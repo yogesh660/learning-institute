@@ -85,7 +85,14 @@ class GitHubProposalClient:
         base: str = "main",
     ) -> dict:
         self.permissions.require(agent, Action.CREATE_PULL_REQUEST)
-        policy_verified = self.branch_policy_check() if self.branch_policy_check is not None else self.branch_policy_verified
+        if self.branch_policy_check is not None:
+            try:
+                policy_verified = self.branch_policy_check()
+            except Exception as exc:
+                self._audit_failure(agent, task, "branch_policy_check_error", error_type=type(exc).__name__)
+                raise BranchProtectionRequired("branch policy verification failed") from exc
+        else:
+            policy_verified = self.branch_policy_verified
         if not policy_verified:
             self._audit_failure(agent, task, "branch_policy_unverified")
             raise BranchProtectionRequired("branch protection and required checks must be verified")

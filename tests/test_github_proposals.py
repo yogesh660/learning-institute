@@ -114,6 +114,26 @@ class GitHubProposalTests(unittest.TestCase):
         state["verified"] = False
         with self.assertRaises(BranchProtectionRequired):
             client.create_pull_request("software_engineer", task=task, title="x", body="y", head="agent/x")
+
+    def test_branch_policy_check_errors_fail_closed_and_are_audited(self):
+        task = Task("curriculum-review")
+        task.transition(TaskStatus.RUNNING)
+        task.transition(TaskStatus.REVIEW_REQUIRED)
+        task.approve("principal-1", "Reviewed the evidence.")
+        with tempfile.TemporaryDirectory() as directory:
+            audit_path = Path(directory) / "audit.jsonl"
+            def broken_check():
+                raise RuntimeError("network unavailable")
+            client = GitHubProposalClient(
+                permissions=PermissionManager(default_policies()),
+                audit_log=AuditLog(audit_path),
+                branch_policy_check=broken_check,
+            )
+            with self.assertRaises(BranchProtectionRequired):
+                client.create_pull_request("software_engineer", task=task, title="x", body="y", head="agent/x")
+            record = json.loads(audit_path.read_text(encoding="utf-8"))
+            self.assertEqual(record["reason"], "branch_policy_check_error")
+            self.assertEqual(record["error_type"], "RuntimeError")
         client = GitHubProposalClient(
             permissions=PermissionManager(default_policies()), token_env="TEST_GITHUB_TOKEN", transport=lambda *args: (201, b"{}")
         )
