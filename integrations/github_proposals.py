@@ -7,13 +7,13 @@ pushes arbitrary files, or exposes credentials in returned data.
 from __future__ import annotations
 
 import json
-import os
 from collections.abc import Callable
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 from agent_foundation.permissions import Action, PermissionManager
 from agent_foundation.audit import AuditLog
+from agent_foundation.credentials import CredentialManager, CredentialUnavailable
 from orchestrator.state import Task, TaskStatus
 
 
@@ -49,6 +49,7 @@ class GitHubProposalClient:
         transport: Transport = _default_transport,
         branch_policy_verified: bool = False,
         branch_policy_check: Callable[[], bool] | None = None,
+        credentials: CredentialManager | None = None,
     ) -> None:
         if repository.count("/") != 1:
             raise ValueError("repository must be owner/name")
@@ -59,6 +60,7 @@ class GitHubProposalClient:
         self._transport = transport
         self.branch_policy_verified = branch_policy_verified
         self.branch_policy_check = branch_policy_check
+        self.credentials = credentials or CredentialManager({token_env: token_env})
 
     def _audit_failure(self, agent: str, task: Task, reason: str, **details: object) -> None:
         if self.audit_log:
@@ -110,8 +112,9 @@ class GitHubProposalClient:
             "Content-Type": "application/json",
             "User-Agent": "learning-institute",
         }
-        token = os.getenv(self.token_env)
-        if not token:
+        try:
+            token = self.credentials.resolve(self.token_env)
+        except CredentialUnavailable:
             self._audit_failure(agent, task, "missing_credential")
             raise GitHubProposalError("missing GitHub credential")
         headers["Authorization"] = f"Bearer {token}"

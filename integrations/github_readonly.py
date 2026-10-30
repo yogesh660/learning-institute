@@ -9,10 +9,11 @@ from __future__ import annotations
 
 import base64
 import json
-import os
 from collections.abc import Callable
 from urllib.parse import quote
 from urllib.request import Request, urlopen
+
+from agent_foundation.credentials import CredentialManager, CredentialUnavailable
 
 
 class GitHubReadError(RuntimeError):
@@ -35,12 +36,14 @@ class GitHubReadOnlyClient:
         *,
         token_env: str = "GITHUB_TOKEN",
         transport: Transport = _default_transport,
+        credentials: CredentialManager | None = None,
     ) -> None:
         if repository.count("/") != 1 or any(part == "" for part in repository.split("/")):
             raise ValueError("repository must be owner/name")
         self.repository = repository
         self.token_env = token_env
         self._transport = transport
+        self.credentials = credentials or CredentialManager({token_env: token_env})
 
     def read_file(self, path: str, ref: str = "main") -> str:
         clean_path = path.strip("/")
@@ -51,9 +54,11 @@ class GitHubReadOnlyClient:
             f"{quote(clean_path, safe='/')}?ref={quote(ref, safe='')}"
         )
         headers = {"Accept": "application/vnd.github+json", "User-Agent": "learning-institute"}
-        token = os.getenv(self.token_env)
-        if token:
+        try:
+            token = self.credentials.resolve(self.token_env)
             headers["Authorization"] = f"Bearer {token}"
+        except CredentialUnavailable:
+            pass
         status, body = self._transport(url, headers)
         if status != 200:
             raise GitHubReadError(f"GitHub read failed with status {status}")
@@ -73,9 +78,11 @@ class GitHubReadOnlyClient:
         suffix = f"contents/{quote(clean_path, safe='/')}" if clean_path else "contents"
         url = f"https://api.github.com/repos/{self.repository}/{suffix}?ref={quote(ref, safe='')}"
         headers = {"Accept": "application/vnd.github+json", "User-Agent": "learning-institute"}
-        token = os.getenv(self.token_env)
-        if token:
+        try:
+            token = self.credentials.resolve(self.token_env)
             headers["Authorization"] = f"Bearer {token}"
+        except CredentialUnavailable:
+            pass
         status, body = self._transport(url, headers)
         if status != 200:
             raise GitHubReadError(f"GitHub directory read failed with status {status}")
@@ -97,9 +104,11 @@ class GitHubReadOnlyClient:
             raise ValueError("branch must remain inside the repository")
         url = f"https://api.github.com/repos/{self.repository}/branches/{quote(clean_branch, safe='/')}/protection"
         headers = {"Accept": "application/vnd.github+json", "User-Agent": "learning-institute"}
-        token = os.getenv(self.token_env)
-        if token:
+        try:
+            token = self.credentials.resolve(self.token_env)
             headers["Authorization"] = f"Bearer {token}"
+        except CredentialUnavailable:
+            pass
         status, body = self._transport(url, headers)
         if status != 200:
             raise GitHubReadError(f"GitHub branch policy read failed with status {status}")
