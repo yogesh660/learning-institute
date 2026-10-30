@@ -41,6 +41,10 @@ class StudentDataTests(unittest.TestCase):
         invalid = event("real-student")
         with self.assertRaises(StudentEventViolation):
             export_events([invalid], "anon_student01")
+        invalid_timestamp = event("anon_student01")
+        invalid_timestamp["occurred_at"] = "2026-10-31T12:00:00"
+        with self.assertRaises(StudentEventViolation):
+            export_events([invalid_timestamp], "anon_student01")
 
 
 if __name__ == "__main__":

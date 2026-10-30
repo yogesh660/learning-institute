@@ -8,7 +8,7 @@
     "student_subject": {"type": "string", "pattern": "^anon_[A-Za-z0-9_-]{8,64}$", "description": "Pseudonymous subject; never a name or email."},
     "event_type": {"enum": ["lesson_started", "lesson_completed", "quiz_submitted", "lab_opened"]},
     "lesson_id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
-    "occurred_at": {"type": "string", "format": "date-time"}
+    "occurred_at": {"type": "string", "format": "date-time", "description": "Timezone-aware ISO-8601 timestamp."}
   },
   "additionalProperties": false
 }

@@ -39,9 +39,11 @@ def validate_student_event(event: dict[str, Any]) -> None:
     if not isinstance(event["lesson_id"], str) or not fullmatch(_LESSON_ID, event["lesson_id"]):
         raise StudentEventViolation("lesson_id is invalid")
     try:
-        datetime.fromisoformat(event["occurred_at"].replace("Z", "+00:00"))
+        occurred = datetime.fromisoformat(event["occurred_at"].replace("Z", "+00:00"))
     except (AttributeError, TypeError, ValueError) as exc:
         raise StudentEventViolation("occurred_at must be ISO-8601") from exc
+    if occurred.tzinfo is None or occurred.utcoffset() is None:
+        raise StudentEventViolation("occurred_at must include a timezone")
 
 
 def export_events(events: list[dict[str, Any]], student_subject: str) -> list[dict[str, Any]]:
