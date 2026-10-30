@@ -9,7 +9,7 @@ class SecretScanTests(unittest.TestCase):
     def test_detects_common_token_patterns(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / "bad.txt").write_text("token=ghp_123456789012345678901234567890", encoding="utf-8")
+            (root / "bad.txt").write_text("token=" + "ghp_" + "123456789012345678901234567890", encoding="utf-8")
             self.assertEqual(scan(root), ["bad.txt:1"])
 
     def test_ignores_example_and_binary_files(self):
