@@ -1,8 +1,11 @@
 import json
 import os
+import tempfile
 import unittest
+from pathlib import Path
 
 from agent_foundation.permissions import PermissionManager, default_policies
+from agent_foundation.audit import AuditLog
 from integrations.github_proposals import ApprovalRequired, GitHubProposalClient, GitHubProposalError
 from orchestrator.state import Task, TaskStatus
 
@@ -21,6 +24,7 @@ class GitHubProposalTests(unittest.TestCase):
             client = GitHubProposalClient(
                 permissions=PermissionManager(default_policies()),
                 token_env="TEST_GITHUB_TOKEN",
+                audit_log=AuditLog(Path(tempfile.mkdtemp()) / "audit.jsonl"),
                 transport=transport,
             )
             task = Task("curriculum-review")

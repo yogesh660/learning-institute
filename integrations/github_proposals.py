@@ -13,6 +13,7 @@ from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 from agent_foundation.permissions import Action, PermissionManager
+from agent_foundation.audit import AuditLog
 from orchestrator.state import Task, TaskStatus
 
 
@@ -40,6 +41,7 @@ class GitHubProposalClient:
         *,
         token_env: str = "GITHUB_TOKEN",
         permissions: PermissionManager,
+        audit_log: AuditLog | None = None,
         transport: Transport = _default_transport,
     ) -> None:
         if repository.count("/") != 1:
@@ -47,6 +49,7 @@ class GitHubProposalClient:
         self.repository = repository
         self.token_env = token_env
         self.permissions = permissions
+        self.audit_log = audit_log
         self._transport = transport
 
     def create_pull_request(
@@ -80,6 +83,17 @@ class GitHubProposalClient:
             raise GitHubProposalError(f"GitHub pull-request proposal failed with status {status}")
         try:
             response = json.loads(response_body)
-            return {"number": response["number"], "url": response["html_url"], "head": head, "base": base}
+            result = {"number": response["number"], "url": response["html_url"], "head": head, "base": base}
+            if self.audit_log:
+                self.audit_log.append(
+                    {
+                        "event": "github_pull_request_proposed",
+                        "agent": agent,
+                        "task_id": task.id,
+                        "repository": self.repository,
+                        "pull_request": result["number"],
+                    }
+                )
+            return result
         except (KeyError, ValueError, TypeError) as exc:
             raise GitHubProposalError("invalid GitHub pull-request response") from exc
