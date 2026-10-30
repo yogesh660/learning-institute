@@ -10,12 +10,12 @@ from agents.analytics import AcademicAnalyticsAgent
 
 class AnalyticsAgentTests(unittest.TestCase):
     @staticmethod
-    def _event(subject: str) -> dict[str, str]:
+    def _event(subject: str, event_type: str = "lesson_completed", lesson_id: str = "gradient-descent") -> dict[str, str]:
         return {
             "event_id": str(uuid4()),
             "student_subject": subject,
-            "event_type": "lesson_completed",
-            "lesson_id": "gradient-descent",
+            "event_type": event_type,
+            "lesson_id": lesson_id,
             "occurred_at": datetime.now(timezone.utc).isoformat(),
         }
 
@@ -55,6 +55,14 @@ class AnalyticsAgentTests(unittest.TestCase):
         self.assertFalse(summary.suppressed)
         self.assertEqual(summary.by_lesson["gradient-descent"], 5)
         self.assertNotIn("anon_student01", summary.to_dict())
+
+    def test_student_analytics_recommends_review_for_completion_gaps(self):
+        events = [
+            self._event(f"anon_student0{i}", "lesson_started", "hard-lesson")
+            for i in range(1, 6)
+        ]
+        summary = AcademicAnalyticsAgent().aggregate_student_events(events)
+        self.assertEqual(summary.recommendations, ("Review cohort completion for lesson: hard-lesson",))
 
 
 if __name__ == "__main__":

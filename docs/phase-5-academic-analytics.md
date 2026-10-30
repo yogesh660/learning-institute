@@ -14,5 +14,7 @@ access-control, and data-minimisation decisions first. The agent now includes
 an offline `aggregate_student_events` helper for synthetic or already-approved
 pseudonymous events; it suppresses detailed counts below a configurable
 minimum cohort and never returns student subjects. It is not a production
-student database or ingestion endpoint.
+student database or ingestion endpoint. For sufficiently large cohorts it also
+emits generic lesson-level completion-gap recommendations, never individual
+learner recommendations.
 

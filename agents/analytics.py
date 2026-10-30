@@ -34,6 +34,7 @@ class StudentAnalyticsSummary:
     suppressed: bool
     by_event_type: dict[str, int]
     by_lesson: dict[str, int]
+    recommendations: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -67,10 +68,21 @@ class AcademicAnalyticsAgent:
             return StudentAnalyticsSummary(len(events), unique_students, True, {}, {})
         by_event_type: dict[str, int] = {}
         by_lesson: dict[str, int] = {}
+        started: dict[str, int] = {}
+        completed: dict[str, int] = {}
         for event in events:
             by_event_type[event["event_type"]] = by_event_type.get(event["event_type"], 0) + 1
             by_lesson[event["lesson_id"]] = by_lesson.get(event["lesson_id"], 0) + 1
-        return StudentAnalyticsSummary(len(events), unique_students, False, by_event_type, by_lesson)
+            if event["event_type"] == "lesson_started":
+                started[event["lesson_id"]] = started.get(event["lesson_id"], 0) + 1
+            elif event["event_type"] == "lesson_completed":
+                completed[event["lesson_id"]] = completed.get(event["lesson_id"], 0) + 1
+        recommendations = tuple(
+            f"Review cohort completion for lesson: {lesson}"
+            for lesson in sorted(started)
+            if started[lesson] > completed.get(lesson, 0)
+        )
+        return StudentAnalyticsSummary(len(events), unique_students, False, by_event_type, by_lesson, recommendations)
 
     def write_snapshot(self, output_path: str | Path, curriculum_report: str | Path, qa_report: str | Path) -> AnalyticsSnapshot:
         snapshot = self.aggregate(curriculum_report, qa_report)
