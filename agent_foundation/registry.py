@@ -25,6 +25,8 @@ class AgentRegistry:
             "software_engineer": "prepare reviewed website and content changes",
             "qa_engineer": "validate generated output and engineering evidence",
             "academic_reviewer": "independently verify academic claims and sources",
+            "examiner": "draft objective assessments and rubrics",
+            "student_support": "provide lesson-context-only learner guidance",
             "principal": "approve important production decisions",
         }
         self._purposes = purposes
