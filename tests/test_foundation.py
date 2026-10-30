@@ -37,6 +37,12 @@ class FoundationTests(unittest.TestCase):
         self.assertEqual(manager.aliases(), ("primary",))
         self.assertTrue(manager.available("primary"))
         self.assertEqual(manager.resolve("primary"), "secret-value")
+        manager.rotate("primary", "TEST_PROVIDER_KEY_NEXT")
+        self.assertFalse(manager.available("primary"))
+        with self.assertRaises(CredentialUnavailable):
+            manager.resolve("primary")
+        with self.assertRaises(ValueError):
+            manager.rotate("primary", "bad-name")
         with self.assertRaises(CredentialUnavailable):
             manager.resolve("unknown")
         with self.assertRaises(ValueError):

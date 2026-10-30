@@ -39,3 +39,11 @@ class CredentialManager:
 
     def aliases(self) -> tuple[str, ...]:
         return tuple(sorted(self._aliases))
+
+    def rotate(self, alias: str, env_name: str) -> None:
+        """Point an existing alias at a new environment variable for rotation."""
+        if alias not in self._aliases:
+            raise CredentialUnavailable("credential alias is not approved")
+        if not isinstance(env_name, str) or not self._ENV_NAME.fullmatch(env_name):
+            raise ValueError("credential environment variable name is invalid")
+        self._aliases[alias] = env_name
