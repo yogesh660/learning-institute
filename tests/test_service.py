@@ -7,6 +7,8 @@ from orchestrator.state import TaskStatus
 from orchestrator.store import TaskStore
 from security.auth import AuthorizationDenied, Identity, Role
 from security.rate_limit import InMemoryRateLimiter, RateLimitExceeded
+from agent_foundation.audit import AuditLog
+import json
 
 
 class ServiceTests(unittest.TestCase):
@@ -32,9 +34,13 @@ class ServiceTests(unittest.TestCase):
 
     def test_anonymous_cannot_create_task(self):
         with tempfile.TemporaryDirectory() as directory:
-            service = AcademyService(TaskStore(Path(directory) / "tasks.json"))
+            audit = AuditLog(Path(directory) / "audit.jsonl")
+            service = AcademyService(TaskStore(Path(directory) / "tasks.json", audit), audit_log=audit)
             with self.assertRaises(AuthorizationDenied):
                 service.create_curriculum_review(None)
+            record = json.loads((Path(directory) / "audit.jsonl").read_text(encoding="utf-8"))
+            self.assertEqual(record["event"], "authorization_denied")
+            self.assertEqual(record["capability"], "prepare_proposal")
 
     def test_create_is_idempotent_for_dedupe_key(self):
         with tempfile.TemporaryDirectory() as directory:

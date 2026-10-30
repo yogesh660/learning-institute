@@ -6,6 +6,8 @@ from pathlib import Path
 
 from security.auth import Authorizer, Identity, default_authorizer
 from security.rate_limit import InMemoryRateLimiter
+from security.auth import AuthorizationDenied
+from agent_foundation.audit import AuditLog
 
 from .state import Task, TaskStatus
 from .store import DuplicateTaskKey, TaskStore
@@ -18,13 +20,27 @@ class AcademyService:
         store: TaskStore,
         authorizer: Authorizer | None = None,
         rate_limiter: InMemoryRateLimiter | None = None,
+        audit_log: AuditLog | None = None,
     ) -> None:
         self.store = store
         self.authorizer = authorizer or default_authorizer()
         self.rate_limiter = rate_limiter
+        self.audit_log = audit_log or store.audit_log
 
     def _require(self, identity: Identity, capability: str) -> None:
-        self.authorizer.require(identity, capability)
+        try:
+            self.authorizer.require(identity, capability)
+        except AuthorizationDenied:
+            if self.audit_log:
+                self.audit_log.append(
+                    {
+                        "event": "authorization_denied",
+                        "subject": getattr(identity, "subject", None),
+                        "role": getattr(getattr(identity, "role", None), "value", None),
+                        "capability": capability,
+                    }
+                )
+            raise
         if self.rate_limiter is not None:
             self.rate_limiter.check(identity.subject)
 
