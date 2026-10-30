@@ -6,6 +6,7 @@ from orchestrator.service import AcademyService
 from orchestrator.state import TaskStatus
 from orchestrator.store import TaskStore
 from security.auth import AuthorizationDenied, Identity, Role
+from security.rate_limit import InMemoryRateLimiter, RateLimitExceeded
 
 
 class ServiceTests(unittest.TestCase):
@@ -49,6 +50,22 @@ class ServiceTests(unittest.TestCase):
             service = AcademyService(TaskStore(Path(directory) / "tasks.json"))
             with self.assertRaises(ValueError):
                 service.create_curriculum_review(Identity("agent-1", Role.AGENT), " ")
+
+    def test_service_can_enforce_rate_limit_after_authorization(self):
+        with tempfile.TemporaryDirectory() as directory:
+            limiter = InMemoryRateLimiter(1, 60)
+            service = AcademyService(TaskStore(Path(directory) / "tasks.json"), rate_limiter=limiter)
+            agent = Identity("agent-1", Role.AGENT)
+            service.create_curriculum_review(agent)
+            with self.assertRaises(RateLimitExceeded):
+                service.create_curriculum_review(agent)
+
+    def test_unauthorized_identity_is_rejected_before_rate_limit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            limiter = InMemoryRateLimiter(1, 60)
+            service = AcademyService(TaskStore(Path(directory) / "tasks.json"), rate_limiter=limiter)
+            with self.assertRaises(AuthorizationDenied):
+                service.create_curriculum_review(Identity("student-1", Role.STUDENT))
 
 
 if __name__ == "__main__":

@@ -24,5 +24,7 @@ repository.
 The repository now includes `security.rate_limit.InMemoryRateLimiter` as a
 thread-safe prototype primitive. It is not a production distributed limiter:
 before deploying multiple backend workers, replace it with a shared counter or
-an API gateway policy while preserving the same fail-closed behavior.
+an API gateway policy while preserving the same fail-closed behavior. The
+`AcademyService` accepts this limiter and applies it only after authorization,
+so rejected identities do not consume an authenticated caller's quota.
 
