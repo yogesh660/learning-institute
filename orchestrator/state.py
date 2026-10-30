@@ -17,20 +17,28 @@ def utc_now() -> str:
 
 class TaskStatus(StrEnum):
     CREATED = "created"
+    QUEUED = "queued"
     RUNNING = "running"
     REVIEW_REQUIRED = "review_required"
+    WAITING_FOR_PRINCIPAL = "waiting_for_principal"
+    BLOCKED = "blocked"
     APPROVED = "approved"
     COMPLETED = "completed"
     FAILED = "failed"
+    CANCELLED = "cancelled"
 
 
 _TRANSITIONS: dict[TaskStatus, set[TaskStatus]] = {
-    TaskStatus.CREATED: {TaskStatus.RUNNING, TaskStatus.FAILED},
-    TaskStatus.RUNNING: {TaskStatus.REVIEW_REQUIRED, TaskStatus.FAILED},
-    TaskStatus.REVIEW_REQUIRED: {TaskStatus.APPROVED, TaskStatus.FAILED},
+    TaskStatus.CREATED: {TaskStatus.QUEUED, TaskStatus.RUNNING, TaskStatus.FAILED, TaskStatus.CANCELLED},
+    TaskStatus.QUEUED: {TaskStatus.RUNNING, TaskStatus.BLOCKED, TaskStatus.CANCELLED, TaskStatus.FAILED},
+    TaskStatus.RUNNING: {TaskStatus.REVIEW_REQUIRED, TaskStatus.FAILED, TaskStatus.BLOCKED},
+    TaskStatus.REVIEW_REQUIRED: {TaskStatus.WAITING_FOR_PRINCIPAL, TaskStatus.APPROVED, TaskStatus.FAILED},
+    TaskStatus.WAITING_FOR_PRINCIPAL: {TaskStatus.APPROVED, TaskStatus.BLOCKED, TaskStatus.CANCELLED},
+    TaskStatus.BLOCKED: {TaskStatus.QUEUED, TaskStatus.FAILED, TaskStatus.CANCELLED},
     TaskStatus.APPROVED: {TaskStatus.COMPLETED, TaskStatus.FAILED},
     TaskStatus.COMPLETED: set(),
     TaskStatus.FAILED: set(),
+    TaskStatus.CANCELLED: set(),
 }
 
 

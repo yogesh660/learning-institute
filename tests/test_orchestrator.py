@@ -28,6 +28,21 @@ class OrchestratorTests(unittest.TestCase):
         task.approve("principal-1", "Reviewed the evidence.")
         self.assertEqual(task.status, TaskStatus.APPROVED)
 
+    def test_governed_queue_block_and_cancel_lifecycle(self):
+        task = Task(kind="curriculum-review")
+        task.transition(TaskStatus.QUEUED)
+        task.transition(TaskStatus.BLOCKED)
+        task.transition(TaskStatus.QUEUED)
+        task.transition(TaskStatus.RUNNING)
+        task.transition(TaskStatus.REVIEW_REQUIRED)
+        task.transition(TaskStatus.WAITING_FOR_PRINCIPAL)
+        task.approve("principal-1", "Reviewed the evidence.")
+        self.assertEqual(task.status, TaskStatus.APPROVED)
+        cancelled = Task(kind="curriculum-review")
+        cancelled.transition(TaskStatus.CANCELLED)
+        with self.assertRaises(ValueError):
+            cancelled.transition(TaskStatus.RUNNING)
+
     def test_store_round_trip(self):
         with tempfile.TemporaryDirectory() as directory:
             store = TaskStore(Path(directory) / "tasks.json")
