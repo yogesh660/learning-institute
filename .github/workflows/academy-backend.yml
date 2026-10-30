@@ -18,6 +18,8 @@ jobs:
           python-version: "3.11"
       - name: Run backend tests
         run: python -m unittest discover -s tests -v
+      - name: Scan for committed secret patterns
+        run: python scripts/academy/secret-scan.py .
       - name: Generate backend health report
         run: python -m orchestrator.main health --output backend-health.json
       - name: Generate read-only curriculum review
