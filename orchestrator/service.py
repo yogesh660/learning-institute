@@ -56,14 +56,27 @@ class AcademyService:
                     )
                 raise
 
-    def create_curriculum_review(self, identity: Identity, dedupe_key: str | None = None) -> Task:
+    def create_curriculum_review(
+        self,
+        identity: Identity,
+        dedupe_key: str | None = None,
+        *,
+        priority: int = 0,
+        acceptance_criteria: list[str] | None = None,
+    ) -> Task:
         self._require(identity, "prepare_proposal")
         if dedupe_key is not None:
             dedupe_key = dedupe_key.strip()
             existing = self.store.find_by_dedupe_key(dedupe_key)
             if existing is not None:
                 return existing
-        task = Task(kind=CurriculumReviewWorkflow.kind, dedupe_key=dedupe_key)
+        task = Task(
+            kind=CurriculumReviewWorkflow.kind,
+            dedupe_key=dedupe_key,
+            requested_by=identity.subject,
+            priority=priority,
+            acceptance_criteria=list(acceptance_criteria or []),
+        )
         try:
             return self.store.save(task)
         except DuplicateTaskKey:

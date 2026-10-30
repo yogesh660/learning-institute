@@ -51,6 +51,18 @@ class ServiceTests(unittest.TestCase):
             self.assertEqual(first.id, second.id)
             self.assertEqual(len(service.store.list()), 1)
 
+    def test_service_records_task_governance_metadata(self):
+        with tempfile.TemporaryDirectory() as directory:
+            service = AcademyService(TaskStore(Path(directory) / "tasks.json"))
+            task = service.create_curriculum_review(
+                Identity("agent-1", Role.AGENT),
+                priority=70,
+                acceptance_criteria=["review current curriculum", "do not edit production"],
+            )
+            self.assertEqual(task.requested_by, "agent-1")
+            self.assertEqual(task.priority, 70)
+            self.assertEqual(task.acceptance_criteria, ["review current curriculum", "do not edit production"])
+
     def test_dedupe_key_is_normalized_before_persistence(self):
         with tempfile.TemporaryDirectory() as directory:
             service = AcademyService(TaskStore(Path(directory) / "tasks.json"))
