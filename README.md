@@ -6,11 +6,11 @@ A repository for building a governed, AI-assisted learning institute on top of t
 
 - Repository: `yogesh660/learning-institute`
 - Visibility: private
-- Source import: `yogesh660/ml-model-zoo` at the Phase 0 import commit
-- Source boundary: `ml-model-zoo` is read-only; all future work belongs here
+- Public source: `yogesh660/ml-model-zoo` remains the read-only Learning Hub
+- Operations role: this private repository hosts governed agents and backend control-plane code
 - Curriculum: 379 live lessons, 50 model lessons, 329 concept lessons, and 18 planned pages
 - Build output: 107 hours of generated learning material
-- Deployment: GitHub Pages is not enabled yet; deployment policy is being prepared before activation
+- Deployment: the public site remains on `ml-model-zoo`; Pages here is manual-only compatibility
 
 ## Repository layout
 
@@ -23,6 +23,10 @@ datasets/raw/             small educational datasets
 scripts/build.js          deterministic site generator
 scripts/dev/              visual QA, quiz checks, merge queue, tracker
 agent_foundation/         Phase 1 schemas, budgets, audit log, and config primitives
+agents/                   governed academic, engineering, support, and analytics agents
+orchestrator/             task state, approval workflow, service facade, and health checks
+integrations/             read-only source access and permission-checked PR proposals
+security/                 authorization, privacy validation, and retention policies
 schemas/                  JSON Schemas for academy tasks and reports
 tests/                    foundation tests
 docs/                     phase plans and security boundaries
@@ -44,9 +48,20 @@ The site is plain HTML, CSS, and browser JavaScript. No npm install is required.
 python -m unittest discover -s tests -v
 python3 scripts/dev/check.py overflow concepts/<lesson-id>
 node scripts/dev/quiz-check.js --hard
+python -m orchestrator.main health
 ```
 
-The pull-request validation workflow runs the foundation tests, rebuilds the site, and checks generated local links. Production deployment is currently restricted to `main`; GitHub Pages will be enabled only after repository governance and deployment settings are reviewed.
+The validation workflows run the Python backend suite, rebuild the imported static tree, run curriculum/QA checks, and publish a backend health artifact. The Academy backend defaults to no provider calls and requires explicit Principal approval before a GitHub pull-request proposal.
+
+## Backend workflow
+
+```bash
+python -m orchestrator.main create --store .academy/tasks.json
+python -m orchestrator.main run TASK_ID --store .academy/tasks.json --repo-root . --output reports/task-review.json
+python -m orchestrator.main approve TASK_ID --store .academy/tasks.json
+```
+
+`learning-institute` prepares evidence and proposals for `ml-model-zoo`; it does not replace the public site or merge production changes.
 
 ## Academy phases
 
