@@ -63,6 +63,19 @@ class FoundationTests(unittest.TestCase):
             self.assertEqual(restored.remaining("teacher")["daily_calls"], 1)
             self.assertEqual(restored.remaining("teacher")["monthly_usd"], 1.5)
 
+    def test_persistent_budget_reservations_serialize_concurrently(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "budgets.json"
+            budgets = {"teacher": Budget(10.0, 10.0, 10, 10)}
+            ledger = PersistentBudgetLedger(budgets, path)
+            threads = [Thread(target=ledger.reserve, args=("teacher",), kwargs={"usd": 1.0, "calls": 1}) for _ in range(10)]
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join()
+            restored = PersistentBudgetLedger(budgets, path)
+            self.assertEqual(restored.remaining("teacher")["daily_calls"], 0)
+
     def test_audit_redacts_secrets(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "audit.jsonl"

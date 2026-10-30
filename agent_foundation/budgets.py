@@ -6,7 +6,7 @@ import json
 import os
 from pathlib import Path
 import tempfile
-from threading import Lock
+from threading import RLock
 from typing import Callable
 
 
@@ -29,7 +29,7 @@ class BudgetLedger:
         self._budgets = budgets
         self._usage: dict[tuple[str, str, str], float | int] = {}
         self._clock = clock or (lambda: datetime.now(timezone.utc))
-        self._lock = Lock()
+        self._lock = RLock()
 
     def reserve(self, agent: str, *, usd: float, calls: int = 1) -> None:
         if usd < 0 or calls < 0:
@@ -101,18 +101,19 @@ class PersistentBudgetLedger(BudgetLedger):
             }
 
     def reserve(self, agent: str, *, usd: float, calls: int = 1) -> None:
-        super().reserve(agent, usd=usd, calls=calls)
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        serialised = {"\u001f".join(key): value for key, value in self._usage.items()}
-        fd, temp_name = tempfile.mkstemp(prefix="academy-budget-", suffix=".json", dir=self.path.parent)
-        try:
-            with os.fdopen(fd, "w", encoding="utf-8") as handle:
-                json.dump(serialised, handle, indent=2)
-                handle.write("\n")
-                handle.flush()
-                os.fsync(handle.fileno())
-            os.replace(temp_name, self.path)
-        finally:
-            if os.path.exists(temp_name):
-                os.unlink(temp_name)
+        with self._lock:
+            super().reserve(agent, usd=usd, calls=calls)
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            serialised = {"\u001f".join(key): value for key, value in self._usage.items()}
+            fd, temp_name = tempfile.mkstemp(prefix="academy-budget-", suffix=".json", dir=self.path.parent)
+            try:
+                with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                    json.dump(serialised, handle, indent=2)
+                    handle.write("\n")
+                    handle.flush()
+                    os.fsync(handle.fileno())
+                os.replace(temp_name, self.path)
+            finally:
+                if os.path.exists(temp_name):
+                    os.unlink(temp_name)
 
