@@ -30,6 +30,15 @@ class QAAgentTests(unittest.TestCase):
             self.assertFalse(result.production_changes)
             self.assertEqual(report.read_bytes(), before)
 
+    def test_writes_result_atomically(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            report = root / "qa.json"
+            output = root / "result.json"
+            report.write_text(json.dumps({"status": "pass", "expectedPages": 1, "plannedPages": 0}), encoding="utf-8")
+            QAEngineerAgent().write_result(output, report)
+            self.assertEqual(json.loads(output.read_text(encoding="utf-8"))["status"], "pass")
+
 
 if __name__ == "__main__":
     unittest.main()

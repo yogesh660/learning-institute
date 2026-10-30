@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -40,3 +42,20 @@ class QAEngineerAgent:
             planned_pages=evidence.get("plannedPages", 0),
             failures=tuple(failures),
         )
+
+    def write_result(self, output_path: str | Path, report_path: str | Path) -> QAResult:
+        result = self.inspect_report(report_path)
+        target = Path(output_path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        fd, temporary = tempfile.mkstemp(prefix="qa-result-", suffix=".json", dir=target.parent)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                json.dump(result.to_dict(), handle, indent=2)
+                handle.write("\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary, target)
+        finally:
+            if os.path.exists(temporary):
+                os.unlink(temporary)
+        return result
