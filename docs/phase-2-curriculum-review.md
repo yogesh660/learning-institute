@@ -20,4 +20,6 @@ lesson change derived from the report.
 
 Researcher work is deliberately separate: source-backed research reports must
 include links, dates, and evidence before they can become curriculum input.
+Persisted research reports are revalidated on read; changing a finding or its
+metadata invalidates the report instead of silently accepting stale evidence.
 

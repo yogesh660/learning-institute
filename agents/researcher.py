@@ -61,3 +61,16 @@ class ResearcherAgent:
             if os.path.exists(temporary):
                 os.unlink(temporary)
         return report
+
+    def read_report(self, path: str | Path) -> dict[str, Any]:
+        """Read and revalidate a persisted source-grounded report."""
+        try:
+            document = json.loads(Path(path).read_text(encoding="utf-8"))
+            raw_findings = document["findings"]
+            findings = [ResearchFinding(**finding) for finding in raw_findings]
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+            raise ValueError("invalid research report document") from exc
+        expected = self.validate_report(findings)
+        if document != expected:
+            raise ValueError("research report document does not match its validated findings")
+        return document
