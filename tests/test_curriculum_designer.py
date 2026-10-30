@@ -30,6 +30,15 @@ class CurriculumDesignerTests(unittest.TestCase):
             self.assertFalse(proposal.production_changes)
             self.assertEqual(report.read_bytes(), original)
 
+    def test_writes_proposal_atomically(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            report = root / "audit.json"
+            output = root / "proposal.json"
+            report.write_text(json.dumps({"paths": [], "checks": {"teacherReviewCandidates": []}}), encoding="utf-8")
+            CurriculumDesignerAgent().write_proposal(output, report)
+            self.assertEqual(json.loads(output.read_text(encoding="utf-8"))["production_changes"], False)
+
 
 if __name__ == "__main__":
     unittest.main()
