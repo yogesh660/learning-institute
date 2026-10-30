@@ -46,7 +46,7 @@ def main(argv: list[str] | None = None) -> int:
         print(rendered)
         return 0
     if args.command == "list":
-        rendered = json.dumps([task.to_dict() for task in store.list()], indent=2)
+        rendered = json.dumps([task.summary() for task in store.list()], indent=2)
         if args.output:
             output = Path(args.output)
             output.parent.mkdir(parents=True, exist_ok=True)

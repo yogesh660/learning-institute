@@ -22,6 +22,7 @@ class OrchestratorTests(unittest.TestCase):
             self.assertEqual(loaded.id, task.id)
             self.assertEqual(loaded.status, TaskStatus.CREATED)
             self.assertEqual([item.id for item in store.list()], [task.id])
+            self.assertNotIn("payload", task.summary())
 
     def test_store_can_audit_task_transitions_without_payload(self):
         with tempfile.TemporaryDirectory() as directory:

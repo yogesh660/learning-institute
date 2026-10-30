@@ -59,6 +59,16 @@ class Task:
         data["status"] = self.status.value
         return data
 
+    def summary(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "kind": self.kind,
+            "status": self.status.value,
+            "history_count": len(self.history),
+            "approved_by": self.approved_by,
+            "completed_by": self.completed_by,
+        }
+
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "Task":
         return cls(
