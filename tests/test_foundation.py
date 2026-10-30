@@ -8,6 +8,7 @@ from agent_foundation.audit import AuditLog
 from agent_foundation.budgets import Budget, BudgetExceeded, BudgetLedger
 from agent_foundation.permissions import Action, PermissionDenied, PermissionManager, default_policies
 from agent_foundation.providers import DisabledProvider, ProviderUnavailable
+from agent_foundation.registry import AgentRegistry
 from agent_foundation.schemas import Approval, Report, Task
 
 
@@ -45,6 +46,11 @@ class FoundationTests(unittest.TestCase):
     def test_provider_boundary_fails_closed(self):
         with self.assertRaises(ProviderUnavailable):
             DisabledProvider().complete("test prompt")
+
+    def test_agent_registry_exposes_policy(self):
+        registry = AgentRegistry()
+        self.assertIn("teacher", registry.names())
+        self.assertEqual(registry.get("teacher").purpose, "review lesson clarity and completeness")
 
 
 if __name__ == "__main__":
