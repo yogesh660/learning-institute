@@ -31,6 +31,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--subject", help="authenticated identity subject")
     p.add_argument("--role", choices=[role.value for role in Role], help="authenticated identity role")
     p.add_argument("--reason", default="", help="required Principal approval rationale")
+    p.add_argument("--status-filter", choices=[status.value for status in TaskStatus], help="filter queue listing")
     return p
 
 
@@ -46,7 +47,8 @@ def main(argv: list[str] | None = None) -> int:
         print(rendered)
         return 0
     if args.command == "list":
-        rendered = json.dumps([task.summary() for task in store.list()], indent=2)
+        selected = TaskStatus(args.status_filter) if args.status_filter else None
+        rendered = json.dumps([task.summary() for task in store.list(selected)], indent=2)
         if args.output:
             output = Path(args.output)
             output.parent.mkdir(parents=True, exist_ok=True)

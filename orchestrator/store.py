@@ -8,7 +8,7 @@ import tempfile
 from pathlib import Path
 
 from agent_foundation.audit import AuditLog
-from .state import Task
+from .state import Task, TaskStatus
 
 
 class TaskStore:
@@ -56,8 +56,10 @@ class TaskStore:
             raise KeyError(f"unknown task: {task_id}")
         return Task.from_dict(data)
 
-    def list(self) -> list[Task]:
+    def list(self, status: TaskStatus | None = None) -> list[Task]:
         """Return tasks ordered by their first recorded state transition."""
         tasks = [Task.from_dict(data) for data in self._read().values()]
+        if status is not None:
+            tasks = [task for task in tasks if task.status is status]
         return sorted(tasks, key=lambda task: task.history[0]["at"] if task.history else "")
 
