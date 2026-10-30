@@ -12,6 +12,15 @@ class SecretScanTests(unittest.TestCase):
             (root / "bad.txt").write_text("token=" + "ghp_" + "123456789012345678901234567890", encoding="utf-8")
             self.assertEqual(scan(root), ["bad.txt:1"])
 
+    def test_detects_provider_and_cloud_key_patterns(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "bad.txt").write_text(
+                "openai=" + "sk-" + "a" * 24 + " aws=AKIA" + "A" * 16,
+                encoding="utf-8",
+            )
+            self.assertEqual(scan(root), ["bad.txt:1"])
+
     def test_ignores_example_and_binary_files(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

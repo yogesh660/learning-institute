@@ -10,6 +10,8 @@ PATTERNS = (
     re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
     re.compile(r"(?:ghp|github_pat)_[A-Za-z0-9_]{20,}"),
     re.compile(r"AIza[0-9A-Za-z_-]{30,}"),
+    re.compile(r"AKIA[0-9A-Z]{16}"),
+    re.compile(r"sk-[A-Za-z0-9_-]{20,}"),
     re.compile(r"(?:sk|rk)-live-[A-Za-z0-9_-]{16,}"),
 )
 EXCLUDED = {".git", "node_modules", "__pycache__", ".pytest_cache"}

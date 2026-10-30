@@ -96,6 +96,9 @@ class FoundationTests(unittest.TestCase):
             AuditLog(path).append({"event": "embedded", "message": "ghp_" + "123456789012345678901234567890"})
             embedded = json.loads(path.read_text(encoding="utf-8").splitlines()[-1])
             self.assertNotIn("ghp_", embedded["message"])
+            AuditLog(path).append({"event": "provider", "message": "sk-" + "a" * 24})
+            provider = json.loads(path.read_text(encoding="utf-8").splitlines()[-1])
+            self.assertNotIn("sk-", provider["message"])
 
     def test_audit_serializes_concurrent_appends(self):
         with tempfile.TemporaryDirectory() as directory:
