@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+from threading import Lock
 from typing import Any
 
 
@@ -19,9 +20,11 @@ def _redact(value: Any) -> Any:
 class AuditLog:
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path)
+        self._lock = Lock()
 
     def append(self, event: dict[str, Any]) -> None:
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        with self.path.open("a", encoding="utf-8") as handle:
-            handle.write(json.dumps(_redact(event), sort_keys=True) + "\n")
+        with self._lock:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            with self.path.open("a", encoding="utf-8") as handle:
+                handle.write(json.dumps(_redact(event), sort_keys=True) + "\n")
 

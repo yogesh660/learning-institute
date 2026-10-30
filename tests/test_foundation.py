@@ -2,6 +2,7 @@ import json
 import tempfile
 import unittest
 from datetime import datetime, timezone
+from threading import Thread
 from pathlib import Path
 from uuid import uuid4
 
@@ -58,6 +59,18 @@ class FoundationTests(unittest.TestCase):
             AuditLog(path).append({"event": "test", "api_key": "do-not-write"})
             record = json.loads(path.read_text(encoding="utf-8"))
             self.assertEqual(record["api_key"], "[REDACTED]")
+
+    def test_audit_serializes_concurrent_appends(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "audit.jsonl"
+            audit = AuditLog(path)
+            threads = [Thread(target=audit.append, args=({"event": "parallel", "index": i},)) for i in range(20)]
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join()
+            records = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+            self.assertEqual(len(records), 20)
 
     def test_permissions_fail_closed(self):
         manager = PermissionManager(default_policies())
