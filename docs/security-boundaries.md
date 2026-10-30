@@ -8,6 +8,8 @@
 - Only Principal identities can approve or complete production-bound tasks.
 - Principal approval is bound to a canonical task-content fingerprint; changing
   the payload or result after approval blocks completion.
+- Task writes use optimistic revisions so concurrent workers cannot silently
+  overwrite newer lifecycle state.
 - GitHub pull-request proposals require both an allowed agent and an
   `approved` task.
 - The default AI provider is disabled; no provider call happens implicitly.

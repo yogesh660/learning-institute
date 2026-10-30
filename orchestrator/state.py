@@ -39,6 +39,7 @@ class Task:
     kind: str
     payload: dict[str, Any] = field(default_factory=dict)
     dedupe_key: str | None = None
+    revision: int = 0
     id: str = field(default_factory=lambda: f"task-{uuid4().hex[:12]}")
     status: TaskStatus = TaskStatus.CREATED
     result: dict[str, Any] | None = None
@@ -93,6 +94,7 @@ class Task:
             kind=data["kind"],
             payload=data.get("payload", {}),
             dedupe_key=data.get("dedupe_key"),
+            revision=data.get("revision", 0),
             id=data["id"],
             status=TaskStatus(data.get("status", TaskStatus.CREATED)),
             result=data.get("result"),

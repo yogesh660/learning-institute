@@ -5,7 +5,7 @@ from pathlib import Path
 from agent_foundation.audit import AuditLog
 
 from orchestrator.state import Task, TaskStatus
-from orchestrator.store import TaskStore
+from orchestrator.store import ConcurrentTaskUpdate, TaskStore
 from orchestrator.workflow import CurriculumReviewWorkflow
 
 
@@ -21,9 +21,22 @@ class OrchestratorTests(unittest.TestCase):
             loaded = store.get(task.id)
             self.assertEqual(loaded.id, task.id)
             self.assertEqual(loaded.status, TaskStatus.CREATED)
+            self.assertEqual(loaded.revision, 1)
             self.assertEqual([item.id for item in store.list()], [task.id])
             self.assertEqual([item.id for item in store.list(TaskStatus.CREATED)], [task.id])
             self.assertNotIn("payload", task.summary())
+
+    def test_store_rejects_stale_task_revision(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store = TaskStore(Path(directory) / "tasks.json")
+            created = store.save(Task(kind="curriculum-review"))
+            stale = store.get(created.id)
+            current = store.get(created.id)
+            current.transition(TaskStatus.RUNNING)
+            store.save(current)
+            stale.transition(TaskStatus.RUNNING)
+            with self.assertRaises(ConcurrentTaskUpdate):
+                store.save(stale)
 
     def test_store_can_audit_task_transitions_without_payload(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -11,6 +11,10 @@ from agent_foundation.audit import AuditLog
 from .state import Task, TaskStatus
 
 
+class ConcurrentTaskUpdate(RuntimeError):
+    """Raised when a stale task tries to overwrite a newer revision."""
+
+
 class TaskStore:
     def __init__(self, path: str | Path, audit_log: AuditLog | None = None) -> None:
         self.path = Path(path)
@@ -37,6 +41,18 @@ class TaskStore:
 
     def save(self, task: Task) -> Task:
         tasks = self._read()
+        existing = tasks.get(task.id)
+        if existing is not None:
+            current_revision = int(existing.get("revision", 0))
+            if task.revision != current_revision:
+                raise ConcurrentTaskUpdate(
+                    f"task {task.id} is stale (expected revision {current_revision}, got {task.revision})"
+                )
+            task.revision = current_revision + 1
+        else:
+            if task.revision != 0:
+                raise ConcurrentTaskUpdate(f"new task {task.id} has invalid revision {task.revision}")
+            task.revision = 1
         tasks[task.id] = task.to_dict()
         self._write(tasks)
         if self.audit_log:
@@ -46,6 +62,7 @@ class TaskStore:
                     "task_id": task.id,
                     "kind": task.kind,
                     "status": task.status.value,
+                    "revision": task.revision,
                 }
             )
         return task
