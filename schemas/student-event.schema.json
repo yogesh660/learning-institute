@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PseudonymousStudentLearningEvent",
+  "type": "object",
+  "required": ["event_id", "student_subject", "event_type", "lesson_id", "occurred_at"],
+  "properties": {
+    "event_id": {"type": "string", "format": "uuid"},
+    "student_subject": {"type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$", "description": "Pseudonymous subject; never a name or email."},
+    "event_type": {"enum": ["lesson_started", "lesson_completed", "quiz_submitted", "lab_opened"]},
+    "lesson_id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "occurred_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false
+}
+
