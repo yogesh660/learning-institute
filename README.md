@@ -54,7 +54,9 @@ The pull-request validation workflow runs the foundation tests, rebuilds the sit
 - Phase 1: governed foundation primitives, schemas, budgets, audit logging, credential conventions, and validation workflow.
 - Phase 2: repository-aware curriculum review with deterministic teacher and curriculum checks.
 - Phase 3: engineering and QA automation around builds, generated output, and pull-request evidence.
-- Later phases: secure assessment, student support, analytics, and an operations command center.
+- Phase 4: student-safety boundaries and a versioned event schema, with no production student data or provider integrations.
+- Phase 5: privacy-safe academic analytics derived only from committed curriculum and QA evidence.
+- Phase 6: a read-only academy command center snapshot and manual GitHub Actions status workflow.
 
 ## Safety boundaries
 
