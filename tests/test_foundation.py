@@ -76,6 +76,17 @@ class FoundationTests(unittest.TestCase):
             restored = PersistentBudgetLedger(budgets, path)
             self.assertEqual(restored.remaining("teacher")["daily_calls"], 0)
 
+    def test_persistent_budget_rolls_back_when_write_fails(self):
+        with tempfile.TemporaryDirectory() as directory:
+            class FailingLedger(PersistentBudgetLedger):
+                def _persist_usage(self):
+                    raise OSError("disk unavailable")
+
+            ledger = FailingLedger({"teacher": Budget(1.0, 1.0, 1, 1)}, Path(directory) / "budgets.json")
+            with self.assertRaises(OSError):
+                ledger.reserve("teacher", usd=0.25, calls=1)
+            self.assertEqual(ledger.remaining("teacher")["daily_calls"], 1)
+
     def test_audit_redacts_secrets(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "audit.jsonl"
