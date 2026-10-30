@@ -12,6 +12,8 @@ Successful proposals and metadata-only failures are written to the configured
 hash-chained, secret-free audit log. Credentials, request bodies, and proposal
 text are never recorded.
 
-The client requires an explicit `branch_policy_verified=True` preflight result;
-it will not create a proposal based on task approval alone.
+The read-only `GitHubReadOnlyClient.verify_branch_policy()` helper can verify
+pull-request reviews and named required checks. The proposal client still
+requires the resulting `branch_policy_verified=True` preflight result; it will
+not create a proposal based on task approval alone.
 Production merges remain a Principal action outside this adapter.

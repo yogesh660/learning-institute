@@ -89,3 +89,25 @@ class GitHubReadOnlyClient:
             ]
         except (KeyError, ValueError, TypeError) as exc:
             raise GitHubReadError("invalid GitHub directory response") from exc
+
+    def verify_branch_policy(self, branch: str = "main", required_checks: tuple[str, ...] = ()) -> bool:
+        """Read branch protection and verify reviews plus required checks."""
+        clean_branch = branch.strip()
+        if not clean_branch or ".." in clean_branch.split("/"):
+            raise ValueError("branch must remain inside the repository")
+        url = f"https://api.github.com/repos/{self.repository}/branches/{quote(clean_branch, safe='/')}/protection"
+        headers = {"Accept": "application/vnd.github+json", "User-Agent": "learning-institute"}
+        token = os.getenv(self.token_env)
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        status, body = self._transport(url, headers)
+        if status != 200:
+            raise GitHubReadError(f"GitHub branch policy read failed with status {status}")
+        try:
+            policy = json.loads(body)
+            reviews = policy.get("required_pull_request_reviews")
+            checks = policy.get("required_status_checks")
+            contexts = set((checks or {}).get("contexts", []))
+            return bool(reviews and checks and set(required_checks).issubset(contexts))
+        except (AttributeError, TypeError, ValueError) as exc:
+            raise GitHubReadError("invalid GitHub branch policy response") from exc
