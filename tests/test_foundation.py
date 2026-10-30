@@ -175,6 +175,28 @@ class FoundationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             BudgetedProvider(FakeProvider(), ledger, "teacher", PermissionManager(default_policies())).complete(" ")
 
+    def test_provider_cache_avoids_duplicate_budgeted_calls_without_storing_prompt(self):
+        class FakeProvider:
+            name = "fake"
+            model = "test"
+            calls = 0
+
+            def complete(self, prompt):
+                self.calls += 1
+                return f"result:{prompt}"
+
+        fake = FakeProvider()
+        cache = {}
+        ledger = BudgetLedger({"teacher": Budget(1.0, 2.0, 1, 4)})
+        provider = BudgetedProvider(
+            fake, ledger, "teacher", PermissionManager(default_policies()), usd_per_call=0.25, cache=cache
+        )
+        self.assertEqual(provider.complete("same"), "result:same")
+        self.assertEqual(provider.complete("same"), "result:same")
+        self.assertEqual(fake.calls, 1)
+        self.assertEqual(ledger.remaining("teacher")["daily_calls"], 0)
+        self.assertNotIn("same", cache)
+
     def test_provider_audit_records_metadata_without_prompt(self):
         class FakeProvider:
             name = "fake"

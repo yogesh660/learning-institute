@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import hashlib
+from threading import RLock
 from dataclasses import dataclass
-from typing import Protocol
+from typing import MutableMapping, Protocol
 
 from .budgets import BudgetLedger
 from .audit import AuditLog
@@ -64,6 +66,7 @@ class BudgetedProvider:
         usd_per_call: float = 0.0,
         max_prompt_chars: int = 100_000,
         audit_log: AuditLog | None = None,
+        cache: MutableMapping[str, ProviderResponse] | None = None,
     ) -> None:
         self.provider = provider
         self.ledger = ledger
@@ -72,6 +75,12 @@ class BudgetedProvider:
         self.usd_per_call = usd_per_call
         self.max_prompt_chars = max_prompt_chars
         self.audit_log = audit_log
+        self.cache = cache
+        self._cache_lock = RLock()
+
+    def _cache_key(self, prompt: str) -> str:
+        material = f"{self.agent}\x00{self.provider.name}\x00{self.provider.model}\x00{prompt}".encode("utf-8")
+        return hashlib.sha256(material).hexdigest()
 
     def complete(self, prompt: str) -> ProviderResponse:
         if not prompt.strip():
@@ -79,6 +88,23 @@ class BudgetedProvider:
         if len(prompt) > self.max_prompt_chars:
             raise ValueError("prompt exceeds configured character limit")
         self.permissions.require(self.agent, Action.CALL_PROVIDER)
+        cache_key = self._cache_key(prompt) if self.cache is not None else None
+        if cache_key is not None:
+            with self._cache_lock:
+                cached = self.cache.get(cache_key)
+            if cached is not None:
+                if self.audit_log:
+                    self.audit_log.append(
+                        {
+                            "event": "provider_call",
+                            "agent": self.agent,
+                            "provider": self.provider.name,
+                            "model": self.provider.model,
+                            "prompt_chars": len(prompt),
+                            "status": "cache_hit",
+                        }
+                    )
+                return cached
         self.ledger.reserve(self.agent, usd=self.usd_per_call, calls=1)
         try:
             response = self.provider.complete(prompt)
@@ -96,6 +122,9 @@ class BudgetedProvider:
                     }
                 )
             raise
+        if cache_key is not None:
+            with self._cache_lock:
+                self.cache[cache_key] = response
         if self.audit_log:
             self.audit_log.append(
                 {
