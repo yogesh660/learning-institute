@@ -8,5 +8,7 @@ repository only when both conditions hold:
 2. The associated task is in the explicit `approved` state.
 
 The adapter does not merge, create arbitrary commits, or expose credentials.
-Successful proposals are written to the configured secret-free audit log.
+Successful proposals and metadata-only failures are written to the configured
+hash-chained, secret-free audit log. Credentials, request bodies, and proposal
+text are never recorded.
 Production merges remain a Principal action outside this adapter.

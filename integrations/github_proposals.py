@@ -52,6 +52,20 @@ class GitHubProposalClient:
         self.audit_log = audit_log
         self._transport = transport
 
+    def _audit_failure(self, agent: str, task: Task, reason: str, **details: object) -> None:
+        if self.audit_log:
+            self.audit_log.append(
+                {
+                    "event": "github_pull_request_proposal",
+                    "status": "failed",
+                    "reason": reason,
+                    "agent": agent,
+                    "task_id": task.id,
+                    "repository": self.repository,
+                    **details,
+                }
+            )
+
     def create_pull_request(
         self,
         agent: str,
@@ -79,11 +93,17 @@ class GitHubProposalClient:
         }
         token = os.getenv(self.token_env)
         if not token:
+            self._audit_failure(agent, task, "missing_credential")
             raise GitHubProposalError("missing GitHub credential")
         headers["Authorization"] = f"Bearer {token}"
         url = f"https://api.github.com/repos/{quote(self.repository, safe='/')}/pulls"
-        status, response_body = self._transport("POST", url, headers, payload)
+        try:
+            status, response_body = self._transport("POST", url, headers, payload)
+        except Exception as exc:
+            self._audit_failure(agent, task, "transport_error", error_type=type(exc).__name__)
+            raise
         if status not in {201}:
+            self._audit_failure(agent, task, "github_rejected", http_status=status)
             raise GitHubProposalError(f"GitHub pull-request proposal failed with status {status}")
         try:
             response = json.loads(response_body)
@@ -100,4 +120,5 @@ class GitHubProposalClient:
                 )
             return result
         except (KeyError, ValueError, TypeError) as exc:
+            self._audit_failure(agent, task, "invalid_response", error_type=type(exc).__name__)
             raise GitHubProposalError("invalid GitHub pull-request response") from exc

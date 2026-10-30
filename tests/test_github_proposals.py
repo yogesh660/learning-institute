@@ -46,6 +46,43 @@ class GitHubProposalTests(unittest.TestCase):
 
     def test_missing_credential_fails_closed(self):
         os.environ.pop("TEST_GITHUB_TOKEN", None)
+        with tempfile.TemporaryDirectory() as directory:
+            audit_path = Path(directory) / "audit.jsonl"
+            client = GitHubProposalClient(
+                permissions=PermissionManager(default_policies()),
+                token_env="TEST_GITHUB_TOKEN",
+                audit_log=AuditLog(audit_path),
+                transport=lambda *args: (201, b"{}"),
+            )
+            task = Task("curriculum-review")
+            task.transition(TaskStatus.RUNNING)
+            task.transition(TaskStatus.REVIEW_REQUIRED)
+            task.approve("principal-1", "Reviewed the evidence.")
+            with self.assertRaises(GitHubProposalError):
+                client.create_pull_request("software_engineer", task=task, title="x", body="y", head="agent/x")
+            record = json.loads(audit_path.read_text(encoding="utf-8"))
+            self.assertEqual(record["reason"], "missing_credential")
+            self.assertNotIn("Authorization", record)
+
+    def test_rejected_response_is_audited_without_request_content(self):
+        os.environ["TEST_GITHUB_TOKEN"] = "test-token"
+        with tempfile.TemporaryDirectory() as directory:
+            audit_path = Path(directory) / "audit.jsonl"
+            client = GitHubProposalClient(
+                permissions=PermissionManager(default_policies()),
+                token_env="TEST_GITHUB_TOKEN",
+                audit_log=AuditLog(audit_path),
+                transport=lambda *args: (422, b"rejected"),
+            )
+            task = Task("curriculum-review")
+            task.transition(TaskStatus.RUNNING)
+            task.transition(TaskStatus.REVIEW_REQUIRED)
+            task.approve("principal-1", "Reviewed the evidence.")
+            with self.assertRaises(GitHubProposalError):
+                client.create_pull_request("software_engineer", task=task, title="private title", body="private body", head="agent/x")
+            record = json.loads(audit_path.read_text(encoding="utf-8"))
+            self.assertEqual(record["http_status"], 422)
+            self.assertNotIn("private title", record)
         client = GitHubProposalClient(
             permissions=PermissionManager(default_policies()), token_env="TEST_GITHUB_TOKEN", transport=lambda *args: (201, b"{}")
         )
