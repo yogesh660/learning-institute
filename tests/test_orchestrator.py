@@ -2,6 +2,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from agent_foundation.audit import AuditLog
 
 from orchestrator.state import Task, TaskStatus
 from orchestrator.store import TaskStore
@@ -20,6 +21,17 @@ class OrchestratorTests(unittest.TestCase):
             loaded = store.get(task.id)
             self.assertEqual(loaded.id, task.id)
             self.assertEqual(loaded.status, TaskStatus.CREATED)
+
+    def test_store_can_audit_task_transitions_without_payload(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            audit = root / "audit.jsonl"
+            store = TaskStore(root / "tasks.json", AuditLog(audit))
+            task = store.save(Task(kind="curriculum-review", payload={"api_key": "must-not-log"}))
+            record = audit.read_text(encoding="utf-8")
+            self.assertIn(task.id, record)
+            self.assertNotIn("must-not-log", record)
+            self.assertNotIn('"payload"', record)
 
     def test_curriculum_review_pauses_for_approval(self):
         with tempfile.TemporaryDirectory() as directory:

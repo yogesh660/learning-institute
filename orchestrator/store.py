@@ -7,12 +7,14 @@ import os
 import tempfile
 from pathlib import Path
 
+from agent_foundation.audit import AuditLog
 from .state import Task
 
 
 class TaskStore:
-    def __init__(self, path: str | Path) -> None:
+    def __init__(self, path: str | Path, audit_log: AuditLog | None = None) -> None:
         self.path = Path(path)
+        self.audit_log = audit_log
 
     def _read(self) -> dict[str, dict]:
         if not self.path.exists():
@@ -37,6 +39,15 @@ class TaskStore:
         tasks = self._read()
         tasks[task.id] = task.to_dict()
         self._write(tasks)
+        if self.audit_log:
+            self.audit_log.append(
+                {
+                    "event": "task_saved",
+                    "task_id": task.id,
+                    "kind": task.kind,
+                    "status": task.status.value,
+                }
+            )
         return task
 
     def get(self, task_id: str) -> Task:
