@@ -12,6 +12,7 @@ from agents.qa import QAEngineerAgent
 from agents.researcher import ResearcherAgent
 from agents.teacher import TeacherAgent
 from .state import Task, TaskStatus
+from .router import TaskRouter
 
 
 class CurriculumReviewWorkflow:
@@ -43,6 +44,7 @@ class CurriculumReviewWorkflow:
         research_path = root / "reports" / "research.json"
         research = ResearcherAgent().read_report(research_path) if research_path.exists() else None
         task.result = {
+            "assigned_agents": TaskRouter().agents_for(task.kind),
             "evidence_file": str(report_path),
             "evidence_sha256": {"curriculum": self._sha256(report_path)},
             "summary": {
