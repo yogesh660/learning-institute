@@ -34,7 +34,7 @@ class GitHubReadOnlyClient:
         self,
         repository: str = "yogesh660/ml-model-zoo",
         *,
-        token_env: str = "GITHUB_TOKEN",
+        token_env: str = "ACADEMY_GITHUB_TOKEN",
         transport: Transport = _default_transport,
         credentials: CredentialManager | None = None,
     ) -> None:
