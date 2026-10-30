@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from .budgets import BudgetLedger
+from .audit import AuditLog
 from .permissions import Action, PermissionManager
 
 
@@ -62,6 +63,7 @@ class BudgetedProvider:
         permissions: PermissionManager,
         usd_per_call: float = 0.0,
         max_prompt_chars: int = 100_000,
+        audit_log: AuditLog | None = None,
     ) -> None:
         self.provider = provider
         self.ledger = ledger
@@ -69,6 +71,7 @@ class BudgetedProvider:
         self.permissions = permissions
         self.usd_per_call = usd_per_call
         self.max_prompt_chars = max_prompt_chars
+        self.audit_log = audit_log
 
     def complete(self, prompt: str) -> ProviderResponse:
         if not prompt.strip():
@@ -77,4 +80,31 @@ class BudgetedProvider:
             raise ValueError("prompt exceeds configured character limit")
         self.permissions.require(self.agent, Action.CALL_PROVIDER)
         self.ledger.reserve(self.agent, usd=self.usd_per_call, calls=1)
-        return self.provider.complete(prompt)
+        try:
+            response = self.provider.complete(prompt)
+        except Exception as exc:
+            if self.audit_log:
+                self.audit_log.append(
+                    {
+                        "event": "provider_call",
+                        "agent": self.agent,
+                        "provider": self.provider.name,
+                        "model": self.provider.model,
+                        "prompt_chars": len(prompt),
+                        "status": "failed",
+                        "error_type": type(exc).__name__,
+                    }
+                )
+            raise
+        if self.audit_log:
+            self.audit_log.append(
+                {
+                    "event": "provider_call",
+                    "agent": self.agent,
+                    "provider": self.provider.name,
+                    "model": self.provider.model,
+                    "prompt_chars": len(prompt),
+                    "status": "completed",
+                }
+            )
+        return response

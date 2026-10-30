@@ -143,6 +143,46 @@ class FoundationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             BudgetedProvider(FakeProvider(), ledger, "teacher", PermissionManager(default_policies())).complete(" ")
 
+    def test_provider_audit_records_metadata_without_prompt(self):
+        class FakeProvider:
+            name = "fake"
+            model = "test"
+
+            def complete(self, prompt):
+                return "ok"
+
+        with tempfile.TemporaryDirectory() as directory:
+            audit_path = Path(directory) / "audit.jsonl"
+            ledger = BudgetLedger({"teacher": Budget(1.0, 2.0, 2, 4)})
+            provider = BudgetedProvider(
+                FakeProvider(), ledger, "teacher", PermissionManager(default_policies()), audit_log=AuditLog(audit_path)
+            )
+            provider.complete("private prompt that must not be persisted")
+            record = json.loads(audit_path.read_text(encoding="utf-8"))
+            self.assertEqual(record["status"], "completed")
+            self.assertEqual(record["prompt_chars"], 41)
+            self.assertNotIn("private prompt", record)
+
+    def test_failed_provider_call_is_audited_and_re_raised(self):
+        class FailingProvider:
+            name = "fake"
+            model = "test"
+
+            def complete(self, prompt):
+                raise RuntimeError("provider unavailable")
+
+        with tempfile.TemporaryDirectory() as directory:
+            audit_path = Path(directory) / "audit.jsonl"
+            ledger = BudgetLedger({"teacher": Budget(1.0, 2.0, 2, 4)})
+            provider = BudgetedProvider(
+                FailingProvider(), ledger, "teacher", PermissionManager(default_policies()), audit_log=AuditLog(audit_path)
+            )
+            with self.assertRaises(RuntimeError):
+                provider.complete("x")
+            record = json.loads(audit_path.read_text(encoding="utf-8"))
+            self.assertEqual(record["status"], "failed")
+            self.assertEqual(record["error_type"], "RuntimeError")
+
     def test_agent_registry_exposes_policy(self):
         registry = AgentRegistry()
         self.assertIn("teacher", registry.names())

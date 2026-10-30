@@ -9,6 +9,8 @@
 - GitHub pull-request proposals require both an allowed agent and an
   `approved` task.
 - The default AI provider is disabled; no provider call happens implicitly.
+- Configured provider calls can emit hash-chained, metadata-only audit events;
+  prompts and provider responses are never recorded by the boundary.
 - Student events must use pseudonymous `anon_...` keys and cannot contain
   direct identifiers, raw answers, or free-form personal data.
 - Retention windows are explicit; no automatic deletion is performed.
