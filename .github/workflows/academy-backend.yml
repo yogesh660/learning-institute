@@ -20,8 +20,16 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Generate backend health report
         run: python -m orchestrator.main health --output backend-health.json
+      - name: Generate read-only curriculum review
+        shell: bash
+        run: |
+          task_json=$(python -m orchestrator.main create --store /tmp/academy-tasks.json --subject ci-agent --role agent)
+          task_id=$(python -c 'import json,sys; print(json.load(sys.stdin)["id"])' <<< "$task_json")
+          python -m orchestrator.main run "$task_id" --store /tmp/academy-tasks.json --repo-root . --subject ci-agent --role agent --output curriculum-review.json
       - name: Upload health report
         uses: actions/upload-artifact@v4
         with:
           name: academy-backend-health
-          path: backend-health.json
+          path: |
+            backend-health.json
+            curriculum-review.json
