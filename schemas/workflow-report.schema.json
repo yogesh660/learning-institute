@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AcademyWorkflowReport",
+  "type": "object",
+  "required": ["kind", "id", "status", "result", "history"],
+  "properties": {
+    "kind": {"type": "string"},
+    "id": {"type": "string"},
+    "status": {"enum": ["created", "running", "review_required", "approved", "completed", "failed"]},
+    "result": {"type": ["object", "null"]},
+    "history": {"type": "array"}
+  },
+  "additionalProperties": false
+}

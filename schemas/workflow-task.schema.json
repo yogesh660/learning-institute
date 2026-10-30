@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AcademyWorkflowTask",
+  "type": "object",
+  "required": ["kind", "id", "status", "payload", "history"],
+  "properties": {
+    "kind": {"type": "string", "const": "curriculum-review"},
+    "id": {"type": "string", "pattern": "^task-[A-Za-z0-9]+$"},
+    "status": {"enum": ["created", "running", "review_required", "approved", "completed", "failed"]},
+    "payload": {"type": "object"},
+    "result": {"type": ["object", "null"]},
+    "history": {"type": "array", "items": {"type": "object", "required": ["status", "at"]}}
+  },
+  "additionalProperties": false
+}
