@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import StrEnum
@@ -42,6 +44,7 @@ class Task:
     result: dict[str, Any] | None = None
     approved_by: str | None = None
     approval_reason: str | None = None
+    approved_fingerprint: str | None = None
     completed_by: str | None = None
     history: list[dict[str, str]] = field(default_factory=list)
 
@@ -61,6 +64,17 @@ class Task:
         data = asdict(self)
         data["status"] = self.status.value
         return data
+
+    def content_fingerprint(self) -> str:
+        """Stable digest of the task content that Principal approval covers."""
+        content = {
+            "kind": self.kind,
+            "payload": self.payload,
+            "dedupe_key": self.dedupe_key,
+            "result": self.result,
+        }
+        encoded = json.dumps(content, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        return hashlib.sha256(encoded).hexdigest()
 
     def summary(self) -> dict[str, Any]:
         return {
@@ -84,6 +98,7 @@ class Task:
             result=data.get("result"),
             approved_by=data.get("approved_by"),
             approval_reason=data.get("approval_reason"),
+            approved_fingerprint=data.get("approved_fingerprint"),
             completed_by=data.get("completed_by"),
             history=data.get("history", []),
         )

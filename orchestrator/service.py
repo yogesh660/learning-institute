@@ -50,11 +50,14 @@ class AcademyService:
         task.transition(TaskStatus.APPROVED)
         task.approved_by = identity.subject
         task.approval_reason = reason.strip()
+        task.approved_fingerprint = task.content_fingerprint()
         return self.store.save(task)
 
     def complete(self, identity: Identity, task_id: str) -> Task:
         self._require(identity, "approve_production")
         task = self.store.get(task_id)
+        if task.approved_fingerprint != task.content_fingerprint():
+            raise ValueError("task content changed after Principal approval")
         task.transition(TaskStatus.COMPLETED)
         task.completed_by = identity.subject
         return self.store.save(task)

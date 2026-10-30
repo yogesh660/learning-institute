@@ -67,6 +67,21 @@ class ServiceTests(unittest.TestCase):
             with self.assertRaises(AuthorizationDenied):
                 service.create_curriculum_review(Identity("student-1", Role.STUDENT))
 
+    def test_completion_rejects_content_changed_after_approval(self):
+        with tempfile.TemporaryDirectory() as directory:
+            service = AcademyService(TaskStore(Path(directory) / "tasks.json"))
+            agent = Identity("agent-1", Role.AGENT)
+            principal = Identity("principal-1", Role.PRINCIPAL)
+            task = service.create_curriculum_review(agent)
+            task.transition(TaskStatus.RUNNING)
+            task.transition(TaskStatus.REVIEW_REQUIRED)
+            service.store.save(task)
+            approved = service.approve(principal, task.id, "Approved the reviewed evidence.")
+            approved.payload["tampered"] = True
+            service.store.save(approved)
+            with self.assertRaises(ValueError):
+                service.complete(principal, task.id)
+
 
 if __name__ == "__main__":
     unittest.main()

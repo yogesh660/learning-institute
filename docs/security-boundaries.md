@@ -6,6 +6,8 @@
 - Agent actions are least-privilege and fail closed.
 - CLI task operations require an explicit identity and role.
 - Only Principal identities can approve or complete production-bound tasks.
+- Principal approval is bound to a canonical task-content fingerprint; changing
+  the payload or result after approval blocks completion.
 - GitHub pull-request proposals require both an allowed agent and an
   `approved` task.
 - The default AI provider is disabled; no provider call happens implicitly.

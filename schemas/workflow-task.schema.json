@@ -12,6 +12,7 @@
     "result": {"type": ["object", "null"]},
     "approved_by": {"type": ["string", "null"]},
     "approval_reason": {"type": ["string", "null"]},
+    "approved_fingerprint": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
     "completed_by": {"type": ["string", "null"]},
     "history": {"type": "array", "items": {"type": "object", "required": ["status", "at"]}}
   },
