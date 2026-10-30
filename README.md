@@ -49,6 +49,7 @@ python -m unittest discover -s tests -v
 python3 scripts/dev/check.py overflow concepts/<lesson-id>
 node scripts/dev/quiz-check.js --hard
 python -m orchestrator.main health
+python scripts/academy/secret-scan.py .
 ```
 
 The validation workflows run the Python backend suite, rebuild the imported static tree, run curriculum/QA checks, and publish a backend health artifact. The Academy backend defaults to no provider calls and requires explicit Principal approval before a GitHub pull-request proposal.
