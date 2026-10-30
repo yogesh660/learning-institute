@@ -159,6 +159,19 @@ class FoundationTests(unittest.TestCase):
         with self.assertRaises(ProviderUnavailable):
             router.for_task("unknown-task")
 
+    def test_provider_route_denials_are_audited_without_configuration_details(self):
+        with tempfile.TemporaryDirectory() as directory:
+            audit_path = Path(directory) / "audit.jsonl"
+            router = ProviderRouter(
+                {}, {"curriculum-review": "missing"}, audit_log=AuditLog(audit_path)
+            )
+            with self.assertRaises(ProviderUnavailable):
+                router.for_task("curriculum-review")
+            record = json.loads(audit_path.read_text(encoding="utf-8"))
+            self.assertEqual(record["event"], "provider_route_denied")
+            self.assertEqual(record["reason"], "provider_unavailable")
+            self.assertNotIn("provider", record)
+
     def test_allowed_provider_call_consumes_budget(self):
         class FakeProvider:
             name = "fake"

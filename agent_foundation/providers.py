@@ -43,13 +43,22 @@ class DisabledProvider:
 class ProviderRouter:
     """Resolve an explicitly configured provider route; never fall back silently."""
 
-    def __init__(self, providers: dict[str, Provider], routes: dict[str, str]) -> None:
+    def __init__(self, providers: dict[str, Provider], routes: dict[str, str], audit_log: AuditLog | None = None) -> None:
         self.providers = providers
         self.routes = routes
+        self.audit_log = audit_log
 
     def for_task(self, task_kind: str) -> Provider:
         provider_name = self.routes.get(task_kind)
         if provider_name is None or provider_name not in self.providers:
+            if self.audit_log:
+                self.audit_log.append(
+                    {
+                        "event": "provider_route_denied",
+                        "task_kind": task_kind,
+                        "reason": "unconfigured_route" if provider_name is None else "provider_unavailable",
+                    }
+                )
             raise ProviderUnavailable(f"no approved provider route for {task_kind}")
         return self.providers[provider_name]
 
