@@ -1,10 +1,8 @@
-# Builds every page from content/ and publishes the site to GitHub Pages.
-# Served at https://yogesh660.github.io/ml-model-zoo/
+# Manual-only compatibility workflow. The public learning site is hosted by
+# ml-model-zoo; learning-institute is the private operations repository.
 name: Pages
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
