@@ -19,7 +19,7 @@ jobs:
           node scripts/academy/curriculum-audit.js /tmp/phase-2-curriculum-audit.json --strict
           node scripts/academy/qa-report.js /tmp/phase-3-qa-report.json --strict
           node scripts/academy/analytics-report.js /tmp/phase-5-analytics-report.json
-          node scripts/academy/status.js /tmp/phase-6-status.json
+          ACADEMY_EVIDENCE_DIR=/tmp node scripts/academy/status.js /tmp/phase-6-status.json
       - name: Upload status snapshot
         uses: actions/upload-artifact@v4
         with:

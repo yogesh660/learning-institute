@@ -1213,6 +1213,16 @@
       ]
     }
   },
+  "taskQueue": {
+    "available": false,
+    "total": 0,
+    "byStatus": {}
+  },
+  "agentOperations": {
+    "providerCallsEnabled": false,
+    "productionMergeEnabled": false,
+    "payloadsIncluded": false
+  },
   "deployment": {
     "branch": "main",
     "pagesEnabled": false,
@@ -1223,4 +1233,3 @@
     "studentDataFeaturesRequirePrivacyReview": true
   }
 }
-
