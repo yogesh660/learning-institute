@@ -47,6 +47,9 @@ class Task:
     kind: str
     payload: dict[str, Any] = field(default_factory=dict)
     dedupe_key: str | None = None
+    requested_by: str | None = None
+    priority: int = 0
+    acceptance_criteria: list[str] = field(default_factory=list)
     revision: int = 0
     id: str = field(default_factory=lambda: f"task-{uuid4().hex[:12]}")
     status: TaskStatus = TaskStatus.CREATED
@@ -60,6 +63,14 @@ class Task:
     def __post_init__(self) -> None:
         if self.dedupe_key is not None and not self.dedupe_key.strip():
             raise ValueError("dedupe_key must not be blank")
+        if self.requested_by is not None and (not isinstance(self.requested_by, str) or not self.requested_by.strip()):
+            raise ValueError("requested_by must not be blank")
+        if not isinstance(self.priority, int) or not 0 <= self.priority <= 100:
+            raise ValueError("priority must be an integer from 0 to 100")
+        if not isinstance(self.acceptance_criteria, list) or any(
+            not isinstance(item, str) or not item.strip() for item in self.acceptance_criteria
+        ):
+            raise ValueError("acceptance_criteria must contain non-blank strings")
         if not self.history:
             self.history.append({"status": self.status.value, "at": utc_now()})
 
@@ -96,6 +107,9 @@ class Task:
             "kind": self.kind,
             "payload": self.payload,
             "dedupe_key": self.dedupe_key,
+            "requested_by": self.requested_by,
+            "priority": self.priority,
+            "acceptance_criteria": self.acceptance_criteria,
             "result": self.result,
         }
         encoded = json.dumps(content, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -118,6 +132,9 @@ class Task:
             kind=data["kind"],
             payload=data.get("payload", {}),
             dedupe_key=data.get("dedupe_key"),
+            requested_by=data.get("requested_by"),
+            priority=data.get("priority", 0),
+            acceptance_criteria=data.get("acceptance_criteria", []),
             revision=data.get("revision", 0),
             id=data["id"],
             status=TaskStatus(data.get("status", TaskStatus.CREATED)),

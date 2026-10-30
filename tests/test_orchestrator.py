@@ -19,6 +19,21 @@ class OrchestratorTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             Task(kind="curriculum-review").transition(TaskStatus.COMPLETED)
 
+    def test_task_governance_metadata_is_validated_and_fingerprinted(self):
+        task = Task(
+            kind="curriculum-review",
+            requested_by="principal-1",
+            priority=80,
+            acceptance_criteria=["review report", "preserve production content"],
+        )
+        fingerprint = task.content_fingerprint()
+        task.priority = 81
+        self.assertNotEqual(task.content_fingerprint(), fingerprint)
+        with self.assertRaises(ValueError):
+            Task(kind="curriculum-review", priority=101)
+        with self.assertRaises(ValueError):
+            Task(kind="curriculum-review", acceptance_criteria=[""])
+
     def test_approval_requires_explicit_approval_operation(self):
         task = Task(kind="curriculum-review")
         task.transition(TaskStatus.RUNNING)
