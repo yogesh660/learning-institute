@@ -135,6 +135,10 @@ class FoundationTests(unittest.TestCase):
             manager.require("software_engineer", Action.MERGE_PULL_REQUEST)
         with self.assertRaises(PermissionDenied):
             manager.require("unknown-agent", Action.READ_PUBLIC_REPO)
+        with self.assertRaises(PermissionDenied):
+            manager.require([], Action.READ_PUBLIC_REPO)
+        with self.assertRaises(PermissionDenied):
+            manager.require("teacher", "read_public_repo")
 
     def test_provider_boundary_fails_closed(self):
         with self.assertRaises(ProviderUnavailable):

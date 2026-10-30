@@ -33,6 +33,8 @@ class PermissionManager:
         self._policies = policies
 
     def require(self, agent: str, action: Action) -> None:
+        if not isinstance(agent, str) or not agent.strip() or not isinstance(action, Action):
+            raise PermissionDenied("invalid agent or action")
         policy = self._policies.get(agent)
         if policy is None or not policy.allows(action):
             raise PermissionDenied(f"{agent} is not allowed to {action.value}")
