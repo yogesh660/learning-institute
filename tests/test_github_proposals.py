@@ -3,7 +3,8 @@ import os
 import unittest
 
 from agent_foundation.permissions import PermissionManager, default_policies
-from integrations.github_proposals import GitHubProposalClient, GitHubProposalError
+from integrations.github_proposals import ApprovalRequired, GitHubProposalClient, GitHubProposalError
+from orchestrator.state import Task, TaskStatus
 
 
 class GitHubProposalTests(unittest.TestCase):
@@ -22,9 +23,15 @@ class GitHubProposalTests(unittest.TestCase):
                 token_env="TEST_GITHUB_TOKEN",
                 transport=transport,
             )
+            task = Task("curriculum-review")
+            with self.assertRaises(ApprovalRequired):
+                client.create_pull_request("software_engineer", task=task, title="x", body="y", head="agent/x")
+            task.transition(TaskStatus.RUNNING)
+            task.transition(TaskStatus.REVIEW_REQUIRED)
+            task.transition(TaskStatus.APPROVED)
             with self.assertRaises(Exception):
-                client.create_pull_request("teacher", title="x", body="y", head="agent/x")
-            result = client.create_pull_request("software_engineer", title="x", body="y", head="agent/x")
+                client.create_pull_request("teacher", task=task, title="x", body="y", head="agent/x")
+            result = client.create_pull_request("software_engineer", task=task, title="x", body="y", head="agent/x")
             self.assertEqual(result["number"], 7)
             self.assertEqual(calls[0][0], "POST")
         finally:
@@ -38,8 +45,12 @@ class GitHubProposalTests(unittest.TestCase):
         client = GitHubProposalClient(
             permissions=PermissionManager(default_policies()), token_env="TEST_GITHUB_TOKEN", transport=lambda *args: (201, b"{}")
         )
+        task = Task("curriculum-review")
+        task.transition(TaskStatus.RUNNING)
+        task.transition(TaskStatus.REVIEW_REQUIRED)
+        task.transition(TaskStatus.APPROVED)
         with self.assertRaises(GitHubProposalError):
-            client.create_pull_request("software_engineer", title="x", body="y", head="agent/x")
+            client.create_pull_request("software_engineer", task=task, title="x", body="y", head="agent/x")
 
 
 if __name__ == "__main__":

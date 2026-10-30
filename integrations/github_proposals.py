@@ -13,10 +13,15 @@ from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 from agent_foundation.permissions import Action, PermissionManager
+from orchestrator.state import Task, TaskStatus
 
 
 class GitHubProposalError(RuntimeError):
     """Raised when GitHub rejects a proposal request."""
+
+
+class ApprovalRequired(GitHubProposalError):
+    """Raised when a proposal task has not received Principal approval."""
 
 
 Transport = Callable[[str, str, dict[str, str], bytes], tuple[int, bytes]]
@@ -44,8 +49,19 @@ class GitHubProposalClient:
         self.permissions = permissions
         self._transport = transport
 
-    def create_pull_request(self, agent: str, *, title: str, body: str, head: str, base: str = "main") -> dict:
+    def create_pull_request(
+        self,
+        agent: str,
+        *,
+        task: Task,
+        title: str,
+        body: str,
+        head: str,
+        base: str = "main",
+    ) -> dict:
         self.permissions.require(agent, Action.CREATE_PULL_REQUEST)
+        if task.status is not TaskStatus.APPROVED:
+            raise ApprovalRequired(f"task {task.id} is not approved")
         if not title.strip() or not head.strip() or not base.strip():
             raise ValueError("title, head, and base are required")
         payload = json.dumps({"title": title, "body": body, "head": head, "base": base}).encode("utf-8")
