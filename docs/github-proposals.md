@@ -13,7 +13,8 @@ hash-chained, secret-free audit log. Credentials, request bodies, and proposal
 text are never recorded.
 
 The read-only `GitHubReadOnlyClient.verify_branch_policy()` helper can verify
-pull-request reviews and named required checks. The proposal client still
-requires the resulting `branch_policy_verified=True` preflight result; it will
-not create a proposal based on task approval alone.
+pull-request reviews and named required checks. The proposal client accepts a
+live `branch_policy_check` callback (preferred) or an explicit
+`branch_policy_verified=True` preflight result; it will not create a proposal
+based on task approval alone.
 Production merges remain a Principal action outside this adapter.

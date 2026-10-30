@@ -99,6 +99,21 @@ class GitHubProposalTests(unittest.TestCase):
         )
         with self.assertRaises(BranchProtectionRequired):
             client.create_pull_request("software_engineer", task=task, title="x", body="y", head="agent/x")
+
+    def test_live_branch_policy_check_is_evaluated_at_proposal_time(self):
+        task = Task("curriculum-review")
+        task.transition(TaskStatus.RUNNING)
+        task.transition(TaskStatus.REVIEW_REQUIRED)
+        task.approve("principal-1", "Reviewed the evidence.")
+        state = {"verified": True}
+        client = GitHubProposalClient(
+            permissions=PermissionManager(default_policies()),
+            token_env="TEST_GITHUB_TOKEN",
+            branch_policy_check=lambda: state["verified"],
+        )
+        state["verified"] = False
+        with self.assertRaises(BranchProtectionRequired):
+            client.create_pull_request("software_engineer", task=task, title="x", body="y", head="agent/x")
         client = GitHubProposalClient(
             permissions=PermissionManager(default_policies()), token_env="TEST_GITHUB_TOKEN", transport=lambda *args: (201, b"{}")
         )

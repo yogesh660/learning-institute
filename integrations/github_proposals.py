@@ -48,6 +48,7 @@ class GitHubProposalClient:
         audit_log: AuditLog | None = None,
         transport: Transport = _default_transport,
         branch_policy_verified: bool = False,
+        branch_policy_check: Callable[[], bool] | None = None,
     ) -> None:
         if repository.count("/") != 1:
             raise ValueError("repository must be owner/name")
@@ -57,6 +58,7 @@ class GitHubProposalClient:
         self.audit_log = audit_log
         self._transport = transport
         self.branch_policy_verified = branch_policy_verified
+        self.branch_policy_check = branch_policy_check
 
     def _audit_failure(self, agent: str, task: Task, reason: str, **details: object) -> None:
         if self.audit_log:
@@ -83,7 +85,8 @@ class GitHubProposalClient:
         base: str = "main",
     ) -> dict:
         self.permissions.require(agent, Action.CREATE_PULL_REQUEST)
-        if not self.branch_policy_verified:
+        policy_verified = self.branch_policy_check() if self.branch_policy_check is not None else self.branch_policy_verified
+        if not policy_verified:
             self._audit_failure(agent, task, "branch_policy_unverified")
             raise BranchProtectionRequired("branch protection and required checks must be verified")
         if task.status is not TaskStatus.APPROVED:
