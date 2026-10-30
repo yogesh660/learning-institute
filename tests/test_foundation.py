@@ -61,6 +61,9 @@ class FoundationTests(unittest.TestCase):
             AuditLog(path).append({"event": "test", "api_key": "do-not-write"})
             record = json.loads(path.read_text(encoding="utf-8"))
             self.assertEqual(record["api_key"], "[REDACTED]")
+            AuditLog(path).append({"event": "embedded", "message": "ghp_123456789012345678901234567890"})
+            embedded = json.loads(path.read_text(encoding="utf-8").splitlines()[-1])
+            self.assertNotIn("ghp_", embedded["message"])
 
     def test_audit_serializes_concurrent_appends(self):
         with tempfile.TemporaryDirectory() as directory:
