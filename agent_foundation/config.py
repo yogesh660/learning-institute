@@ -20,8 +20,13 @@ class ProviderConfig:
 @dataclass(frozen=True)
 class AcademyConfig:
     github_repository: str = "yogesh660/learning-institute"
+    source_repository: str = "yogesh660/ml-model-zoo"
     github_token_env: str = "GITHUB_TOKEN"
     max_retries: int = 2
+
+    @property
+    def operations_repository(self) -> str:
+        return self.github_repository
 
     def github_token(self) -> str:
         value = os.getenv(self.github_token_env, "")
