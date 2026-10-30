@@ -1,6 +1,7 @@
 import json
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
@@ -33,6 +34,14 @@ class FoundationTests(unittest.TestCase):
         self.assertEqual(ledger.remaining("teacher")["daily_calls"], 1)
         with self.assertRaises(BudgetExceeded):
             ledger.reserve("teacher", usd=0.6, calls=2)
+
+    def test_budget_periods_reset(self):
+        current = [datetime(2026, 1, 31, tzinfo=timezone.utc)]
+        ledger = BudgetLedger({"teacher": Budget(1.0, 2.0, 2, 4)}, clock=lambda: current[0])
+        ledger.reserve("teacher", usd=1.0, calls=2)
+        current[0] = datetime(2026, 2, 1, tzinfo=timezone.utc)
+        self.assertEqual(ledger.remaining("teacher")["daily_calls"], 2)
+        self.assertEqual(ledger.remaining("teacher")["monthly_calls"], 4)
 
     def test_audit_redacts_secrets(self):
         with tempfile.TemporaryDirectory() as directory:
