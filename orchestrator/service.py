@@ -92,6 +92,13 @@ class AcademyService:
         result = CurriculumReviewWorkflow().run(task, repo_root)
         return self.store.save(result)
 
+    def queue(self, identity: Identity, task_id: str) -> Task:
+        """Move a newly created task into the governed execution queue."""
+        self._require(identity, "prepare_proposal")
+        task = self.store.get(task_id)
+        task.transition(TaskStatus.QUEUED)
+        return self.store.save(task)
+
     def approve(self, identity: Identity, task_id: str, reason: str) -> Task:
         self._require(identity, "approve_production")
         if not reason.strip():

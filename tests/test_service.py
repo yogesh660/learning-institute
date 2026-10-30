@@ -32,6 +32,14 @@ class ServiceTests(unittest.TestCase):
             completed = service.complete(principal, task.id)
             self.assertEqual(completed.completed_by, "principal-1")
 
+    def test_authorized_agent_can_queue_created_task(self):
+        with tempfile.TemporaryDirectory() as directory:
+            service = AcademyService(TaskStore(Path(directory) / "tasks.json"))
+            agent = Identity("agent-1", Role.AGENT)
+            task = service.create_curriculum_review(agent)
+            queued = service.queue(agent, task.id)
+            self.assertEqual(queued.status, TaskStatus.QUEUED)
+
     def test_anonymous_cannot_create_task(self):
         with tempfile.TemporaryDirectory() as directory:
             audit = AuditLog(Path(directory) / "audit.jsonl")
