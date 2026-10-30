@@ -16,11 +16,12 @@ from pathlib import Path
 from .state import Task, TaskStatus
 from .store import TaskStore
 from .workflow import CurriculumReviewWorkflow
+from .health import collect_health
 
 
 def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Learning Institute workflow runner")
-    p.add_argument("command", choices=("create", "run", "approve", "complete", "status"))
+    p.add_argument("command", choices=("create", "run", "approve", "complete", "status", "health"))
     p.add_argument("task_id", nargs="?")
     p.add_argument("--store", default=".academy/tasks.json")
     p.add_argument("--repo-root", default=".")
@@ -31,6 +32,14 @@ def parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
     store = TaskStore(args.store)
+    if args.command == "health":
+        rendered = json.dumps(collect_health().to_dict(), indent=2)
+        if args.output:
+            output = Path(args.output)
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(rendered + "\n", encoding="utf-8")
+        print(rendered)
+        return 0
     if args.command == "create":
         task = store.save(Task(kind=CurriculumReviewWorkflow.kind))
     else:
