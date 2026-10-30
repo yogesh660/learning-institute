@@ -4,6 +4,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const ROOT = path.resolve(__dirname, '../..');
 const EVIDENCE_ROOT = process.env.ACADEMY_EVIDENCE_DIR
   ? path.resolve(process.env.ACADEMY_EVIDENCE_DIR)
@@ -46,10 +47,30 @@ if (process.env.ACADEMY_AUDIT_LOG) {
   if (fs.existsSync(auditPath)) {
     const lines = fs.readFileSync(auditPath, 'utf8').split(/\r?\n/).filter(Boolean);
     audit = { available: true, valid: true, entries: lines.length };
+    let previous = '0'.repeat(64);
     for (const line of lines) {
-      try { JSON.parse(line); } catch { audit.valid = false; }
+      try {
+        const record = JSON.parse(line);
+        if (!('_hash' in record) || !('_prev_hash' in record)) {
+          previous = crypto.createHash('sha256').update(line, 'utf8').digest('hex');
+          continue;
+        }
+        const unsigned = Object.fromEntries(Object.entries(record).filter(([key]) => key !== '_hash'));
+        const canonical = JSON.stringify(sortKeys(unsigned));
+        const digest = crypto.createHash('sha256').update(canonical, 'utf8').digest('hex');
+        if (record._prev_hash !== previous || record._hash !== digest) audit.valid = false;
+        previous = record._hash;
+      } catch { audit.valid = false; }
     }
   }
+}
+
+function sortKeys(value) {
+  if (Array.isArray(value)) return value.map(sortKeys);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.keys(value).sort().map(key => [key, sortKeys(value[key])]));
+  }
+  return value;
 }
 const snapshot = {
   phase: 6,
