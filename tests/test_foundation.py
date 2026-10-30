@@ -98,6 +98,20 @@ class FoundationTests(unittest.TestCase):
         with self.assertRaises(PermissionDenied):
             BudgetedProvider(FakeProvider(), ledger, "curriculum_designer", PermissionManager(default_policies())).complete("x")
 
+    def test_allowed_provider_call_consumes_budget(self):
+        class FakeProvider:
+            name = "fake"
+            model = "test"
+
+            def complete(self, prompt):
+                return "ok"
+
+        ledger = BudgetLedger({"teacher": Budget(1.0, 2.0, 2, 4)})
+        result = BudgetedProvider(FakeProvider(), ledger, "teacher", PermissionManager(default_policies()), usd_per_call=0.25).complete("x")
+        self.assertEqual(result, "ok")
+        self.assertEqual(ledger.remaining("teacher")["daily_calls"], 1)
+        self.assertEqual(ledger.remaining("teacher")["daily_usd"], 0.75)
+
     def test_agent_registry_exposes_policy(self):
         registry = AgentRegistry()
         self.assertIn("teacher", registry.names())
