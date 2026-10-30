@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Any
@@ -35,3 +37,20 @@ class AcademicAnalyticsAgent:
             curriculum_status=checks.get("structuralStatus", "unknown"),
             qa_status=qa.get("status", "unknown"),
         )
+
+    def write_snapshot(self, output_path: str | Path, curriculum_report: str | Path, qa_report: str | Path) -> AnalyticsSnapshot:
+        snapshot = self.aggregate(curriculum_report, qa_report)
+        target = Path(output_path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        fd, temporary = tempfile.mkstemp(prefix="analytics-snapshot-", suffix=".json", dir=target.parent)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                json.dump(snapshot.to_dict(), handle, indent=2)
+                handle.write("\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary, target)
+        finally:
+            if os.path.exists(temporary):
+                os.unlink(temporary)
+        return snapshot
