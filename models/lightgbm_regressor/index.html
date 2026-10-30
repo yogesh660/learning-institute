@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>LightGBM Regression · Learn · Yogesh Awate</title>
+<meta name="description" content="Gradient boosting built for speed: histogram binning, leaf-wise tree growth and gradient-based row sampling.">
+<meta property="og:title" content="LightGBM Regression · Learn · Yogesh Awate">
+<meta property="og:description" content="Gradient boosting built for speed: histogram binning, leaf-wise tree growth and gradient-based row sampling.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="lightgbm_regressor">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-regression">Path 03 · Regression</a> / Trees and ensembles / Lesson 15 of 23</span>
+    <h1 class="case-title">LightGBM Regression</h1>
+    <p class="lede rise" style="--d:3">Gradient boosting built for speed: histogram binning, leaf-wise tree growth and gradient-based row sampling.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="3"><i><b></b></i>Advanced</span></span>
+      <span class="tagline">18 min</span>
+      <span class="tagline lab">Live lab</span>
+      <span class="prereq">Before this: <a href="../../models/gradient_boosting_regressor/">Gradient boosting regressor</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Task</dt><dd>Regression</dd>
+          <dt>Family</dt><dd>Boosting (histogram)</dd>
+          <dt>What it learns</dt><dd>Leaf-wise trees on histograms</dd>
+          <dt>Training cost</dt><dd>$O(M \cdot \text{leaves} \cdot p \cdot \text{bins})$ after binning</dd>
+          <dt>Prediction cost</dt><dd>$O(M \cdot \text{depth})$</dd>
+          <dt>In code</dt><dd><code class="no-math">lightgbm.<wbr>LGBMRegressor</code></dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>How it works</a></li><li><a href="#lab"><span>03</span>Try it</a></li><li><a href="#maths"><span>04</span>The maths</a></li><li><a href="#tuning"><span>05</span>Hyperparameters</a></li><li><a href="#when"><span>06</span>When to use it</a></li><li><a href="#code"><span>07</span>In code</a></li><li><a href="#quiz"><span>08</span>Check yourself</a></li><li><a href="#related"><span>09</span>Related lessons</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">LightGBM gets its speed from three ideas: bucket each feature into a small number of bins, grow trees leaf-wise (always splitting the most useful leaf), and sample rows smartly by gradient size.</p>
+        <p><strong>Histograms:</strong> instead of sorting every value, each feature is bucketed into at most 255 bins once. Split search then scans bins, not rows. It is a lot faster and barely less accurate.</p>
+        <p><strong>Leaf-wise growth:</strong> level-wise trees (XGBoost’s default) split every node at a depth. LightGBM always splits the single leaf with the largest gain. For the same number of leaves, this reduces loss more, but it can grow deep, lopsided branches, so <code>num_leaves</code> and <code>min_data_in_leaf</code> matter.</p>
+        <p><strong>GOSS</strong> keeps all rows with large gradients (the ones the model gets wrong) and a random sample of the rest, up-weighted to stay unbiased. <strong>EFB</strong> bundles mutually exclusive sparse features into one.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Instead of sorting every house by exact price, sort them into 255 price bands, and always spend effort on the neighbourhood where predictions are worst.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> How it works</h2>
+        <ol class="steps"><li>Bin each feature into histograms once.</li><li>For each round, compute gradients; optionally apply GOSS row sampling.</li><li>Grow a tree leaf-wise: repeatedly split the leaf with the best gain until <code>num_leaves</code> is reached.</li><li>Add the shrunken tree and repeat with early stopping.</li></ol>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>03</span> Try it</h2>
+        <p>A browser booster with LightGBM’s two signature ideas: features bucketed into a set number of bins, and leaf-wise tree growth limited by a leaf budget.</p>
+        <div class="lab" data-lab="lightgbm_regressor" data-kind="models" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>Drop the bin count to 4: thresholds snap to coarse bin edges and the fit gets blocky.</li><li>Switch between leaf-wise and level-wise growth at the same leaf budget and compare training loss.</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>04</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Histogram split search</h3><div class="formula">$$\text{Gain}(b) = \frac{G_{\le b}^2}{H_{\le b} + \lambda} + \frac{G_{&gt;b}^2}{H_{&gt;b} + \lambda} - \frac{G^2}{H + \lambda}$$</div><p>Gradient sums per bin are accumulated once; every candidate threshold $b$ is then a cumulative sum. Cost per feature is $O(\text{bins})$ instead of $O(n)$.</p></li>
+          <li><h3>GOSS re-weighting</h3><div class="formula">$$\tilde G = \sum_{i \in A} g_i + \frac{1 - a}{b}\sum_{i \in B} g_i$$</div><p>$A$ is the top-$a$ fraction by $|g|$; $B$ is a random $b$ fraction of the rest, up-weighted so the gradient estimate stays unbiased.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="tuning">
+        <h2 class="h3"><span>05</span> Hyperparameters</h2>
+        <div class="table-wrap"><table class="kv">
+          <thead><tr><th>Setting</th><th>What it does</th><th>Typical choice</th></tr></thead>
+          <tbody><tr><td><span class="hp">num_leaves</span></td><td>Max leaves per tree (main complexity knob).</td><td>15–255; keep below 2^max_depth.</td></tr><tr><td><span class="hp">min_child_samples</span></td><td>Min rows per leaf.</td><td>20–100 to curb deep branches.</td></tr><tr><td><span class="hp">learning_rate / n_estimators</span></td><td>Shrinkage and rounds.</td><td>0.03–0.1 with early stopping.</td></tr><tr><td><span class="hp">max_bin</span></td><td>Histogram resolution.</td><td>255 default; lower is faster and more regularised.</td></tr><tr><td><span class="hp">feature_fraction, bagging_fraction</span></td><td>Column and row sampling.</td><td>0.7–0.9.</td></tr></tbody>
+        </table></div>
+      </section>
+      <section class="reveal" id="when">
+        <h2 class="h3"><span>06</span> When to use it</h2>
+        <div class="split2">
+          <div class="box good"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Strengths</h3><ul><li>Very fast on large data; low memory.</li><li>Native categorical support.</li><li>Accuracy on par with XGBoost.</li></ul></div>
+          <div class="box bad"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg> Limitations</h3><ul><li>Leaf-wise growth overfits small datasets more easily.</li><li>Many parameters, with aliases that can confuse.</li></ul></div>
+          <div class="box use"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> Reach for it when</h3><p>Large tabular datasets where training speed matters.</p></div>
+          <div class="box avoid"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Think twice when</h3><p>Very small datasets (a few thousand rows), unless you constrain num_leaves and leaf size.</p></div>
+        </div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>07</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> lightgbm <span class="k">as</span> lgb
+
+model = lgb.<span class="f">LGBMRegressor</span>(n_estimators=<span class="n">5000</span>, learning_rate=<span class="n">0.03</span>, num_leaves=<span class="n">31</span>,
+                          min_child_samples=<span class="n">30</span>, feature_fraction=<span class="n">0.8</span>, bagging_fraction=<span class="n">0.8</span>,
+                          bagging_freq=<span class="n">1</span>, random_state=<span class="n">0</span>, verbose=-<span class="n">1</span>)
+model.<span class="f">fit</span>(X_tr, y_tr, eval_set=[(X_te, y_te)], callbacks=[lgb.<span class="f">early_stopping</span>(<span class="n">100</span>, verbose=<span class="k">False</span>)])
+<span class="k">print</span>(<span class="s">&quot;best iteration:&quot;</span>, model.best_iteration_)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Setting num_leaves to $2^{\text{max\_depth}}$ by habit: that is far more complex than an equivalent XGBoost tree.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Passing categorical columns as plain integers without telling LightGBM they are categorical.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>08</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>Leaf-wise growth differs from level-wise growth because it:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Uses random splits</span></button><button class="opt" type="button"><b>B</b><span>Never splits leaves</span></button><button class="opt" type="button"><b>C</b><span>Always splits the single leaf with the largest gain</span></button><button class="opt" type="button"><b>D</b><span>Splits every leaf at the current depth</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> It greedily spends the leaf budget where it reduces loss most, which can produce deep, asymmetric trees.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>What does histogram binning trade away?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Support for missing values</span></button><button class="opt" type="button"><b>B</b><span>Nothing</span></button><button class="opt" type="button"><b>C</b><span>Regularisation</span></button><button class="opt" type="button"><b>D</b><span>A little split precision for a large speed-up</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Thresholds can only fall on bin edges, which rarely matters in practice.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>What is the "histogram subtraction trick" used by LightGBM to speed up split evaluation?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It subtracts the mean of the histogram to centre all gradients at zero</span></button><button class="opt" type="button"><b>B</b><span>It subtracts test set histograms from training histograms to detect covariate shift</span></button><button class="opt" type="button"><b>C</b><span>Once the parent histogram and one child's histogram are computed, the sibling child's histogram is obtained instantly by subtracting the first child from the parent ($O(\text{bins})$), cutting compute time in half</span></button><button class="opt" type="button"><b>D</b><span>It zeroes out bins whose sample counts fall below 5</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because parent bin statistics equal the sum of left and right children ($H_P = H_L + H_R$), LightGBM only builds the histogram for the smaller child, obtaining the sibling's histogram via simple subtraction at $O(\text{bins})$ cost.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q4</span>What is Exclusive Feature Bundling (EFB) in LightGBM?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>A technique that bundles multiple trees into a single neural network layer</span></button><button class="opt" type="button"><b>B</b><span>A clustering algorithm used to impute missing categorical levels</span></button><button class="opt" type="button"><b>C</b><span>An algorithm that merges mutually exclusive sparse features (features that rarely take non-zero values simultaneously) into a single dense feature, reducing the effective number of features without losing information</span></button><button class="opt" type="button"><b>D</b><span>A method for encrypting features during distributed model training</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In sparse high-dimensional data (e.g. one-hot encoded text), many features are mutually exclusive. EFB safely combines their non-zero values into separate bin ranges of a single bundled feature, sharply reducing the number of features scanned.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q5</span>How does Gradient-based One-Side Sampling (GOSS) retain gradient estimation accuracy while training on only a subset of data?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It randomly drops 50% of all rows regardless of gradient size</span></button><button class="opt" type="button"><b>B</b><span>It retains 100% of samples with the largest gradients (top fraction $a$), randomly samples a fraction $b$ of the small-gradient samples, and multiplies the sampled small-gradient instances by $\frac{1 - a}{b}$ to maintain an unbiased gradient estimate</span></button><button class="opt" type="button"><b>C</b><span>It replaces small gradients with the average gradient of the validation fold</span></button><button class="opt" type="button"><b>D</b><span>It scales all small gradients to zero and doubles large gradients</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Instances with small gradients are already well-trained and contribute little to learning new directions. GOSS keeps all large-gradient instances and downsamples small-gradient instances, applying an exact mathematical scaling factor $\frac{1-a}{b}$ to preserve the true gradient sum.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q6</span>Why can setting num_leaves = 64 with no max_depth limit in LightGBM lead to severe overfitting compared to depth-6 level-wise growth in XGBoost?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Level-wise growth trains trees using random feature selection while leaf-wise does not</span></button><button class="opt" type="button"><b>B</b><span>Leaf-wise growth cannot compute regularisation penalties</span></button><button class="opt" type="button"><b>C</b><span>Leaf-wise growth splits whichever leaf achieves the highest gain, which can create very deep, highly asymmetric branches (depth 20+) focused on tiny subsets of data, whereas level-wise growth strictly caps depth at 6 everywhere</span></button><button class="opt" type="button"><b>D</b><span>64 leaves require 100 times more memory in LightGBM</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A balanced depth-6 tree has 64 leaves. But with leaf-wise growth, 64 leaves can be arranged into a lopsided tree where a single branch plunges 25 levels deep to fit a handful of noisy points. Restricting min_data_in_leaf or setting max_depth prevents this.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q7</span>How does LightGBM natively find splits for categorical features without requiring manual one-hot encoding?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It trains an autoencoder to embed categories into 2 dimensions</span></button><button class="opt" type="button"><b>B</b><span>It converts each category into a random float between 0 and 1</span></button><button class="opt" type="button"><b>C</b><span>It sorts the categorical categories by the ratio of their accumulated gradients to Hessians ($G/H$) and evaluates optimal contiguous threshold partitions in $O(K \log K)$ time instead of checking all $O(2^K)$ subsets</span></button><button class="opt" type="button"><b>D</b><span>It replaces categorical values with their frequency rank in the dataset</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Testing all binary partitions of $K$ categories requires $O(2^K)$ checks. LightGBM orders categories by their gradient statistics on the current residual, reducing the search to finding an optimal cut point along the sorted array in $O(K \log K)$ operations.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q8</span>What is the main advantage of LightGBM's default max_bin=255 setting regarding memory and hardware architecture?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It eliminates the need for computing Hessian derivatives</span></button><button class="opt" type="button"><b>B</b><span>255 bins matches the number of threads on standard NVIDIA GPUs</span></button><button class="opt" type="button"><b>C</b><span>Each feature value can be stored in memory as an unsigned 8-bit integer (uint8), reducing dataset RAM usage four-fold compared to 32-bit floats and fitting histograms directly into CPU L1/L2 cache</span></button><button class="opt" type="button"><b>D</b><span>It prevents decision trees from growing past depth 8</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> By restricting continuous variables to 255 discrete bins, each value fits into a single byte (uint8). Storing datasets as bytes slashes memory traffic by 75% and ensures histogram tables fit inside fast CPU cache.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q9</span>What is the primary role of the min_data_in_leaf (or min_child_samples) hyperparameter in LightGBM?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It sets a minimum threshold on the number of training observations allowed in any terminal leaf, providing a critical safeguard against leaf-wise growth creating single-sample leaves</span></button><button class="opt" type="button"><b>B</b><span>It sets the minimum number of rows required in the entire dataset</span></button><button class="opt" type="button"><b>C</b><span>It defines the mini-batch size used for gradient descent</span></button><button class="opt" type="button"><b>D</b><span>It determines how many histograms are cached in memory</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because leaf-wise growth greedily pursues maximum gain, it will happily isolate 1 or 2 outlier rows into a deep leaf. Setting min_data_in_leaf (default 20) forces leaves to generalise across meaningful sample clusters.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q10</span>In GOSS sampling, a dataset of 1,000 instances has $a = 0.10$ (top 10% large gradients kept, $n_A = 100$) and $b = 0.20$ (a random sample equal to 20% of the whole dataset, so $n_B = 200$, drawn from the remaining 900 small-gradient instances). What is the weight multiplier $\frac{1 - a}{b}$ applied to the 200 sampled small-gradient instances?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$9.00$</span></button><button class="opt" type="button"><b>B</b><span>$2.00$</span></button><button class="opt" type="button"><b>C</b><span>$0.50$</span></button><button class="opt" type="button"><b>D</b><span>$4.50$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> $\frac{1 - a}{b} = \frac{1 - 0.10}{0.20} = \frac{0.90}{0.20} = 4.50$. The 200 sampled instances stand in for all 900 small-gradient instances, so each one is scaled by $900 / 200 = 4.50$, which equals $(1 - a)/b$, to keep the estimate of the total gradient unbiased.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q11</span>A parent node has accumulated gradient sum $G_P = 50.0$ and Hessian sum $H_P = 20.0$ across its data points. After a split, its left child contains gradient sum $G_L = 32.0$ and Hessian sum $H_L = 14.0$. Using the histogram subtraction trick, what are the gradient sum $G_R$ and Hessian sum $H_R$ for the right child?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$G_R = 82.0$ and $H_R = 34.0$</span></button><button class="opt" type="button"><b>B</b><span>$G_R = 18.0$ and $H_R = 6.0$</span></button><button class="opt" type="button"><b>C</b><span>$G_R = -18.0$ and $H_R = -6.0$</span></button><button class="opt" type="button"><b>D</b><span>$G_R = 16.0$ and $H_R = 10.0$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> By conservation of statistics: $G_R = G_P - G_L = 50.0 - 32.0 = 18.0$. $H_R = H_P - H_L = 20.0 - 14.0 = 6.0$. This subtraction requires zero iterations over the right child's data rows.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q12</span>A continuous feature with 10,000 rows is binned into 200 histogram bins. Scanning all thresholds by sorting 10,000 raw floats costs $O(n \log n) \approx 10{,}000 \times 13.29 \approx 132{,}900$ operations. How many cumulative sum operations does LightGBM execute to evaluate all 200 candidate split thresholds once the histogram is built?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$10{,}000$ operations</span></button><button class="opt" type="button"><b>B</b><span>$200$ operations</span></button><button class="opt" type="button"><b>C</b><span>$132{,}900$ operations</span></button><button class="opt" type="button"><b>D</b><span>$2{,}000{,}000$ operations</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Once the 200 bins are populated with $(G_b, H_b)$, finding the best split only requires a single linear pass computing prefix cumulative sums across the 200 bins: $G_{\le b} = G_{\le b-1} + G_b$, which takes exactly 200 operations—a nearly 700-fold speed-up over sorting.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>09</span> Related lessons</h2>
+        <div class="related"><a href="../../models/xgboost_regressor/"><small class="kicker">Regression</small><b>XGBoost</b></a><a href="../../models/catboost_regressor/"><small class="kicker">Regression</small><b>CatBoost</b></a><a href="../../models/gradient_boosting_regressor/"><small class="kicker">Regression</small><b>Gradient boosting regressor</b></a><a href="../../concepts/regularization/"><small class="kicker">Concept</small><b>Regularisation</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../models/xgboost_regressor/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Regression</small><b>XGBoost</b></a>
+    <a class="pager-next" href="../../models/catboost_regressor/"><small>Next · Regression <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>CatBoost</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/sequences.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

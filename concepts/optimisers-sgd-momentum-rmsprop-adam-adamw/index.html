@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Optimisers: SGD, Momentum, RMSProp, Adam, and AdamW · Learn · Yogesh Awate</title>
+<meta name="description" content="Navigating non-convex loss landscapes using adaptive learning rates, first-order momentum, and decoupled weight decay.">
+<meta property="og:title" content="Optimisers: SGD, Momentum, RMSProp, Adam, and AdamW · Learn · Yogesh Awate">
+<meta property="og:description" content="Navigating non-convex loss landscapes using adaptive learning rates, first-order momentum, and decoupled weight decay.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="optimisers-sgd-momentum-rmsprop-adam-adamw">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-neural">Path 08 · Deep learning</a> / Training fundamentals / Lesson 6 of 42</span>
+    <h1 class="case-title">Optimisers: SGD, Momentum, RMSProp, Adam, and AdamW</h1>
+    <p class="lede rise" style="--d:3">Navigating non-convex loss landscapes using adaptive learning rates, first-order momentum, and decoupled weight decay.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/gradient-descent/">Gradient descent</a> <a href="../../concepts/backpropagation-and-autodiff/">Backprop and autodiff</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Deep learning · Training fundamentals</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Standard Stochastic Gradient Descent (SGD) struggles in ill-conditioned loss ravines where surfaces curve steeply in one dimension and gently in another, causing oscillations and slow progress. Modern deep learning relies on advanced optimisers that accelerate along consistent directions and adapt step sizes per parameter. Tracing the algorithmic lineage from classical SGD to Momentum, RMSProp, Adam, and AdamW reveals how decoupled weight decay resolved Adam's generalisation gap to become the standard optimiser for training deep transformers and vision backbones.</p>
+        <p>Imagine rolling a heavy bowling ball down a steep, narrow canyon where the canyon walls slope steeply downwards at 80 degrees, while the river floor slopes gently toward the sea at 2 degrees. If you take a step purely in the direction of steepest descent (standard SGD), you bounce violently back and forth between the canyon walls, making almost zero forward progress down the river. The loss function oscillates wildly along high-curvature dimensions while creeping at a crawl along low-curvature dimensions.</p>
+        <p>Momentum addresses this by introducing physical inertia: it accumulates an exponentially decaying moving average of past gradients. Perpendicular oscillations cancel each other out, while forward momentum down the river floor compounds, propelling the optimiser smoothly forward. RMSProp tackles the problem from another angle: it divides the learning rate by the square root of running gradient variance. Dimensions with massive oscillating gradients have their step size dampened; dimensions with gentle gradients have their step size boosted.</p>
+        <p>Adam combined both mechanisms: maintaining both an exponentially decaying average of past gradients (first moment) and past squared gradients (second moment). However, researchers noticed that SGD with momentum frequently achieved superior final test generalisation. In 2017, Loshchilov and Hutter showed why: frameworks implemented L2 regularisation by adding lambda * w directly to the gradient vector. In Adam, this gradient penalty was scaled by 1 / sqrt(v), penalising frequent features far less than rare features! AdamW decouples weight decay, applying the regularisation penalty directly to the weights after the adaptive step, restoring state-of-the-art generalisation and cementing AdamW as the gold standard for LLMs and vision transformers.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Navigating a rocky, foggy mountain trail in a heavy toboggan: momentum provides forward physical inertia that carries you over small bumps and prevents sideways wobbling, while adaptive suspension automatically softens the ride over rugged terrain and accelerates on smooth flat stretches.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Select baseline optimiser: deploy AdamW as the standard choice for Transformers, language models, and complex architectures; choose SGD with momentum for standard convolutional backbones.</li><li>Configure core AdamW hyperparameters: set standard defaults: learning rate eta = 0.001, beta_1 = 0.9 (momentum), beta_2 = 0.999 (second moment), and epsilon = 1e-8.</li><li>Apply decoupled weight decay: set weight decay lambda between 0.01 and 0.1 in AdamW, ensuring regularisation acts directly on parameters without distorting adaptive moments.</li><li>Exclude 1D parameters from weight decay: explicitly disable weight decay for layer normalisation gains, biases, and embedding offsets to avoid underfitting.</li><li>Pair with learning rate warmup and decay: combine AdamW with an initial linear warmup phase followed by cosine annealing decay to stabilize early training steps.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Stochastic gradient descent with classical momentum</h3><div class="formula">v_t = \beta v_{t-1} + (1 - \beta) g_t, \qquad \theta_t = \theta_{t-1} - \eta v_t</div><p>Where $g_t = \nabla_\theta \mathcal{L}(\theta_{t-1})$ is the stochastic minibatch gradient, $\beta \in [0.9, 0.99]$ is the momentum decay factor, and $\eta$ is the learning rate. Oscillations perpendicular to the gradient canyon cancel out while consistent gradient directions accelerate.</p></li>
+          <li><h3>Adam (Adaptive Moment Estimation) with bias correction</h3><div class="formula">m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t, \qquad v_t = \beta_2 v_{t-1} + (1 - \beta_2) g_t^2</div><p>Where $\hat{m}_t = m_t / (1 - \beta_1^t)$ and $\hat{v}_t = v_t / (1 - \beta_2^t)$ correct for initialization bias toward zero during early training steps ($t=1, 2$). The update step divides the momentum estimate by $\sqrt{\hat{v}_t} + \epsilon$.</p></li>
+          <li><h3>AdamW decoupled weight decay formulation</h3><div class="formula">\theta_t = \theta_{t-1} - \eta \lambda \theta_{t-1} - \frac{\eta}{\sqrt{\hat{v}_t} + \epsilon} \hat{m}_t</div><p>Where regularisation penalty $\eta \lambda \theta_{t-1}$ is subtracted directly from parameter $\theta$, completely decoupled from the adaptive gradient scale factor $\sqrt{\hat{v}_t}$. This guarantees true scale-invariant weight shrinkage.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Momentum accumulates first-order gradient history, dampening oscillations across steep ill-conditioned ravines.</li><li>RMSProp and Adam divide updates by the square root of second moments, automatically calibrating individual learning rates per parameter.</li><li>AdamW fixes Adam's weight decay flaw by decoupling regularisation shrinkage from adaptive gradient scaling, restoring generalisation parity with SGD.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Minimise 2D anisotropic ill-conditioned quadratic: f(x, y) = 0.5*x^2 + 12.5*y^2</span>
+<span class="k">def</span> <span class="f">grad</span>(pos): <span class="k">return</span> np.<span class="f">array</span>([pos[<span class="n">0</span>], <span class="n">25.0</span> * pos[<span class="n">1</span>]])
+
+pos_sgd = np.<span class="f">array</span>([<span class="n">5.0</span>, <span class="n">1.0</span>])
+pos_mom = np.<span class="f">array</span>([<span class="n">5.0</span>, <span class="n">1.0</span>])
+pos_adamw = np.<span class="f">array</span>([<span class="n">5.0</span>, <span class="n">1.0</span>])
+
+v_mom = np.<span class="f">zeros</span>(<span class="n">2</span>)
+m, v = np.<span class="f">zeros</span>(<span class="n">2</span>), np.<span class="f">zeros</span>(<span class="n">2</span>)
+lr = <span class="n">0.075</span>
+
+<span class="k">for</span> t <span class="k">in</span> <span class="k">range</span>(<span class="n">1</span>, <span class="n">51</span>):
+    <span class="c"># 1. Standard SGD</span>
+    pos_sgd -= lr * <span class="f">grad</span>(pos_sgd)
+    
+    <span class="c"># 2. SGD with Momentum (beta=0.8)</span>
+    g_m = <span class="f">grad</span>(pos_mom)
+    v_mom = <span class="n">0.8</span> * v_mom + <span class="n">0.2</span> * g_m
+    pos_mom -= lr * v_mom
+    
+    <span class="c"># 3. AdamW (beta1=0.9, beta2=0.99, weight_decay=0.01)</span>
+    g_ad = <span class="f">grad</span>(pos_adamw)
+    m = <span class="n">0.9</span> * m + <span class="n">0.1</span> * g_ad
+    v = <span class="n">0.99</span> * v + <span class="n">0.01</span> * (g_ad**<span class="n">2</span>)
+    m_hat = m / (<span class="n">1.0</span> - <span class="n">0.9</span>**t)
+    v_hat = v / (<span class="n">1.0</span> - <span class="n">0.99</span>**t)
+    pos_adamw = pos_adamw * (<span class="n">1.0</span> - lr * <span class="n">0.01</span>) - <span class="n">0.2</span> * m_hat / (np.<span class="f">sqrt</span>(v_hat) + <span class="n">1e-8</span>)
+
+<span class="k">print</span>(<span class="s">'Initial loss:'</span>, <span class="f">round</span>(<span class="n">0.5</span> * <span class="n">5.0</span>**<span class="n">2</span> + <span class="n">12.5</span> * <span class="n">1.0</span>**<span class="n">2</span>, <span class="n">2</span>))
+<span class="k">print</span>(<span class="s">'Standard SGD loss after 50 steps:   '</span>, <span class="f">round</span>(<span class="n">0.5</span> * pos_sgd[<span class="n">0</span>]**<span class="n">2</span> + <span class="n">12.5</span> * pos_sgd[<span class="n">1</span>]**<span class="n">2</span>, <span class="n">4</span>))
+<span class="k">print</span>(<span class="s">'SGD + Momentum loss after 50 steps: '</span>, <span class="f">round</span>(<span class="n">0.5</span> * pos_mom[<span class="n">0</span>]**<span class="n">2</span> + <span class="n">12.5</span> * pos_mom[<span class="n">1</span>]**<span class="n">2</span>, <span class="n">4</span>))
+<span class="k">print</span>(<span class="s">'AdamW loss after 50 steps:          '</span>, <span class="f">round</span>(<span class="n">0.5</span> * pos_adamw[<span class="n">0</span>]**<span class="n">2</span> + <span class="n">12.5</span> * pos_adamw[<span class="n">1</span>]**<span class="n">2</span>, <span class="n">4</span>))</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Implementing L2 regularisation inside Adam by adding lambda * w to the gradient: this dilutes weight decay on parameters with large gradients, corrupting regularisation.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Omitting bias correction terms in custom Adam implementations: without dividing by (1 - beta^t), initial gradient steps are artificially tiny.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Applying weight decay indiscriminately to normalisation scales and bias parameters: penalising affine shift/scale parameters damages representation capacity without aiding regularisation.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>Why does adding classical momentum help optimisers navigate steep, narrow loss ravines?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It computes second derivatives using the Hessian matrix</span></button><button class="opt" type="button"><b>B</b><span>It inverts the loss function so the minimum becomes a maximum</span></button><button class="opt" type="button"><b>C</b><span>It accumulates an exponentially decaying moving average of past gradients, causing perpendicular oscillations to cancel while accelerating forward progress</span></button><button class="opt" type="button"><b>D</b><span>It reduces the memory required to store gradients to zero</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In steep ravines, gradient signs oscillate rapidly across the narrow walls. Momentum averages these oscillations out, dampening perpendicular bounce while building speed along the consistent gentle ravine floor.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>What key flaw in the original Adam optimiser did AdamW fix?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Adam could only run on CPU architectures</span></button><button class="opt" type="button"><b>B</b><span>Adam coupled L2 regularisation with adaptive gradient scaling by adding weight decay directly to the gradient vector, diluting regularisation for weights with large gradients</span></button><button class="opt" type="button"><b>C</b><span>Adam was incapable of computing momentum</span></button><button class="opt" type="button"><b>D</b><span>Adam required learning rates above 10.0 to converge</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Original Adam added L2 regularisation to the gradient g_t, which was then divided by sqrt(v_t), reducing weight decay for parameters with frequent large gradients. AdamW decouples weight decay, applying direct shrinkage.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>Why are bias parameters and normalisation scale/shift gains typically excluded from weight decay during neural network training?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Biases and normalisation parameters represent very few parameters and penalising them causes underfitting without preventing overfitting</span></button><button class="opt" type="button"><b>B</b><span>Because PyTorch cannot compute derivatives for 1D vectors</span></button><button class="opt" type="button"><b>C</b><span>Because biases must always remain strictly zero</span></button><button class="opt" type="button"><b>D</b><span>Because weight decay turns all bias parameters to positive infinity</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Overfitting is driven by complex combinations of weight matrices. Biases and normalisation affine parameters simply shift and scale representations; decaying them harms network expressivity without aiding regularisation.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/activation-functions/"><small class="kicker">Concept</small><b>Activation functions</b></a><a href="../../concepts/weight-initialisation-xavier-and-he/"><small class="kicker">Concept</small><b>Weight initialisation: Xavier, He</b></a><a href="../../concepts/quasi-newton-and-lbfgs/"><small class="kicker">Concept</small><b>Newton, BFGS &amp; L-BFGS</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/weight-initialisation-xavier-and-he/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>Weight initialisation: Xavier, He</b></a>
+    <a class="pager-next" href="../../concepts/learning-rate-schedules-and-warm-up/"><small>Next · Deep learning <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>LR schedules and warm-up</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

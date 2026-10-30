@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Coreference Resolution: Mention Detection, Pairwise Scoring, and SpanBERT · Learn · Yogesh Awate</title>
+<meta name="description" content="Coreference resolution identifies mentions (spans of text) and partitions them into clusters referring to identical entities. Coreference encompasses diverse linguistic phenomena: anaphora (pronoun referring back to antecedent), cataphora (pronoun preceding referent), and apposition. Classic approaches rely on mention-pair classification or mention-ranking models evaluated across MUC, B3, and CEAF metrics. Modern end-to-end neural systems (e.g. SpanBERT coref) jointly extract candidate spans and predict antecedent link probabilities without pipelined syntactic parsers.">
+<meta property="og:title" content="Coreference Resolution: Mention Detection, Pairwise Scoring, and SpanBERT · Learn · Yogesh Awate">
+<meta property="og:description" content="Coreference resolution identifies mentions (spans of text) and partitions them into clusters referring to identical entities. Coreference encompasses diverse linguistic phenomena: anaphora (pronoun referring back to antecedent), cataphora (pronoun preceding referent), and apposition. Classic approaches rely on mention-pair classification or mention-ranking models evaluated across MUC, B3, and CEAF metrics. Modern end-to-end neural systems (e.g. SpanBERT coref) jointly extract candidate spans and predict antecedent link probabilities without pipelined syntactic parsers.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="coreference-resolution">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-nlp">Path 10 · Natural language processing</a> / Tasks and evaluation / Lesson 48 of 52</span>
+    <h1 class="case-title">Coreference Resolution: Mention Detection, Pairwise Scoring, and SpanBERT</h1>
+    <p class="lede rise" style="--d:3">Coreference resolution identifies mentions (spans of text) and partitions them into clusters referring to identical entities. Coreference encompasses diverse linguistic phenomena: anaphora (pronoun referring back to antecedent), cataphora (pronoun preceding referent), and apposition. Classic approaches rely on mention-pair classification or mention-ranking models evaluated across MUC, $B^3$, and CEAF metrics. Modern end-to-end neural systems (e.g. SpanBERT coref) jointly extract candidate spans and predict antecedent link probabilities without pipelined syntactic parsers.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Natural language processing · Tasks and evaluation</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Coreference Resolution groups all mentions in a text that refer to the same real-world entity into coherent equivalence clusters. Resolving pronouns ("she", "it"), noun phrases ("the company"), and proper names ("Alphabet") is vital for document comprehension, question answering, and automated summarisation.</p>
+        <p>Consider the sentence: "Dr Marie Curie visited Paris. She conducted research there because the city offered excellent laboratories." Who does "She" refer to? Marie Curie. What does "the city" and "there" refer to? Paris. Humans resolve these referential connections effortlessly. For a computer, however, "Marie Curie", "She", "Paris", "there", and "the city" are distinct strings of characters. If a question answering system is asked "Where did Marie Curie conduct research?", it cannot answer unless it connects "there" and "the city" back to "Paris". Coreference resolution solves this problem: it scans the document, identifies all noun phrases and pronouns (mentions), and links them into clusters that refer to the exact same underlying real-world entity.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine reading a detective novel where a character is referred to variably as "the inspector", "John", "he", "the veteran detective", and "the man in the raincoat". As a reader, your brain maintains a single mental dossier for this character, pinning each moniker onto the same bulletin board profile. Coreference resolution builds and maintains these entity dossiers computationally.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Extract candidate text spans: enumerate all contiguous word sequences up to a maximum span width (e.g. 10 tokens).</li><li>Encode span representations: compute contextual token embeddings (SpanBERT) and apply self-attention pooling over internal span words.</li><li>Prune candidate mentions: compute unary mention scores $s_m(i)$ and prune top spans to maintain $\lambda T$ candidates, discarding non-entity phrases.</li><li>Score candidate antecedent pairs: compute relational pairwise compatibility scores $s(i, j)$ between surviving spans.</li><li>Decode coreference clusters: assign each span to its highest scoring antecedent, linking spans into directed trees and taking transitive closures to form final entity clusters.</li><li>Evaluate CoNLL metric: compute the unweighted average of MUC, $B^3$, and $\text{CEAF}_{\phi_4}$ F1 scores.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Coreference Resolution: Mention Detection, Pairwise Scoring, and SpanBERT formulation (Part 1)</h3><div class="formula">\mathbf{g}_i = [\mathbf{x}_{\text{START}(i)} \,;\, \mathbf{x}_{\text{END}(i)} \,;\, \mathbf{x}_i^* \,;\, \mathbf{\phi}(i)]</div><p>Pairwise coreference score $s(i, j)$ between span $i$ and candidate antecedent $j$ is formulated as:</p></li>
+          <li><h3>Coreference Resolution: Mention Detection, Pairwise Scoring, and SpanBERT formulation (Part 2)</h3><div class="formula">s(i, j) = \begin{cases} 0 & j = \epsilon \\ s_m(i) + s_m(j) + s_a(i, j) & j \ne \epsilon \end{cases}</div><p>where $s_m(i) = \mathbf{w}_m^T \text{FFNN}_m(\mathbf{g}_i)$ measures mention score and $s_a(i, j) = \mathbf{w}_a^T \text{FFNN}_a([\mathbf{g}_i, \mathbf{g}_j, \mathbf{g}_i \odot \mathbf{g}_j, \mathb...</p></li>
+          <li><h3>Coreference Resolution: Mention Detection, Pairwise Scoring, and SpanBERT formulation (Part 3)</h3><div class="formula">P(a_i = j) = \frac{\exp(s(i, j))}{\sum_{j' \in \mathcal{Y}(i)} \exp(s(i, j'))}</div><p>Training maximises marginal log-likelihood of gold cluster antecedents $\mathcal{C}(i)$:</p></li>
+          <li><h3>Coreference Resolution: Mention Detection, Pairwise Scoring, and SpanBERT formulation (Part 4)</h3><div class="formula">\mathcal{L} = \sum_{i=1}^N \log \sum_{j \in \mathcal{Y}(i) \cap \mathcal{C}(i)} P(a_i = j)</div><p>Training maximises marginal log-likelihood of gold cluster antecedents $\mathcal{C}(i)$:</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Coreference resolution connects pronouns and variant noun phrases to their canonical real-world entity referents.</li><li>End-to-end models jointly score mention spans and pairwise antecedent links via contextual transformer encoders.</li><li>The standard CoNLL metric combines MUC, $B^3$, and CEAF scores to evaluate clustering fidelity across diverse entity types.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">def</span> <span class="f">resolve_coreference_toy</span>(mentions, pairwise_matrix):
+    <span class="s">&quot;&quot;&quot;Clusters mentions into entities using antecedent link argmax.&quot;&quot;&quot;</span>
+    N = <span class="k">len</span>(mentions)
+    clusters = {i: [i] <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(N)}
+    parent = <span class="f">list</span>(<span class="k">range</span>(N))
+    
+    <span class="k">def</span> <span class="f">find</span>(i):
+        <span class="k">if</span> parent[i] == i:
+            <span class="k">return</span> i
+        parent[i] = <span class="f">find</span>(parent[i])
+        <span class="k">return</span> parent[i]
+        
+    <span class="k">def</span> <span class="f">union</span>(i, j):
+        root_i = <span class="f">find</span>(i)
+        root_j = <span class="f">find</span>(j)
+        <span class="k">if</span> root_i != root_j:
+            parent[root_i] = root_j
+            
+    <span class="c"># For each mention i &gt; 0, find best antecedent j &lt; i</span>
+    <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(<span class="n">1</span>, N):
+        scores = pairwise_matrix[i, :i]
+        best_j = np.<span class="f">argmax</span>(scores)
+        <span class="c"># Threshold for linking</span>
+        <span class="k">if</span> scores[best_j] &gt; <span class="n">0.0</span>:
+            <span class="f">union</span>(i, best_j)
+            
+    <span class="c"># Aggregate into clusters</span>
+    final_clusters = {}
+    <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(N):
+        root = <span class="f">find</span>(i)
+        <span class="k">if</span> root <span class="k">not</span> <span class="k">in</span> final_clusters:
+            final_clusters[root] = []
+        final_clusters[root].<span class="f">append</span>(mentions[i])
+        
+    <span class="k">return</span> <span class="f">list</span>(final_clusters.<span class="f">values</span>())
+
+<span class="c"># Mentions extracted from: &quot;Marie Curie arrived in Paris. She loved the capital city.&quot;</span>
+mentions = [
+    <span class="s">&quot;Marie Curie&quot;</span>,     <span class="c"># 0</span>
+    <span class="s">&quot;Paris&quot;</span>,           <span class="c"># 1</span>
+    <span class="s">&quot;She&quot;</span>,             <span class="c"># 2</span>
+    <span class="s">&quot;the capital city&quot;</span> <span class="c"># 3</span>
+]
+
+<span class="c"># Simulated pairwise affinity matrix (row = mention i, col = candidate antecedent j)</span>
+pairwise_scores = np.<span class="f">array</span>([
+    [ <span class="n">0.0</span>,  <span class="n">0.0</span>,  <span class="n">0.0</span>,  <span class="n">0.0</span>],
+    [-<span class="n">2.0</span>,  <span class="n">0.0</span>,  <span class="n">0.0</span>,  <span class="n">0.0</span>],
+    [ <span class="n">4.5</span>, -<span class="n">3.0</span>,  <span class="n">0.0</span>,  <span class="n">0.0</span>],  <span class="c"># &quot;She&quot; -&gt; strong link to &quot;Marie Curie&quot;</span>
+    [-<span class="n">3.0</span>,  <span class="n">5.2</span>, -<span class="n">2.5</span>,  <span class="n">0.0</span>]   <span class="c"># &quot;the capital city&quot; -&gt; strong link to &quot;Paris&quot;</span>
+])
+
+clusters = <span class="f">resolve_coreference_toy</span>(mentions, pairwise_scores)
+
+<span class="k">print</span>(<span class="s">&quot;Discovered Coreference Entity Clusters:&quot;</span>)
+<span class="k">for</span> idx, cluster <span class="k">in</span> <span class="f">enumerate</span>(clusters, <span class="n">1</span>):
+    <span class="k">print</span>(<span class="s">f&quot;  Cluster {idx}: {cluster}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Conflating apposition or predicative nominals ("Barack Obama, the president") as separate entities rather than coreferent mentions of the same individual.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Evaluating models solely on pronoun resolution (Winograd schemas), ignoring complex nominal coreference chains involving lexical variation.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Suffering cubic computational complexity $\mathcal{O}(N^3)$ without span pruning; unrestricted pairwise comparison over all text spans explodes on long documents.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>What is the primary objective of coreference resolution?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To identify all text mentions that refer to the same real-world entity and group them into equivalence clusters</span></button><button class="opt" type="button"><b>B</b><span>To detect spelling errors in proper nouns</span></button><button class="opt" type="button"><b>C</b><span>To compute syntactic dependency trees for sentences</span></button><button class="opt" type="button"><b>D</b><span>To translate pronouns into grammatical case markers</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Coreference resolution clusters mentions (names, pronouns, definite noun phrases) across a text that refer to the identical underlying entity.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>What is the official CoNLL evaluation score for coreference resolution systems?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The exact match accuracy of pronouns</span></button><button class="opt" type="button"><b>B</b><span>The unweighted arithmetic mean of MUC, $B^3$, and $\text{CEAF}_{\phi_4}$ F1 scores</span></button><button class="opt" type="button"><b>C</b><span>BLEU score averaged over 4-grams</span></button><button class="opt" type="button"><b>D</b><span>The Spearman correlation with human glosses</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The standard CoNLL metric averages the F1 scores of three complementary clustering metrics: MUC (link-based), $B^3$ (mention-based), and $\text{CEAF}_{\phi_4}$ (entity-based).</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>Why does SpanBERT achieve superior performance over standard BERT on coreference resolution tasks?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>SpanBERT removes all subword tokenisation</span></button><button class="opt" type="button"><b>B</b><span>SpanBERT replaces transformers with convolutional networks</span></button><button class="opt" type="button"><b>C</b><span>SpanBERT only processes sentences containing pronouns</span></button><button class="opt" type="button"><b>D</b><span>SpanBERT is pretrained using span boundary objective and mask contiguous spans, creating richer representations of complete phrases</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> SpanBERT masks contiguous spans of tokens and introduces a span boundary objective (SBO), training representations to summarise full multi-word mentions from their boundary tokens.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/bert-and-masked-language-models/"><small class="kicker">Concept</small><b>BERT &amp; Masked LMs</b></a><a href="../../concepts/semantic-role-labelling/"><small class="kicker">Concept</small><b>Semantic Role Labelling (SRL)</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/dialogue-systems/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Natural language processing</small><b>Dialogue Systems &amp; DST</b></a>
+    <a class="pager-next" href="../../concepts/bias-and-fairness-in-nlp/"><small>Next · Natural language processing <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Bias &amp; Fairness in NLP</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

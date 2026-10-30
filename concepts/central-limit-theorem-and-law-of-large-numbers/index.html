@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Central Limit Theorem and Law of Large Numbers · Learn · Yogesh Awate</title>
+<meta name="description" content="Why averages converge and bell curves appear everywhere: the Law of Large Numbers pins down the mean, while the Central Limit Theorem dictates the shape of sample sums.">
+<meta property="og:title" content="Central Limit Theorem and Law of Large Numbers · Learn · Yogesh Awate">
+<meta property="og:description" content="Why averages converge and bell curves appear everywhere: the Law of Large Numbers pins down the mean, while the Central Limit Theorem dictates the shape of sample sums.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="central-limit-theorem-and-law-of-large-numbers">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-statistics">Path 02 · Statistics</a> / Probability / Lesson 5 of 51</span>
+    <h1 class="case-title">Central Limit Theorem and Law of Large Numbers</h1>
+    <p class="lede rise" style="--d:3">Why averages converge and bell curves appear everywhere: the Law of Large Numbers pins down the mean, while the Central Limit Theorem dictates the shape of sample sums.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="1"><i><b></b></i>Beginner</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/random-variables-and-distributions/">Random variables</a> <a href="../../concepts/expectation-variance-and-covariance/">Expectation and variance</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Statistics · Probability</dd>
+          <dt>Level</dt><dd>Beginner</dd>
+          <dt>Used by</dt><dd>2 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">The Law of Large Numbers guarantees that sample averages converge to the true population expectation as sample size grows. The Central Limit Theorem goes further, proving that the standardised sum or mean of independent random variables converges to a Gaussian distribution, regardless of the underlying distribution's shape.</p>
+        <p>Imagine rolling a fair six-sided die. A single roll has a completely flat, discrete uniform distribution: 1, 2, 3, 4, 5, or 6 each appear with equal probability 1/6. The true expected value is 3.5. If you roll the die 10 times, your average might be 2.9 or 4.1. But roll it 10,000 times, and the average will be virtually indistinguishable from 3.5. That stability is the Law of Large Numbers (LLN): random noise cancels out across large samples.</p>
+        <p>Now, instead of one long run, imagine taking 1,000 separate players. Each player rolls 30 dice and computes their own average. If you plot the histogram of those 1,000 averages, something remarkable emerges: the flat uniform distribution has completely vanished. In its place sits a smooth, bell-shaped Gaussian curve centred at 3.5.</p>
+        <p>This is the Central Limit Theorem (CLT). Even if the original population is skewed, bimodal, or uniform, the distribution of sample averages becomes approximately normal once sample size $n$ is sufficiently large (typically $n \ge 30$). This explains why Gaussian assumptions dominate machine learning: measurement errors and composite features are usually sums of many small, independent underlying effects.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>The Law of Large Numbers tells you that a fleet of ships will on average reach their port; the Central Limit Theorem describes the bell-shaped dispersion pattern of their arrival times.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Draw independent, identically distributed (i.i.d.) observations $X_1, X_2, \dots, X_n$ from any population with finite mean $\mu$ and variance $\sigma^2$.</li><li>Compute the sample average $\bar{X}_n = \frac{1}{n}\sum_{i=1}^n X_i$.</li><li>Observe the Law of Large Numbers in action: as $n \to \infty$, the sample mean $\bar{X}_n$ converges in probability to the true population mean $\mu$.</li><li>Apply the Central Limit Theorem: standardise the sum or mean to form $Z_n = \frac{\bar{X}_n - \mu}{\sigma / \sqrt{n}}$.</li><li>Approximate probabilities of sample averages using the standard Gaussian CDF $\Phi(z)$ whenever $n$ is adequately large.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Weak and Strong Laws of Large Numbers</h3><div class="formula">$$\text{Weak Law (WLLN): } \lim_{n \to \infty} P(|\bar{X}_n - \mu| \ge \varepsilon) = 0, \qquad \text{Strong Law (SLLN): } P\left(\lim_{n \to \infty} \bar{X}_n = \mu\right) = 1$$</div><p>The Weak Law (Khinchin's theorem) guarantees convergence in probability: for any margin $\varepsilon &gt; 0$, the probability of a discrepancy larger than $\varepsilon$ decays to 0. The Strong Law (Kolmogorov's theorem) guarantees almost sure convergence: the sample trajectory itself converges to the constant $\mu$ with probability 1.</p></li>
+          <li><h3>The Lindeberg–Lévy Central Limit Theorem</h3><div class="formula">$$\sqrt{n}\left(\frac{\bar{X}_n - \mu}{\sigma}\right) \xrightarrow{d} \mathcal{N}(0, 1) \quad \text{as } n \to \infty$$</div><p>For any sequence of i.i.d. random variables with finite variance $\sigma^2 &lt; \infty$, the distribution of the normalised error converges in distribution ($\xrightarrow{d}$) to a standard Gaussian. Equivalently, the unstandardised sample mean follows approximately $\bar{X}_n \sim \mathcal{N}\left(\mu, \frac{\sigma^2}{n}\right)$.</p></li>
+          <li><h3>Berry–Esseen Rate of Convergence</h3><div class="formula">$$\sup_{z \in \mathbb{R}} \big| F_n(z) - \Phi(z) \big| \le \frac{C \cdot \mathbb{E}\big[|X - \mu|^3\big]}{\sigma^3 \sqrt{n}}$$</div><p>The Berry–Esseen theorem bounds the maximum discrepancy between the actual CDF of the standardised sample mean $F_n(z)$ and the standard normal CDF $\Phi(z)$. The convergence rate is $O(1/\sqrt{n})$, scaled by the population skewness. Heavily skewed distributions require larger $n$ before the normal approximation becomes accurate.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>LLN guarantees that empirical risk converges to expected risk in machine learning as training set size grows.</li><li>CLT applies to the sum or average of random variables, not to the raw data distribution itself; raw data does not magically become normal.</li><li>Finite variance is an absolute requirement; heavy-tailed distributions like Cauchy have no finite variance and violate the CLT entirely.</li><li>The spread of sample averages shrinks at the rate $1/\sqrt{n}$, meaning halving estimation error requires quadrupling the sample size.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+rng = np.random.<span class="f">default_rng</span>(<span class="n">42</span>)
+<span class="c"># Draw from a heavily skewed Exponential distribution (scale = 2.0)</span>
+scale = <span class="n">2.0</span>
+n_samples = <span class="n">50</span>
+n_experiments = <span class="n">5000</span>
+
+<span class="c"># True parameters: mean = scale, var = scale^2</span>
+true_mean = scale
+true_se = scale / np.<span class="f">sqrt</span>(n_samples)
+
+<span class="c"># Simulate 5,000 separate sample means of size n = 50</span>
+means = rng.<span class="f">exponential</span>(scale=scale, size=(n_experiments, n_samples)).<span class="f">mean</span>(axis=<span class="n">1</span>)
+
+empirical_mean = np.<span class="f">mean</span>(means)
+empirical_se = np.<span class="f">std</span>(means, ddof=<span class="n">1</span>)
+<span class="c"># Fraction of sample averages falling within 1.96 standard errors of the mean</span>
+coverage = np.<span class="f">mean</span>(np.<span class="f">abs</span>(means - true_mean) &lt;= <span class="n">1.96</span> * true_se)
+
+<span class="k">print</span>(<span class="s">f&quot;True Mean: {true_mean:.2f}, Simulated Mean: {empirical_mean:.4f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Theoretical SE: {true_se:.4f}, Simulated SE: {empirical_se:.4f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;95% Gaussian Coverage: {coverage * 100:.2f}%&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Believing the raw data becomes normally distributed with more samples; only sample sums and averages become normal.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Applying CLT to Cauchy or Pareto distributions with infinite variance where averages wander erratically forever.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming $n = 30$ is always sufficient; heavily skewed or zero-inflated distributions can require hundreds or thousands of samples for good Gaussian fits.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Confusing standard deviation of the population ($\sigma$) with standard error of the mean ($\sigma / \sqrt{n}$).</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>What happens to the distribution of individual data points $X_i$ as the sample size $n$ increases?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Its variance drops to zero</span></button><button class="opt" type="button"><b>B</b><span>It remains exactly the true population distribution from which it is drawn</span></button><button class="opt" type="button"><b>C</b><span>It approaches a standard normal distribution</span></button><button class="opt" type="button"><b>D</b><span>It becomes uniform</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The CLT applies exclusively to sample sums and averages. The raw individual observations continue to reflect their true underlying population distribution regardless of sample size.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>If you wish to cut the standard error of a sample mean in half, by what factor must you increase the sample size?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>2</span></button><button class="opt" type="button"><b>B</b><span>$\sqrt{2}$</span></button><button class="opt" type="button"><b>C</b><span>8</span></button><button class="opt" type="button"><b>D</b><span>4</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The standard error is $\sigma / \sqrt{n}$. To divide the error by 2, $n$ must increase by a factor of $2^2 = 4$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>Which fundamental condition must a probability distribution satisfy for the classical Lindeberg–Lévy CLT to hold?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The population must have finite variance</span></button><button class="opt" type="button"><b>B</b><span>The population must be symmetric</span></button><button class="opt" type="button"><b>C</b><span>The observations must be correlated</span></button><button class="opt" type="button"><b>D</b><span>The sample size must exceed 100,000</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The classical CLT requires independent, identically distributed observations with finite mean and finite variance ($\sigma^2 &lt; \infty$). Distributions with infinite variance (like Cauchy) violate CLT.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q4</span>What is the conceptual difference between the Law of Large Numbers (LLN) and the Central Limit Theorem (CLT)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>There is no difference; they are alternative names for the same theorem</span></button><button class="opt" type="button"><b>B</b><span>LLN applies only to continuous variables; CLT applies only to discrete variables</span></button><button class="opt" type="button"><b>C</b><span>LLN describes the limiting Gaussian shape; CLT proves the mean converges to a point</span></button><button class="opt" type="button"><b>D</b><span>LLN shows the sample mean converges to the true mean; CLT describes the distribution of errors around that mean</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> LLN pins down the destination ($\bar{X}_n \to \mu$), whereas CLT provides the rate and probability distribution of the fluctuations around that destination ($\sqrt{n}(\bar{X}_n - \mu) \to \mathcal{N}(0, \sigma^2)$).</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q5</span>Which of the following distributions is a celebrated counterexample where sample averages fail to converge under the Law of Large Numbers because it lacks a finite mean?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Cauchy distribution</span></button><button class="opt" type="button"><b>B</b><span>Exponential distribution</span></button><button class="opt" type="button"><b>C</b><span>Uniform distribution</span></button><button class="opt" type="button"><b>D</b><span>Poisson distribution</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The Cauchy distribution has heavy polynomial tails and undefined mean and variance. Averaging $n$ Cauchy variables produces the exact same Cauchy spread, never concentrating around a point.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q6</span>What distinguishes the Weak Law of Large Numbers (WLLN) from the Strong Law of Large Numbers (SLLN)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>WLLN establishes convergence in probability; SLLN establishes almost sure convergence with probability 1</span></button><button class="opt" type="button"><b>B</b><span>WLLN applies to independent variables; SLLN applies to dependent variables</span></button><button class="opt" type="button"><b>C</b><span>WLLN describes variance; SLLN describes expectation</span></button><button class="opt" type="button"><b>D</b><span>WLLN applies only to small samples; SLLN applies when $n \ge 30$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The Weak Law (Khinchin) proves that $P(|\bar{X}_n - \mu| \ge \varepsilon) \to 0$ as $n \to \infty$. The Strong Law (Kolmogorov) proves that the sample average trajectory converges to $\mu$ with probability 1.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q7</span>A machine packs bags with mean weight 250 g and standard deviation 5 g. For a box containing 100 independently filled bags, what are the expected total weight and standard deviation of the box?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>25,000 g and 0.5 g</span></button><button class="opt" type="button"><b>B</b><span>25,000 g and 500 g</span></button><button class="opt" type="button"><b>C</b><span>2,500 g and 50 g</span></button><button class="opt" type="button"><b>D</b><span>25,000 g and 50 g</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Expected values add directly ($\mathbb{E}[S] = 100 \times 250 = 25{,}000\text{ g}$). Variances add ($\operatorname{Var}(S) = 100 \times 5^2 = 2{,}500$), so standard deviation is $\sqrt{2{,}500} = 50\text{ g}$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q8</span>A simulation averages 64 independent $U(0, 1)$ random variables ($\mu = 0.5, \sigma \approx 0.2887$) across 10,000 runs. What should the empirical standard deviation of these 10,000 means be closest to?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>0.036</span></button><button class="opt" type="button"><b>B</b><span>0.005</span></button><button class="opt" type="button"><b>C</b><span>0.500</span></button><button class="opt" type="button"><b>D</b><span>0.289</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> By the CLT, the standard error of the sample mean is $\sigma / \sqrt{n} = 0.2887 / \sqrt{64} = 0.2887 / 8 \approx 0.0361$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q9</span>According to the Berry–Esseen theorem, what property of the underlying population primarily governs how quickly sample averages converge to normality?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The standardised third moment (skewness)</span></button><button class="opt" type="button"><b>B</b><span>The size of the population mean</span></button><button class="opt" type="button"><b>C</b><span>The population median</span></button><button class="opt" type="button"><b>D</b><span>Whether the support is continuous or discrete</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Berry–Esseen bounds the maximum discrepancy from a normal CDF by $\frac{C \cdot \mathbb{E}[|X - \mu|^3]}{\sigma^3 \sqrt{n}}$. Heavily skewed populations converge much more slowly than symmetric ones.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q10</span>Server request times have mean $\mu = 40\text{ ms}$ and standard deviation $\sigma = 30\text{ ms}$. For a random sample of $n = 100$ requests, what is the approximate probability that the sample mean latency exceeds $45\text{ ms}$? (Given: $P(Z &gt; 1.67) \approx 0.048$).</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>2.5%</span></button><button class="opt" type="button"><b>B</b><span>15.9%</span></button><button class="opt" type="button"><b>C</b><span>33.3%</span></button><button class="opt" type="button"><b>D</b><span>4.8%</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Standard error is $\sigma / \sqrt{n} = 30 / \sqrt{100} = 3\text{ ms}$. The $z$-score is $(45 - 40) / 3 = 5/3 \approx 1.67$. Using standard normal tables, $P(Z &gt; 1.67) \approx 0.048$ (or 4.8%).</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q11</span>Battery lifetime has population standard deviation $\sigma = 80\text{ hours}$. What is the minimum sample size $n$ required so that the standard error of the sample mean is at most $4\text{ hours}$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>20</span></button><button class="opt" type="button"><b>B</b><span>100</span></button><button class="opt" type="button"><b>C</b><span>1,600</span></button><button class="opt" type="button"><b>D</b><span>400</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Setting $\sigma / \sqrt{n} \le 4$ gives $80 / \sqrt{n} \le 4$, so $\sqrt{n} \ge 20$, which implies $n \ge 20^2 = 400$.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q12</span>Suppose $X_1, X_2, \dots, X_n$ are drawn from a heavy-tailed distribution with finite mean $\mu$ but infinite variance $\sigma^2 = \infty$. How does the normalised sample average behave as $n \to \infty$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Its standard deviation drops to zero at rate $1/n$</span></button><button class="opt" type="button"><b>B</b><span>It fails to converge to any distribution because the mean is undefined</span></button><button class="opt" type="button"><b>C</b><span>It converges to a standard Gaussian by the Lindeberg–Lévy CLT</span></button><button class="opt" type="button"><b>D</b><span>It converges to an alpha-stable non-Gaussian distribution rather than a normal distribution</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The classical Lindeberg–Lévy CLT requires finite variance. When variance is infinite, the generalised CLT states that sums of independent variables converge to Lévy alpha-stable distributions.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/sampling-and-standard-error/"><small class="kicker">Concept</small><b>Sampling &amp; standard error</b></a><a href="../../concepts/confidence-intervals/"><small class="kicker">Concept</small><b>Confidence intervals</b></a><a href="../../models/ols_linear_regression/"><small class="kicker">Regression</small><b>Linear regression (OLS)</b></a><a href="../../models/linear_discriminant_analysis/"><small class="kicker">Classification</small><b>LDA</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/correlation-pearson-spearman-kendall/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Statistics</small><b>Correlation coefficients</b></a>
+    <a class="pager-next" href="../../concepts/joint-marginal-and-conditional-distributions/"><small>Next · Statistics <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Joint &amp; Conditional Dist.</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

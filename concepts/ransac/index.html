@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>RANSAC · Learn · Yogesh Awate</title>
+<meta name="description" content="RANdom SAmple Consensus (RANSAC) is a non-deterministic iterative framework designed to robustly estimate mathematical model parameters from data heavily corrupted by outliers. Where standard linear regression and ordinary least-squares estimators suffer catastrophic breakdown from even a single severe outlier, RANSAC handles contamination rates exceeding 50% to 80% by repeatedly sampling minimal random subsets, fitting candidate hypotheses, and scoring consensus based on inlier support. The required number of sample iterations N = (1 - p)(1 - (1 - )s) is derived from first principles to guarantee finding an outlier-free sample with specified statistical confidence p.">
+<meta property="og:title" content="RANSAC · Learn · Yogesh Awate">
+<meta property="og:description" content="RANdom SAmple Consensus (RANSAC) is a non-deterministic iterative framework designed to robustly estimate mathematical model parameters from data heavily corrupted by outliers. Where standard linear regression and ordinary least-squares estimators suffer catastrophic breakdown from even a single severe outlier, RANSAC handles contamination rates exceeding 50% to 80% by repeatedly sampling minimal random subsets, fitting candidate hypotheses, and scoring consensus based on inlier support. The required number of sample iterations N = (1 - p)(1 - (1 - )s) is derived from first principles to guarantee finding an outlier-free sample with specified statistical confidence p.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="ransac">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-vision">Path 09 · Computer vision</a> / Geometry / Lesson 12 of 37</span>
+    <h1 class="case-title">RANSAC</h1>
+    <p class="lede rise" style="--d:3">RANdom SAmple Consensus (RANSAC) is a non-deterministic iterative framework designed to robustly estimate mathematical model parameters from data heavily corrupted by outliers. Where standard linear regression and ordinary least-squares estimators suffer catastrophic breakdown from even a single severe outlier, RANSAC handles contamination rates exceeding 50% to 80% by repeatedly sampling minimal random subsets, fitting candidate hypotheses, and scoring consensus based on inlier support. The required number of sample iterations $N = \frac{\ln(1 - p)}{\ln(1 - (1 - \epsilon)^s)}$ is derived from first principles to guarantee finding an outlier-free sample with specified statistical confidence $p$.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">15 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/geometric-transforms-and-homography/">Homography &amp; Transforms</a> <a href="../../concepts/sift-orb-and-feature-matching/">SIFT &amp; ORB</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Computer vision · Geometry</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Feature matching across images is messy. In real-world visual SLAM, robotic navigation, and panorama stitching, matching keypoints using SIFT or ORB frequently yields datasets where over half the correspondences are completely spurious—caused by repetitive window patterns, moving foliage, specular reflections, or motion blur. Feeding these raw matches into ordinary least squares produces catastrophic failure: because least squares squares errors, a single wild outlier thousands of pixels away exerts infinite leverage, rotating the entire estimated transformation into nonsense. RANSAC prevents this by reversing the paradigm: rather than trying to fit all data and smoothing away errors, it assumes data is guilty until proven innocent, searching for the largest coherent consensus set.</p>
+        <p>The failure of least-squares and breakdown points: Classical statistical estimators minimise the sum of squared residuals $\sum_i r_i^2$. Because squaring magnifies large deviations quadratically, an arbitrary outlier with enormous residual pulls the regression hyperplane entirely toward itself. The "breakdown point"—the proportion of arbitrary incorrect observations an estimator can tolerate before returning an unbounded estimate—for ordinary least squares is exactly $0\%$. A single bad point destroys the result. Robust vision algorithms require estimators with breakdown points reaching $50\%$ or even $80\%$.</p>
+        <p>The hypothesis-and-verify consensus loop: Martin Fischler and Robert Bolles proposed RANSAC in 1981 based on an elegant randomized hypothesis loop: (1) Randomly select the minimum number of data points $s$ required to define the mathematical model (e.g. $s=2$ points for a 2D line, $s=4$ point correspondences for a homography, $s=5$ points for an essential matrix). (2) Fit a candidate model hypothesis strictly to this minimal sample. (3) Count how many data points in the entire dataset agree with this model within an error tolerance $\tau$ (the "inlier set"). (4) Repeat for $N$ iterations, retaining the model with the largest consensus set. Finally, re-estimate model parameters using standard least squares over all identified inliers.</p>
+        <p>How many iterations are sufficient: At first glance, random sampling might appear heuristic. However, the required number of trials $N$ is mathematically bounded. Let $\epsilon \in [0, 1)$ represent the outlier ratio (fraction of contaminated points). The probability that a single randomly drawn point is a true inlier is $(1 - \epsilon)$. The probability that a minimal sample of size $s$ consists entirely of pristine inliers is $(1 - \epsilon)^s$. The probability that at least one of the $s$ points is an outlier is $1 - (1 - \epsilon)^s$. After $N$ independent draws, the probability that every single trial fails to draw a pure inlier sample is $(1 - (1 - \epsilon)^s)^N$. Setting this failure probability to $1 - p$ (where $p$ is our desired confidence, e.g. $99\%$) yields a closed-form formula for $N$.</p>
+        <p>Adaptive iteration termination: In real applications, the true outlier fraction $\epsilon$ is unknown beforehand. Practical RANSAC implementations estimate $\epsilon$ dynamically during execution. Whenever a newly sampled model discovers a consensus set larger than any seen previously, the empirical inlier ratio is updated: $1 - \hat{\epsilon} = \frac{|S_{\text{inliers}}|}{N_{\text{total}}}$. The required iteration budget $N$ is immediately recalculated downwards. If a dominant consensus is discovered early, the loop terminates within dozens of trials rather than running for thousands of redundant iterations.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine you are an archaeologist attempting to reconstruct an ancient Roman road that crosses a desert. Over two thousand years, storms, landslides, and careless travellers have strewn random stones everywhere: 70% of the stones on the ground are random boulders that have nothing to do with the road. If you average the coordinates of all stones using least squares, the result is a meaningless point in the middle of nowhere. RANSAC is like a surveyor who picks up a laser pointer, selects two random stones at a time, and shines a beam through them. Most pairs pick at least one random boulder, projecting a beam into empty desert where almost no other stones line up. But eventually, pure chance selects two authentic Roman paving stones: suddenly, seventy other stones across the valley illuminate along the laser beam. The surveyor recognizes the massive consensus line, discards all other scattered boulders as noise, and maps the true Roman highway with centimetre precision.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Required iteration bound for confidence $p$</h3><div class="formula">N = \frac{\ln(1 - p)}{\ln\left(1 - (1 - \epsilon)^s\right)}</div><p>Here $p$ is the desired probability of success (typically $p=0.99$), $s$ is the minimal sample size, and $\epsilon \in [0, 1)$ is the outlier ratio. For $s=4$ (homography) with $50\%$ outliers ($\epsilon=0.5$), the probability of a pure sample is $(0.5)^4 = 0.0625$, requiring $N = \frac{\ln(0.01)}{\ln(1 - 0.0625)} \approx 72$ iterations. For $80\%$ outliers ($\epsilon=0.8$), $N \approx 2,875$ iterations.</p></li>
+          <li><h3>Orthogonal line residual metric</h3><div class="formula">r_i = \frac{|a x_i + b y_i + c|}{\sqrt{a^2 + b^2}} \le \tau</div><p>When fitting geometric models, orthogonal geometric distance is preferred over vertical algebraic residuals ($|y_i - (mx_i+c)|$), because vertical residuals fail when lines approach vertical orientation. Points with orthogonal distance $r_i \le \tau$ are classified as inliers.</p></li>
+          <li><h3>Adaptive iteration update rule</h3><div class="formula">\hat{\epsilon} = 1 - \frac{|S_{\text{best}}|}{N_{\text{total}}}, \quad N_{\text{new}} = \frac{\ln(1 - p)}{\ln\left(1 - (1 - \hat{\epsilon})^s\right)}</div><p>Whenever an iteration yields a larger consensus set, $\hat{\epsilon}$ is updated with the observed inlier ratio. If $N_{\text{new}}$ is smaller than the remaining scheduled iterations, the search budget is dynamically reduced, ensuring rapid termination when strong consensus is established.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>RANSAC is a robust randomized consensus estimator capable of fitting models in the presence of extreme outlier ratios ($&gt;50\%$).</li><li>Ordinary least-squares estimators possess a $0\%$ breakdown point: a single wild outlier can corrupt the entire solution.</li><li>RANSAC fits hypotheses strictly to minimal subsets of size $s$ to maximise the probability $(1 - \epsilon)^s$ of drawing a clean sample.</li><li>The number of required iterations $N = \frac{\ln(1 - p)}{\ln(1 - (1 - \epsilon)^s)}$ is mathematically derived to guarantee confidence $p$.</li><li>After finding the maximal consensus set, the final model is refined via least squares over all identified inliers.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Simulate robust 2D line fitting in the presence of 60% outliers</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+
+<span class="c"># 1. Generate ground truth inliers along line: y = 2.0 * x + 5.0</span>
+num_inliers = <span class="n">40</span>
+num_outliers = <span class="n">60</span>
+num_total = num_inliers + num_outliers
+
+x_inliers = np.<span class="f">linspace</span>(-<span class="n">10.0</span>, <span class="n">10.0</span>, num_inliers)
+noise = np.random.<span class="f">normal</span>(<span class="n">0.0</span>, <span class="n">0.4</span>, size=num_inliers)
+y_inliers = <span class="n">2.0</span> * x_inliers + <span class="n">5.0</span> + noise
+
+<span class="c"># Generate wild outliers scattered across the domain</span>
+x_outliers = np.random.<span class="f">uniform</span>(-<span class="n">10.0</span>, <span class="n">10.0</span>, size=num_outliers)
+y_outliers = np.random.<span class="f">uniform</span>(-<span class="n">40.0</span>, <span class="n">40.0</span>, size=num_outliers)
+
+<span class="c"># Combine into dataset</span>
+X = np.<span class="f">concatenate</span>([x_inliers, x_outliers])
+Y = np.<span class="f">concatenate</span>([y_inliers, y_outliers])
+points = np.<span class="f">column_stack</span>([X, Y])
+
+<span class="c"># 2. RANSAC implementation for 2D line fitting (minimal sample s = 2)</span>
+s = <span class="n">2</span>
+p_confidence = <span class="n">0.99</span>
+outlier_ratio_est = <span class="n">0.60</span>  <span class="c"># initial conservative estimate</span>
+tau_threshold = <span class="n">1.0</span>       <span class="c"># orthogonal distance threshold</span>
+
+<span class="c"># Theoretical iterations needed: ln(1 - p) / ln(1 - (1 - eps)^s)</span>
+prob_clean = (<span class="n">1.0</span> - outlier_ratio_est) ** s
+N_iterations = <span class="f">int</span>(np.<span class="f">ceil</span>(np.<span class="f">log</span>(<span class="n">1.0</span> - p_confidence) / np.<span class="f">log</span>(<span class="n">1.0</span> - prob_clean)))
+<span class="k">print</span>(<span class="s">f&quot;Dataset: {num_total} points ({num_inliers} inliers, {num_outliers} outliers)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Theoretical iterations for 99% confidence (s=2, eps=0.6): {N_iterations}&quot;</span>)
+
+best_inliers = <span class="k">None</span>
+max_inlier_count = <span class="n">0</span>
+best_model = <span class="k">None</span>
+
+<span class="k">for</span> trial <span class="k">in</span> <span class="k">range</span>(N_iterations):
+    <span class="c"># Randomly draw 2 points</span>
+    sample_indices = np.random.<span class="f">choice</span>(num_total, size=s, replace=<span class="k">False</span>)
+    p1, p2 = points[sample_indices[<span class="n">0</span>]], points[sample_indices[<span class="n">1</span>]]
+    
+    <span class="c"># Avoid degenerate vertical / identical points</span>
+    dx = p2[<span class="n">0</span>] - p1[<span class="n">0</span>]
+    dy = p2[<span class="n">1</span>] - p1[<span class="n">1</span>]
+    <span class="k">if</span> np.<span class="f">abs</span>(dx) &lt; <span class="n">1e-6</span>:
+        continue
+        
+    <span class="c"># Line equation: a*x + b*y + c = 0</span>
+    <span class="c"># dy * x - dx * y + (dx * p1[1] - dy * p1[0]) = 0</span>
+    a = dy
+    b = -dx
+    c = dx * p1[<span class="n">1</span>] - dy * p1[<span class="n">0</span>]
+    denom = np.<span class="f">sqrt</span>(a*a + b*b)
+    
+    <span class="c"># Compute orthogonal distance for all points</span>
+    distances = np.<span class="f">abs</span>(a * points[:, <span class="n">0</span>] + b * points[:, <span class="n">1</span>] + c) / denom
+    inliers = np.<span class="f">where</span>(distances &lt;= tau_threshold)[<span class="n">0</span>]
+    
+    <span class="k">if</span> <span class="k">len</span>(inliers) &gt; max_inlier_count:
+        max_inlier_count = <span class="k">len</span>(inliers)
+        best_inliers = inliers
+        best_model = (a, b, c)
+
+<span class="c"># 3. Final refinement: least squares over all identified inliers</span>
+inlier_x = points[best_inliers, <span class="n">0</span>]
+inlier_y = points[best_inliers, <span class="n">1</span>]
+
+<span class="c"># Fit y = m*x + b over inliers</span>
+A_matrix = np.<span class="f">column_stack</span>([inlier_x, np.<span class="f">ones_like</span>(inlier_x)])
+m_ransac, b_ransac = np.linalg.<span class="f">lstsq</span>(A_matrix, inlier_y, rcond=<span class="k">None</span>)[<span class="n">0</span>]
+
+<span class="c"># Compare against non-robust ordinary least squares over all points</span>
+A_all = np.<span class="f">column_stack</span>([points[:, <span class="n">0</span>], np.<span class="f">ones</span>(num_total)])
+m_ols, b_ols = np.linalg.<span class="f">lstsq</span>(A_all, points[:, <span class="n">1</span>], rcond=<span class="k">None</span>)[<span class="n">0</span>]
+
+<span class="k">print</span>(<span class="s">f&quot;\nRANSAC consensus inlier count: {max_inlier_count} / {num_total}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Ground truth line:             y = 2.000 * x + 5.000&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;RANSAC estimated line:         y = {m_ransac:.3f} * x + {b_ransac:.3f} (ROBUST)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Ordinary Least Squares line:   y = {m_ols:.3f} * x + {b_ols:.3f} (BROKEN BY OUTLIERS)&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Selecting sample sizes larger than minimal ($&gt;s$): Drawing more than the minimum number of points causes the clean-sample probability $(1 - \epsilon)^k$ to plummet exponentially, requiring drastically more iterations to succeed.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Setting threshold $\tau$ too tight or too loose: Setting $\tau$ too tight rejects true inliers with sensor noise, preventing consensus discovery; setting $\tau$ too loose allows spurious outliers into the consensus set, biasing the estimated model.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming RANSAC is fully deterministic: Because RANSAC relies on random pseudo-random number generator draws, two runs on identical noisy data may yield slightly different consensus sets unless a fixed seed is used.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Failing to detect degenerate minimal samples: In homography estimation, if 3 of the 4 randomly drawn points happen to be collinear, the candidate model is mathematically degenerate and must be rejected before checking consensus.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Omitting final least-squares refitting: A minimal sample of size $s$ fits the sampled points exactly but carries higher variance due to measurement noise; always refit over all inliers to produce the minimum-variance estimate.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>Why does RANSAC deliberately restrict its candidate model fitting to minimal sample sizes (such as $s=2$ for lines or $s=4$ for homographies)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To ensure all estimated parameters are positive numbers</span></button><button class="opt" type="button"><b>B</b><span>Because matrix inversion cannot be evaluated for sets larger than 4 points</span></button><button class="opt" type="button"><b>C</b><span>Because the probability of drawing an all-inlier sample $(1 - \epsilon)^s$ decreases exponentially as sample size $s$ grows, requiring drastically more iterations to guarantee success</span></button><button class="opt" type="button"><b>D</b><span>Because computer vision datasets never contain more than 10 points</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> If outlier ratio is $50\%$ ($\epsilon=0.5$), a sample of size $s=4$ has a $(0.5)^4 = 6.25\%$ chance of being clean, requiring 72 trials. A sample of size $s=8$ has only a $(0.5)^8 = 0.39\%$ chance, requiring 1,177 trials. Minimal samples maximise the chance of drawing pristine data.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>What is the theoretical breakdown point of classical ordinary least-squares estimators when fitting geometric models?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$50\%$ (it tolerates half the data being noise)</span></button><button class="opt" type="button"><b>B</b><span>$25\%$ (one quarter of observations can be corrupted)</span></button><button class="opt" type="button"><b>C</b><span>$0\%$ (a single extreme outlier can pull the least-squares estimate arbitrarily far from the true parameters)</span></button><button class="opt" type="button"><b>D</b><span>$100\%$ (it is completely immune to noise)</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because ordinary least squares squares residuals ($r_i^2$), an outlier situated far from the true line generates an unbounded penalty that pulls the entire fitted model towards itself, giving it a breakdown point of $0\%$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>How does adaptive RANSAC terminate its iteration loop early when processing real image correspondences?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Whenever a candidate model discovers an inlier consensus larger than previously observed, it recalculates the outlier estimate $\hat{\epsilon}$ and reduces the required iteration budget $N$ dynamically</span></button><button class="opt" type="button"><b>B</b><span>It terminates when the sum of residuals evaluates to an exact integer</span></button><button class="opt" type="button"><b>C</b><span>It stops whenever the camera sensor temperature exceeds 50 degrees Celsius</span></button><button class="opt" type="button"><b>D</b><span>It halts automatically after exactly 10 iterations regardless of inlier counts</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> By updating the estimated outlier fraction $\hat{\epsilon} = 1 - (|S_{\text{best}}| / N_{\text{total}})$ each time a superior consensus is found, the formula for $N$ reveals whether current iterations already exceed the required confidence threshold, allowing early termination.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q4</span>Why is it essential to re-estimate model parameters using linear least squares over the entire inlier set after RANSAC finishes its consensus search?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To convert the model parameters into integer coefficients</span></button><button class="opt" type="button"><b>B</b><span>Because OpenCV refuses to compile models fitted on fewer than 50 points</span></button><button class="opt" type="button"><b>C</b><span>Because the RANSAC minimal sample solution produces imaginary numbers</span></button><button class="opt" type="button"><b>D</b><span>Because a minimal sample of size $s$ fits the selected points exactly but carries higher estimation variance due to localized measurement noise; pooling all inliers produces a lower-variance, optimal estimate</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The minimal sample of $s$ points isolates the outlier-free consensus set, but fitting strictly to $s$ points is subject to local noise. Refitting over all dozens or hundreds of consensus inliers averages out zero-mean Gaussian measurement noise.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/geometric-transforms-and-homography/"><small class="kicker">Concept</small><b>Homography &amp; Transforms</b></a><a href="../../concepts/sift-orb-and-feature-matching/"><small class="kicker">Concept</small><b>SIFT &amp; ORB</b></a><a href="../../concepts/corners-and-keypoints-harris-fast/"><small class="kicker">Concept</small><b>Harris &amp; FAST</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/geometric-transforms-and-homography/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Computer vision</small><b>Homography &amp; Transforms</b></a>
+    <a class="pager-next" href="../../concepts/camera-model-and-calibration/"><small>Next · Computer vision <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Camera model &amp; calibration</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

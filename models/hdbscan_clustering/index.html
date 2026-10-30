@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>HDBSCAN (Hierarchical DBSCAN) · Learn · Yogesh Awate</title>
+<meta name="description" content="Runs DBSCAN at every density level at once and keeps the clusters that persist longest. Handles varying densities.">
+<meta property="og:title" content="HDBSCAN (Hierarchical DBSCAN) · Learn · Yogesh Awate">
+<meta property="og:description" content="Runs DBSCAN at every density level at once and keeps the clusters that persist longest. Handles varying densities.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="hdbscan_clustering">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-clustering">Path 05 · Clustering</a> / Density-based / Lesson 9 of 17</span>
+    <h1 class="case-title">HDBSCAN (Hierarchical DBSCAN)</h1>
+    <p class="lede rise" style="--d:3">Runs DBSCAN at every density level at once and keeps the clusters that persist longest. Handles varying densities.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="3"><i><b></b></i>Advanced</span></span>
+      <span class="tagline">20 min</span>
+      <span class="tagline lab">Live lab</span>
+      <span class="prereq">Before this: <a href="../../models/dbscan_clustering/">DBSCAN</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Task</dt><dd>Clustering</dd>
+          <dt>Family</dt><dd>Density-based, hierarchical</dd>
+          <dt>What it learns</dt><dd>A condensed density hierarchy</dd>
+          <dt>Training cost</dt><dd>$O(n\log n)$ typical, $O(n^2)$ worst</dd>
+          <dt>Prediction cost</dt><dd>approximate_predict available</dd>
+          <dt>In code</dt><dd><code class="no-math">sklearn.<wbr>cluster.<wbr>HDBSCAN</code></dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>How it works</a></li><li><a href="#lab"><span>03</span>Try it</a></li><li><a href="#maths"><span>04</span>The maths</a></li><li><a href="#tuning"><span>05</span>Hyperparameters</a></li><li><a href="#when"><span>06</span>When to use it</a></li><li><a href="#code"><span>07</span>In code</a></li><li><a href="#results"><span>08</span>On real data</a></li><li><a href="#quiz"><span>09</span>Check yourself</a></li><li><a href="#related"><span>10</span>Related lessons</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">HDBSCAN builds a hierarchy of DBSCAN-like clusterings across all values of $\varepsilon$, then picks the clusters that are most stable across that range. You set the smallest cluster size you care about; it figures out the rest.</p>
+        <p>It first measures density per point with the <em>core distance</em> (distance to the k-th neighbour) and defines a "mutual reachability" distance that pushes sparse points apart. A minimum spanning tree over these distances, cut at every level, gives a full hierarchy.</p>
+        <p>Small fragments below <code>min_cluster_size</code> are treated as points falling out of a cluster, not new clusters. Each remaining cluster gets a stability score: roughly how long (in density terms) it survives with many points. The final answer selects the most stable non-overlapping clusters, which can come from different density levels.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Watching islands appear as the tide goes out: some appear early and last, others are brief sandbars. Keep the islands that last.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> How it works</h2>
+        <ol class="steps"><li>Compute each point’s core distance (min_samples neighbours).</li><li>Compute mutual reachability distances and build their minimum spanning tree.</li><li>Sort MST edges to build a single-linkage hierarchy.</li><li>Condense it: ignore splits that shed fewer than min_cluster_size points.</li><li>Select clusters by stability (excess of mass); the rest is noise.</li></ol>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>03</span> Try it</h2>
+        <p>HDBSCAN computed in your browser: mutual-reachability MST, condensed tree and stability-based selection. Point brightness is membership strength.</p>
+        <div class="lab" data-lab="hdbscan_clustering" data-kind="models" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>On "varied density", HDBSCAN finds both the tight and the loose cluster, where DBSCAN could not.</li><li>Raise min_cluster_size until small clusters merge into noise.</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>04</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Mutual reachability distance</h3><div class="formula">$$d_{\text{mreach}}(a, b) = \max\{\text{core}_k(a),\; \text{core}_k(b),\; d(a, b)\}$$</div><p>Points in sparse regions get pushed away from everything, which keeps noise from bridging clusters.</p></li>
+          <li><h3>Cluster stability</h3><div class="formula">$$S(C) = \sum_{p \in C}\big(\lambda_p - \lambda_{\text{birth}}(C)\big), \qquad \lambda = 1/\varepsilon$$</div><p>How much density "mass" a cluster accumulates between its birth and when its points leave.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="tuning">
+        <h2 class="h3"><span>05</span> Hyperparameters</h2>
+        <div class="table-wrap"><table class="kv">
+          <thead><tr><th>Setting</th><th>What it does</th><th>Typical choice</th></tr></thead>
+          <tbody><tr><td><span class="hp">min_cluster_size</span></td><td>Smallest group you would call a cluster.</td><td>The main knob; think in business terms.</td></tr><tr><td><span class="hp">min_samples</span></td><td>How conservative the density estimate is.</td><td>Defaults to min_cluster_size; raise for more noise points.</td></tr><tr><td><span class="hp">cluster_selection_method</span></td><td>eom or leaf.</td><td>eom (default) for fewer, larger clusters.</td></tr></tbody>
+        </table></div>
+      </section>
+      <section class="reveal" id="when">
+        <h2 class="h3"><span>06</span> When to use it</h2>
+        <div class="split2">
+          <div class="box good"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Strengths</h3><ul><li>Handles clusters of varying density.</li><li>Few, intuitive parameters.</li><li>Gives membership strengths and outlier scores.</li></ul></div>
+          <div class="box bad"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg> Limitations</h3><ul><li>Slower than DBSCAN.</li><li>Can label many points as noise.</li><li>Hierarchy can be hard to explain.</li></ul></div>
+          <div class="box use"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> Reach for it when</h3><p>Exploratory clustering of real-world data, embeddings (often after UMAP), anything where density varies.</p></div>
+          <div class="box avoid"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Think twice when</h3><p>When every point must be assigned to a cluster.</p></div>
+        </div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>07</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> pandas <span class="k">as</span> pd
+<span class="k">from</span> sklearn.preprocessing <span class="k">import</span> StandardScaler
+
+df = pd.<span class="f">read_csv</span>(<span class="s">&quot;datasets/raw/mall_customers.csv&quot;</span>)
+X = <span class="f">StandardScaler</span>().<span class="f">fit_transform</span>(df[[<span class="s">&quot;Annual_Income_k&quot;</span>, <span class="s">&quot;Spending_Score&quot;</span>]])
+<span class="k">from</span> sklearn.cluster <span class="k">import</span> HDBSCAN
+
+hdb = <span class="f">HDBSCAN</span>(min_cluster_size=<span class="n">15</span>).<span class="f">fit</span>(X)
+<span class="k">print</span>(<span class="s">&quot;clusters:&quot;</span>, <span class="k">len</span>(<span class="f">set</span>(hdb.labels_)) - (-<span class="n">1</span> <span class="k">in</span> hdb.labels_), <span class="s">&quot;noise:&quot;</span>, (hdb.labels_ == -<span class="n">1</span>).<span class="f">sum</span>())
+<span class="k">print</span>(<span class="s">&quot;membership strength of first rows:&quot;</span>, hdb.probabilities_[:<span class="n">5</span>].<span class="f">round</span>(<span class="n">2</span>))</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Setting min_cluster_size to 2 or 3 and getting hundreds of micro-clusters.</span></li></ul>
+      </section>
+      <section class="reveal" id="results">
+        <h2 class="h3"><span>08</span> On real data</h2>
+        <p>HDBSCAN (min size 10) on standardised annual income and spending score of the mall customers sample. No labels exist, so the scores are internal: higher silhouette and lower Davies–Bouldin are better.</p>
+        <div class="table-wrap" style="margin-top:18px"><table class="kv results-table">
+          <thead><tr><th>Metric</th><th>HDBSCAN (min size 10)</th><th>k-means (k = 5)</th></tr></thead>
+          <tbody><tr><td>Clusters</td><td>7.000</td><td>5.000</td></tr><tr><td>Noise points</td><td>264.0</td><td>0.000</td></tr><tr><td>Silhouette</td><td>0.576</td><td>0.404</td></tr><tr><td>Davies–Bouldin</td><td>0.556</td><td>0.828</td></tr><tr><td>Calinski–Harabasz</td><td>477.4</td><td>489.200</td></tr></tbody>
+        </table></div>
+        <p class="note">Produced by <a href="https://github.com/yogesh660/ml-model-zoo/blob/main/models/hdbscan_clustering/train.py" target="_blank" rel="noopener">models/hdbscan_clustering/train.py</a> · generated 2026-10-28. Run it yourself: <code class="no-math">python models/hdbscan_clustering/train.py</code></p>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>09</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>What problem of DBSCAN does HDBSCAN solve?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Detecting noise</span></button><button class="opt" type="button"><b>B</b><span>Needing k</span></button><button class="opt" type="button"><b>C</b><span>A single global density threshold</span></button><button class="opt" type="button"><b>D</b><span>Speed</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> It considers all density levels and picks stable clusters from different ones.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>What is the primary hyperparameter in HDBSCAN that specifies the smallest grouping an analyst considers a legitimate cluster?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>max_leaf_nodes</span></button><button class="opt" type="button"><b>B</b><span>eps</span></button><button class="opt" type="button"><b>C</b><span>n_clusters</span></button><button class="opt" type="button"><b>D</b><span>min_cluster_size</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> <code>min_cluster_size</code> is HDBSCAN's primary intuitive parameter, setting the minimum number of observations required to form a distinct cluster rather than being treated as noise.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>What label does HDBSCAN assign to points deemed unclustered noise or background clutter?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>999</span></button><button class="opt" type="button"><b>B</b><span>-1</span></button><button class="opt" type="button"><b>C</b><span>NaN</span></button><button class="opt" type="button"><b>D</b><span>0</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Following the scikit-learn density-based convention, HDBSCAN assigns label <code>-1</code> to points classified as noise.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q4</span>What transformation is applied to density scale $\varepsilon$ to define $\lambda$ in HDBSCAN's condensed tree?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$\lambda = \varepsilon^2$</span></button><button class="opt" type="button"><b>B</b><span>$\lambda = \exp(-\varepsilon)$</span></button><button class="opt" type="button"><b>C</b><span>$\lambda = \log(\varepsilon)$</span></button><button class="opt" type="button"><b>D</b><span>$\lambda = 1 / \varepsilon$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In HDBSCAN, $\lambda = 1/\varepsilon$ represents inverse distance (density). As $\varepsilon$ shrinks toward zero, density $\lambda$ increases toward infinity.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q5</span>How is the mutual reachability distance $d_{\text{mreach}}(a, b)$ calculated between two points $a$ and $b$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>As $\max\{\text{core}_k(a), \; \text{core}_k(b), \; d(a, b)\}$</span></button><button class="opt" type="button"><b>B</b><span>As the average of their Euclidean distance and their core distances</span></button><button class="opt" type="button"><b>C</b><span>As $\min\{\text{core}_k(a), \; \text{core}_k(b)\} \times d(a, b)$</span></button><button class="opt" type="button"><b>D</b><span>As the cosine distance between their feature vectors</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Mutual reachability distance takes the maximum of point $a$'s core distance, point $b$'s core distance, and the raw distance between them. This artificially pushes points in sparse regions far apart, preventing noise from bridging clusters.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q6</span>What happens during the tree condensation step in HDBSCAN when a cluster splits into two components?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The larger component is discarded as background noise</span></button><button class="opt" type="button"><b>B</b><span>Both components are always registered as new independent clusters</span></button><button class="opt" type="button"><b>C</b><span>The algorithm restarts with a smaller sample size</span></button><button class="opt" type="button"><b>D</b><span>If one component has fewer than min_cluster_size points, it is treated as points falling out of the parent cluster rather than a genuine split</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The condensed tree ignores splits where one branch has fewer than <code>min_cluster_size</code> points, recording them as points gradually detaching from the cluster as density increases.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q7</span>How does HDBSCAN select the final flat clusters from the condensed tree under the default "eom" (Excess of Mass) method?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It navigates the tree from the bottom up, comparing the stability of parent clusters against the sum of stabilities of their child clusters to maximise overall persistent mass</span></button><button class="opt" type="button"><b>B</b><span>It picks the top $k$ clusters with the highest centroid variance</span></button><button class="opt" type="button"><b>C</b><span>It cuts the tree with a single horizontal line at a fixed $\lambda$</span></button><button class="opt" type="button"><b>D</b><span>It selects only the individual leaf nodes of the tree</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The Excess of Mass (EOM) criterion compares parent stability $S(\text{parent})$ with the sum of children stabilities. If the children's combined stability is greater, the children are selected; otherwise the parent is retained.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q8</span>What does the <code>hdb.probabilities_</code> attribute quantify in a fitted HDBSCAN model?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The p-value of a statistical test against the null hypothesis of randomness</span></button><button class="opt" type="button"><b>B</b><span>The posterior probability under a fitted Gaussian mixture</span></button><button class="opt" type="button"><b>C</b><span>The probability that the entire dataset is normally distributed</span></button><button class="opt" type="button"><b>D</b><span>The degree of cluster membership strength for each point, reflecting how persistently the point remained in its assigned cluster across density levels</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> <code>hdb.probabilities_</code> indicates how tightly bound each point is to its assigned cluster, evaluated as $\frac{\lambda_p - \lambda_{\text{birth}}}{\lambda_{\text{death}} - \lambda_{\text{birth}}}$. Noise points have probability 0.0.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q9</span>If an analyst wants HDBSCAN to produce smaller, more fine-grained sub-clusters rather than broad aggregate clusters, which setting should they change?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Set algorithm="brute"</span></button><button class="opt" type="button"><b>B</b><span>Set metric="precomputed"</span></button><button class="opt" type="button"><b>C</b><span>Switch cluster_selection_method from "eom" to "leaf"</span></button><button class="opt" type="button"><b>D</b><span>Increase min_cluster_size to a much larger number</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Setting <code>cluster_selection_method="leaf"</code> selects the finest, homogeneous leaf sub-clusters at the tips of the condensed tree rather than merging them into broad parent clusters under Excess of Mass.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q10</span>Points $a$ and $b$ are separated by Euclidean distance $d(a, b) = 1.8$. In a 5-nearest neighbour density estimate, point $a$ has core distance $\text{core}_5(a) = 1.2$ and point $b$ has core distance $\text{core}_5(b) = 2.5$. What is their mutual reachability distance $d_{\text{mreach}}(a, b)$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>1.8</span></button><button class="opt" type="button"><b>B</b><span>2.5</span></button><button class="opt" type="button"><b>C</b><span>5.5</span></button><button class="opt" type="button"><b>D</b><span>1.2</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The mutual reachability distance is $\max\{\text{core}(a), \text{core}(b), d(a, b)\} = \max\{1.2, 2.5, 1.8\} = 2.5$. Because point $b$ sits in a sparser neighbourhood ($\text{core} = 2.5$), the effective distance between them is widened to 2.5.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q11</span>A cluster $C$ is born at density $\lambda_{\text{birth}} = 0.50$ (corresponding to $\varepsilon = 2.0$). The cluster contains 3 points whose disappearance densities are $\lambda_1 = 1.50$, $\lambda_2 = 2.00$, and $\lambda_3 = 2.50$. What is the stability $S(C) = \sum_{p \in C} (\lambda_p - \lambda_{\text{birth}})$ of this cluster?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>6.00</span></button><button class="opt" type="button"><b>B</b><span>3.00</span></button><button class="opt" type="button"><b>C</b><span>4.50</span></button><button class="opt" type="button"><b>D</b><span>1.50</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Stability measures the cumulative persistence of points in the cluster above the birth threshold: $(1.50 - 0.50) + (2.00 - 0.50) + (2.50 - 0.50) = 1.00 + 1.50 + 2.00 = 4.50$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q12</span>In the condensed tree of an HDBSCAN model, a parent cluster has stability $S(\text{parent}) = 8.5$. At a higher density, the parent splits into two child clusters with stabilities $S(\text{child}_1) = 4.0$ and $S(\text{child}_2) = 5.2$. Under the Excess of Mass (EOM) selection algorithm, which cluster(s) are selected?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Both child clusters are selected because their combined stability (9.2) exceeds the parent's stability (8.5)</span></button><button class="opt" type="button"><b>B</b><span>All three clusters are selected simultaneously</span></button><button class="opt" type="button"><b>C</b><span>The parent cluster is selected because an individual cluster with stability 8.5 is larger than either child alone</span></button><button class="opt" type="button"><b>D</b><span>All points in the parent cluster are reclassified as noise</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> EOM compares the parent's stability against the sum of the children's stabilities: $S(\text{children}) = 4.0 + 5.2 = 9.2 &gt; 8.5$. Because the children accumulate more persistence mass, the algorithm selects the two children.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>10</span> Related lessons</h2>
+        <div class="related"><a href="../../models/dbscan_clustering/"><small class="kicker">Clustering</small><b>DBSCAN</b></a><a href="../../models/optics_clustering/"><small class="kicker">Clustering</small><b>OPTICS</b></a><a href="../../models/agglomerative_hierarchical/"><small class="kicker">Clustering</small><b>Agglomerative clustering</b></a><a href="../../concepts/clustering-metrics/"><small class="kicker">Concept</small><b>Clustering metrics</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../models/dbscan_clustering/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Clustering</small><b>DBSCAN</b></a>
+    <a class="pager-next" href="../../models/optics_clustering/"><small>Next · Clustering <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>OPTICS</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/sequences.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

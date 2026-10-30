@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Question Answering: Extractive SQuAD, Multi-Hop Reasoning, and Open-Domain QA · Learn · Yogesh Awate</title>
+<meta name="description" content="Extractive QA (SQuAD) identifies continuous start and end token indices within a provided reference passage that answer the question. Open-Domain QA (ODQA) decouples into a retriever that scans millions of passages and a reader that extracts or synthesizes the final answer. Multi-hop QA (HotpotQA) requires gathering disjoint clues across multiple disparate documents to deduce the correct conclusion. Evaluation benchmarks evaluate exact match (EM) and token-level macro-averaged F1 score against ground-truth answer strings.">
+<meta property="og:title" content="Question Answering: Extractive SQuAD, Multi-Hop Reasoning, and Open-Domain QA · Learn · Yogesh Awate">
+<meta property="og:description" content="Extractive QA (SQuAD) identifies continuous start and end token indices within a provided reference passage that answer the question. Open-Domain QA (ODQA) decouples into a retriever that scans millions of passages and a reader that extracts or synthesizes the final answer. Multi-hop QA (HotpotQA) requires gathering disjoint clues across multiple disparate documents to deduce the correct conclusion. Evaluation benchmarks evaluate exact match (EM) and token-level macro-averaged F1 score against ground-truth answer strings.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="question-answering">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-nlp">Path 10 · Natural language processing</a> / Tasks and evaluation / Lesson 45 of 52</span>
+    <h1 class="case-title">Question Answering: Extractive SQuAD, Multi-Hop Reasoning, and Open-Domain QA</h1>
+    <p class="lede rise" style="--d:3">Extractive QA (SQuAD) identifies continuous start and end token indices within a provided reference passage that answer the question. Open-Domain QA (ODQA) decouples into a retriever that scans millions of passages and a reader that extracts or synthesizes the final answer. Multi-hop QA (HotpotQA) requires gathering disjoint clues across multiple disparate documents to deduce the correct conclusion. Evaluation benchmarks evaluate exact match (EM) and token-level macro-averaged F1 score against ground-truth answer strings.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Natural language processing · Tasks and evaluation</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Question Answering (QA) tests a system's ability to retrieve, understand, and synthesize answers to natural language inquiries. Architectures range from span-extractive reading comprehension on benchmark datasets like SQuAD to complex multi-hop reasoning over knowledge graphs and retriever-reader open-domain pipelines.</p>
+        <p>When you take an open-book reading comprehension test, you read a paragraph and answer a question by underlining the exact phrase that gives the answer. This is Extractive QA (popularised by SQuAD). For instance, given the text "Marie Curie was awarded the Nobel Prize in Chemistry in 1911", and the question "When did Curie win her Chemistry Nobel?", an extractive model predicts start index 9 and end index 9 to extract "1911". In Open-Domain QA, no passage is provided: the system must first act as a search engine to retrieve the right articles from Wikipedia, then read them to find the answer. In Multi-Hop QA, answering the question requires connecting separate clues: e.g. "What team does the quarterback who won the 2021 Super Bowl play for?" requires first discovering who won in 2021, and second finding that player's team.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Extractive QA is like using an index finger to point directly at a single sentence in a brochure handed to you. Open-Domain QA is walking into a multi-storey library, finding the correct aisle, pulling down the right book, and pointing at the page. Multi-Hop QA is following a scavenger hunt where Clue #1 inside an envelope in the attic directs you to open a safe in the basement to find the prize.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Format input pair: concatenate the question tokens and context paragraph tokens separated by a `[SEP]` delimiter.</li><li>Encode joint sequence: process the concatenated tokens through a bidirectional transformer encoder.</li><li>Predict span boundaries: compute linear projections of each token embedding to yield start and end probability distributions.</li><li>Filter candidate spans: apply dynamic programming to select the span $(i, j)$ maximising $P_{\text{start}}(i) \times P_{\text{end}}(j)$ where $j \ge i$ and span length $\le L_{\max}$.</li><li>Handle unanswerable questions: if the `[CLS]` token score exceeds valid span scores, predict that the question cannot be answered from the text.</li><li>Evaluate metrics: compare extracted string against reference spans using Exact Match (EM) binary score and token-overlap F1 score.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Question Answering: Extractive SQuAD, Multi-Hop Reasoning, and Open-Domain QA formulation (Part 1)</h3><div class="formula">\mathbf{x} = [\text{CLS}] \, q_1, \dots, q_M \, [\text{SEP}] \, p_1, \dots, p_N \, [\text{SEP}]</div><p>Contextual token representations $\mathbf{H} \in \mathbb{R}^{(M+N+3) \times d}$ are projected to start and end token logits via parameter vectors $\mathbf{w}_s, \mathbf{w}_e$:</p></li>
+          <li><h3>Question Answering: Extractive SQuAD, Multi-Hop Reasoning, and Open-Domain QA formulation (Part 2)</h3><div class="formula">s_i = \mathbf{w}_s^T \mathbf{h}_i, \quad e_j = \mathbf{w}_e^T \mathbf{h}_j</div><p>Probability distributions for start index $i$ and end index $j$ are calculated using softmax:</p></li>
+          <li><h3>Question Answering: Extractive SQuAD, Multi-Hop Reasoning, and Open-Domain QA formulation (Part 3)</h3><div class="formula">P_{\text{start}}(i) = \frac{\exp(s_i)}{\sum_{k} \exp(s_k)}, \quad P_{\text{end}}(j) = \frac{\exp(e_j)}{\sum_{k} \exp(e_k)}</div><p>The predicted span $(i^*, j^*)$ maximises joint score subject to constraint $i \le j \le i + L_{\max}$:</p></li>
+          <li><h3>Question Answering: Extractive SQuAD, Multi-Hop Reasoning, and Open-Domain QA formulation (Part 4)</h3><div class="formula">(i^*, j^*) = \arg\max_{i \le j \le i + L_{\max}} \left( s_i + e_j \right)</div><p>Loss for true span $(y_s, y_e)$ is formulated as:</p></li>
+          <li><h3>Question Answering: Extractive SQuAD, Multi-Hop Reasoning, and Open-Domain QA formulation (Part 5)</h3><div class="formula">\mathcal{L}_{\text{QA}} = - \log P_{\text{start}}(y_s) - \log P_{\text{end}}(y_e)</div><p>Loss for true span $(y_s, y_e)$ is formulated as:</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Extractive reading comprehension predicts start and end token indices of answer spans within source paragraphs.</li><li>Open-domain QA combines an information retriever with a reader model to locate answers across millions of documents.</li><li>Evaluation benchmarks evaluate Exact Match (strict binary) and token-level F1 overlap to quantify comprehension accuracy.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">def</span> <span class="f">score_extractive_span</span>(start_logits, end_logits, max_answer_len=<span class="n">5</span>):
+    <span class="s">&quot;&quot;&quot;Finds optimal start and end span maximising joint probability.&quot;&quot;&quot;</span>
+    <span class="c"># Convert logits to probabilities</span>
+    <span class="k">def</span> <span class="f">softmax</span>(z):
+        exp_z = np.<span class="f">exp</span>(z - np.<span class="f">max</span>(z))
+        <span class="k">return</span> exp_z / np.<span class="f">sum</span>(exp_z)
+        
+    p_start = <span class="f">softmax</span>(start_logits)
+    p_end = <span class="f">softmax</span>(end_logits)
+    
+    best_score = -<span class="n">1.0</span>
+    best_span = (<span class="n">0</span>, <span class="n">0</span>)
+    N = <span class="k">len</span>(start_logits)
+    
+    <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(N):
+        <span class="k">for</span> j <span class="k">in</span> <span class="k">range</span>(i, <span class="f">min</span>(N, i + max_answer_len)):
+            score = p_start[i] * p_end[j]
+            <span class="k">if</span> score &gt; best_score:
+                best_score = score
+                best_span = (i, j)
+                
+    <span class="k">return</span> best_span, best_score
+
+<span class="k">def</span> <span class="f">compute_qa_f1</span>(pred_tokens, gold_tokens):
+    <span class="s">&quot;&quot;&quot;Computes token-level F1 overlap score.&quot;&quot;&quot;</span>
+    common = <span class="f">set</span>(pred_tokens) &amp; <span class="f">set</span>(gold_tokens)
+    <span class="k">if</span> <span class="k">not</span> common:
+        <span class="k">return</span> <span class="n">0.0</span>
+    p = <span class="k">len</span>(common) / <span class="k">len</span>(pred_tokens)
+    r = <span class="k">len</span>(common) / <span class="k">len</span>(gold_tokens)
+    <span class="k">return</span> (<span class="n">2</span> * p * r) / (p + r)
+
+<span class="c"># Simulation: &quot;Marie Curie received the Nobel Prize in 1911&quot;</span>
+<span class="c"># Tokens: [CLS] When did Curie win ? [SEP] Marie Curie received the Nobel Prize in 1911 [SEP]</span>
+tokens = [<span class="s">&quot;[CLS]&quot;</span>, <span class="s">&quot;When&quot;</span>, <span class="s">&quot;did&quot;</span>, <span class="s">&quot;Curie&quot;</span>, <span class="s">&quot;win&quot;</span>, <span class="s">&quot;?&quot;</span>, <span class="s">&quot;[SEP]&quot;</span>, 
+          <span class="s">&quot;Marie&quot;</span>, <span class="s">&quot;Curie&quot;</span>, <span class="s">&quot;received&quot;</span>, <span class="s">&quot;the&quot;</span>, <span class="s">&quot;Nobel&quot;</span>, <span class="s">&quot;Prize&quot;</span>, <span class="s">&quot;in&quot;</span>, <span class="s">&quot;1911&quot;</span>, <span class="s">&quot;[SEP]&quot;</span>]
+
+<span class="c"># Simulated logits from model head</span>
+start_logits = np.<span class="f">array</span>([-<span class="n">5</span>, -<span class="n">5</span>, -<span class="n">5</span>, -<span class="n">5</span>, -<span class="n">5</span>, -<span class="n">5</span>, -<span class="n">5</span>,  <span class="n">0.1</span>, <span class="n">0.2</span>, <span class="n">0.1</span>, <span class="n">0.0</span>, <span class="n">0.1</span>, <span class="n">0.2</span>, <span class="n">0.1</span>, <span class="n">8.5</span>, -<span class="n">5</span>])
+end_logits   = np.<span class="f">array</span>([-<span class="n">5</span>, -<span class="n">5</span>, -<span class="n">5</span>, -<span class="n">5</span>, -<span class="n">5</span>, -<span class="n">5</span>, -<span class="n">5</span>,  <span class="n">0.1</span>, <span class="n">0.1</span>, <span class="n">0.0</span>, <span class="n">0.1</span>, <span class="n">0.1</span>, <span class="n">0.2</span>, <span class="n">0.1</span>, <span class="n">8.9</span>, -<span class="n">5</span>])
+
+span, conf = <span class="f">score_extractive_span</span>(start_logits, end_logits)
+extracted_answer = tokens[span[<span class="n">0</span>]:span[<span class="n">1</span>] + <span class="n">1</span>]
+
+<span class="k">print</span>(<span class="s">f&quot;Extracted Span Indices: {span}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Extracted Answer:       '{' '.join(extracted_answer)}' (Confidence: {conf:.4f})&quot;</span>)
+
+f1 = <span class="f">compute_qa_f1</span>(extracted_answer, [<span class="s">&quot;1911&quot;</span>])
+<span class="k">print</span>(<span class="s">f&quot;Token-Level F1 Score:   {f1:.2f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming all questions are answerable from the passage; SQuAD 2.0 requires systems to abstain when the text does not contain the answer.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Extracting grammatically invalid spans by omitting the constraint $i \le j$, causing negative length predictions.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Evaluating extractive QA models on generative responses without accounting for semantic equivalence (e.g. marking "two" incorrect when gold is "2").</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>How does an extractive QA model like BERT-SQuAD predict an answer from a context paragraph?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It searches an inverted index on disk</span></button><button class="opt" type="button"><b>B</b><span>It maps questions to SQL queries</span></button><button class="opt" type="button"><b>C</b><span>It generates answer tokens word-by-word from an internal autoregressive decoder</span></button><button class="opt" type="button"><b>D</b><span>It computes start and end token classification logits over the input passage, identifying the boundaries of the answer span</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Extractive QA identifies the answer as a continuous span within the context document by predicting the start token index and end token index.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>What defines a "multi-hop" question answering task (such as HotpotQA)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The system requires multiple GPUs to compute forward passes</span></button><button class="opt" type="button"><b>B</b><span>The answer requires reasoning across and combining information from two or more separate documents or paragraphs</span></button><button class="opt" type="button"><b>C</b><span>The question must be translated into multiple languages before answering</span></button><button class="opt" type="button"><b>D</b><span>The model must query multiple internet search engines simultaneously</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Multi-hop QA requires connecting intermediate reasoning steps across distinct texts where no single document contains all necessary information to answer the question.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>In SQuAD evaluation, what is the difference between Exact Match (EM) and F1 score?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>EM measures character count, while F1 measures word count</span></button><button class="opt" type="button"><b>B</b><span>EM is a strict binary check (1 if prediction matches gold exactly, 0 otherwise), while F1 measures token-level precision and recall overlap</span></button><button class="opt" type="button"><b>C</b><span>F1 is only calculated on unanswerable questions</span></button><button class="opt" type="button"><b>D</b><span>EM evaluates latency, while F1 evaluates accuracy</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Exact Match requires character-for-character agreement with the reference answer, whereas F1 treats predicted and ground-truth answers as bags of tokens and calculates their harmonic mean overlap.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/semantic-search-and-dense-retrieval/"><small class="kicker">Concept</small><b>Semantic Search &amp; Dense Retrieval</b></a><a href="../../concepts/summarisation/"><small class="kicker">Concept</small><b>Text Summarisation &amp; ROUGE</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/summarisation/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Natural language processing</small><b>Text Summarisation &amp; ROUGE</b></a>
+    <a class="pager-next" href="../../concepts/information-and-relation-extraction/"><small>Next · Natural language processing <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Relation Extraction &amp; OpenIE</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

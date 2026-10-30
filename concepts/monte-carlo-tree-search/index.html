@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Monte Carlo Tree Search (MCTS): Selection, Expansion, Simulation, and Backpropagation · Learn · Yogesh Awate</title>
+<meta name="description" content="A heuristic search algorithm that navigates massive combinatorial decision trees by combining selective tree growth with random Monte Carlo rollouts and UCB1 exploration.">
+<meta property="og:title" content="Monte Carlo Tree Search (MCTS): Selection, Expansion, Simulation, and Backpropagation · Learn · Yogesh Awate">
+<meta property="og:description" content="A heuristic search algorithm that navigates massive combinatorial decision trees by combining selective tree growth with random Monte Carlo rollouts and UCB1 exploration.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="monte-carlo-tree-search">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ai">Path 11 · AI</a> / Classical AI / Lesson 4 of 42</span>
+    <h1 class="case-title">Monte Carlo Tree Search (MCTS): Selection, Expansion, Simulation, and Backpropagation</h1>
+    <p class="lede rise" style="--d:3">A heuristic search algorithm that navigates massive combinatorial decision trees by combining selective tree growth with random Monte Carlo rollouts and UCB1 exploration.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="3"><i><b></b></i>Advanced</span></span>
+      <span class="tagline">18 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>AI · Classical AI</dd>
+          <dt>Level</dt><dd>Advanced</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Monte Carlo Tree Search (MCTS) revolutionized automated game playing and sequential decision making where exhaustive minimax search is computationally intractable. By combining asymmetric tree expansion, Upper Confidence Bound for Trees (UCT), and random or neural rollout simulations, MCTS concentrates computation on the most promising tactical variations.</p>
+        <p>In games with massive state spaces like Go or chess, minimax search with alpha-beta pruning fails because the game tree branch factor is enormous and crafting a hand-engineered heuristic evaluation function for arbitrary board states is extraordinarily difficult.</p>
+        <p>MCTS solves this by building an asymmetric search tree incrementally across four repeating phases: Selection (following high-confidence paths via UCB1), Expansion (adding a new leaf node), Simulation (playing out the game to termination using random moves or a rollout policy), and Backpropagation (updating visit counts and win rates up the ancestor chain).</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine an explorer navigating an uncharted maze of caves. Instead of attempting to survey every dead-end branch equally, the explorer takes quick running sprints down unknown paths, takes note of which routes brought them closer to daylight, and focuses subsequent detailed mapping on the tunnels that led to the best breakthroughs.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Selection: starting from the root state, descend the tree by choosing actions that maximise the Upper Confidence Bound (UCT) formula until reaching an unexpanded node.</li><li>Expansion: create one or more child nodes corresponding to available legal actions from the selected leaf state.</li><li>Simulation (Rollout): play the game out to a terminal state from the new child node using a fast default policy (e.g. uniform random moves).</li><li>Backpropagation: evaluate the terminal reward (e.g. +1 for win, 0 for loss) and propagate the result upward, incrementing visit counts $N(s)$ and value sums $W(s)$ for all visited ancestors.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Upper Confidence Bound for Trees (UCT)</h3><div class="formula">\text{UCT}(s, a) = Q(s, a) + c \sqrt{\frac{\ln N(s)}{N(s, a)}}, \quad Q(s, a) = \frac{W(s, a)}{N(s, a)}</div><p>Balances exploitation of the empirical average win rate $Q(s, a)$ with exploration of rarely visited actions weighted by exploration constant $c \approx \sqrt{2}$.</p></li>
+          <li><h3>Value Backpropagation Update</h3><div class="formula">N(s, a) \leftarrow N(s, a) + 1, \quad W(s, a) \leftarrow W(s, a) + v</div><p>Increments the edge visit count and accumulates the rollout terminal outcome $v \in \{-1, 0, 1\}$ back to the root.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>MCTS grows asymmetric decision trees towards high-potential game trajectories using UCT selection.</li><li>The UCB1 exploration term guarantees that every legal action is eventually explored while prioritizing proven winning lines.</li><li>Deep reinforcement learning architectures like AlphaZero replace random rollouts with trained neural value networks.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">class</span> MCTSNode:
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, state, parent=<span class="k">None</span>):
+        <span class="k">self</span>.state = state
+        <span class="k">self</span>.parent = parent
+        <span class="k">self</span>.children = {}
+        <span class="k">self</span>.visits = <span class="n">0</span>
+        <span class="k">self</span>.value = <span class="n">0.0</span>
+
+    <span class="k">def</span> <span class="f">is_fully_expanded</span>(<span class="k">self</span>, legal_actions):
+        <span class="k">return</span> <span class="k">len</span>(<span class="k">self</span>.children) == <span class="k">len</span>(legal_actions)
+
+    <span class="k">def</span> <span class="f">best_child</span>(<span class="k">self</span>, c_param=<span class="n">1.414</span>):
+        choices = []
+        <span class="k">for</span> action, child <span class="k">in</span> <span class="k">self</span>.children.<span class="f">items</span>():
+            <span class="c"># UCT formula: exploitation + exploration</span>
+            exploit = child.value / child.visits
+            explore = c_param * np.<span class="f">sqrt</span>(np.<span class="f">log</span>(<span class="k">self</span>.visits) / child.visits)
+            choices.<span class="f">append</span>((exploit + explore, action, child))
+        <span class="k">return</span> <span class="f">max</span>(choices, key=<span class="k">lambda</span> x: x[<span class="n">0</span>])[<span class="n">2</span>]
+
+<span class="k">def</span> <span class="f">simulate_rollout</span>(state):
+    <span class="s">&quot;&quot;&quot;Simulates random rollout to termination.&quot;&quot;&quot;</span>
+    <span class="c"># Toy coin game: target is reaching 10 points</span>
+    current = state
+    <span class="k">while</span> current &lt; <span class="n">10</span>:
+        current += np.random.<span class="f">choice</span>([<span class="n">1</span>, <span class="n">2</span>])
+    <span class="k">return</span> <span class="n">1.0</span> <span class="k">if</span> current == <span class="n">10</span> <span class="k">else</span> <span class="n">0.0</span>
+
+<span class="k">def</span> <span class="f">mcts_search</span>(root_state, iterations=<span class="n">100</span>):
+    root = <span class="f">MCTSNode</span>(root_state)
+    <span class="k">for</span> _ <span class="k">in</span> <span class="k">range</span>(iterations):
+        node = root
+        <span class="c"># 1. Selection</span>
+        legal_actions = [<span class="n">1</span>, <span class="n">2</span>] <span class="k">if</span> node.state &lt; <span class="n">10</span> <span class="k">else</span> []
+        <span class="k">while</span> node.<span class="f">is_fully_expanded</span>(legal_actions) <span class="k">and</span> legal_actions:
+            node = node.<span class="f">best_child</span>()
+            legal_actions = [<span class="n">1</span>, <span class="n">2</span>] <span class="k">if</span> node.state &lt; <span class="n">10</span> <span class="k">else</span> []
+
+        <span class="c"># 2. Expansion</span>
+        unexplored = [a <span class="k">for</span> a <span class="k">in</span> legal_actions <span class="k">if</span> a <span class="k">not</span> <span class="k">in</span> node.children]
+        <span class="k">if</span> unexplored:
+            action = unexplored[<span class="n">0</span>]
+            child_node = <span class="f">MCTSNode</span>(node.state + action, parent=node)
+            node.children[action] = child_node
+            node = child_node
+
+        <span class="c"># 3. Simulation</span>
+        reward = <span class="f">simulate_rollout</span>(node.state)
+
+        <span class="c"># 4. Backpropagation</span>
+        <span class="k">while</span> node is <span class="k">not</span> <span class="k">None</span>:
+            node.visits += <span class="n">1</span>
+            node.value += reward
+            node = node.parent
+
+    <span class="c"># Choose action with most visits</span>
+    best_action = <span class="f">max</span>(root.children.<span class="f">items</span>(), key=<span class="k">lambda</span> x: x[<span class="n">1</span>].visits)[<span class="n">0</span>]
+    <span class="k">return</span> best_action, root.children[best_action].visits
+
+action, visits = <span class="f">mcts_search</span>(root_state=<span class="n">6</span>, iterations=<span class="n">200</span>)
+<span class="k">print</span>(<span class="s">f&quot;MCTS Recommended Action from state 6: +{action} (Explored {visits} times)&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Setting exploration constant $c$ too high causes the search to devolve into uniform random search; setting it too low traps the agent in premature local optima.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using pure random rollouts in games requiring tactical traps where a single random blunder in the rollout ruins accurate value estimation.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>What is the role of the $\sqrt{\ln N(s) / N(s, a)}$ term in the UCT formula?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It provides an exploration bonus that rewards actions that have been visited infrequently relative to their parent</span></button><button class="opt" type="button"><b>B</b><span>It calculates the discount factor for long-term rewards</span></button><button class="opt" type="button"><b>C</b><span>It forces the agent to surrender immediately when losing</span></button><button class="opt" type="button"><b>D</b><span>It normalises the board size to fit in GPU memory</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The square root term increases as parent visits $N(s)$ grow but decreases as the specific action visits $N(s, a)$ grow, incentivizing exploration of neglected actions.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>Which action does MCTS typically select as the final move after search completes?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The action that requires the fewest lines of code to execute</span></button><button class="opt" type="button"><b>B</b><span>A uniformly random action among all non-terminal nodes</span></button><button class="opt" type="button"><b>C</b><span>The action with the most visits $N(s, a)$, as visit count is the most robust estimate of policy quality</span></button><button class="opt" type="button"><b>D</b><span>The action with the highest instantaneous reward during the initial random rollout</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In MCTS, visit count is the most stable and noise-resistant signal of move quality because UCT naturally allocates the majority of iterations to the superior branch.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>How did AlphaGo and AlphaZero improve upon classical MCTS rollouts?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>They converted the search tree into an unweighted directed acyclic graph</span></button><button class="opt" type="button"><b>B</b><span>They eliminated the selection phase entirely</span></button><button class="opt" type="button"><b>C</b><span>They restricted board play to 3x3 grids</span></button><button class="opt" type="button"><b>D</b><span>They replaced random Monte Carlo rollout games with a trained neural value network and guided expansion using a neural policy prior</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Random rollouts are noisy and computationally slow; AlphaZero replaced rollouts with a single forward evaluation of a deep value network $V(s)$.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/mdps-and-bellman-equations/"><small class="kicker">Concept</small><b>MDPs &amp; Bellman Equations</b></a><a href="../../concepts/dynamic-programming-value-and-policy-iteration/"><small class="kicker">Concept</small><b>Value &amp; Policy Iteration</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/intelligent-agents-and-environments/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · AI</small><b>Agents &amp; Environments</b></a>
+    <a class="pager-next" href="../../concepts/constraint-satisfaction/"><small>Next · AI <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Constraint Satisfaction (CSP)</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

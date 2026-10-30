@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Transfer Learning and Fine-Tuning · Learn · Yogesh Awate</title>
+<meta name="description" content="Do not train complex vision or language networks from scratch when foundation models have spent millions of GPU hours learning universal representations. Freeze, adapt, and fine-tune for sample-efficient mastery.">
+<meta property="og:title" content="Transfer Learning and Fine-Tuning · Learn · Yogesh Awate">
+<meta property="og:description" content="Do not train complex vision or language networks from scratch when foundation models have spent millions of GPU hours learning universal representations. Freeze, adapt, and fine-tune for sample-efficient mastery.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="transfer-learning-and-fine-tuning">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-neural">Path 08 · Deep learning</a> / Practical deep learning / Lesson 14 of 42</span>
+    <h1 class="case-title">Transfer Learning and Fine-Tuning</h1>
+    <p class="lede rise" style="--d:3">Do not train complex vision or language networks from scratch when foundation models have spent millions of GPU hours learning universal representations. Freeze, adapt, and fine-tune for sample-efficient mastery.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/the-pytorch-training-loop/">PyTorch training loop</a> <a href="../../concepts/learning-rate-schedules-and-warm-up/">LR schedules and warm-up</a> <a href="../../concepts/weight-initialisation-xavier-and-he/">Weight initialisation: Xavier, He</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Deep learning · Practical deep learning</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Training deep architectures from scratch requires massive labelled datasets and substantial computational budgets. Transfer learning reuses parameter representations learned on massive upstream corpora (such as ImageNet or web-scale text) and adapts them to specialized downstream tasks using linear probing, head replacement, and differential fine-tuning.</p>
+        <p>Deep neural networks learn hierarchical feature representations. In vision backbones, early layers act as Gabor-like edge and texture filters; intermediate layers assemble these primitives into textures, corners, and motifs; and late layers combine parts into task-specific semantic classes. Because early and middle representations capture fundamental statistical structures of the physical world, they transfer effortlessly across domains. A model pre-trained on natural photos already understands edge detection and spatial composition, making it equally adept at learning medical radiographs or satellite images.</p>
+        <p>Practitioners adapt pre-trained models using two primary methodologies. In **feature extraction (linear probing)**, the entire pre-trained backbone is frozen (`param.requires_grad = False`), and only a newly appended classification head is trained. This strategy is lightning-fast, computationally cheap, and immune to overfitting on small target datasets ($N &lt; 1,000$). In **fine-tuning**, the backbone weights are unfrozen and trained alongside the head using a substantially reduced learning rate ($10\times$ to $100\times$ smaller than training from scratch), allowing pre-trained filters to adapt gently to target domain nuances.</p>
+        <p>A common failure mode during fine-tuning is **catastrophic forgetting**: if you unfreeze the backbone immediately while the new head is completely random, large initial gradient updates from the disordered head wash backward through the network, destroying years of pre-trained feature representations in the very first epoch. The standard remedy is staged unfreezing: train the head alone for several epochs until its loss stabilizes, then unfreeze the backbone with layer-wise discriminative learning rates.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Like hiring a classically trained concert pianist to play jazz: you do not need to teach them finger agility, pitch recognition, or reading music from scratch (pre-trained backbone); you simply teach them jazz harmonic progressions and improvisation phrasing (fine-tuning the head).</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Select a foundation backbone: pick a pre-trained model whose upstream data distribution shares structural affinities with the target task (e.g. ResNet/ConvNeXt for vision; BERT/RoBERTa/Llama for NLP).</li><li>Replace the task head: strip the original final projection layer and attach a new randomly initialised linear classifier sized to your target class count.</li><li>Warm up the head (linear probe): freeze all backbone layers (`requires_grad = False`) and train only the new head for 3 to 5 epochs to bring output projections into an orderly parameter regime.</li><li>Unfreeze with discriminative learning rates: unlock backbone parameters and assign smaller learning rates to early layers ($\eta_{\text{early}} = 0.1 \cdot \eta_{\text{head}}$) to preserve universal primitive filters.</li><li>Apply regularisation and evaluate: employ <a class="inline" href="../../concepts/regularisation-dropout-weight-decay-early-stopping/">weight decay</a> and early stopping to prevent overparameterised backbones from memorising small target datasets.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Transfer learning objective with parameter regularisation</h3><div class="formula">$$\min_{\theta_{\text{bb}}, \theta_{\text{head}}} \frac{1}{N}\sum_{i=1}^N \mathcal{L}\Big(g_{\theta_{\text{head}}}\big(f_{\theta_{\text{bb}}}(x_i)\big), y_i\Big) + \lambda_{\text{head}} \lVert \theta_{\text{head}} \rVert_2^2 + \lambda_{\text{bb}} \lVert \theta_{\text{bb}} - \theta_{\text{bb}}^{(0)} \rVert_2^2$$</div><p>$f_{\theta_{\text{bb}}}$ is the feature extraction backbone, $g_{\theta_{\text{head}}}$ is the task head, and $\theta_{\text{bb}}^{(0)}$ represents the original pre-trained weight initialisation. The final term anchors backbone weights to their pre-trained values, regularising representation drift during fine-tuning.</p></li>
+          <li><h3>Layer-wise discriminative learning rate schedule</h3><div class="formula">$$\eta_l = \eta_{\text{head}} \cdot \xi^{L - l}, \qquad 0 &lt; \xi &lt; 1$$</div><p>$L$ is the total layer depth, $l \in [1, L]$ is the layer index, and $\xi$ is the decay multiplier (typically $0.7$ to $0.9$). Early layers ($l=1$) receive geometrically smaller updates, ensuring that low-level edge and texture detectors remain stable while higher layers adapt to target semantics.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Transfer learning drastically reduces the dataset size and training duration required to achieve competitive deep learning accuracy.</li><li>Freezing the backbone to train the randomly initialised head first prevents catastrophic forgetting of pre-trained feature hierarchies.</li><li>Discriminative learning rates assign smaller update steps to lower layers, protecting universal spatial or syntactic primitives while adapting high-level semantics.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Simulate pre-trained feature extraction on target classification task</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+N, D = <span class="n">100</span>, <span class="n">8</span>  <span class="c"># 100 target samples with 8-dimensional pre-trained embeddings</span>
+X_features = np.random.<span class="f">randn</span>(N, D)
+<span class="c"># Target ground truth driven primarily by features 0 and 1</span>
+y_target = (<span class="n">1.5</span> * X_features[:, <span class="n">0</span>] - <span class="n">2.0</span> * X_features[:, <span class="n">1</span>] &gt; <span class="n">0</span>).<span class="f">astype</span>(int)
+
+<span class="c"># Linear probe: train head weights (8 -&gt; 1) with frozen backbone features</span>
+w_head = np.<span class="f">zeros</span>(D)
+lr_head = <span class="n">0.2</span>
+
+<span class="k">for</span> _ <span class="k">in</span> <span class="k">range</span>(<span class="n">50</span>):
+    logits = X_features @ w_head
+    probs = <span class="n">1.0</span> / (<span class="n">1.0</span> + np.<span class="f">exp</span>(-logits))
+    grad = X_features.T @ (probs - y_target) / N
+    w_head -= lr_head * grad
+
+<span class="c"># Evaluate target accuracy</span>
+predictions = (X_features @ w_head &gt; <span class="n">0</span>).<span class="f">astype</span>(int)
+accuracy = <span class="f">float</span>(np.<span class="f">mean</span>(predictions == y_target))
+
+<span class="k">print</span>(<span class="s">f&quot;Linear probe target task accuracy: {accuracy * 100:.1f}%&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Learned head weights for top 2 features: {w_head[0]:.3f}, {w_head[1]:.3f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Fine-tuning the entire network end-to-end with a large learning rate from epoch 1, immediately destroying pre-trained representations.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using mismatched image normalisation statistics (e.g. standardising with mean $0.5$ when the backbone was trained with ImageNet RGB mean and variance).</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Attempting feature extraction when the downstream task is drastically dissimilar from pre-training data, where end-to-end fine-tuning is required.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>What is catastrophic forgetting during fine-tuning of deep neural networks?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The model runs out of GPU memory during backward passes</span></button><button class="opt" type="button"><b>B</b><span>The validation dataset is accidentally shuffled into the training split</span></button><button class="opt" type="button"><b>C</b><span>The optimiser permanently deletes learning rate schedule milestones</span></button><button class="opt" type="button"><b>D</b><span>Large gradient updates from a randomly initialised head overwrite and destroy pre-trained representations in early layers</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> When an untrained head outputs large random errors, backpropagating these massive gradients into an unfrozen backbone immediately shatters the delicately tuned pre-trained weights.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>When is linear probing (feature extraction with a frozen backbone) preferred over full fine-tuning?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>When the target dataset is small (e.g. hundreds of samples) and similar in domain to the pre-training data</span></button><button class="opt" type="button"><b>B</b><span>When the model must run exclusively on CPU hardware</span></button><button class="opt" type="button"><b>C</b><span>When the target dataset has millions of labelled examples</span></button><button class="opt" type="button"><b>D</b><span>When the target task has 1,000 output classes</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> With small target datasets, fine-tuning millions of backbone parameters quickly leads to severe overfitting. Freezing the backbone restricts training to the linear head, preserving generalisation.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>How do discriminative (layer-wise) learning rates help preserve pre-trained knowledge?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>They apply progressively smaller learning rates to earlier layers, leaving low-level general feature detectors largely intact while allowing higher layers to adapt</span></button><button class="opt" type="button"><b>B</b><span>They force all convolutional kernels to sum to one</span></button><button class="opt" type="button"><b>C</b><span>They set the learning rate of odd-numbered layers to zero</span></button><button class="opt" type="button"><b>D</b><span>They multiply the learning rate by the batch size at every epoch</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Early layers capture universal features (edges, basic textures) that rarely need alteration. Decaying the learning rate with depth shields these foundational filters while granting semantic layers flexibility.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q4</span>What pre-processing step is essential when performing transfer learning with a vision backbone like ResNet?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Applying the exact same normalisation mean and standard deviation used during the model's original pre-training</span></button><button class="opt" type="button"><b>B</b><span>Padding every image to $1024 \times 1024$ resolution with zeros</span></button><button class="opt" type="button"><b>C</b><span>Randomly swapping the red and blue colour channels</span></button><button class="opt" type="button"><b>D</b><span>Converting all target images to binary black-and-white silhouettes</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Pre-trained neural weights expect input activations to conform to the specific channel means and variances used during upstream training (such as ImageNet channel statistics); mismatching them degrades performance.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/reading-loss-curves-and-debugging-training/"><small class="kicker">Concept</small><b>Reading loss curves</b></a><a href="../../concepts/regularisation-dropout-weight-decay-early-stopping/"><small class="kicker">Concept</small><b>Regularisation: dropout, decay</b></a><a href="../../concepts/residual-networks-and-skip-connections/"><small class="kicker">Concept</small><b>ResNets and skip connections</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/reading-loss-curves-and-debugging-training/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>Reading loss curves</b></a>
+    <a class="pager-next" href="../../concepts/data-augmentation-and-mixup/"><small>Next · Deep learning <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Data augmentation &amp; Mixup</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

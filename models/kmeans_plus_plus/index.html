@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>k-Means++ Initialisation · Learn · Yogesh Awate</title>
+<meta name="description" content="A smarter way to choose starting centres: spread them out in proportion to squared distance. Better and faster k-means.">
+<meta property="og:title" content="k-Means++ Initialisation · Learn · Yogesh Awate">
+<meta property="og:description" content="A smarter way to choose starting centres: spread them out in proportion to squared distance. Better and faster k-means.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="kmeans_plus_plus">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-clustering">Path 05 · Clustering</a> / Centroid-based / Lesson 2 of 17</span>
+    <h1 class="case-title">k-Means++ Initialisation</h1>
+    <p class="lede rise" style="--d:3">A smarter way to choose starting centres: spread them out in proportion to squared distance. Better and faster k-means.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">12 min</span>
+      <span class="tagline lab">Live lab</span>
+      <span class="prereq">Before this: <a href="../../models/kmeans_clustering/">k-means</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Task</dt><dd>Clustering</dd>
+          <dt>Family</dt><dd>Centroid seeding</dd>
+          <dt>What it learns</dt><dd>Starting centroids</dd>
+          <dt>Training cost</dt><dd>$O(n\,k\,p)$ seeding</dd>
+          <dt>Prediction cost</dt><dd>—</dd>
+          <dt>In code</dt><dd><code class="no-math">sklearn.<wbr>cluster.<wbr>KMeans</code></dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>How it works</a></li><li><a href="#lab"><span>03</span>Try it</a></li><li><a href="#maths"><span>04</span>The maths</a></li><li><a href="#tuning"><span>05</span>Hyperparameters</a></li><li><a href="#when"><span>06</span>When to use it</a></li><li><a href="#code"><span>07</span>In code</a></li><li><a href="#results"><span>08</span>On real data</a></li><li><a href="#quiz"><span>09</span>Check yourself</a></li><li><a href="#related"><span>10</span>Related lessons</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">k-means++ picks the first centre at random, then picks each next centre with probability proportional to its squared distance from the nearest centre already chosen. Starting centres end up spread across the data.</p>
+        <p>Random initialisation often drops two centres into the same cluster and none into another. k-means then has to drag them apart, often getting stuck. k-means++ makes far-away points much more likely to be chosen, so every real cluster tends to get a centre from the start.</p>
+        <p>It comes with a guarantee: the expected WCSS after seeding alone is within $O(\log k)$ of the optimum. In practice it means fewer iterations and fewer bad local minima, which is why it is scikit-learn’s default.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Choosing meeting points for a scattered group: each new spot is chosen near the people who are currently farthest from any meeting point.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> How it works</h2>
+        <ol class="steps"><li>Choose the first centre uniformly at random from the data.</li><li>For each point, compute $D(x)$: the distance to its nearest chosen centre.</li><li>Pick the next centre with probability $\propto D(x)^2$.</li><li>Repeat until $k$ centres are chosen, then run standard k-means.</li></ol>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>03</span> Try it</h2>
+        <p>Watch seeding step by step. The heat behind the points is the probability of each point being picked next.</p>
+        <div class="lab" data-lab="kmeans_plus_plus" data-kind="models" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>Press <em>Seed next</em> and watch probability drain away from points near chosen centres.</li><li>Run 20 restarts with random and with ++ seeding and compare the average WCSS.</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>04</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Seeding distribution</h3><div class="formula">$$P(x_i \text{ chosen next}) = \frac{D(x_i)^2}{\sum_j D(x_j)^2}$$</div><p>Squared distance makes far points much more likely without making the choice deterministic (which would favour outliers).</p></li>
+          <li><h3>Approximation guarantee</h3><div class="formula">$$\mathbb E[J_{\text{seed}}] \le 8(\ln k + 2)\,J_{\text{opt}}$$</div><p>From Arthur and Vassilvitskii (2007).</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="tuning">
+        <h2 class="h3"><span>05</span> Hyperparameters</h2>
+        <div class="table-wrap"><table class="kv">
+          <thead><tr><th>Setting</th><th>What it does</th><th>Typical choice</th></tr></thead>
+          <tbody><tr><td><span class="hp">init</span></td><td>"k-means++" or "random".</td><td>k-means++.</td></tr><tr><td><span class="hp">n_init</span></td><td>Restarts.</td><td>Still useful; 1–10.</td></tr></tbody>
+        </table></div>
+      </section>
+      <section class="reveal" id="when">
+        <h2 class="h3"><span>06</span> When to use it</h2>
+        <div class="split2">
+          <div class="box good"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Strengths</h3><ul><li>Better solutions, fewer iterations.</li><li>Provable approximation bound.</li><li>Negligible extra cost.</li></ul></div>
+          <div class="box bad"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg> Limitations</h3><ul><li>Seeding is sequential ($k$ passes over the data).</li><li>Can still pick an outlier as a centre.</li></ul></div>
+          <div class="box use"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> Reach for it when</h3><p>Always, whenever you run k-means.</p></div>
+          <div class="box avoid"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Think twice when</h3><p>Huge $k$ on huge data, where parallel variants (k-means‖) are faster.</p></div>
+        </div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>07</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> pandas <span class="k">as</span> pd
+<span class="k">from</span> sklearn.preprocessing <span class="k">import</span> StandardScaler
+
+df = pd.<span class="f">read_csv</span>(<span class="s">&quot;datasets/raw/mall_customers.csv&quot;</span>)
+X = <span class="f">StandardScaler</span>().<span class="f">fit_transform</span>(df[[<span class="s">&quot;Annual_Income_k&quot;</span>, <span class="s">&quot;Spending_Score&quot;</span>]])
+<span class="k">from</span> sklearn.cluster <span class="k">import</span> KMeans
+
+<span class="k">for</span> init <span class="k">in</span> [<span class="s">&quot;random&quot;</span>, <span class="s">&quot;k-means++&quot;</span>]:
+    runs = [<span class="f">KMeans</span>(<span class="n">5</span>, init=init, n_init=<span class="n">1</span>, random_state=s).<span class="f">fit</span>(X) <span class="k">for</span> s <span class="k">in</span> <span class="k">range</span>(<span class="n">20</span>)]
+    <span class="k">print</span>(init, <span class="s">&quot;mean inertia&quot;</span>, <span class="f">sum</span>(r.inertia_ <span class="k">for</span> r <span class="k">in</span> runs) / <span class="n">20</span>, <span class="s">&quot;mean iters&quot;</span>, <span class="f">sum</span>(r.n_iter_ <span class="k">for</span> r <span class="k">in</span> runs) / <span class="n">20</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming k-means++ removes the need to choose k. It only picks better starting points for the k you chose.</span></li></ul>
+      </section>
+      <section class="reveal" id="results">
+        <h2 class="h3"><span>08</span> On real data</h2>
+        <p>best of 20 k-means++ runs on standardised annual income and spending score of the mall customers sample. No labels exist, so the scores are internal: higher silhouette and lower Davies–Bouldin are better.</p>
+        <div class="table-wrap" style="margin-top:18px"><table class="kv results-table">
+          <thead><tr><th>Metric</th><th>best of 20 k-means++ runs</th><th>k-means (k = 5)</th></tr></thead>
+          <tbody><tr><td>Clusters</td><td>5.000</td><td>5.000</td></tr><tr><td>Noise points</td><td>0.000</td><td>0.000</td></tr><tr><td>Silhouette</td><td>0.402</td><td>0.404</td></tr><tr><td>Davies–Bouldin</td><td>0.821</td><td>0.828</td></tr><tr><td>Calinski–Harabasz</td><td>489.4</td><td>489.200</td></tr><tr><td>Mean inertia (random)</td><td>205.3</td><td>–</td></tr><tr><td>Mean inertia (k-means++)</td><td>204.0</td><td>–</td></tr></tbody>
+        </table></div>
+        <p class="note">Produced by <a href="https://github.com/yogesh660/ml-model-zoo/blob/main/models/kmeans_plus_plus/train.py" target="_blank" rel="noopener">models/kmeans_plus_plus/train.py</a> · generated 2026-10-28. Run it yourself: <code class="no-math">python models/kmeans_plus_plus/train.py</code></p>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>09</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>k-means++ chooses the next centre with probability proportional to:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Cluster size</span></button><button class="opt" type="button"><b>B</b><span>Uniformly</span></button><button class="opt" type="button"><b>C</b><span>Distance to the data mean</span></button><button class="opt" type="button"><b>D</b><span>Squared distance to the nearest chosen centre</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> $D(x)^2$ weighting spreads centres while keeping some randomness.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>What does k-means++ improve?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Robustness to non-convex shapes</span></button><button class="opt" type="button"><b>B</b><span>The number of clusters</span></button><button class="opt" type="button"><b>C</b><span>The objective being minimised</span></button><button class="opt" type="button"><b>D</b><span>The starting point, so k-means finds better local minima faster</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Only the initialisation changes; Lloyd’s algorithm runs as before.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>How is the very first initial centroid selected in the k-means++ algorithm?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The medoid of the entire dataset</span></button><button class="opt" type="button"><b>B</b><span>Uniformly at random from all data observations</span></button><button class="opt" type="button"><b>C</b><span>The point closest to the dataset mean</span></button><button class="opt" type="button"><b>D</b><span>The point with the largest feature values</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Step 1 of k-means++ selects the first centre uniformly at random from the data points with equal probability $1/n$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q4</span>Does k-means++ change the objective function or update equations of standard k-means during Lloyd's iterations?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>No, it is strictly an initialisation algorithm; once $k$ centres are seeded, standard Lloyd's iterations run unchanged</span></button><button class="opt" type="button"><b>B</b><span>Yes, it replaces squared Euclidean distance with Manhattan distance</span></button><button class="opt" type="button"><b>C</b><span>Yes, it incorporates gradient descent with momentum</span></button><button class="opt" type="button"><b>D</b><span>Yes, it dynamically adjusts the number of clusters $k$ at each iteration</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> k-means++ only modifies how initial centroids are seeded. Once the $k$ initial centres are chosen, standard Lloyd's assignment and update steps execute as normal.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q5</span>What is the theoretical approximation guarantee proven by Arthur and Vassilvitskii (2007) for k-means++ seeding?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It guarantees that the silhouette score will exceed 0.80</span></button><button class="opt" type="button"><b>B</b><span>It guarantees that no cluster will have fewer than 10 points</span></button><button class="opt" type="button"><b>C</b><span>The expected inertia $\mathbb{E}[J]$ of the initial seeding is bounded by $O(\log k)$ times the optimal clustering inertia: $\mathbb{E}[J] \le 8(\ln k + 2) J_{\text{opt}}$</span></button><button class="opt" type="button"><b>D</b><span>It guarantees finding the exact global minimum in polynomial time</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Arthur and Vassilvitskii proved that k-means++ seeding achieves an $O(\log k)$ approximation ratio in expectation relative to the global optimum, ensuring that the starting points are provably competitive.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q6</span>Why does k-means++ sample with probability proportional to squared distance $D(x)^2$ rather than deterministically selecting the point with the maximum distance $\arg\max D(x)$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because deterministic selection cannot be implemented in Python</span></button><button class="opt" type="button"><b>B</b><span>Because deterministic selection always chooses extreme outliers or isolated noise points as cluster centres</span></button><button class="opt" type="button"><b>C</b><span>Because computing the maximum distance is NP-hard</span></button><button class="opt" type="button"><b>D</b><span>Because squared distance guarantees an even number of clusters</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> If the algorithm deterministically picked $\arg\max D(x)$, any single extreme outlier would be guaranteed to become an initial centroid. Sampling stochastically with $D(x)^2$ weights distant points heavily while preventing outliers from dominating.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q7</span>Why does standard random initialisation (picking $k$ points uniformly at random) often lead to poor clustering outcomes?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because random initialisation causes matrix inversion errors</span></button><button class="opt" type="button"><b>B</b><span>Because uniform sampling only selects points near the origin</span></button><button class="opt" type="button"><b>C</b><span>Because random initialisation forces $k$-means to run indefinitely</span></button><button class="opt" type="button"><b>D</b><span>Because random initialisation frequently places multiple starting centres in the same large cluster while leaving other distinct clusters without any centre</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In dense regions with many points, uniform random selection is likely to place multiple centres in the same cluster. The algorithm then gets stuck in poor local minima trying to split one natural cluster while merging others.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q8</span>What is a practical limitation of the k-means++ initialisation procedure on distributed computing frameworks with massive $k$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It cannot compute Euclidean distance in parallel</span></button><button class="opt" type="button"><b>B</b><span>It requires calculating the full $n \times n$ distance matrix</span></button><button class="opt" type="button"><b>C</b><span>It requires $k$ sequential passes over the dataset (each centre must be chosen before distances to it can be evaluated for the next centre)</span></button><button class="opt" type="button"><b>D</b><span>It only works on datasets with fewer than 1,000 points</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because each new centre depends on distances to all previously selected centres, standard k-means++ requires $k$ sequential round-trip passes over the data. For large $k$ (e.g. $k = 1,000$) on distributed clusters, this serial dependency causes substantial network latency (prompting algorithms like k-means||).</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q9</span>How does k-means++ affect the number of Lloyd's iterations required until convergence compared to uniform random initialisation?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It requires significantly more iterations because centres start further apart</span></button><button class="opt" type="button"><b>B</b><span>It typically reduces the number of iterations required to converge because centroids start much closer to their true natural cluster locations</span></button><button class="opt" type="button"><b>C</b><span>It always converges in exactly 1 iteration</span></button><button class="opt" type="button"><b>D</b><span>It has no effect on convergence speed</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because starting centres are already well distributed across natural cluster locations, fewer assignment-update cycles are needed to reach equilibrium, saving computational time overall.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q10</span>Suppose a 1D dataset has 4 points: $\{0, 2, 6, 10\}$. The first centre chosen at random is $c_1 = 0$. For $k = 2$, what is the sampling probability that the next centre chosen is $x = 10$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$1/4 = 0.250$ (uniform ratio)</span></button><button class="opt" type="button"><b>B</b><span>$100/136 \approx 0.735$</span></button><button class="opt" type="button"><b>C</b><span>$10/18 \approx 0.556$ (linear distance ratio)</span></button><button class="opt" type="button"><b>D</b><span>$5/7 \approx 0.714$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The squared distances from $c_1 = 0$ are $D(0)^2 = 0$, $D(2)^2 = 4$, $D(6)^2 = 36$, and $D(10)^2 = 100$, summing to 140. The probability of picking $x = 10$ is $100 / 140 = 5/7 \approx 0.714$. Notice how $D(x)^2$ concentrates over 71% of the probability on the farthest point.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q11</span>Three points lie in 1D: $x_1 = 0, x_2 = 2, x_3 = 6$. Two centres have already been chosen: $c_1 = 0$ and $c_2 = 6$. For the remaining point $x_2 = 2$, what is $D(x_2)$ (the distance to its nearest chosen centre), and what is $D(x_2)^2$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$D(x_2) = 4, D(x_2)^2 = 16$</span></button><button class="opt" type="button"><b>B</b><span>$D(x_2) = 2, D(x_2)^2 = 4$</span></button><button class="opt" type="button"><b>C</b><span>$D(x_2) = 6, D(x_2)^2 = 36$</span></button><button class="opt" type="button"><b>D</b><span>$D(x_2) = 3, D(x_2)^2 = 9$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The distance to the nearest centre is $D(x_2) = \min(|2 - 0|, |2 - 6|) = \min(2, 4) = 2$. Its squared distance is $2^2 = 4$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q12</span>In a dataset with $n = 100$ points, suppose 90 points belong to a tight cluster at $(0, 0)$ and 10 points belong to a distant cluster at $(10, 0)$. The first centre $c_1$ is picked from the tight cluster at $(0, 0)$. How does the probability of picking the second centre from the distant cluster under k-means++ compare to uniform random initialisation?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Under k-means++ it is exactly $50\%$</span></button><button class="opt" type="button"><b>B</b><span>Under k-means++ it rises from $\approx 10\%$ to nearly $100\%$, almost guaranteeing the second cluster is seeded</span></button><button class="opt" type="button"><b>C</b><span>It is roughly identical ($\approx 10\%$) in both methods</span></button><button class="opt" type="button"><b>D</b><span>Under k-means++ it drops to $0\%$ because the distant cluster has fewer points</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Under uniform sampling, the chance of picking from the 10-point cluster is only $10/99 \approx 10.1\%$. Under k-means++, each distant point has $D(x)^2 \approx 100$ while points near $c_1$ have $D(x)^2 \approx 0$, directing virtually all sampling probability ($\approx 100\%$) to the unrepresented cluster.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>10</span> Related lessons</h2>
+        <div class="related"><a href="../../models/kmeans_clustering/"><small class="kicker">Clustering</small><b>k-means</b></a><a href="../../models/kmedoids_clustering/"><small class="kicker">Clustering</small><b>k-medoids</b></a><a href="../../concepts/clustering-metrics/"><small class="kicker">Concept</small><b>Clustering metrics</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../models/kmeans_clustering/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Clustering</small><b>k-means</b></a>
+    <a class="pager-next" href="../../models/kmedoids_clustering/"><small>Next · Clustering <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>k-medoids</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/sequences.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Error, Loss and Cost: Three Words, Three Meanings · Learn · Yogesh Awate</title>
+<meta name="description" content="Error is a single mistake, loss scores one prediction, cost (the objective) aggregates loss over data plus any penalty.">
+<meta property="og:title" content="Error, Loss and Cost: Three Words, Three Meanings · Learn · Yogesh Awate">
+<meta property="og:description" content="Error is a single mistake, loss scores one prediction, cost (the objective) aggregates loss over data plus any penalty.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="cost-vs-loss-vs-error">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-foundations">Path 01 · Foundations</a> / Learning as optimisation / Lesson 3 of 17</span>
+    <h1 class="case-title">Error, Loss and Cost: Three Words, Three Meanings</h1>
+    <p class="lede rise" style="--d:3">Error is a single mistake, loss scores one prediction, cost (the objective) aggregates loss over data plus any penalty.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="1"><i><b></b></i>Beginner</span></span>
+      <span class="tagline">10 min</span>
+      <span class="tagline lab">Live lab</span>
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Foundations · Learning as optimisation</dd>
+          <dt>Level</dt><dd>Beginner</dd>
+          <dt>Used by</dt><dd>3 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#lab"><span>03</span>Try it</a></li><li><a href="#maths"><span>04</span>The maths</a></li><li><a href="#takeaways"><span>05</span>Key takeaways</a></li><li><a href="#code"><span>06</span>In code</a></li><li><a href="#quiz"><span>07</span>Check yourself</a></li><li><a href="#related"><span>08</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">People use these words loosely, but the distinction is useful: <strong>error</strong> is the raw difference for one example, <strong>loss</strong> turns it into a penalty, and <strong>cost</strong> averages the loss over the dataset and adds regularisation. Training minimises the cost.</p>
+        <p>For one house, the error is $y - \hat y = 30$k. The squared loss of that prediction is $900$ (in k²). The cost is the average squared loss over all houses plus, say, $\lambda\lVert w\rVert^2$. The optimiser only ever sees the cost.</p>
+        <p>The <em>metric</em> you report (RMSE, accuracy, AUC) can differ from the loss you train on. You train with log-loss because it is smooth and convex, then report accuracy because people understand it. Keeping the four words apart avoids a lot of confusion.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Error is how far one dart missed; loss is the points you lose for that miss; cost is your total penalty for the round, plus a fine for an overly fancy throwing style.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Error: $e_i = y_i - \hat y_i$ (or a 0/1 mistake for classification).</li><li>Loss: $\ell(y_i, \hat y_i)$, e.g. $e_i^2$, $|e_i|$, log-loss.</li><li>Cost: $J(\theta) = \frac1n\sum_i\ell(y_i, \hat y_i) + \lambda R(\theta)$.</li><li>Metric: what you report on held-out data, chosen for the business question.</li></ol>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>03</span> Try it</h2>
+        <p>Five predictions, their errors and losses, and the cost they add up to. Drag the predictions, switch the loss, and add a penalty.</p>
+        <div class="lab" data-lab="cost-vs-loss-vs-error" data-kind="concepts" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>Switch from squared to absolute loss and see how the biggest error’s share of the cost drops.</li><li>Raise λ: the cost rises even though no prediction changed.</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>04</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Empirical risk with a regulariser</h3><div class="formula">$$J(\theta) = \underbrace{\frac1n\sum_{i=1}^n\ell\big(y_i, f_\theta(x_i)\big)}_{\text{average loss (empirical risk)}} + \underbrace{\lambda R(\theta)}_{\text{penalty}}$$</div><p>Minimising the first term alone is empirical risk minimisation; the second term is what <a class="inline" href="../../concepts/regularization/">Regularisation</a> adds.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>05</span> Key takeaways</h2>
+        <div class="box use"><ul><li>The optimiser sees the cost; you report a metric. They are often different on purpose.</li><li>Loss is per example; cost is per dataset.</li><li>A model can lower its training cost and still get worse on the metric you care about: that is overfitting.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>06</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+y, y_hat, w, lam = np.<span class="f">array</span>([<span class="n">3</span>., <span class="n">5</span>., <span class="n">2</span>.]), np.<span class="f">array</span>([<span class="n">2.5</span>, <span class="n">6</span>., <span class="n">2</span>.]), np.<span class="f">array</span>([<span class="n">0.8</span>, -<span class="n">1.2</span>]), <span class="n">0.1</span>
+error = y - y_hat                       <span class="c"># [ 0.5, -1. ,  0. ]</span>
+loss = error ** <span class="n">2</span>                       <span class="c"># per-example squared loss</span>
+cost = loss.<span class="f">mean</span>() + lam * (w ** <span class="n">2</span>).<span class="f">sum</span>()
+rmse = np.<span class="f">sqrt</span>(loss.<span class="f">mean</span>())             <span class="c"># the metric you might report</span>
+<span class="k">print</span>(error, loss, <span class="f">round</span>(cost, <span class="n">3</span>), <span class="f">round</span>(rmse, <span class="n">3</span>))</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Tuning hyperparameters on training cost instead of a validation metric.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Reporting log-loss to stakeholders who expect accuracy, or the reverse.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>07</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>Which quantity does gradient descent actually minimise?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The error of one example</span></button><button class="opt" type="button"><b>B</b><span>Accuracy</span></button><button class="opt" type="button"><b>C</b><span>The test metric</span></button><button class="opt" type="button"><b>D</b><span>The cost: average loss plus any penalty</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> It follows the gradient of the training objective.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>What is the fundamental distinction between "loss" and "cost" in machine learning?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>"Loss" refers only to classification models, while "cost" refers only to regression models</span></button><button class="opt" type="button"><b>B</b><span>"Cost" is always non-negative, whereas "loss" can be negative</span></button><button class="opt" type="button"><b>C</b><span>"Loss" is evaluated on a single training example, whereas "cost" aggregates loss across the dataset and includes any regularisation penalty</span></button><button class="opt" type="button"><b>D</b><span>"Loss" is measured on test data, while "cost" is measured on training data</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> By standard convention, loss $\ell(y_i, \hat{y}_i)$ evaluates the error on a single instance, whereas cost $J(\theta)$ is the overall objective function summing or averaging losses across all training examples, plus any regularisation term.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>Why can gradient descent not directly optimise classification accuracy as its training objective?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Accuracy is a step function whose derivative is zero almost everywhere and undefined at decision boundaries, providing no directional gradient for updates</span></button><button class="opt" type="button"><b>B</b><span>Accuracy requires computing matrix inversions that take $O(n^3)$ time</span></button><button class="opt" type="button"><b>C</b><span>Accuracy can only be computed when classes are perfectly balanced</span></button><button class="opt" type="button"><b>D</b><span>Gradient descent only works on unconstrained linear systems</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> 0/1 mistake loss (and accuracy) has flat plateaus where small parameter tweaks make zero difference to discrete predictions, giving zero gradient. Smooth surrogate losses like log-loss provide continuous non-zero gradients everywhere.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q4</span>What is "empirical risk minimisation" (ERM)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Pruning decision trees to minimise out-of-bag variance</span></button><button class="opt" type="button"><b>B</b><span>Minimising the average loss across the training dataset without an explicit regularisation penalty</span></button><button class="opt" type="button"><b>C</b><span>Minimising the test set error rate during cross-validation</span></button><button class="opt" type="button"><b>D</b><span>Calculating the covariance matrix of input features before modelling</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The "empirical risk" is the sample average of the loss over observed training examples $\frac{1}{n}\sum_{i=1}^n \ell(y_i, f_\theta(x_i))$. Minimising it alone without regularisation is empirical risk minimisation (ERM).</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q5</span>A binary classifier predicts a probability of $\hat{p} = 0.99$ for an observation whose true label is $y = 0$. What are the 0/1 classification error (threshold 0.5) and the binary cross-entropy loss $-\ln(1 - \hat{p})$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>0/1 error $= 1$; cross-entropy loss $= -\ln(0.01) \approx 4.605$</span></button><button class="opt" type="button"><b>B</b><span>0/1 error $= 1$; cross-entropy loss $= 0.990$</span></button><button class="opt" type="button"><b>C</b><span>0/1 error $= 0.01$; cross-entropy loss $= 1.000$</span></button><button class="opt" type="button"><b>D</b><span>0/1 error $= 0$; cross-entropy loss $= -\ln(0.99) \approx 0.010$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because $\hat{p} = 0.99 \ge 0.5$, it predicts Class 1. Since the true label is $y = 0$, the 0/1 classification error is 1. The binary cross-entropy loss for $y = 0$ is $-\ln(1 - 0.99) = -\ln(0.01) \approx 4.605$, punishing confident wrong predictions heavily.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q6</span>Why do practitioners frequently train models using log-loss but evaluate and report test set ROC-AUC or accuracy to stakeholders?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Accuracy can only be evaluated after regularisation parameter $\lambda$ is set to zero</span></button><button class="opt" type="button"><b>B</b><span>ROC-AUC cannot be computed on training datasets</span></button><button class="opt" type="button"><b>C</b><span>Log-loss is smooth and convex, making gradient optimisation efficient, but business stakeholders understand accuracy and threshold-free ranking metrics like ROC-AUC better</span></button><button class="opt" type="button"><b>D</b><span>Log-loss is mathematically invalid on unseen test data</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Training objectives require smooth gradients for numerical optimisers to find good parameters. Evaluation metrics, however, reflect real-world costs and operational interpretability for decision makers.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q7</span>During training of a neural network, the training cost $J(\theta)$ steadily decreases across 50 epochs, while the validation metric (error rate) stops decreasing at epoch 15 and begins to climb. What does this indicate?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The learning rate should be multiplied by 10 to escape a local minimum</span></button><button class="opt" type="button"><b>B</b><span>The regularisation penalty $\lambda$ is too large</span></button><button class="opt" type="button"><b>C</b><span>The model has begun overfitting to training noise and idiosyncrasies</span></button><button class="opt" type="button"><b>D</b><span>The optimiser has encountered numerical underflow in gradient computation</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The optimiser successfully minimises the training cost function, but memorising training quirks harms generalisation to unseen validation data. This divergence is the hallmark of overfitting.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q8</span>What is the risk of selecting model hyperparameters by minimising training cost $J(\theta)$ rather than evaluating a validation metric?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Minimising training cost will favor overly complex models (like $\lambda = 0$ or infinite tree depth) that memorise the training set perfectly but generalise poorly</span></button><button class="opt" type="button"><b>B</b><span>The training cost always overestimates the true test error rate</span></button><button class="opt" type="button"><b>C</b><span>Training cost cannot be calculated when regularisation is present</span></button><button class="opt" type="button"><b>D</b><span>Validation metrics cannot rank models with differing numbers of parameters</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Zero regularisation ($\lambda = 0$) and maximal model capacity minimise empirical training loss to zero, but cause severe overfitting. Hyperparameters must be tuned against validation metrics that test unseen generalisation.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q9</span>In the cost function $J(\theta) = \frac{1}{n}\sum_{i=1}^n \ell(y_i, f_\theta(x_i)) + \lambda R(\theta)$, what happens as the regularisation hyperparameter $\lambda \to \infty$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The optimiser focuses exclusively on minimising parameter penalty $R(\theta)$, driving weights toward zero regardless of training loss</span></button><button class="opt" type="button"><b>B</b><span>The training error drops to zero</span></button><button class="opt" type="button"><b>C</b><span>The empirical loss term dominates the objective</span></button><button class="opt" type="button"><b>D</b><span>The model interpolates every single training point perfectly</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> As $\lambda \to \infty$, the penalty term $R(\theta)$ overwhelmingly dominates the cost function, forcing the weights towards zero and causing severe underfitting.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q10</span>Consider a dataset of $n = 4$ regression points with true targets $y = [10, 20, 30, 40]$ and model predictions $\hat{y} = [12, 18, 35, 38]$. If the cost function is $J(w) = \frac{1}{n}\sum_{i=1}^n (y_i - \hat{y}_i)^2 + \lambda \lVert w\rVert^2$ with $\lambda = 2$ and $\lVert w\rVert^2 = 5$, what is the exact value of the cost $J(w)$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$44.00$</span></button><button class="opt" type="button"><b>B</b><span>$9.25$</span></button><button class="opt" type="button"><b>C</b><span>$20.25$</span></button><button class="opt" type="button"><b>D</b><span>$18.50$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Errors: $e_1 = 10 - 12 = -2$; $e_2 = 20 - 18 = 2$; $e_3 = 30 - 35 = -5$; $e_4 = 40 - 38 = 2$. Squared losses: $(-2)^2 = 4$, $2^2 = 4$, $(-5)^2 = 25$, $2^2 = 4$. Mean squared loss $= \frac{4 + 4 + 25 + 4}{4} = \frac{37}{4} = 8.50$. Regularisation penalty $= \lambda \lVert w\rVert^2 = 2 \times 5 = 10.00$. Total cost $J(w) = 8.50 + 10.00 = 18.50$.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q11</span>Suppose a binary model outputs probabilities $\hat{p} = [0.90, 0.40]$ for two observations with true classes $y = [1, 0]$. If the model uses log-loss $\ell(y, \hat{p}) = -[y\ln(\hat{p}) + (1-y)\ln(1-\hat{p})]$, what is the average empirical loss across these two observations? (Given $\ln(0.90) \approx -0.1054$, $\ln(0.60) \approx -0.5108$).</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$0.6162$</span></button><button class="opt" type="button"><b>B</b><span>$0.5108$</span></button><button class="opt" type="button"><b>C</b><span>$0.3081$</span></button><button class="opt" type="button"><b>D</b><span>$0.2054$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> For instance 1 ($y = 1$): $\ell_1 = -\ln(0.90) \approx 0.1054$. For instance 2 ($y = 0$): $\ell_2 = -\ln(1 - 0.40) = -\ln(0.60) \approx 0.5108$. Total loss $= 0.1054 + 0.5108 = 0.6162$. Average empirical loss $= \frac{0.6162}{2} = 0.3081$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q12</span>A regression model is evaluated on 3 validation points with true values $y = [5, 10, 15]$ and predictions $\hat{y} = [7, 6, 15]$. What are the Mean Absolute Error (MAE) and the Root Mean Squared Error (RMSE) on this validation set?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$\mathrm{MAE} = 2.00$ and $\mathrm{RMSE} \approx 2.58$</span></button><button class="opt" type="button"><b>B</b><span>$\mathrm{MAE} = 6.00$ and $\mathrm{RMSE} \approx 4.47$</span></button><button class="opt" type="button"><b>C</b><span>$\mathrm{MAE} = 3.00$ and $\mathrm{RMSE} = 3.00$</span></button><button class="opt" type="button"><b>D</b><span>$\mathrm{MAE} = 2.00$ and $\mathrm{RMSE} = 4.00$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Errors: $5 - 7 = -2$, $10 - 6 = 4$, $15 - 15 = 0$. Absolute errors: $|-2| = 2$, $|4| = 4$, $|0| = 0$. $\mathrm{MAE} = \frac{2 + 4 + 0}{3} = \frac{6}{3} = 2.00$. Squared errors: $(-2)^2 = 4$, $4^2 = 16$, $0^2 = 0$. Mean squared error $= \frac{4 + 16 + 0}{3} = \frac{20}{3} \approx 6.667$. $\mathrm{RMSE} = \sqrt{20/3} \approx 2.582$.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>08</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/loss-functions/"><small class="kicker">Concept</small><b>Loss functions</b></a><a href="../../concepts/regularization/"><small class="kicker">Concept</small><b>Regularisation</b></a><a href="../../models/ols_linear_regression/"><small class="kicker">Regression</small><b>Linear regression (OLS)</b></a><a href="../../models/ridge_regression/"><small class="kicker">Regression</small><b>Ridge regression</b></a><a href="../../models/logistic_regression/"><small class="kicker">Classification</small><b>Logistic regression</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/feature-selection/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Foundations</small><b>Feature selection</b></a>
+    <a class="pager-next" href="../../concepts/loss-functions/"><small>Next · Foundations <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Loss functions</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

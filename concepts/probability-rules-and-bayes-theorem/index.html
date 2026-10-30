@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Probability Rules and Bayes' Theorem · Learn · Yogesh Awate</title>
+<meta name="description" content="The calculus of uncertainty: addition, multiplication, conditional probability and Bayes' theorem. Invert probabilities to update beliefs as new evidence arrives.">
+<meta property="og:title" content="Probability Rules and Bayes' Theorem · Learn · Yogesh Awate">
+<meta property="og:description" content="The calculus of uncertainty: addition, multiplication, conditional probability and Bayes' theorem. Invert probabilities to update beliefs as new evidence arrives.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="probability-rules-and-bayes-theorem">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-statistics">Path 02 · Statistics</a> / Probability / Lesson 1 of 51</span>
+    <h1 class="case-title">Probability Rules and Bayes' Theorem</h1>
+    <p class="lede rise" style="--d:3">The calculus of uncertainty: addition, multiplication, conditional probability and Bayes' theorem. Invert probabilities to update beliefs as new evidence arrives.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="1"><i><b></b></i>Beginner</span></span>
+      <span class="tagline">20 min</span>
+      <span class="tagline lab">Live lab</span>
+      <span class="prereq">Before this: <a href="../../concepts/confusion-matrix/">Confusion matrix</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Statistics · Probability</dd>
+          <dt>Level</dt><dd>Beginner</dd>
+          <dt>Used by</dt><dd>3 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#watch"><span>03</span>Watch it work</a></li><li><a href="#lab"><span>04</span>Try it</a></li><li><a href="#maths"><span>05</span>The maths</a></li><li><a href="#takeaways"><span>06</span>Key takeaways</a></li><li><a href="#code"><span>07</span>In code</a></li><li><a href="#quiz"><span>08</span>Check yourself</a></li><li><a href="#related"><span>09</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Probability quantifies uncertainty on a principled scale from 0 to 1. Bayes' theorem provides the mathematical machinery to invert conditional probabilities, updating prior beliefs into posterior distributions in the light of fresh empirical data.</p>
+        <p>Suppose a clinic screens 1,000 patients for a rare disease affecting 1% of the population (10 people). A diagnostic test boasts a 90% true positive rate (detecting 9 of the 10 sick patients) and an 8% false positive rate (falsely flagging roughly 79 of the 990 healthy patients). If a patient tests positive, what is the chance they actually have the disease? Most people guess 90%, yet the actual probability is only 9 out of (9 + 79) = 88 positive tests, which is roughly 10.2%.</p>
+        <p>This counter-intuitive outcome is known as the base rate fallacy. Because healthy individuals vastly outnumber sick individuals, even a modest false positive rate creates far more false alarms than true cases. To compute the probability of disease after seeing a positive test, you cannot evaluate the test in a vacuum; you must weigh the likelihood of the test against the prior prevalence of the disease.</p>
+        <p>This exact reasoning powers probabilistic machine learning. A spam filter assessing an email does not merely check how often the word "lottery" appears in junk mail; it balances that evidence against the base rate of spam in your inbox. In models like <a class="inline" href="../../models/gaussian_naive_bayes/">Gaussian Naive Bayes</a> and Bayesian inference, Bayes' theorem is the formal engine that turns likelihoods into actionable class probabilities.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Updating beliefs with Bayes' theorem is like spotting dark clouds: they strongly indicate rain in Manchester, but rarely mean rain in the Atacama desert.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Define the sample space $\Omega$ and assign valid prior probabilities $P(A_k)$ that sum to 1 over all mutually exclusive outcomes.</li><li>Calculate conditional probabilities using the multiplication rule: $P(A \cap B) = P(A \mid B)P(B)$.</li><li>Sum across all mutually exclusive scenarios via the law of total probability to establish the marginal evidence $P(B)$.</li><li>Invert the conditional direction with Bayes' theorem: multiply the prior $P(A)$ by the likelihood $P(B \mid A)$ and divide by $P(B)$.</li><li>Use the resulting posterior distribution $P(A \mid B)$ to drive decision thresholds or serve as the prior for future observations.</li></ol>
+      </section>
+      <section class="reveal" id="watch">
+        <h2 class="h3"><span>03</span> Watch it work</h2>
+        <p>Press play, or step through at your own pace. Each step adds one idea.</p>
+        <div class="explainer" data-explainer="bayes" style="margin-top:18px"><noscript><p class="lab-noscript">The animation needs JavaScript.</p></noscript></div>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>04</span> Try it</h2>
+        <p>Each dot is one of 1,000 people. Move the sliders and watch the cyan dots (real cases) compete with the pink ones (false alarms). The curve on the right shows the posterior for every prevalence at once. Repeated tests assume each one errs independently, given whether the person is really sick.</p>
+        <div class="lab" data-lab="probability-rules-and-bayes-theorem" data-kind="concepts" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>Press <em>Rare disease</em> (prevalence 0.1%). The pink false alarms swamp the cyan dots and a positive test means only about 1%.</li><li>At 1% prevalence, raise sensitivity from 90% to 99%. The posterior barely moves (about 10% to 11%), because the false alarms are the real problem.</li><li>Instead, cut the false-positive rate from 8% to 1%. The posterior jumps to about 48%.</li><li>Go back to the defaults and raise <em>Independent positive tests</em> to 2 and 3: the posterior climbs from 10% to about 56% and then 93%.</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>05</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Probability Axioms and Fundamental Rules</h3><div class="formula">$$P(A \cup B) = P(A) + P(B) - P(A \cap B), \qquad P(A \cap B) = P(A \mid B)P(B)$$</div><p>Kolmogorov's axioms require probabilities to be non-negative, bounded in $[0, 1]$, and sum to 1 over the sample space. The addition rule subtracts the intersection $P(A \cap B)$ so overlapping events are not counted twice. When events are mutually exclusive, $P(A \cap B) = 0$. When events are statistically independent, conditional conditioning vanishes: $P(A \mid B) = P(A)$, reducing the intersection to $P(A)P(B)$.</p></li>
+          <li><h3>The Law of Total Probability</h3><div class="formula">$$P(B) = \sum_{k=1}^K P(B \mid A_k)P(A_k)$$</div><p>If the events $\{A_1, A_2, \dots, A_K\}$ form a partition of the sample space (meaning they are mutually exclusive and collectively exhaustive, $\bigcup_k A_k = \Omega$), the total marginal probability of any event $B$ is the weighted average of its conditional probabilities across all possible states $A_k$.</p></li>
+          <li><h3>Bayes' Theorem</h3><div class="formula">$$P(A_j \mid B) = \frac{P(B \mid A_j)P(A_j)}{P(B)} = \frac{P(B \mid A_j)P(A_j)}{\sum_{k=1}^K P(B \mid A_k)P(A_k)}$$</div><p>Bayes' theorem translates the prior probability $P(A_j)$ into the posterior probability $P(A_j \mid B)$ by multiplying by the likelihood $P(B \mid A_j)$ and normalising by the total probability of the evidence $P(B)$. It allows us to infer hidden causes from observed effects.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>06</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Conditional probability $P(A \mid B)$ is mathematically distinct from $P(B \mid A)$; confusing them is the prosecutor's fallacy.</li><li>A rare prior requires overwhelming likelihood evidence to produce a convincing posterior probability.</li><li>Statistical independence is a property of probabilities ($P(A \cap B) = P(A)P(B)$), not of physical separation.</li><li>Bayes' theorem is the foundation for updating models sequentially as streaming batches of data arrive.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>07</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Medical screening base-rate calculation</span>
+prior_disease = <span class="n">0.01</span>          <span class="c"># P(D) = 1%</span>
+prior_healthy = <span class="n">1.0</span> - prior_disease  <span class="c"># P(~D) = 99%</span>
+
+<span class="c"># Test characteristics: sensitivity and false positive rate</span>
+sensitivity = <span class="n">0.90</span>            <span class="c"># P(+ | D) = 90%</span>
+false_positive_rate = <span class="n">0.08</span>    <span class="c"># P(+ | ~D) = 8%</span>
+
+<span class="c"># Total evidence: Law of total probability</span>
+p_positive = (sensitivity * prior_disease) + (false_positive_rate * prior_healthy)
+
+<span class="c"># Bayes' theorem: Posterior P(D | +)</span>
+posterior = (sensitivity * prior_disease) / p_positive
+<span class="k">print</span>(<span class="s">f&quot;P(Positive Test) = {p_positive:.4f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;P(Disease | Positive) = {posterior:.4f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Base rate neglect: evaluating the diagnostic accuracy of a classifier or test while ignoring class imbalance.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming events are independent when latent confounding factors or serial correlations link them together.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Confusing mutually exclusive events ($P(A \cap B) = 0$) with independent events ($P(A \cap B) = P(A)P(B)$); mutually exclusive events with non-zero probability can never be independent.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Forgetting to normalise by the denominator $P(B)$, which is essential whenever absolute posterior probabilities are required.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>08</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>A rare condition has a prevalence of 0.1%. A test has 99% sensitivity and a 2% false positive rate. If someone tests positive, their posterior probability of having the condition is closest to:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>50.0%</span></button><button class="opt" type="button"><b>B</b><span>99.0%</span></button><button class="opt" type="button"><b>C</b><span>98.0%</span></button><button class="opt" type="button"><b>D</b><span>4.7%</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> $P(+) = (0.99 \times 0.001) + (0.02 \times 0.999) = 0.00099 + 0.01998 = 0.02097$. The posterior $P(\text{condition} \mid +) = 0.00099 / 0.02097 \approx 0.0472$ (or 4.7%).</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>Two events $A$ and $B$ both have probability 0.5 and are mutually exclusive. What is $P(A \cap B)$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>0.25</span></button><button class="opt" type="button"><b>B</b><span>1.0</span></button><button class="opt" type="button"><b>C</b><span>0</span></button><button class="opt" type="button"><b>D</b><span>0.50</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Mutually exclusive events cannot occur simultaneously by definition, so their intersection is the empty set with probability 0.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>Under what condition does $P(A \mid B) = P(A)$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>When $A$ and $B$ are statistically independent</span></button><button class="opt" type="button"><b>B</b><span>When $A$ and $B$ are mutually exclusive</span></button><button class="opt" type="button"><b>C</b><span>When $A$ is a subset of $B$</span></button><button class="opt" type="button"><b>D</b><span>When $P(B) = 1$ only</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> By definition of statistical independence, knowledge that $B$ has occurred provides zero information about the occurrence of $A$.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q4</span>Why does the denominator in Bayes' theorem sum over all hypotheses $A_k$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To maximise the likelihood function</span></button><button class="opt" type="button"><b>B</b><span>To remove the effect of the prior</span></button><button class="opt" type="button"><b>C</b><span>To ensure the posterior probabilities across all hypotheses sum to 1</span></button><button class="opt" type="button"><b>D</b><span>To penalise overly complex models</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The denominator is the marginal probability of the evidence across the full partition, acting as the normalising constant so the posteriors form a valid probability distribution.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q5</span>If $P(A) = 0.4$, $P(B) = 0.5$, and $P(A \cap B) = 0.1$, what is the union probability $P(A \cup B)$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>0.8</span></button><button class="opt" type="button"><b>B</b><span>0.9</span></button><button class="opt" type="button"><b>C</b><span>0.2</span></button><button class="opt" type="button"><b>D</b><span>0.7</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The addition rule gives $P(A \cup B) = P(A) + P(B) - P(A \cap B) = 0.4 + 0.5 - 0.1 = 0.8$. Simply adding $0.4 + 0.5$ would double-count the intersection.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q6</span>Can two events $A$ and $B$ with strictly positive probabilities ($P(A) &gt; 0, P(B) &gt; 0$) be simultaneously mutually exclusive and statistically independent?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Yes, provided $P(A) + P(B) = 1$</span></button><button class="opt" type="button"><b>B</b><span>Yes, whenever they share no outcomes in the sample space</span></button><button class="opt" type="button"><b>C</b><span>No, because independent events must always be subsets of each other</span></button><button class="opt" type="button"><b>D</b><span>No, because mutual exclusivity requires $P(A \cap B) = 0$, whereas independence requires $P(A \cap B) = P(A)P(B) &gt; 0$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Mutual exclusivity requires $P(A \cap B) = 0$. Statistical independence requires $P(A \cap B) = P(A)P(B)$. Because both probabilities are strictly positive, their product is positive, so both conditions cannot hold at once.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q7</span>A factory uses two assembly lines. Line 1 produces 60% of all parts with a defect rate of 2%, while Line 2 produces 40% with a defect rate of 5%. What is the overall probability that a randomly chosen part is defective?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>7.0%</span></button><button class="opt" type="button"><b>B</b><span>2.8%</span></button><button class="opt" type="button"><b>C</b><span>3.5%</span></button><button class="opt" type="button"><b>D</b><span>3.2%</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> By the law of total probability, $P(D) = P(D \mid L_1)P(L_1) + P(D \mid L_2)P(L_2) = (0.02 \times 0.60) + (0.05 \times 0.40) = 0.012 + 0.020 = 0.032$ (or 3.2%). Averaging 2% and 5% ignores line volume.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q8</span>A diagnostic test runs in code with <code>prior = 0.20</code>, <code>likelihood = 0.80</code>, and marginal evidence <code>p_evidence = 0.40</code>. Evaluating <code>(likelihood * prior) / p_evidence</code> produces:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>0.25</span></button><button class="opt" type="button"><b>B</b><span>0.40</span></button><button class="opt" type="button"><b>C</b><span>0.16</span></button><button class="opt" type="button"><b>D</b><span>0.50</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Applying Bayes' theorem directly: $(0.80 \times 0.20) / 0.40 = 0.16 / 0.40 = 0.40$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q9</span>In a medical screening scenario with a very rare disease (prevalence 0.1%), why does cutting the false-positive rate from 8% to 1% increase posterior disease probability far more than raising sensitivity from 90% to 99%?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because false alarms arise from the healthy majority, which vastly outnumbers the small sick cohort</span></button><button class="opt" type="button"><b>B</b><span>Because false-positive rates are mathematically bounded by sensitivity</span></button><button class="opt" type="button"><b>C</b><span>Because sensitivity has no effect on Bayes' theorem</span></button><button class="opt" type="button"><b>D</b><span>Because the law of total probability applies only to uninfected individuals</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> When 99.9% of people are healthy, even a modest false-positive rate generates dozens of false alarms that swamp the few genuine positive cases. Reducing false alarms directly cuts the dominant term in the denominator.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q10</span>On the factory lines (Line 1: 60% volume, 2% defects; Line 2: 40% volume, 5% defects; overall defect rate 3.2%), an inspected part turns out to be defective. What is the posterior probability that it came from Line 2?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>71.4%</span></button><button class="opt" type="button"><b>B</b><span>40.0%</span></button><button class="opt" type="button"><b>C</b><span>50.0%</span></button><button class="opt" type="button"><b>D</b><span>62.5%</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Bayes' inversion gives $P(L_2 \mid D) = P(D \mid L_2)P(L_2) / P(D) = (0.05 \times 0.40) / 0.032 = 0.020 / 0.032 = 20/32 = 0.625$ (62.5%). Even with lower output volume, Line 2's higher defect rate produces the majority of defects.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q11</span>A patient tests positive on a test with 10% disease prior, 80% sensitivity, and 10% false-positive rate. A second, independent test from an external laboratory with identical characteristics also returns positive. What is the posterior probability after both positive tests?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>98.2%</span></button><button class="opt" type="button"><b>B</b><span>72.0%</span></button><button class="opt" type="button"><b>C</b><span>47.1%</span></button><button class="opt" type="button"><b>D</b><span>87.7%</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> After one test, the posterior is $(0.8 \times 0.1) / (0.8 \times 0.1 + 0.1 \times 0.9) = 0.08 / 0.17 = 8/17 \approx 47.1\%$. With independent errors, the joint likelihoods are $0.8^2 \times 0.10 = 0.064$ for disease and $0.1^2 \times 0.90 = 0.009$ for healthy, giving $0.064 / (0.064 + 0.009) = 64/73 \approx 87.7\%$.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q12</span>Confusing the probability of evidence given an innocence hypothesis, $P(E \mid I)$, with the probability of innocence given that evidence, $P(I \mid E)$, is an error known as:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The ecological fallacy</span></button><button class="opt" type="button"><b>B</b><span>Berkson's bias</span></button><button class="opt" type="button"><b>C</b><span>The prosecutor's fallacy</span></button><button class="opt" type="button"><b>D</b><span>Simpson's paradox</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The prosecutor's fallacy equates the probability of innocent evidence $P(E \mid I)$ with the posterior $P(I \mid E)$ by neglecting the prior probability of guilt or innocence.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>09</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/random-variables-and-distributions/"><small class="kicker">Concept</small><b>Random variables</b></a><a href="../../concepts/log-odds/"><small class="kicker">Concept</small><b>Log-odds (logit)</b></a><a href="../../concepts/maximum-likelihood-estimation/"><small class="kicker">Concept</small><b>Maximum likelihood</b></a><a href="../../models/gaussian_naive_bayes/"><small class="kicker">Classification</small><b>Gaussian Naive Bayes</b></a><a href="../../models/multinomial_bernoulli_nb/"><small class="kicker">Classification</small><b>Multinomial &amp; Bernoulli NB</b></a><a href="../../models/bayesian_linear_regression/"><small class="kicker">Regression</small><b>Bayesian linear regression</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/clustering-metrics/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Foundations</small><b>Clustering metrics</b></a>
+    <a class="pager-next" href="../../concepts/random-variables-and-distributions/"><small>Next · Statistics <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Random variables</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/explainers.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

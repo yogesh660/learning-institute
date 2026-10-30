@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Coordinate Descent and Cyclic Updates · Learn · Yogesh Awate</title>
+<meta name="description" content="Minimise multi-variable objective functions by optimising one coordinate at a time: master soft-thresholding, Lasso path solving, and convergence guarantees.">
+<meta property="og:title" content="Coordinate Descent and Cyclic Updates · Learn · Yogesh Awate">
+<meta property="og:description" content="Minimise multi-variable objective functions by optimising one coordinate at a time: master soft-thresholding, Lasso path solving, and convergence guarantees.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="coordinate-descent">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ml-toolbox">Path 06 · Machine learning toolbox</a> / Optimisation / Lesson 20 of 50</span>
+    <h1 class="case-title">Coordinate Descent and Cyclic Updates</h1>
+    <p class="lede rise" style="--d:3">Minimise multi-variable objective functions by optimising one coordinate at a time: master soft-thresholding, Lasso path solving, and convergence guarantees.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../models/lasso_regression/">Lasso regression</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Machine learning toolbox · Optimisation</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Full gradient descent computes gradients across all p features at every step. Coordinate descent simplifies optimisation by cycling through parameters one by one, solving fast 1D sub-problems in closed form.</p>
+        <p>When training high-dimensional machine learning models with thousands or millions of parameters, full gradient descent can be computationally unwieldy: each step requires evaluating gradients across all features and carefully selecting a global learning rate. If features vary in curvature, gradient descent oscillates wildly in steep directions while creeping in flat directions.</p>
+        <p>Coordinate Descent (CD) offers an alternative optimisation strategy: instead of updating all variables simultaneously along a combined gradient vector, update only one coordinate direction at a time while keeping all other $p - 1$ variables rigidly fixed.</p>
+        <p>At step $j$, the multi-variable problem collapses into a simple one-dimensional scalar optimisation: $\beta_j^* = \arg\min_z f(\beta_1, \dots, \beta_{j-1}, z, \beta_{j+1}, \dots, \beta_p)$. For many common objectives, this 1D sub-problem has an exact closed-form algebraic minimiser, eliminating the need for line searches or learning rate tuning entirely.</p>
+        <p>Coordinate descent achieves its greatest triumph in $L_1$-regularised problems like Lasso and Elastic Net. The $L_1$ penalty $|\beta_j|$ has a sharp non-differentiable kink at zero that invalidates standard gradient descent. However, along individual coordinate axes, the objective separates cleanly into 1D sub-problems solved analytically via the Soft-Thresholding Operator. This algorithmic breakthrough makes coordinate descent the core computational engine behind glmnet and scikit-learn Lasso.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine tuning an analog radio receiver with ten dials to eliminate background static. Trying to twist all ten dials simultaneously with both hands is clumsy and throws everything out of alignment. Instead, you hold nine dials completely steady with your fingers, twisting only the first dial back and forth until reception peaks. You freeze the first dial, move to the second dial, and repeat. By cycling through the dials one by one, the signal quickly becomes crystal clear.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Coordinate-Wise Lasso Decomposition</h3><div class="formula">f(\beta) = \frac{1}{2n} \sum_{i=1}^n \left( y_i - \sum_{k \neq j} x_{ik} \beta_k - x_{ij} \beta_j \right)^2 + \lambda \sum_{k \neq j} |\beta_k| + \lambda |\beta_j|</div><p>Decomposes the objective into terms independent of beta_j plus a simple univariate quadratic and absolute value function in beta_j.</p></li>
+          <li><h3>The Soft-Thresholding Operator</h3><div class="formula">S_\lambda(z) = \operatorname{sign}(z) (|z| - \lambda)_+ = \begin{cases} z - \lambda & \text{if } z > \lambda \\ 0 & \text{if } |z| \le \lambda \\ z + \lambda & \text{if } z < -\lambda \end{cases}</div><p>The exact analytical minimiser of 0.5 (beta_j - z)^2 + lambda |beta_j|. Pulls small coefficients strictly to zero, inducing structural sparsity.</p></li>
+          <li><h3>Tseng Separability Convergence Condition</h3><div class="formula">f(\beta) = g(\beta) + \sum_{j=1}^p h_j(\beta_j)</div><p>Paul Tseng proved that cyclic coordinate descent is guaranteed to converge to a global minimum for composite functions where g is convex and smooth, and the non-smooth part h separates into coordinate-wise terms.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Optimises multi-variable objective functions by updating one coordinate at a time, keeping all other variables frozen.</li><li>Replaces complex multi-variable gradient steps with fast 1D sub-problems that frequently possess exact closed-form algebraic solutions.</li><li>The foundational solver for Lasso and Elastic Net, using the Soft-Thresholding operator to handle non-differentiable $L_1$ kinks.</li><li>Guaranteed to converge to the global minimum for convex functions with coordinate-wise separable non-smooth terms (Tseng condition).</li><li>Requires zero learning rate tuning or line searches when closed-form coordinate updates exist.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Cyclic Coordinate Descent for Lasso from scratch</span>
+<span class="k">def</span> <span class="f">coordinate_descent_lasso</span>(X, y, alpha=<span class="n">0.1</span>, max_iters=<span class="n">500</span>, tol=<span class="n">1e-6</span>):
+    n, p = X.shape
+    beta = np.<span class="f">zeros</span>(p)
+    
+    <span class="c"># Precalculate column squared norms</span>
+    norm_sq = np.<span class="f">sum</span>(X**<span class="n">2</span>, axis=<span class="n">0</span>)
+    
+    <span class="c"># Initial residual</span>
+    r = y - X @ beta
+    
+    <span class="c"># Soft-thresholding operator</span>
+    <span class="k">def</span> <span class="f">soft_thresh</span>(z, thresh):
+        <span class="k">return</span> np.<span class="f">sign</span>(z) * np.<span class="f">maximum</span>(<span class="n">0.0</span>, np.<span class="f">abs</span>(z) - thresh)
+        
+    <span class="k">for</span> it <span class="k">in</span> <span class="k">range</span>(max_iters):
+        max_change = <span class="n">0.0</span>
+        
+        <span class="k">for</span> j <span class="k">in</span> <span class="k">range</span>(p):
+            beta_old = beta[j]
+            
+            <span class="c"># Partial residual without feature j</span>
+            <span class="c"># r_j = r + beta_old * X[:, j]</span>
+            <span class="c"># rho_j = X[:, j]^T r_j</span>
+            rho_j = np.<span class="f">dot</span>(X[:, j], r) + beta_old * norm_sq[j]
+            
+            <span class="c"># Analytical update via soft-thresholding</span>
+            <span class="c"># Loss: (1 / (2n)) * ||y - X beta||^2 + alpha * ||beta||_1</span>
+            <span class="c"># Scaling threshold by n</span>
+            thresh = alpha * n
+            beta_new = <span class="f">soft_thresh</span>(rho_j, thresh) / norm_sq[j]
+            
+            <span class="c"># Update residual vector: r &lt;- r - (beta_new - beta_old) * X_j</span>
+            delta = beta_new - beta_old
+            <span class="k">if</span> delta != <span class="n">0.0</span>:
+                r -= delta * X[:, j]
+                beta[j] = beta_new
+                max_change = <span class="f">max</span>(max_change, <span class="f">abs</span>(delta))
+                
+        <span class="k">if</span> max_change &lt; tol:
+            break
+            
+    <span class="k">return</span> beta
+
+<span class="c"># Generate sparse regression problem: 100 samples, 20 features, only 3 active</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+n_samples = <span class="n">150</span>
+n_features = <span class="n">25</span>
+X = np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">1</span>, (n_samples, n_features))
+true_beta = np.<span class="f">zeros</span>(n_features)
+true_beta[<span class="n">2</span>] = <span class="n">2.5</span>
+true_beta[<span class="n">7</span>] = -<span class="n">1.8</span>
+true_beta[<span class="n">15</span>] = <span class="n">3.0</span>
+y = X @ true_beta + np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">0.5</span>, n_samples)
+
+<span class="c"># Fit Lasso via Coordinate Descent</span>
+lambda_reg = <span class="n">0.15</span>
+beta_est = <span class="f">coordinate_descent_lasso</span>(X, y, alpha=lambda_reg)
+
+n_nonzero = np.<span class="f">sum</span>(beta_est != <span class="n">0</span>)
+mse = np.<span class="f">mean</span>((y - X @ beta_est)**<span class="n">2</span>)
+
+<span class="k">print</span>(<span class="s">f&quot;Dataset shape: {X.shape}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;True non-zero coefficients: indices 2 (2.5), 7 (-1.8), 15 (3.0)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Recovered non-zero count:  {n_nonzero} / {n_features}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Recovered beta[2]:         {beta_est[2]:.3f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Recovered beta[7]:         {beta_est[7]:.3f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Recovered beta[15]:        {beta_est[15]:.3f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;All other 22 features zeroed out: {np.all(beta_est[np.setdiff1d(np.arange(n_features), [2, 7, 15])] == 0)}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Non-separable non-smooth penalties: Coordinate descent can get trapped in non-optimal points if non-smooth terms are non-separable (e.g. constraints like $|x_1 - x_2| \le 1$).</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Correlated features slowing convergence: Highly collinear features create elongated diagonal ravines where coordinate steps make slow zigzagging progress.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Memory access inefficiency on column-major data: Cycling across features requires efficient column-wise matrix memory layout; row-major memory causes CPU cache misses.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>Why is coordinate descent uniquely suited for solving L1-regularised Lasso regression?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It requires no training samples</span></button><button class="opt" type="button"><b>B</b><span>The non-differentiable L1 penalty separates across coordinates, allowing each 1D coordinate sub-problem to be solved in closed form via soft-thresholding</span></button><button class="opt" type="button"><b>C</b><span>It inverts the full p x p matrix in O(1) time</span></button><button class="opt" type="button"><b>D</b><span>Coordinate descent eliminates all noise from the dataset</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> While the L1 kink breaks joint gradient descent, along any single coordinate axis the sub-problem has an exact closed-form minimiser given by the soft-thresholding operator.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>Under what condition can coordinate descent fail to converge to a stationary point?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>When all variables are strictly positive</span></button><button class="opt" type="button"><b>B</b><span>When the dataset has more samples than features</span></button><button class="opt" type="button"><b>C</b><span>When the objective function has non-smooth terms that are non-separable across coordinates</span></button><button class="opt" type="button"><b>D</b><span>When the objective function is quadratic</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> If a non-smooth term couples multiple variables (such as non-separable constraints), coordinate descent can get trapped at a corner point where no axis-aligned move reduces loss.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../models/lasso_regression/"><small class="kicker">Regression</small><b>Lasso regression</b></a><a href="../../models/elastic_net/"><small class="kicker">Regression</small><b>Elastic net</b></a><a href="../../concepts/proximal-gradient-methods/"><small class="kicker">Concept</small><b>Proximal gradient methods</b></a><a href="../../concepts/newtons-method/"><small class="kicker">Concept</small><b>Newton's method</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/lagrange-multipliers-and-kkt-conditions/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Machine learning toolbox</small><b>Lagrange &amp; KKT conditions</b></a>
+    <a class="pager-next" href="../../concepts/newtons-method/"><small>Next · Machine learning toolbox <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Newton's method</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

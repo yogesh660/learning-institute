@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Chunking and embeddings for retrieval · Learn · Yogesh Awate</title>
+<meta name="description" content="Chunking and embedding represent the foundational ingestion stage of Retrieval-Augmented Generation (RAG) architectures. Because raw documents are too extensive to embed as monolithic vectors, text must be partitioned into granular passages that balance semantic coherence against retrieval specificity. From fixed-length token windows with sliding overlaps to recursive syntactic splitting, semantic clustering, and hierarchical parent-document indexing, chunking strategies directly determine retrieval recall and downstream LLM generation quality.">
+<meta property="og:title" content="Chunking and embeddings for retrieval · Learn · Yogesh Awate">
+<meta property="og:description" content="Chunking and embedding represent the foundational ingestion stage of Retrieval-Augmented Generation (RAG) architectures. Because raw documents are too extensive to embed as monolithic vectors, text must be partitioned into granular passages that balance semantic coherence against retrieval specificity. From fixed-length token windows with sliding overlaps to recursive syntactic splitting, semantic clustering, and hierarchical parent-document indexing, chunking strategies directly determine retrieval recall and downstream LLM generation quality.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="chunking-and-embeddings-for-retrieval">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ai">Path 11 · AI</a> / Retrieval and RAG / Lesson 21 of 42</span>
+    <h1 class="case-title">Chunking and embeddings for retrieval</h1>
+    <p class="lede rise" style="--d:3">Chunking and embedding represent the foundational ingestion stage of Retrieval-Augmented Generation (RAG) architectures. Because raw documents are too extensive to embed as monolithic vectors, text must be partitioned into granular passages that balance semantic coherence against retrieval specificity. From fixed-length token windows with sliding overlaps to recursive syntactic splitting, semantic clustering, and hierarchical parent-document indexing, chunking strategies directly determine retrieval recall and downstream LLM generation quality.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/semantic-search-and-dense-retrieval/">Semantic Search &amp; Dense Retrieval</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>AI · Retrieval and RAG</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">If you feed an entire 200-page corporate financial report into an embedding model as a single vector, the resulting embedding averages together revenue numbers, legal disclaimers, executive biographies, and supply chain updates into an uninformative semantic soup. Conversely, if you chop the report into single-sentence fragments, a search for "Q3 revenue" finds a sentence saying "It increased by 14%" without knowing what "It" refers to. The art and science of chunking solves this Goldilocks dilemma: partitioning text into chunks that are small enough for precise retrieval, yet rich enough to be self-contained.</p>
+        <p>The Granularity vs Context Trade-off:
+- Small Chunks (50 to 150 tokens): High retrieval precision. The embedding vector reflects a specific, tightly focused idea. However, small chunks lack surrounding context, resulting in pronoun ambiguity and missing qualifiers.
+- Large Chunks (500 to 1,000 tokens): High contextual completeness. The passage contains necessary background and surrounding facts. However, the vector embedding averages multiple topics, reducing cosine similarity with targeted search queries.</p>
+        <p>The Evolution of Chunking Strategies:
+1. Fixed-Size Token Chunking: Splitting text every N tokens with an overlap of M tokens (e.g. 512 tokens with 64 overlap). Fast and simple, but frequently slices mid-sentence or breaks tabular data.
+2. Recursive Character / Syntactic Chunking: Recursively splitting on natural boundaries: first paragraph breaks (\n\n), then sentence breaks (\n, full stops), then word boundaries. Preserves grammatical paragraphs.
+3. Semantic Chunking: Computing cosine similarity between consecutive sentence embeddings and creating a split only when semantic similarity drops below a percentile threshold.
+4. Hierarchical / Parent-Document Retrieval: Decoupling the chunk you search from the chunk you read: index small, focused child chunks (100 tokens) for search, but return their larger parent section (1,000 tokens) to the LLM generator.</p>
+        <p>Embedding Dimension and Matryoshka Representation Learning (MRL): Modern embedding models (like OpenAI text-embedding-3 or voyage-ai) produce dense vectors of 1,536 or 3,072 dimensions. Matryoshka Representation Learning (MRL) trains models such that the first 256 or 512 dimensions contain the vast majority of semantic information, allowing developers to truncate embeddings by 75% to save memory and vector database costs with negligible accuracy loss.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Think of packing a shipping container with household goods. If you pack an entire house into one gigantic wooden crate, no forklift can lift it, and finding your car keys requires unpacking the entire crate (document-level embedding). If you put every single pencil, fork, and bolt into its own individual tiny envelope (sentence-level chunking), you have two million envelopes, lose the context of which room they belong to, and drown in shipping labels. Effective chunking packs items into neatly labelled, themed boxes (kitchen utensils, bedroom books) with packing slips (metadata) so you can retrieve exactly what you need in seconds.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Sliding window token chunking with stride</h3><div class="formula">C_k = [w_{k \cdot (L - O)}, \, w_{k \cdot (L - O) + 1}, \, \dots, \, w_{k \cdot (L - O) + L - 1}]</div><p>Here $L$ is chunk window length in tokens, $O$ is overlap length ($O &lt; L$), and the stride is $S = L - O$. Overlap ensures that entities and facts positioned at chunk boundaries are represented continuously in at least one window.</p></li>
+          <li><h3>Semantic chunking split threshold condition</h3><div class="formula">\operatorname{Split}(i) \iff \cos\left( E(s_i), E(s_{i+1}) \right) < \mu_{\text{sim}} - k \cdot \sigma_{\text{sim}}</div><p>A semantic boundary is triggered between consecutive sentences $s_i$ and $s_{i+1}$ when their embedding cosine similarity drops significantly below the running mean $\mu_{\text{sim}}$ by $k$ standard deviations $\sigma_{\text{sim}}$, detecting topical transitions.</p></li>
+          <li><h3>Matryoshka Representation Learning (MRL) loss</h3><div class="formula">\mathcal{L}_{\text{MRL}} = \sum_{m \in \{d_1, d_2, \dots, D\}} \mathcal{L}_{\text{contrastive}}\left( \mathbf{z}_{1:m}, \mathbf{z}^+_{1:m} \right)</div><p>MRL optimises contrastive loss across nested vector prefixes $d_1 &lt; d_2 &lt; \dots &lt; D$. The top dimensions capture high-level semantic clusters, allowing vector truncation to $d_1 = 256$ dimensions with minimal loss in retrieval accuracy.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Chunking balances retrieval precision (small chunks) against contextual completeness (large chunks).</li><li>Recursive character splitting respects natural linguistic boundaries: paragraphs, sentences, and clauses.</li><li>Sliding window overlap (typically 10-20% of chunk size) prevents facts positioned at boundaries from being cleaved in half.</li><li>Hierarchical parent-document retrieval indexes granular child chunks for search while supplying full parent passages to the LLM.</li><li>Prepending document titles and section breadcrumbs to chunks resolves ambiguous pronouns and boosts retrieval recall.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">class</span> RecursiveTextSplitter:
+    <span class="s">&quot;&quot;&quot;
+    Recursive syntactic text splitter that respects paragraph and sentence
+    boundaries while enforcing maximum chunk size and sliding overlap.
+    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, chunk_size=<span class="n">100</span>, chunk_overlap=<span class="n">20</span>):
+        <span class="k">self</span>.chunk_size = chunk_size
+        <span class="k">self</span>.chunk_overlap = chunk_overlap
+        <span class="k">self</span>.separators = [<span class="s">&quot;\n\n&quot;</span>, <span class="s">&quot;\n&quot;</span>, <span class="s">&quot;. &quot;</span>, <span class="s">&quot; &quot;</span>]
+
+    <span class="k">def</span> <span class="f">split_text</span>(<span class="k">self</span>, text):
+        <span class="k">return</span> <span class="k">self</span>.<span class="f">_split</span>(text, <span class="k">self</span>.separators)
+
+    <span class="k">def</span> <span class="f">_split</span>(<span class="k">self</span>, text, separators):
+        final_chunks = []
+        <span class="k">if</span> <span class="k">not</span> separators:
+            <span class="k">return</span> [text] <span class="k">if</span> text <span class="k">else</span> []
+            
+        sep = separators[<span class="n">0</span>]
+        splits = text.<span class="f">split</span>(sep)
+        
+        current_chunk = <span class="s">&quot;&quot;</span>
+        <span class="k">for</span> s <span class="k">in</span> splits:
+            s_clean = s.<span class="f">strip</span>()
+            <span class="k">if</span> <span class="k">not</span> s_clean:
+                continue
+                
+            candidate = <span class="s">f&quot;{current_chunk}{sep}{s_clean}&quot;</span> <span class="k">if</span> current_chunk <span class="k">else</span> s_clean
+            <span class="k">if</span> <span class="k">len</span>(candidate) &lt;= <span class="k">self</span>.chunk_size:
+                current_chunk = candidate
+            <span class="k">else</span>:
+                <span class="k">if</span> current_chunk:
+                    final_chunks.<span class="f">append</span>(current_chunk)
+                    <span class="c"># Create overlap from end of current chunk</span>
+                    overlap_start = <span class="f">max</span>(<span class="n">0</span>, <span class="k">len</span>(current_chunk) - <span class="k">self</span>.chunk_overlap)
+                    overlap_text = current_chunk[overlap_start:]
+                    current_chunk = <span class="s">f&quot;{overlap_text} {s_clean}&quot;</span>.<span class="f">strip</span>()
+                <span class="k">else</span>:
+                    <span class="c"># Current piece itself exceeds chunk size, recurse on next separator</span>
+                    deeper = <span class="k">self</span>.<span class="f">_split</span>(s_clean, separators[<span class="n">1</span>:])
+                    final_chunks.<span class="f">extend</span>(deeper)
+                    current_chunk = <span class="s">&quot;&quot;</span>
+                    
+        <span class="k">if</span> current_chunk:
+            final_chunks.<span class="f">append</span>(current_chunk)
+        <span class="k">return</span> final_chunks
+
+<span class="c"># Sample document demonstrating paragraph, sentence, and section boundaries</span>
+raw_document = (
+    <span class="s">&quot;Overview of Neural Architecture Search.\n\n&quot;</span>
+    <span class="s">&quot;Neural Architecture Search (NAS) automates the design of artificial neural networks. &quot;</span>
+    <span class="s">&quot;Rather than hand-crafting layer topologies, algorithms explore vast discrete search spaces. &quot;</span>
+    <span class="s">&quot;Common exploration techniques include reinforcement learning, evolutionary algorithms, and gradient-based continuous relaxation.\n\n&quot;</span>
+    <span class="s">&quot;Computational Costs and Efficiency.\n\n&quot;</span>
+    <span class="s">&quot;Early NAS methods required thousands of GPU hours on CIFAR-10. &quot;</span>
+    <span class="s">&quot;Modern one-shot NAS architectures share weights across sub-networks, reducing training time to a single day on modest hardware.&quot;</span>
+)
+
+splitter = <span class="f">RecursiveTextSplitter</span>(chunk_size=<span class="n">160</span>, chunk_overlap=<span class="n">30</span>)
+chunks = splitter.<span class="f">split_text</span>(raw_document)
+
+<span class="k">print</span>(<span class="s">f&quot;Original Document Length: {len(raw_document)} characters&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Generated {len(chunks)} Chunks (Target size: 160 chars, Overlap: 30 chars):\n&quot;</span>)
+<span class="k">for</span> i, c <span class="k">in</span> <span class="f">enumerate</span>(chunks, <span class="n">1</span>):
+    <span class="k">print</span>(<span class="s">f&quot;--- Chunk {i} ({len(c)} chars) ---&quot;</span>)
+    <span class="k">print</span>(<span class="s">f&quot;'{c}'\n&quot;</span>)
+</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Splitting blindly by character count: Slicing text every 500 characters breaks words in half and severs sentences midway, creating broken token embeddings. Always split by tokens or natural linguistic boundaries.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Zero overlap in sliding windows: With zero overlap, a key answer spanning the boundary between chunk A and chunk B is split across two vectors, causing both chunks to score poorly. Always maintain 10-20% overlap.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Shredding tables and structured data: Naively chunking markdown or HTML tables into linear text turns structured rows and columns into incomprehensible gibberish. Use dedicated table parsers or serialize rows as key-value pairs.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Neglecting chunk metadata: When a retrieved chunk reads 'The fee is £50' without document metadata, the LLM cannot know whether the fee applies to parking, checking accounts, or visa processing. Always attach document titles and headers.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>Why does Hierarchical Parent-Document retrieval offer superior performance over single-scale chunking in RAG pipelines?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It decouples search from generation: small child chunks are indexed for high-precision vector search, while larger parent chunks provide rich surrounding context to the LLM generator</span></button><button class="opt" type="button"><b>B</b><span>It compresses all documents onto a single GPU core</span></button><button class="opt" type="button"><b>C</b><span>It translates all English text into SQL queries</span></button><button class="opt" type="button"><b>D</b><span>It eliminates the need for vector databases</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Small chunks have high vector specificity for finding exact matches, but lack context. Large chunks contain complete context, but blur vector similarity. Hierarchical retrieval indexes small child chunks for search and passes the full parent context to the generator.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>What failure mode occurs when sliding window chunking is performed with zero overlap (overlap = 0)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The vector store runs out of memory</span></button><button class="opt" type="button"><b>B</b><span>Key facts, entities, and answers that span the boundary between two adjacent chunks are split in half, causing both chunks to fail semantic retrieval</span></button><button class="opt" type="button"><b>C</b><span>The document text is automatically reversed</span></button><button class="opt" type="button"><b>D</b><span>The embedding model outputs complex imaginary numbers</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> If a critical answer spans words 510 to 515 and the chunk splits at word 512 with zero overlap, half the concept is in chunk 1 and half in chunk 2. Neither chunk contains the complete fact. Maintaining 10-20% overlap ensures the fact appears intact in at least one chunk.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>How does Semantic Chunking decide where to partition a document?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By dividing the text into equal thirds</span></button><button class="opt" type="button"><b>B</b><span>By inserting a split after every ten vowels</span></button><button class="opt" type="button"><b>C</b><span>By computing cosine similarity between consecutive sentence embeddings and creating a split where the similarity score drops significantly below the average, signaling a shift in topic</span></button><button class="opt" type="button"><b>D</b><span>By splitting only when an exclamation point is detected</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Semantic chunking calculates the vector similarity between adjacent sentences. When the topic transitions, the cosine similarity between consecutive sentences drops sharply, providing an adaptive, content-aware boundary marker.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/semantic-search-and-dense-retrieval/"><small class="kicker">Concept</small><b>Semantic Search &amp; Dense Retrieval</b></a><a href="../../concepts/sentence-embeddings-and-sbert/"><small class="kicker">Concept</small><b>Sentence Embeddings &amp; SBERT</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/context-windows-and-memory/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · AI</small><b>Context Windows &amp; Memory</b></a>
+    <a class="pager-next" href="../../concepts/hybrid-search-and-reranking/"><small>Next · AI <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Hybrid Search &amp; Reranking</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Local Outlier Factor · Learn · Yogesh Awate</title>
+<meta name="description" content="Density-based anomaly detection that quantifies how isolated a point is relative to the varying local densities of its surrounding k-nearest neighbours.">
+<meta property="og:title" content="Local Outlier Factor · Learn · Yogesh Awate">
+<meta property="og:description" content="Density-based anomaly detection that quantifies how isolated a point is relative to the varying local densities of its surrounding k-nearest neighbours.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="local-outlier-factor">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ml-toolbox">Path 06 · Machine learning toolbox</a> / Anomaly detection / Lesson 11 of 50</span>
+    <h1 class="case-title">Local Outlier Factor</h1>
+    <p class="lede rise" style="--d:3">Density-based anomaly detection that quantifies how isolated a point is relative to the varying local densities of its surrounding $k$-nearest neighbours.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/isolation-forest/">Isolation Forest</a> <a href="../../models/dbscan_clustering/">DBSCAN</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Machine learning toolbox · Anomaly detection</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Global anomaly detection algorithms assume that anomalies always sit far away from all other data points according to a single distance threshold. In datasets containing multiple clusters of wildly differing densities, this global assumption collapses: points on the fringe of a sparse cluster look like anomalies, while outliers near a dense cluster remain undetected. Local Outlier Factor (LOF) solves this by computing a ratio of local reachability densities, evaluating each point's degree of isolation purely relative to its immediate neighbourhood.</p>
+        <p>Imagine comparing population densities in two different regions: central Tokyo and rural Scotland. In central Tokyo, houses sit centimetres apart; if a new house were built 50 metres from its closest neighbour, that house would be an extraordinary anomaly. In the Scottish Highlands, houses routinely sit two kilometres apart; a home separated by 50 metres from its neighbour is not an anomaly at all, but rather part of a tightly clustered village. A global distance threshold would either brand every home in Scotland an anomaly, or miss the isolated house in Tokyo completely.</p>
+        <p>Local Outlier Factor resolves this by measuring relative density rather than absolute distance. For any candidate point $p$, LOF first finds its $k$-nearest neighbours and calculates its local reachability density ($\operatorname{lrd}$)—the reciprocal of the average distance required to reach $p$ from its neighbours. If $p$ is located in the middle of a dense cluster, its reachability density is high. If $p$ sits in a sparse cloud, its density is low.</p>
+        <p>The critical breakthrough is the LOF score itself, which divides the average local reachability density of $p$'s neighbours by $p$'s own local density. If $p$ has roughly the same density as its neighbours, this ratio is approximately 1, identifying $p$ as an inlier regardless of whether the cluster is dense or sparse. If $p$ is isolated—meaning its neighbours enjoy high density while $p$ sits out in the cold—the ratio jumps significantly above 1 (typically 1.5 or higher). This relative formulation makes LOF uniquely adept at uncovering local anomalies across complex, multi-density manifolds.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Judging whether an ambient sound is unusually loud not by measuring absolute decibels on an open highway, but by comparing the volume to the quiet whisper of the immediate library room you are sitting in.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>For every point $p$ in the dataset, determine its $k$-distance $d_k(p)$ (the distance to its $k$-th nearest neighbour) and identify its neighbourhood set $N_k(p)$.</li><li>For each neighbour $o \in N_k(p)$, compute the reachability distance of $p$ from $o$: $\text{reach-dist}_k(p, o) = \max\\{d_k(o), d(p, o)\}$, which stabilises density estimates within dense clusters.</li><li>Calculate the local reachability density $\operatorname{lrd}_k(p)$ as the inverse of the average reachability distance from $p$ to all points in $N_k(p)$.</li><li>Compute the Local Outlier Factor $\operatorname{LOF}_k(p)$ by taking the average ratio between the neighbours' local reachability densities $\operatorname{lrd}_k(o)$ and $p$'s own density $\operatorname{lrd}_k(p)$.</li><li>Flag observations with $\operatorname{LOF}_k(p) \gg 1$ as anomalies; points with $\operatorname{LOF}_k(p) \approx 1$ are confirmed inliers.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>k-distance and reachability distance</h3><div class="formula">$$\text{reach-dist}_k(p, o) = \max\big\\{d_k(o), \, d(p, o)\big}$$</div><p>where $d(p, o)$ is Euclidean distance and $d_k(o)$ is the distance from neighbour $o$ to its $k$-th nearest neighbour. If $p$ is very close to $o$, the reachability distance is floored at $d_k(o)$, preventing tiny denominator fluctuations from destabilising density estimates.</p></li>
+          <li><h3>Local reachability density</h3><div class="formula">$$\operatorname{lrd}_k(p) = \frac{|N_k(p)|}{\sum_{o \in N_k(p)} \text{reach-dist}_k(p, o)}$$</div><p>$\operatorname{lrd}_k(p)$ quantifies the number of neighbours per unit reachability distance. Dense regions produce small reachability distances and large $\operatorname{lrd}$, while sparse regions produce small $\operatorname{lrd}$.</p></li>
+          <li><h3>Local Outlier Factor score</h3><div class="formula">$$\operatorname{LOF}_k(p) = \frac{1}{|N_k(p)|} \sum_{o \in N_k(p)} \frac{\operatorname{lrd}_k(o)}{\operatorname{lrd}_k(p)}$$</div><p>When $p$ is deep inside a cluster, its density matches its neighbours' ($\operatorname{lrd}_k(o) \approx \operatorname{lrd}_k(p)$), yielding $\operatorname{LOF} \approx 1$. When $p$ is an outlier, its density is much lower than its neighbours' ($\operatorname{lrd}_k(p) \ll \operatorname{lrd}_k(o)$), driving $\operatorname{LOF} \gg 1$.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Detects anomalies based on relative local density rather than global Euclidean distance cutoffs.</li><li>Successfully identifies outliers in datasets containing multiple clusters of vastly different densities.</li><li>Reachability distance $\max\\{d_k(o), d(p, o)\\}$ stabilises calculations within dense clusters.</li><li>Points with $\operatorname{LOF} \approx 1$ are normal inliers; scores substantially greater than 1 indicate local outliers.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Synthetic clusters with different densities plus one outlier</span>
+rng = np.random.<span class="f">default_rng</span>(<span class="n">42</span>)
+c1 = rng.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">0.5</span>, (<span class="n">30</span>, <span class="n">2</span>))
+c2 = rng.<span class="f">normal</span>(<span class="n">5</span>, <span class="n">1.5</span>, (<span class="n">30</span>, <span class="n">2</span>))
+outlier = np.<span class="f">array</span>([[<span class="n">1.5</span>, <span class="n">1.5</span>]])
+X = np.<span class="f">vstack</span>([c1, c2, outlier])
+n, k = <span class="k">len</span>(X), <span class="n">5</span>
+
+<span class="c"># Pairwise distances and k-nearest neighbours</span>
+dist = np.linalg.<span class="f">norm</span>(X[:, <span class="k">None</span>, :] - X[<span class="k">None</span>, :, :], axis=-<span class="n">1</span>)
+sorted_idx = np.<span class="f">argsort</span>(dist, axis=<span class="n">1</span>)
+nbr_idx = sorted_idx[:, <span class="n">1</span>:k+<span class="n">1</span>]
+k_dist = dist[np.<span class="f">arange</span>(n), sorted_idx[:, k]]
+
+<span class="c"># Reachability distance and local reachability density (lrd)</span>
+reach_dist = np.<span class="f">maximum</span>(dist, k_dist[<span class="k">None</span>, :])
+lrd = k / np.<span class="f">sum</span>([reach_dist[i, nbr_idx[i]] <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(n)], axis=<span class="n">1</span>)
+
+<span class="c"># Local Outlier Factor (LOF) score</span>
+lof = np.<span class="f">array</span>([np.<span class="f">mean</span>(lrd[nbr_idx[i]] / lrd[i]) <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(n)])
+
+<span class="k">print</span>(<span class="s">f&quot;Dense cluster inlier LOF: {lof[0]:.3f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Sparse cluster inlier LOF: {lof[30]:.3f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Outlier LOF: {lof[-1]:.3f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Quadratic computational scaling: Finding exact $k$-nearest neighbours across all pairs requires $O(n^2)$ distance calculations, which becomes computationally prohibitive on millions of rows without spatial tree indexing (like $k$-d trees).</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Selection of $k$: If $k$ is chosen smaller than the size of an outlier cluster, the outliers form a mutual neighbourhood and mask each other. If $k$ is too large, it dilutes micro-density contrasts.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>High-dimensional distance concentration: In spaces with hundreds of dimensions, Euclidean distances concentrate and become equidistant, eroding the contrast between local and distant densities.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Lack of an absolute score threshold: Unlike a calibrated probability, there is no universal cutoff for LOF; a score of 1.3 might be an extreme outlier in one dataset and a normal border point in another.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>Why does Local Outlier Factor use relative local density rather than absolute distance to the nearest cluster centre?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because computing cluster centres requires supervised class labels</span></button><button class="opt" type="button"><b>B</b><span>To guarantee that all inlier scores are identically zero</span></button><button class="opt" type="button"><b>C</b><span>Because absolute distances cannot be computed using Euclidean metrics</span></button><button class="opt" type="button"><b>D</b><span>To avoid falsely labelling normal points in sparse clusters as anomalies while missing true outliers near dense clusters</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In datasets with heterogeneous densities, points in a legitimate sparse cluster have large pairwise distances. Global metrics mistake them for outliers, whereas LOF's relative density ratio normalises for local cluster spread.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>What is the expected Local Outlier Factor ($\operatorname{LOF}$) score for a data point nestled securely deep inside a cluster?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Approximately 1.0</span></button><button class="opt" type="button"><b>B</b><span>Greater than 5.0</span></button><button class="opt" type="button"><b>C</b><span>Negative infinity</span></button><button class="opt" type="button"><b>D</b><span>Exactly 0.0</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Deep inside a cluster, a point and all of its neighbours have virtually identical local reachability densities ($\operatorname{lrd}(o) \approx \operatorname{lrd}(p)$), so the ratio averages to approximately 1.0.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>What role does the reachability distance $\text{reach-dist}_k(p, o) = \max\\{d_k(o), d(p, o)\\}$ play in LOF?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It forces all distances to follow a normal distribution</span></button><button class="opt" type="button"><b>B</b><span>It projects points into a lower-dimensional subspace</span></button><button class="opt" type="button"><b>C</b><span>It eliminates the need to specify the neighbourhood size $k$</span></button><button class="opt" type="button"><b>D</b><span>It establishes a minimum distance floor based on neighbour density, preventing statistical instability from near-zero distances</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> By replacing tiny distances between identical or near-duplicate points with $d_k(o)$, reachability distance prevents near-zero divisions and stabilises local density estimates.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q4</span>What is a primary limitation of standard Local Outlier Factor when scaling to high-dimensional datasets?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>LOF can only be evaluated on single-dimensional scalar values</span></button><button class="opt" type="button"><b>B</b><span>LOF assumes that all features follow independent Bernoulli distributions</span></button><button class="opt" type="button"><b>C</b><span>Distance concentration diminishes the contrast between nearest and furthest neighbours, blurring local density differences</span></button><button class="opt" type="button"><b>D</b><span>LOF requires training thousands of deep neural network weights</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> As dimensionality increases, Euclidean distances concentrate around a common mean (the curse of dimensionality), causing relative density ratios to flatten toward 1 and degrading outlier discrimination.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/isolation-forest/"><small class="kicker">Concept</small><b>Isolation Forest</b></a><a href="../../models/dbscan_clustering/"><small class="kicker">Clustering</small><b>DBSCAN</b></a><a href="../../models/kmedoids_clustering/"><small class="kicker">Clustering</small><b>k-medoids</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/isolation-forest/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Machine learning toolbox</small><b>Isolation Forest</b></a>
+    <a class="pager-next" href="../../concepts/one-class-svm/"><small>Next · Machine learning toolbox <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>One-class SVM</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Causal graphs (DAGs) and adjustment · Learn · Yogesh Awate</title>
+<meta name="description" content="Causal Directed Acyclic Graphs (DAGs) and Pearl's structural causal framework provide the mathematical language to differentiate mere statistical correlation from genuine causal effect. By formalising causal assumptions as directional graphical models (X -&gt; Y), causal DAGs systematically identify confounding, mediation, and collider structures. The Backdoor Criterion and d-separation establish exactly which set of covariates Z must be controlled for—and crucially, which variables must NOT be conditioned on (to avoid collider stratification bias)—to eliminate spurious confounding and identify causal effects from observational data.">
+<meta property="og:title" content="Causal graphs (DAGs) and adjustment · Learn · Yogesh Awate">
+<meta property="og:description" content="Causal Directed Acyclic Graphs (DAGs) and Pearl's structural causal framework provide the mathematical language to differentiate mere statistical correlation from genuine causal effect. By formalising causal assumptions as directional graphical models (X -&gt; Y), causal DAGs systematically identify confounding, mediation, and collider structures. The Backdoor Criterion and d-separation establish exactly which set of covariates Z must be controlled for—and crucially, which variables must NOT be conditioned on (to avoid collider stratification bias)—to eliminate spurious confounding and identify causal effects from observational data.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="causal-graphs-dags-and-adjustment">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-statistics">Path 02 · Statistics</a> / Experiments and causality / Lesson 39 of 51</span>
+    <h1 class="case-title">Causal graphs (DAGs) and adjustment</h1>
+    <p class="lede rise" style="--d:3">Causal Directed Acyclic Graphs (DAGs) and Pearl's structural causal framework provide the mathematical language to differentiate mere statistical correlation from genuine causal effect. By formalising causal assumptions as directional graphical models (X -> Y), causal DAGs systematically identify confounding, mediation, and collider structures. The Backdoor Criterion and d-separation establish exactly which set of covariates Z must be controlled for—and crucially, which variables must NOT be conditioned on (to avoid collider stratification bias)—to eliminate spurious confounding and identify causal effects from observational data.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">20 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/a-b-testing-end-to-end/">A/B Testing End-to-End</a> <a href="../../concepts/simpsons-paradox-and-confounding/">Simpson's Paradox &amp; Confounding</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Statistics · Experiments and causality</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">"Correlation does not imply causation"—every data scientist knows this axiom, yet when building predictive models, how do you decide which variables to include as regression controls? Adding more control variables is not always safe: controlling for the wrong variable can create massive spurious correlations that did not exist in the raw data! Pearl's causal DAGs provide the mathematical calculus to identify true causal pathways, avoid collider bias, and determine whether observational data can answer causal questions.</p>
+        <p>The Three Fundamental Causal Junctions: Any causal graph is built from three 3-node patterns:
+- Chain (Mediation): X -> M -> Y. X causes M, which causes Y. Conditioning on mediator M blocks the causal path between X and Y.
+- Fork (Confounder): X <- Z -> Y. Confounder Z causes both X and Y, creating a spurious non-causal association. Conditioning on Z blocks the spurious correlation.
+- Collider: X -> C <- Y. Both X and Y independently cause collider C. In the unconditioned data, X and Y are independent! But if you condition on collider C (or a descendant of C), you open a spurious path and induce artificial correlation between X and Y!</p>
+        <p>The Danger of Bad Controls (Collider Stratification Bias): Suppose being a brilliant actor (X) and having movie star looks (Y) are completely independent in the general population. But to be cast in Hollywood films (C), you need either talent or looks (X -> C <- Y). If you only analyse Hollywood actors (conditioning on C), you will find a strong negative correlation: talented actors seem less attractive, and attractive actors seem less talented! This is Berkson's fallacy / collider bias.</p>
+        <p>The Backdoor Criterion: To find the true causal effect of treatment X on outcome Y, you must block all "backdoor paths" (paths that start with an arrow pointing into X: X <- ... -> Y) by conditioning on a valid adjustment set Z, without conditioning on any collider or descendant of X.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine water flowing through a plumbing pipe network from tap X to drain Y. A backdoor path is an accidental cross-connection through an upstream water tower Z that leaks into both pipes. Conditioning on a confounder is closing a valve on the leak so only water from tap X reaches drain Y. A collider is a shared flood sensor that is normally dry; if you tamper with it (condition on it), you inadvertently create an electrical short that connects two previously isolated pipe valves together.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>The do-Operator and Causal Effect Identification</h3><div class="formula">P(Y = y \mid \text{do}(X = x)) \neq P(Y = y \mid X = x), \qquad P(Y = y \mid \text{do}(X = x)) = \sum_{\mathbf{z}} P(Y = y \mid X = x, \mathbf{Z} = \mathbf{z}) \, P(\mathbf{Z} = \mathbf{z})</div><p>The do-operator \text{do}(X=x) represents a physical intervention that severs all incoming arrows into X, setting X to value x. When the set of covariates \mathbf{Z} satisfies the Backdoor Criterion, the causal effect is identified from purely observational data using the adjustment formula.</p></li>
+          <li><h3>The Backdoor Criterion (Pearl)</h3><div class="formula">\mathbf{Z} \text{ satisfies Backdoor Criterion for } (X, Y) \iff \begin{cases} (1) \; \text{No node in } \mathbf{Z} \text{ is a descendant of } X \\ (2) \; \mathbf{Z} \text{ d-separates (blocks) every path } X \leftarrow \dots \to Y \end{cases}</div><p>Condition (1) ensures that causal mechanisms mediated by X are not accidentally blocked. Condition (2) ensures that all spurious non-causal confounding associations are completely blocked.</p></li>
+          <li><h3>Collider Conditioning Bias (Berkson's Paradox)</h3><div class="formula">X \perp Y \quad \text{but} \quad X \not\perp Y \mid C \quad \text{for collider junction } X \to C \leftarrow Y</div><p>Two independent causes X and Y become conditionally dependent when conditioning on their common effect C (or any descendant of C). Conditioning on a collider induces spurious negative or positive correlation where none exists in the population.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Causal DAGs represent causal mechanisms via directed acyclic graphs, distinguishing correlation from causation.</li><li>The three fundamental junctions are Chains (mediation), Forks (confounding), and Colliders (common effects).</li><li>Confounders must be controlled for to block spurious backdoor paths; colliders must NOT be conditioned on, as conditioning opens spurious association.</li><li>The Backdoor Criterion provides the graphical rules for identifying valid adjustment sets from observational data.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="s">&quot;&quot;&quot;
+Causal DAG Simulation: Confounding vs Collider Bias
+Demonstrating that adding control variables can eliminate confounding
+OR artificially introduce collider bias (Berkson's fallacy).
+&quot;&quot;&quot;</span>
+
+<span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Ground Truth Causal Data Generating Process:</span>
+<span class="c"># Z (Confounder: Socioeconomic status) -&gt; X (Education) and Y (Health)</span>
+<span class="c"># True Causal Effect of Education on Health = 2.0</span>
+<span class="c"># C (Collider: Hospital admission) &lt;- X (Education) and Y (Health)</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+N = <span class="n">10000</span>
+
+<span class="c"># 1. Confounder Z</span>
+z_socioeconomic = np.random.<span class="f">normal</span>(loc=<span class="n">0.0</span>, scale=<span class="n">1.0</span>, size=N)
+
+<span class="c"># 2. Treatment X (caused by Z + independent noise)</span>
+x_education = <span class="n">1.5</span> * z_socioeconomic + np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">1</span>, size=N)
+
+<span class="c"># 3. Outcome Y (caused by X with true effect beta=2.0 + Z + noise)</span>
+true_causal_beta = <span class="n">2.0</span>
+y_health = true_causal_beta * x_education + <span class="n">2.5</span> * z_socioeconomic + np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">1</span>, size=N)
+
+<span class="c"># 4. Collider C (caused by BOTH X and Y)</span>
+<span class="c"># e.g. Admission to a specialised clinic: C = 1 if 0.8*X + 0.8*Y + noise &gt; 2.0</span>
+collider_score = <span class="n">0.8</span> * x_education + <span class="n">0.8</span> * y_health + np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">1</span>, size=N)
+c_admitted = (collider_score &gt; <span class="n">1.5</span>).<span class="f">astype</span>(int)
+
+<span class="k">def</span> <span class="f">fit_ols</span>(y_vec, *x_vecs):
+    <span class="s">&quot;&quot;&quot;Simple OLS solver returning slope coefficients.&quot;&quot;&quot;</span>
+    X_mat = np.<span class="f">column_stack</span>([np.<span class="f">ones</span>(<span class="k">len</span>(y_vec))] + <span class="f">list</span>(x_vecs))
+    beta = np.linalg.<span class="f">inv</span>(X_mat.T @ X_mat) @ (X_mat.T @ y_vec)
+    <span class="k">return</span> beta
+
+<span class="k">print</span>(<span class="s">&quot;=== Causal Inference Demonstration: True Causal Effect beta = 2.00 ===&quot;</span>)
+
+<span class="c"># Model 1: Naive Regression (No controls: Y ~ X)</span>
+<span class="c"># Confounded by Z!</span>
+beta_naive = <span class="f">fit_ols</span>(y_health, x_education)
+<span class="k">print</span>(<span class="s">f&quot;1. Naive Regression (Y ~ X):                   Estimated beta = {beta_naive[1]:.3f} (Severely Confounded!)&quot;</span>)
+
+<span class="c"># Model 2: Valid Backdoor Adjustment (Y ~ X + Z)</span>
+<span class="c"># Blocks the backdoor path X &lt;- Z -&gt; Y</span>
+beta_adjusted = <span class="f">fit_ols</span>(y_health, x_education, z_socioeconomic)
+<span class="k">print</span>(<span class="s">f&quot;2. Valid Backdoor Adjustment (Y ~ X + Z):      Estimated beta = {beta_adjusted[1]:.3f} (Recovers True Effect!)&quot;</span>)
+
+<span class="c"># Model 3: Bad Control - Conditioning on Collider C (Y ~ X + Z + C)</span>
+<span class="c"># Inadvertently opens the collider path X -&gt; C &lt;- Y!</span>
+beta_collider = <span class="f">fit_ols</span>(y_health, x_education, z_socioeconomic, collider_score)
+<span class="k">print</span>(<span class="s">f&quot;3. Bad Control / Collider Bias (Y ~ X + Z + C):Estimated beta = {beta_collider[1]:.3f} (Biased by Collider!)&quot;</span>)
+
+<span class="c"># Model 4: Berkson's Fallacy (Analysing only the admitted subpopulation C == 1)</span>
+mask = (c_admitted == <span class="n">1</span>)
+beta_subpop = <span class="f">fit_ols</span>(y_health[mask], x_education[mask], z_socioeconomic[mask])
+<span class="k">print</span>(<span class="s">f&quot;4. Stratified on Collider (Subset where C=1):   Estimated beta = {beta_subpop[1]:.3f} (Berkson's Bias!)&quot;</span>)
+</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>The 'kitchen sink' regression trap: Adding all available features as control variables often controls for colliders or mediators, destroying causal validity.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Controlling for post-treatment variables: Conditioning on an outcome of treatment (mediator) blocks the very causal mechanism being measured.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming causal DAGs can be discovered purely from data without assumptions: Observational data can identify Markov equivalence classes, but orienting arrows requires domain knowledge or physical interventions.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>In a causal DAG, what happens when you condition on a collider node (X -> C <- Y)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The causal effect becomes impossible to calculate on a computer</span></button><button class="opt" type="button"><b>B</b><span>You completely eliminate all confounding in the dataset</span></button><button class="opt" type="button"><b>C</b><span>You reverse the direction of time in the graph</span></button><button class="opt" type="button"><b>D</b><span>You inadvertently open a spurious non-causal path between X and Y, inducing artificial correlation (collider stratification bias / Berkson's fallacy)</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> An unconditioned collider naturally blocks association between X and Y. Conditioning on the collider opens the path, creating an artificial statistical association between its independent causes.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>What two conditions must a set of covariates Z satisfy to meet the Backdoor Criterion for (X, Y)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Z must be measured after outcome Y</span></button><button class="opt" type="button"><b>B</b><span>Z must be perfectly correlated with X</span></button><button class="opt" type="button"><b>C</b><span>No variable in Z can be a descendant of treatment X, and Z must block (d-separate) every backdoor path from X to Y</span></button><button class="opt" type="button"><b>D</b><span>Z must include every variable in the dataset</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Pearl's Backdoor Criterion requires that Z blocks all confounding paths (X <- ... -> Y) without conditioning on any downstream consequence of treatment X (descendant).</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>What is the difference between P(Y | X=x) and P(Y | do(X=x))?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>P(Y | X=x) represents passive observation which can be confounded, whereas P(Y | do(X=x)) represents physical intervention where incoming causes to X are severedd</span></button><button class="opt" type="button"><b>B</b><span>P(Y | do(X=x)) can only be evaluated in laboratory chemistry experiments</span></button><button class="opt" type="button"><b>C</b><span>They are identical in all statistical models</span></button><button class="opt" type="button"><b>D</b><span>P(Y | X=x) is always equal to 1.0</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Observational conditioning P(Y | X=x) filters existing data (and includes confounding associations). The do-operator P(Y | do(X=x)) simulates an intervention that fixes X, establishing genuine causal impact.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/simpsons-paradox-and-confounding/"><small class="kicker">Concept</small><b>Simpson's Paradox &amp; Confounding</b></a><a href="../../concepts/a-b-testing-end-to-end/"><small class="kicker">Concept</small><b>A/B Testing End-to-End</b></a><a href="../../concepts/bayesian-a-b-testing/"><small class="kicker">Concept</small><b>Bayesian A/B Testing</b></a><a href="../../concepts/ols-inference-t-tests-f-test-r2-and-adjusted-r2/"><small class="kicker">Concept</small><b>OLS Inference: t, F &amp; R-Squared</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/bayesian-a-b-testing/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Statistics</small><b>Bayesian A/B Testing</b></a>
+    <a class="pager-next" href="../../concepts/propensity-scores-and-matching/"><small>Next · Statistics <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Propensity Scores &amp; Matching</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

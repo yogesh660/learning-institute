@@ -1,0 +1,17 @@
+{
+  "dataset": "Titanic sample",
+  "summary": "AdaBoost (300 stumps) trained on 80% of the Titanic sample and scored on a stratified 20% hold-out. The baseline always predicts the most common class.",
+  "model_label": "AdaBoost (300 stumps)",
+  "baseline_label": "Majority class",
+  "metrics": {
+    "Accuracy": 0.95,
+    "F1 (survived)": 0.9333,
+    "ROC-AUC": 0.991
+  },
+  "baseline": {
+    "Accuracy": 0.63,
+    "F1 (survived)": 0.0,
+    "ROC-AUC": 0.5
+  },
+  "generated": "generated 2026-10-28"
+}

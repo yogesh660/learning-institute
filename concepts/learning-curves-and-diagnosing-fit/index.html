@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Learning Curves and Diagnosing Fit · Learn · Yogesh Awate</title>
+<meta name="description" content="Empirical diagnostic plotting training and validation error against sample size to distinguish high bias (underfitting) from high variance (overfitting).">
+<meta property="og:title" content="Learning Curves and Diagnosing Fit · Learn · Yogesh Awate">
+<meta property="og:description" content="Empirical diagnostic plotting training and validation error against sample size to distinguish high bias (underfitting) from high variance (overfitting).">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="learning-curves-and-diagnosing-fit">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ml-toolbox">Path 06 · Machine learning toolbox</a> / Model selection / Lesson 25 of 50</span>
+    <h1 class="case-title">Learning Curves and Diagnosing Fit</h1>
+    <p class="lede rise" style="--d:3">Empirical diagnostic plotting training and validation error against sample size to distinguish high bias (underfitting) from high variance (overfitting).</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="1"><i><b></b></i>Beginner</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/bias-variance-tradeoff/">Bias–variance trade-off</a> <a href="../../concepts/cross-validation/">Cross-validation</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Machine learning toolbox · Model selection</dd>
+          <dt>Level</dt><dd>Beginner</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">When a machine learning model underperforms, practitioners often make random architectural tweaks or reflexively gather more training data, often with zero improvement. Learning curves plot training error and validation error as a function of training dataset size $n$, offering an empirical diagnostic that exposes the true bottleneck: high bias, high variance, or data quality limits. Interpreting the gap and convergence asymptotes reveals precisely whether the solution requires more data, a more expressive model, or stronger regularisation.</p>
+        <p>Imagine a primary school pupil learning to read music versus a student memorising exam answers. If the pupil tries to sight-read complex Mozart symphonies using only a rudimentary knowledge of three notes, their reading error will be atrocious on day one and remain equally atrocious six months later, no matter how many sheet music books you buy them. The problem is not a shortage of books (data); the pupil's mental model is fundamentally too primitive to capture harmonic complexity (high bias / underfitting).</p>
+        <p>Now imagine a student cramming for a history test by memorising exact practice exam questions word for word. On the practice tests they have memorised, their score is 100% (near-zero training error). But on the final exam with slightly rephrased questions, they flounder with a 55% score (high validation error). However, if you give this student 500 diverse practice exams covering every possible variation, memorisation gradually forces them to learn the underlying historical themes, and their exam score steadily climbs toward their practice score (high variance / overfitting).</p>
+        <p>Learning curves plot this exact dynamic across sample sizes $n$. When $n$ is tiny, any flexible model can easily memorise the training instances (training error starts near zero), while validation error starts high. As $n$ increases, fitting every point perfectly becomes harder, so training error rises slightly while validation error falls. Where the two curves end up tells you the whole story: if both flatten early at an unacceptably high error plateau with virtually no gap, collecting more data is a total waste of money. If a large gap persists between low training error and high validation error, more data or regularisation is the exact cure.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Reading the gauges on an engine diagnostics panel: knowing whether a sputtering car suffers from fuel starvation (underfitting) or spark plug misfires (overfitting) before spending thousands on the wrong replacement parts.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Select training sample increments: define a progression of training subset sizes $n_1 &lt; n_2 &lt; \dots &lt; n_m = n_{\text{total}}$ (e.g. 10%, 25%, 50%, 75%, 100%).</li><li>Perform cross-validation: for each sample size $n_i$, randomly sample $n_i$ instances from the training fold, fit the estimator, and record the training score and validation score across $K$ folds.</li><li>Compute mean and variance: calculate the mean training error $\bar{E}_{\text{train}}(n_i)$ and validation error $\bar{E}_{\text{val}}(n_i)$, along with confidence bands ($\pm 1 \text{ standard error}$).</li><li>Diagnose high bias: check if the validation curve plateaus at high error and the training curve converges upward to meet it with a negligible gap.</li><li>Diagnose high variance: check if the training error remains low while the validation error remains significantly higher, with the validation curve still descending as $n$ grows.</li><li>Execute corrective action: increase model capacity or reduce regularisation for high bias; add training samples, prune features, or increase regularisation for high variance.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Generalisation error decomposition</h3><div class="formula">$$\mathbb{E}\big[(y - \hat{f}(x))^2\big] = \operatorname{Bias}^2\big(\hat{f}(x)\big) + \operatorname{Var}\big(\hat{f}(x)\big) + \sigma_{\epsilon}^2$$</div><p>where $\sigma_{\epsilon}^2$ is the irreducible noise floor (Bayes error). The asymptotic gap between the convergence plateau of learning curves and zero reflects the sum of squared bias and irreducible noise.</p></li>
+          <li><h3>High bias (underfitting) asymptotic regime</h3><div class="formula">$$\lim_{n \to \infty} E_{\text{train}}(n) \approx \lim_{n \to \infty} E_{\text{val}}(n) \gg \sigma_{\epsilon}^2, \qquad \frac{\partial E_{\text{val}}}{\partial n} \approx 0$$</div><p>As sample size $n$ grows, training error increases and validation error decreases until both collide at a high error plateau. The vanishing derivative $\partial E_{\text{val}} / \partial n \approx 0$ indicates that additional training data yields zero marginal performance gain.</p></li>
+          <li><h3>High variance (overfitting) asymptotic regime</h3><div class="formula">$$E_{\text{val}}(n) - E_{\text{train}}(n) \gg 0, \qquad \frac{\partial E_{\text{val}}}{\partial n} &lt; 0$$</div><p>A persistent, substantial gap separates training and validation performance. The negative derivative confirms that collecting more training observations will continue driving validation error downward toward the training error asymptote.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>High bias displays high training and validation error with an early plateau and a negligible gap; adding data will not help.</li><li>High variance displays low training error, higher validation error, and a persistent gap that shrinks as training data increases.</li><li>The asymptote of the learning curve reveals whether the model is limited by statistical sample size or structural model capacity.</li><li>Saves immense engineering time and budget by proving whether gathering more data will improve performance before collecting it.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Non-linear ground truth: y = 0.5 * x^2 + noise</span>
+rng = np.random.<span class="f">default_rng</span>(<span class="n">42</span>)
+X_all = rng.<span class="f">uniform</span>(-<span class="n">3</span>, <span class="n">3</span>, (<span class="n">300</span>, <span class="n">1</span>))
+y_all = <span class="n">0.5</span> * X_all[:, <span class="n">0</span>]**<span class="n">2</span> + rng.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">0.5</span>, <span class="n">300</span>)
+
+X_test, y_test = X_all[<span class="n">200</span>:], y_all[<span class="n">200</span>:]
+train_sizes = [<span class="n">15</span>, <span class="n">30</span>, <span class="n">60</span>, <span class="n">120</span>, <span class="n">200</span>]
+
+<span class="k">print</span>(<span class="s">&quot;--- Linear Model (High Bias: Underfitting) ---&quot;</span>)
+<span class="k">for</span> n <span class="k">in</span> train_sizes:
+    X_tr, y_tr = X_all[:n], y_all[:n]
+    A_tr = np.<span class="f">hstack</span>([X_tr, np.<span class="f">ones</span>((n, <span class="n">1</span>))])
+    w = np.linalg.<span class="f">lstsq</span>(A_tr, y_tr, rcond=<span class="k">None</span>)[<span class="n">0</span>]
+    
+    tr_mse = np.<span class="f">mean</span>((y_tr - A_tr @ w) ** <span class="n">2</span>)
+    A_te = np.<span class="f">hstack</span>([X_test, np.<span class="f">ones</span>((<span class="k">len</span>(X_test), <span class="n">1</span>))])
+    te_mse = np.<span class="f">mean</span>((y_test - A_te @ w) ** <span class="n">2</span>)
+    <span class="k">print</span>(<span class="s">f&quot;n={n:3d} | Train MSE: {tr_mse:.3f} | Val MSE: {te_mse:.3f} | Gap: {abs(te_mse - tr_mse):.3f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Conflating learning curves with training epoch loss curves: Loss plotted over training epochs tracks optimiser convergence (gradient descent progress), whereas learning curves plot final performance against sample size $n$ to diagnose statistical capacity.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Data leakage across training subsamples: When sampling subsets of size $n$, instances must be sampled strictly from the training folds; validation folds must remain constant and untouched.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Unstratified subsampling on imbalanced classes: Drawing small subsamples (e.g. $n=20$) from highly imbalanced datasets can omit minority classes entirely, causing massive artificial variance spikes in early curve points.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Misinterpreting the irreducible Bayes error floor: If both curves converge at 85% accuracy and no model can exceed 85% due to noisy labels or missing features, the model does not have high bias—it has hit the irreducible Bayes error rate.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>If a model's learning curve shows that both training error and validation error plateau at a high error rate with a negligible gap between them, what is the correct diagnosis and remediation?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The model has reached 100% test accuracy</span></button><button class="opt" type="button"><b>B</b><span>Data leakage; remove duplicate rows from the validation split</span></button><button class="opt" type="button"><b>C</b><span>High variance (overfitting); collect more training data immediately</span></button><button class="opt" type="button"><b>D</b><span>High bias (underfitting); increase model capacity, engineer non-linear features, or decrease regularisation (do not gather more data)</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> When both training and validation errors are high and parallel with a near-zero gap, the model is underfitting (high bias). The model lacks the capacity to represent the underlying patterns, so adding more training examples will not improve performance.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>What does a learning curve with very low training error and significantly higher validation error that is still trending downwards at the maximum available sample size indicate?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The learning rate is set too high</span></button><button class="opt" type="button"><b>B</b><span>High variance (overfitting); gathering more training data or increasing regularisation will likely improve test performance</span></button><button class="opt" type="button"><b>C</b><span>The dataset contains no predictive signal</span></button><button class="opt" type="button"><b>D</b><span>High bias, indicating the model should be simplified</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A large gap between low training error and higher validation error defines high variance. If the validation error curve maintains a negative downward slope at the maximum sample size, collecting more data will continue driving test error down.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>How do learning curves (performance vs dataset size $n$) differ fundamentally from loss curves in deep learning?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Loss curves require cross-validation, while learning curves do not</span></button><button class="opt" type="button"><b>B</b><span>Loss curves track optimiser convergence over training epochs for a fixed dataset, whereas learning curves track final model performance as a function of training dataset size $n$</span></button><button class="opt" type="button"><b>C</b><span>Learning curves can only be plotted for linear regression models</span></button><button class="opt" type="button"><b>D</b><span>Learning curves are always strictly horizontal lines</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Training loss curves monitor whether gradient descent is converging across iterative epochs. Learning curves evaluate statistical generalisation by retraining models from scratch on subsets of varying sizes $n$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q4</span>Why does training error typically increase as the training sample size $n$ grows on a learning curve?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because it is easy for a model to perfectly fit or memorise a small handful of points, but harder to fit a large, diverse dataset with the same parameter budget</span></button><button class="opt" type="button"><b>B</b><span>Because larger datasets automatically increase label noise</span></button><button class="opt" type="button"><b>C</b><span>Because gradient descent fails on datasets with more than 100 samples</span></button><button class="opt" type="button"><b>D</b><span>Because regularisation is automatically disabled on small sample sizes</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> On tiny datasets (e.g. $n=10$), an expressive model has enough degrees of freedom to interpolate every single point, yielding near-zero training error. As $n$ increases, constraints multiply and the model must compromise, pulling training error up toward the population error.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/bias-variance-tradeoff/"><small class="kicker">Concept</small><b>Bias–variance trade-off</b></a><a href="../../concepts/cross-validation/"><small class="kicker">Concept</small><b>Cross-validation</b></a><a href="../../concepts/nested-cross-validation/"><small class="kicker">Concept</small><b>Nested cross-validation</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/bayesian-optimisation-and-optuna/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Machine learning toolbox</small><b>Bayesian opt. &amp; Optuna</b></a>
+    <a class="pager-next" href="../../concepts/nested-cross-validation/"><small>Next · Machine learning toolbox <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Nested cross-validation</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

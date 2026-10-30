@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Denoising Diffusion Probabilistic Models (DDPMs) · Learn · Yogesh Awate</title>
+<meta name="description" content="Destroying data structure with forward Gaussian noise, then training a neural network to reverse entropy step by step to synthesize photorealistic images from pure white noise.">
+<meta property="og:title" content="Denoising Diffusion Probabilistic Models (DDPMs) · Learn · Yogesh Awate">
+<meta property="og:description" content="Destroying data structure with forward Gaussian noise, then training a neural network to reverse entropy step by step to synthesize photorealistic images from pure white noise.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="diffusion-models">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-neural">Path 08 · Deep learning</a> / Architectures / Lesson 26 of 42</span>
+    <h1 class="case-title">Denoising Diffusion Probabilistic Models (DDPMs)</h1>
+    <p class="lede rise" style="--d:3">Destroying data structure with forward Gaussian noise, then training a neural network to reverse entropy step by step to synthesize photorealistic images from pure white noise.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/variational-autoencoders/">Variational autoencoders</a> <a href="../../concepts/the-pytorch-training-loop/">PyTorch training loop</a> <a href="../../concepts/gans/">GANs</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Deep learning · Architectures</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Unlike GANs that suffer from delicate adversarial balance and mode collapse, Denoising Diffusion Probabilistic Models (DDPMs, Sohl-Dickstein et al. 2015, Ho et al. 2020) formulate generative modelling as an iterative denoising process. A forward Markov chain adds Gaussian noise over hundreds of timesteps until an image dissolves into pure noise, and a neural network learns to predict and subtract that noise at each step to generate novel samples.</p>
+        <p>Imagine a single drop of blue food dye suspended in a glass of water. At time $t=0$, the dye is a concentrated, well-structured droplet (the original data image). As time progresses, thermodynamic diffusion causes the dye molecules to disperse randomly until the water becomes a completely uniform, pale blue haze (pure Gaussian noise). This forward process destroys information systematically and requires zero learned parameters.</p>
+        <p>Generative diffusion asks whether we can reverse the video: starting from an unorganised glass of hazy water ($x_T \sim \mathcal{N}(0, I)$), can we trace the molecules backward step by step until the concentrated droplet reforms? A neural network (typically a U-Net equipped with self-attention) inspects the noisy image at step $t$ and predicts the noise component $\epsilon_\theta(x_t, t)$ that was added. Subtracting this predicted noise steps the state backward from $t$ to $t-1$. Repeating this reverse denoising procedure over dozens or hundreds of steps transforms pure random static into an exquisite, coherent image.</p>
+        <p>The fundamental mathematical breakthrough of modern diffusion is the **closed-form forward jump**: you do not need to simulate the forward diffusion step by step during training! By defining the cumulative noise factor $\bar{\alpha}_t = \prod_{s=1}^t (1 - \beta_s)$, you can calculate the noisy image $x_t$ at any arbitrary timestep $t$ directly from the clean image $x_0$ in a single equation: $x_t = \sqrt{\bar{\alpha}_t} x_0 + \sqrt{1 - \bar{\alpha}_t} \epsilon$. Training then collapses into a clean Mean Squared Error regression problem where the network simply predicts the injected noise vector $\epsilon$.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Like sculpting a statue in reverse: sandblasting a marble masterpiece into a shapeless pile of dust (forward process), then training an artisan to brush away microscopic grains of dust step by step until the statue re-emerges (reverse process).</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Define the forward variance schedule: select hyperparameter bounds $\beta_1, \dots, \beta_T$ (e.g. linear schedule from $10^{-4}$ to $0.02$) and precompute cumulative products $\bar{\alpha}_t = \prod_{s=1}^t (1 - \beta_s)$.</li><li>Sample random training batches: select clean data points $x_0$, sample random discrete timesteps $t \sim \operatorname{Uniform}(1, T)$, and sample standard Gaussian noise $\epsilon \sim \mathcal{N}(0, I)$.</li><li>Calculate the noisy latent in closed form: compute $x_t = \sqrt{\bar{\alpha}_t} x_0 + \sqrt{1 - \bar{\alpha}_t} \epsilon$ directly without simulating preceding timesteps.</li><li>Predict injected noise with a U-Net: pass noisy input $x_t$ alongside a sinusoidal timestep embedding $t$ through the network to predict noise estimate $\hat{\epsilon} = \epsilon_\theta(x_t, t)$.</li><li>Optimise with Mean Squared Error: update network weights using the simplified loss $\lVert \epsilon - \epsilon_\theta(x_t, t) \rVert_2^2$ via <a class="inline" href="../../concepts/optimisers-sgd-momentum-rmsprop-adam-adamw/">AdamW</a>.</li><li>Generate samples via reverse denoising: initialise at $x_T \sim \mathcal{N}(0, I)$ and iteratively subtract predicted noise according to the reverse Markov transition formula until reaching clean sample $x_0$.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Closed-form forward diffusion distribution</h3><div class="formula">$$q(x_t | x_0) = \mathcal{N}\left(x_t; \, \sqrt{\bar{\alpha}_t} x_0, \, (1 - \bar{\alpha}_t) I\right), \qquad \alpha_t = 1 - \beta_t, \quad \bar{\alpha}_t = \prod_{s=1}^t \alpha_s$$</div><p>$x_0$ is the clean image, $\beta_t \in (0, 1)$ is the variance schedule at step $t$, and $\bar{\alpha}_t$ is the cumulative variance scale. As $t \to T$, $\bar{\alpha}_t \to 0$, causing $x_T$ to converge to standard isotropic Gaussian noise $\mathcal{N}(0, I)$.</p></li>
+          <li><h3>Simplified noise prediction training objective</h3><div class="formula">$$\mathcal{L}_{\text{simple}}(\theta) = \mathbb{E}_{t, x_0, \epsilon}\left[ \left\lVert \epsilon - \epsilon_\theta\left(\sqrt{\bar{\alpha}_t} x_0 + \sqrt{1 - \bar{\alpha}_t} \epsilon, \, t\right) \right\rVert_2^2 \right]$$</div><p>$\epsilon \sim \mathcal{N}(0, I)$ is the ground-truth noise sampled during the forward jump, and $\epsilon_\theta$ is the neural network. Ho et al. showed that training on unweighted noise regression outperforms optimising the full variational lower bound, yielding sharper perceptual details.</p></li>
+          <li><h3>Reverse Markov transition step (DDPM sampling)</h3><div class="formula">$$x_{t-1} = \frac{1}{\sqrt{\alpha_t}}\left( x_t - \frac{\beta_t}{\sqrt{1 - \bar{\alpha}_t}} \epsilon_\theta(x_t, t) \right) + \sigma_t z, \quad z \sim \mathcal{N}(0, I) \text{ for } t &gt; 1$$</div><p>$x_t$ is the noisy state at step $t$, $\epsilon_\theta(x_t, t)$ is the predicted noise, and $\sigma_t^2 = \frac{1 - \bar{\alpha}_{t-1}}{1 - \bar{\alpha}_t} \beta_t$ controls stochastic injection. Repeating this step from $t=T$ down to $t=1$ synthesizes clean image $x_0$.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>The forward diffusion process progressively destroys structure with Gaussian noise; the reverse process creates data by learning to subtract predicted noise.</li><li>The closed-form forward jump equation ($x_t = \sqrt{\bar{\alpha}_t} x_0 + \sqrt{1 - \bar{\alpha}_t}\epsilon$) allows training at arbitrary timesteps in $O(1)$ time without simulating intermediate steps.</li><li>Diffusion models eliminate adversarial minimax instability and mode collapse, providing higher sample diversity and visual fidelity than classical GANs.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Forward diffusion noise schedule simulation (T = 100 timesteps)</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+T = <span class="n">100</span>
+beta = np.<span class="f">linspace</span>(<span class="n">1e-4</span>, <span class="n">0.02</span>, T)
+alpha = <span class="n">1.0</span> - beta
+alpha_bar = np.<span class="f">cumprod</span>(alpha)
+
+<span class="c"># Clean synthetic 1D signal and random noise</span>
+x0 = <span class="n">3.0</span>
+eps = <span class="f">float</span>(np.random.<span class="f">randn</span>())
+
+timesteps = [<span class="n">10</span>, <span class="n">50</span>, <span class="n">99</span>]
+<span class="k">print</span>(<span class="s">&quot;Forward diffusion closed-form evaluation (clean x0 = 3.0):&quot;</span>)
+<span class="k">for</span> t <span class="k">in</span> timesteps:
+    ab = <span class="f">float</span>(alpha_bar[t])
+    xt = np.<span class="f">sqrt</span>(ab) * x0 + np.<span class="f">sqrt</span>(<span class="n">1.0</span> - ab) * eps
+    signal_ratio = np.<span class="f">sqrt</span>(ab) * x0
+    noise_ratio = np.<span class="f">sqrt</span>(<span class="n">1.0</span> - ab) * eps
+    <span class="k">print</span>(<span class="s">f&quot;Step {t+1:3d}: alpha_bar={ab:.4f} | x_t={xt:.4f} (signal={signal_ratio:.4f}, noise={noise_ratio:.4f})&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Slow ancestral sampling: generating an image with vanilla DDPM requires 50 to 1,000 sequential neural forward passes; accelerated non-Markovian samplers (DDIM, DPM-Solver) are required for interactive latency.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Omitting timestep conditioning: the denoising network must receive an explicit embedding of timestep $t$ because removing faint noise at $t=5$ requires entirely different operations than hallucinating shapes from near-pure noise at $t=900$.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using linear noise schedules on high-resolution images, where noise increases too abruptly early in the forward process and destroys structural low-frequency composition.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>Why does modern diffusion model training not require simulating the forward process step by step from $t=1$ to $t$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because cumulative properties of Gaussian distributions permit sampling $x_t$ directly from $x_0$ in closed form: $x_t = \sqrt{\bar{\alpha}_t} x_0 + \sqrt{1 - \bar{\alpha}_t}\epsilon$</span></button><button class="opt" type="button"><b>B</b><span>Because the forward process uses an autoregressive language model</span></button><button class="opt" type="button"><b>C</b><span>Because diffusion models only train on the final timestep $t=T$</span></button><button class="opt" type="button"><b>D</b><span>Because all intermediate images are pre-computed and stored on disk</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because the sum of independent Gaussians is itself Gaussian, the chain of noise additions compounds into a single closed-form distribution with mean $\sqrt{\bar{\alpha}_t} x_0$ and variance $(1 - \bar{\alpha}_t) I$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>What is the primary operational disadvantage of DDPM compared to Generative Adversarial Networks (GANs)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Diffusion models suffer from catastrophic mode collapse</span></button><button class="opt" type="button"><b>B</b><span>Inference generation is computationally slow because it requires dozens or hundreds of sequential neural network evaluations to denoise an image</span></button><button class="opt" type="button"><b>C</b><span>Diffusion models can only generate black-and-white images</span></button><button class="opt" type="button"><b>D</b><span>Diffusion models cannot be trained with the Adam optimiser</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> While GANs produce a synthetic image in a single forward pass ($G(z)$), DDPMs must iteratively evaluate the denoising U-Net at every reverse timestep, requiring substantial compute per generated sample.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>In the simplified DDPM training objective $\mathcal{L}_{\text{simple}}$, what target does the neural network attempt to predict?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The Gaussian noise vector $\epsilon$ that was added to create $x_t$</span></button><button class="opt" type="button"><b>B</b><span>The optimal learning rate for the backward pass</span></button><button class="opt" type="button"><b>C</b><span>The exact unscaled clean image $x_0$ directly</span></button><button class="opt" type="button"><b>D</b><span>The classification label of the image</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Ho et al. showed that training the network $\epsilon_\theta(x_t, t)$ to predict the injected noise vector $\epsilon$ with standard MSE loss yields superior sample quality and simpler optimisation than predicting $x_0$ directly.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q4</span>What role does the sinusoidal timestep embedding play in the denoising U-Net?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It applies causal masking across the spatial grid</span></button><button class="opt" type="button"><b>B</b><span>It prevents the learning rate from decaying to zero</span></button><button class="opt" type="button"><b>C</b><span>It normalises the image pixels to zero mean and unit variance</span></button><button class="opt" type="button"><b>D</b><span>It informs the network of the current noise level $t$, enabling it to calibrate whether to perform subtle refinement or coarse structural synthesis</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The task of removing faint noise near $t=0$ requires vastly different spatial operations than guessing global layouts from heavy noise near $t=T$; timestep embeddings condition the network on the current noise scale.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/residual-networks-and-skip-connections/"><small class="kicker">Concept</small><b>ResNets and skip connections</b></a><a href="../../concepts/the-attention-mechanism/"><small class="kicker">Concept</small><b>The attention mechanism</b></a><a href="../../concepts/autoencoders/"><small class="kicker">Concept</small><b>Autoencoders</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/gans/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>GANs</b></a>
+    <a class="pager-next" href="../../concepts/graph-neural-networks-gcn-gat-graphsage/"><small>Next · Deep learning <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>GNNs: GCN, GAT &amp; GraphSAGE</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

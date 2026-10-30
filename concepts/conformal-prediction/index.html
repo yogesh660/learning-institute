@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Conformal Prediction and Distribution-Free Uncertainty · Learn · Yogesh Awate</title>
+<meta name="description" content="Construct prediction intervals with rigorous finite-sample coverage guarantees: master non-conformity scores, exchangeability, and inductive conformal prediction.">
+<meta property="og:title" content="Conformal Prediction and Distribution-Free Uncertainty · Learn · Yogesh Awate">
+<meta property="og:description" content="Construct prediction intervals with rigorous finite-sample coverage guarantees: master non-conformity scores, exchangeability, and inductive conformal prediction.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="conformal-prediction">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ml-toolbox">Path 06 · Machine learning toolbox</a> / Model selection / Lesson 28 of 50</span>
+    <h1 class="case-title">Conformal Prediction and Distribution-Free Uncertainty</h1>
+    <p class="lede rise" style="--d:3">Construct prediction intervals with rigorous finite-sample coverage guarantees: master non-conformity scores, exchangeability, and inductive conformal prediction.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/confidence-intervals/">Confidence intervals</a> <a href="../../concepts/cross-validation/">Cross-validation</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Machine learning toolbox · Model selection</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Standard confidence intervals rely on parametric Gaussian assumptions that fail when distributions are skewed or multimodal. Conformal prediction produces prediction sets with mathematically guaranteed 1 - alpha marginal coverage under any distribution, using any underlying model.</p>
+        <p>Most machine learning models output point predictions: predicting a house price will be £450,000 or a patient will be diagnosed with Disease A. However, when deployed in medicine, finance, or automated hiring, point predictions hide risk: is the true house price guaranteed to lie between £440,000 and £460,000, or could it be anywhere from £200,000 to £700,000?</p>
+        <p>Traditional statistical methods construct confidence intervals using rigid parametric assumptions: assuming error residuals are identically normally distributed with constant variance. When real-world data is skewed, heteroscedastic, or multi-modal, these parametric intervals collapse and under-cover reality.</p>
+        <p>Pioneered by Vladimir Vovk, Alex Gammerman, and Glenn Shafer, Conformal Prediction provides a mathematically rigorous, distribution-free framework for uncertainty quantification. It constructs prediction intervals (in regression) or prediction sets (in classification) that satisfy an exact finite-sample coverage guarantee: $P(Y_{n+1} \in C(X_{n+1})) \ge 1 - \alpha$, for any user-chosen significance level $\alpha$ (e.g. 90% or 95%).</p>
+        <p>Astonishingly, conformal prediction requires zero parametric assumptions, works on top of any black-box machine learning model (Random Forests, XGBoost, or Deep Neural Networks), and holds for finite sample sizes $n$ without relying on asymptotic $n \to \infty$ limits. The only foundational mathematical assumption is exchangeability (satisfied whenever data is identically and independently distributed, i.i.d.).</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine a dart player practicing in an arcade. Rather than assuming the darts always land in a neat circular Gaussian bell curve around the bullseye, you watch the player throw 100 calibration darts and measure the exact physical distance of each dart from the bullseye. If you want a 90% guarantee for their next throw, you simply take the 90th largest throw distance. Drawing a circle with that exact radius around the next aimed target is guaranteed by pure permutation symmetry to contain the next dart 90% of the time.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Inductive Non-Conformity Score (Absolute Residual)</h3><div class="formula">s_i = s(x_i, y_i) = |y_i - \hat{f}(x_i)|</div><p>Quantifies how poorly the model prediction matches the ground truth. Higher values denote points that conform poorly to model expectations.</p></li>
+          <li><h3>Empirical Conformal Quantile Correction</h3><div class="formula">\hat{q} = \operatorname{Quantile}\left(\frac{\lceil(n + 1)(1 - \alpha)\rceil}{n}, \; \{s_1, \dots, s_n\}\right)</div><p>The finite-sample correction factor (n+1)/n accounts for the unobserved test sample, ensuring the theoretical coverage guarantee holds exactly in finite samples.</p></li>
+          <li><h3>Conformal Validity Coverage Guarantee Theorem</h3><div class="formula">1 - \alpha \le P\left(Y_{n+1} \in C(X_{n+1})\right) \le 1 - \alpha + \frac{1}{n + 1}</div><p>Rigorous finite-sample mathematical guarantee. The true outcome falls inside the prediction set with probability at least 1 - alpha under exchangeability.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Provides mathematically guaranteed finite-sample coverage $P(Y \in C(X)) \ge 1 - \alpha$ without parametric assumptions.</li><li>Model-agnostic: wraps around any black-box machine learning model (neural nets, gradient boosting, random forests).</li><li>Relies solely on exchangeability (i.i.d. assumption), holding exactly for finite samples without asymptotic approximations.</li><li>In regression, outputs prediction intervals; in classification, outputs prediction sets of varying cardinality.</li><li>Adaptive non-conformity scores (e.g. Conformalised Quantile Regression, CQR) produce variable-width intervals reflecting local heteroscedasticity.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">from</span> sklearn.ensemble <span class="k">import</span> GradientBoostingRegressor
+
+<span class="c"># Split Conformal Prediction for Regression from scratch</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+n_total = <span class="n">1000</span>
+
+<span class="c"># Synthetic non-linear data with heteroscedastic skewed noise</span>
+x = np.random.<span class="f">uniform</span>(<span class="n">0</span>, <span class="n">10</span>, n_total)
+<span class="c"># Variance grows with x, and noise is heavily skewed (exponential)</span>
+y_clean = <span class="n">2.0</span> * np.<span class="f">sin</span>(x) + <span class="n">0.5</span> * x
+noise = np.random.<span class="f">exponential</span>(scale=<span class="n">0.3</span> * (<span class="n">1.0</span> + <span class="n">0.2</span> * x)) - <span class="n">0.3</span> * (<span class="n">1.0</span> + <span class="n">0.2</span> * x)
+y = y_clean + noise
+X = x.<span class="f">reshape</span>(-<span class="n">1</span>, <span class="n">1</span>)
+
+<span class="c"># Split into: Train (50%), Calibration (25%), Test (25%)</span>
+n_train = <span class="n">500</span>
+n_cal = <span class="n">250</span>
+X_train, y_train = X[:n_train], y[:n_train]
+X_cal, y_cal = X[n_train:n_train+n_cal], y[n_train:n_train+n_cal]
+X_test, y_test = X[n_train+n_cal:], y[n_train+n_cal:]
+
+<span class="c"># 1. Train black-box base model on training set</span>
+model = <span class="f">GradientBoostingRegressor</span>(n_estimators=<span class="n">100</span>, random_state=<span class="n">42</span>)
+model.<span class="f">fit</span>(X_train, y_train)
+
+<span class="c"># 2. Compute non-conformity scores on calibration set</span>
+cal_preds = model.<span class="f">predict</span>(X_cal)
+nonconformity_scores = np.<span class="f">abs</span>(y_cal - cal_preds)
+
+<span class="c"># 3. Calculate conformal quantile for 90% coverage (alpha = 0.10)</span>
+alpha = <span class="n">0.10</span>
+n = <span class="k">len</span>(X_cal)
+<span class="c"># Finite-sample index: ceil((n + 1) * (1 - alpha)) / n</span>
+q_level = np.<span class="f">ceil</span>((n + <span class="n">1</span>) * (<span class="n">1.0</span> - alpha)) / n
+q_hat = np.<span class="f">quantile</span>(nonconformity_scores, q_level, method=<span class="s">'higher'</span>)
+
+<span class="c"># 4. Form prediction intervals on test set</span>
+test_preds = model.<span class="f">predict</span>(X_test)
+lower_bounds = test_preds - q_hat
+upper_bounds = test_preds + q_hat
+
+<span class="c"># Evaluate empirical coverage on test set</span>
+covered = (y_test &gt;= lower_bounds) &amp; (y_test &lt;= upper_bounds)
+empirical_coverage = np.<span class="f">mean</span>(covered)
+
+<span class="k">print</span>(<span class="s">f&quot;Target Coverage Level: { (1 - alpha) * 100:.1f}%&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Calibration set size:  {n_cal} samples&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Calibrated Conformal Margin (q_hat): ±{q_hat:.3f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Empirical Test Coverage: {empirical_coverage * 100:.1f}% (Guaranteed &gt;= 90.0%!)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Average Prediction Interval Width:   {2 * q_hat:.3f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Marginal coverage vs conditional coverage: Standard conformal prediction guarantees average coverage across the entire population, but may under-cover specific localised minority sub-populations.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Exchangeability violation in time series: If data exhibits temporal drift, non-stationarity, or autoregressive correlation, exchangeability fails and adaptive conformal prediction is required.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Calibration set data taxation: Split conformal prediction requires reserving a clean holdout calibration set, slightly reducing data available for model training.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>What is the only foundational assumption required for Conformal Prediction coverage guarantees to hold?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Normally distributed Gaussian errors with homoscedastic variance</span></button><button class="opt" type="button"><b>B</b><span>That the sample size approaches infinity</span></button><button class="opt" type="button"><b>C</b><span>That the base model is a linear regression model</span></button><button class="opt" type="button"><b>D</b><span>Data exchangeability (samples are identically and independently distributed or permutation symmetric)</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Conformal prediction is distribution-free and finite-sample exact; its mathematical proof relies entirely on permutation symmetry (exchangeability) of the calibration and test instances.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>Why is the quantile level calculated as ceil((n + 1)(1 - alpha)) / n rather than simply 1 - alpha?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To correct for heteroscedasticity in the features</span></button><button class="opt" type="button"><b>B</b><span>To force the interval to be symmetric</span></button><button class="opt" type="button"><b>C</b><span>To account for the finite sample size and the fact that the unobserved test sample is the (n+1)-th observation in the exchangeable sequence</span></button><button class="opt" type="button"><b>D</b><span>To round down to the nearest integer</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because the calibration set has n samples and the test point is the (n+1)-th point, rank symmetry requires partitioning probability into n+1 intervals, yielding the exact finite-sample bound.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/confidence-intervals/"><small class="kicker">Concept</small><b>Confidence intervals</b></a><a href="../../concepts/ensemble-theory-bagging-boosting-stacking-compared/"><small class="kicker">Concept</small><b>Ensemble theory</b></a><a href="../../concepts/residual-diagnostics-and-heteroscedasticity/"><small class="kicker">Concept</small><b>Residuals &amp; Heteroscedasticity</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/ensemble-theory-bagging-boosting-stacking-compared/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Machine learning toolbox</small><b>Ensemble theory</b></a>
+    <a class="pager-next" href="../../concepts/permutation-and-impurity-feature-importance/"><small>Next · Machine learning toolbox <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Permutation &amp; impurity</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

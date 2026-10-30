@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Variational Inference · Learn · Yogesh Awate</title>
+<meta name="description" content="Turn intractable posterior integration into continuous optimisation: fit a simpler tractable distribution q(z) to the true posterior p(z|x) by maximising the Evidence Lower Bound (ELBO).">
+<meta property="og:title" content="Variational Inference · Learn · Yogesh Awate">
+<meta property="og:description" content="Turn intractable posterior integration into continuous optimisation: fit a simpler tractable distribution q(z) to the true posterior p(z|x) by maximising the Evidence Lower Bound (ELBO).">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="variational-inference">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-statistics">Path 02 · Statistics</a> / Bayesian and stochastic / Lesson 45 of 51</span>
+    <h1 class="case-title">Variational Inference</h1>
+    <p class="lede rise" style="--d:3">Turn intractable posterior integration into continuous optimisation: fit a simpler tractable distribution q(z) to the true posterior p(z|x) by maximising the Evidence Lower Bound (ELBO).</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="3"><i><b></b></i>Advanced</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/kl-divergence/">Kullback–Leibler Divergence</a> <a href="../../concepts/conjugate-priors-beta-binomial/">Beta–Binomial Conjugacy</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Statistics · Bayesian and stochastic</dd>
+          <dt>Level</dt><dd>Advanced</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Exact Bayesian posterior calculation requires computing a marginal likelihood integral over latent variables that is intractable for all but conjugate models. Variational inference circumvents numerical integration by recasting inference as an optimisation problem.</p>
+        <p>In Bayesian modelling, we observe data $x$ generated via unobserved latent variables $z$ according to a joint distribution $p(x, z) = p(x \mid z) p(z)$. The central goal is evaluating the posterior distribution $p(z \mid x) = p(x, z) / p(x)$. However, the marginal likelihood (evidence) $p(x) = \int p(x, z) dz$ is frequently an intractable high-dimensional integral when priors and likelihoods are non-conjugate, as in deep latent variable models or complex hierarchical Bayesian networks.</p>
+        <p>Markov chain Monte Carlo (MCMC) tackles this intractability by constructing a Markov chain whose stationary distribution matches the exact posterior. While asymptotically exact, MCMC explores state spaces slowly and scales poorly to millions of observations or real-time latent inferences. Variational inference (VI) offers an alternative paradigm: instead of sampling, approximate the posterior using continuous optimisation.</p>
+        <p>VI posits a tractable family of distributions over latent variables $\mathcal{Q} = \{q_\theta(z)\}$ parameterised by variational parameters $\theta$. It then searches within $\mathcal{Q}$ for the distribution $q^*(z)$ that minimises the Kullback–Leibler divergence $D_{\mathrm{KL}}(q_\theta(z) \parallel p(z \mid x))$ to the true posterior. Because the true posterior $p(z \mid x)$ is unknown, we cannot minimise this divergence directly. Fortunately, decomposing the log marginal evidence reveals that maximising the Evidence Lower Bound (ELBO) is mathematically identical to minimising this divergence.</p>
+        <p>The choice of family $\mathcal{Q}$ determines both fidelity and computational tractability. The classic mean-field approximation assumes latent variables factorise completely: $q(z) = \prod_{j=1}^M q_j(z_j)$. Under this structure, Coordinate Ascent Variational Inference (CAVI) iteratively updates each variational factor in closed form. In modern deep learning, variational autoencoders (VAEs) employ stochastic gradient variational inference, using amortised neural networks and the reparameterisation trick to optimise the ELBO via standard backpropagation.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine sculpting a statue out of a block of marble to match a phantom figure standing behind a frosted glass screen. You cannot touch or measure the phantom directly (the intractable posterior), but every step closer your chisel sculpts the marble against a shadow projection (the joint likelihood and prior) raises the total illumination in the studio (the evidence lower bound). When illumination reaches its peak, your marble sculpture is the closest possible physical approximation within your sculpting toolset.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Evidence and KL Decomposition</h3><div class="formula">\log p(x) = \mathbb{E}_{q(z)}\left[\log \frac{p(x, z)}{q(z)}\right] + D_{\mathrm{KL}}(q(z) \parallel p(z \mid x)) = \mathrm{ELBO}(q) + D_{\mathrm{KL}}(q \parallel p)</div><p>Because the KL divergence is non-negative and equals zero if and only if q(z) = p(z|x), the ELBO serves as a strict mathematical lower bound on the log evidence log p(x). Maximising the ELBO with respect to q directly minimises KL divergence to the exact posterior.</p></li>
+          <li><h3>ELBO Components: Reconstruction vs Regularisation</h3><div class="formula">\mathrm{ELBO}(q) = \mathbb{E}_{q(z)}[\log p(x \mid z)] - D_{\mathrm{KL}}(q(z) \parallel p(z))</div><p>Rewriting the ELBO decomposes the objective into an expected log-likelihood term (rewarding variational states that reconstruct observed data well) and a prior KL penalty (regularising q(z) toward prior p(z)).</p></li>
+          <li><h3>Mean-Field Coordinate Ascent (CAVI)</h3><div class="formula">\log q_j^*(z_j) = \mathbb{E}_{-j}[\log p(x, z_j, z_{-j})] + \text{const}</div><p>For each latent variable j, the optimal mean-field factor q_j*(z_j) is proportional to the exponential of the expected complete-data log-likelihood conditioned on all remaining factors -j.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Transforms Bayesian inference from intractable numerical integration into continuous optimisation over distribution parameters.</li><li>The Evidence Lower Bound (ELBO) satisfies ELBO(q) = log p(x) - D_KL(q || p) <= log p(x); maximising it minimises divergence to the true posterior.</li><li>Mean-field variational inference factorises latent variables independently, enabling coordinate ascent (CAVI) in conditionally conjugate models.</li><li>Underestimates posterior variance: because reverse KL heavily penalises places where q > 0 but p approx 0, VI fits tightly into the dominant mode rather than covering the whole spread.</li><li>Stochastic VI and the reparameterisation trick allow VI to scale to massive datasets and power variational autoencoders (VAEs).</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Coordinate Ascent Variational Inference (CAVI) for 1D Gaussian Mixture</span>
+<span class="c"># Model: x_i ~ N(mu_{c_i}, 1), prior mu_k ~ N(0, sigma_0^2), equal cluster weights</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+
+<span class="c"># Generate synthetic two-component mixture</span>
+n_samples = <span class="n">300</span>
+true_mus = np.<span class="f">array</span>([-<span class="n">2.5</span>, <span class="n">3.0</span>])
+assignments = np.random.<span class="f">binomial</span>(<span class="n">1</span>, <span class="n">0.5</span>, size=n_samples)
+x = np.<span class="f">where</span>(assignments == <span class="n">0</span>, np.random.<span class="f">normal</span>(true_mus[<span class="n">0</span>], <span class="n">1.0</span>, n_samples),
+                               np.random.<span class="f">normal</span>(true_mus[<span class="n">1</span>], <span class="n">1.0</span>, n_samples))
+
+K = <span class="n">2</span>
+sigma0_sq = <span class="n">10.0</span>  <span class="c"># Prior variance on cluster means</span>
+
+<span class="c"># Initialise variational parameters:</span>
+<span class="c"># q(mu_k) = N(m_k, s2_k), q(c_i) = Categorical(phi_i)</span>
+m = np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">1</span>, size=K)
+s2 = np.<span class="f">ones</span>(K)
+phi = np.<span class="f">ones</span>((n_samples, K)) / K
+
+<span class="k">def</span> <span class="f">compute_elbo</span>(x, m, s2, phi, sigma0_sq):
+    elbo = <span class="n">0.0</span>
+    <span class="k">for</span> k <span class="k">in</span> <span class="k">range</span>(K):
+        <span class="c"># Prior on mu_k</span>
+        elbo += -<span class="n">0.5</span> * np.<span class="f">log</span>(<span class="n">2</span> * np.pi * sigma0_sq) - (m[k]**<span class="n">2</span> + s2[k]) / (<span class="n">2</span> * sigma0_sq)
+        <span class="c"># Entropy of q(mu_k)</span>
+        elbo += <span class="n">0.5</span> * np.<span class="f">log</span>(<span class="n">2</span> * np.pi * np.e * s2[k])
+    
+    <span class="c"># Expected likelihood and cluster entropy</span>
+    <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(n_samples):
+        <span class="k">for</span> k <span class="k">in</span> <span class="k">range</span>(K):
+            <span class="k">if</span> phi[i, k] &gt; <span class="n">1e-12</span>:
+                exp_log_lik = -<span class="n">0.5</span> * np.<span class="f">log</span>(<span class="n">2</span> * np.pi) - <span class="n">0.5</span> * ((x[i] - m[k])**<span class="n">2</span> + s2[k])
+                elbo += phi[i, k] * (exp_log_lik - np.<span class="f">log</span>(phi[i, k]) - np.<span class="f">log</span>(K))
+    <span class="k">return</span> elbo
+
+<span class="c"># Coordinate Ascent iterations</span>
+n_iters = <span class="n">25</span>
+elbo_history = []
+
+<span class="k">for</span> it <span class="k">in</span> <span class="k">range</span>(n_iters):
+    <span class="c"># 1. Update cluster responsibilities phi_ik</span>
+    <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(n_samples):
+        log_rho = np.<span class="f">zeros</span>(K)
+        <span class="k">for</span> k <span class="k">in</span> <span class="k">range</span>(K):
+            log_rho[k] = -<span class="n">0.5</span> * ((x[i] - m[k])**<span class="n">2</span> + s2[k]) - np.<span class="f">log</span>(K)
+        <span class="c"># Softmax normalisation for stability</span>
+        rho = np.<span class="f">exp</span>(log_rho - np.<span class="f">max</span>(log_rho))
+        phi[i] = rho / np.<span class="f">sum</span>(rho)
+        
+    <span class="c"># 2. Update variational parameters for cluster means m_k and s2_k</span>
+    <span class="k">for</span> k <span class="k">in</span> <span class="k">range</span>(K):
+        sum_phi = np.<span class="f">sum</span>(phi[:, k])
+        s2[k] = <span class="n">1.0</span> / (<span class="n">1.0</span> / sigma0_sq + sum_phi)
+        m[k] = s2[k] * np.<span class="f">sum</span>(phi[:, k] * x)
+        
+    elbo = <span class="f">compute_elbo</span>(x, m, s2, phi, sigma0_sq)
+    elbo_history.<span class="f">append</span>(elbo)
+
+<span class="k">print</span>(<span class="s">f&quot;True cluster means: {true_mus}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Variational posterior means: {np.sort(m).round(3)}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Variational posterior variances: {s2[np.argsort(m)].round(4)}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Initial ELBO: {elbo_history[0]:.2f} -&gt; Final ELBO: {elbo_history[-1]:.2f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;ELBO strictly non-decreasing: {np.all(np.diff(elbo_history) &gt;= -1e-7)}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Zero-forcing variance underestimation: Reverse KL forces q(z) to remain strictly within high-density regions of p(z|x), underestimating true parameter uncertainty and ignoring secondary modes.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Mean-field correlation blindness: Assuming complete factorisation q(z) = \prod q_j(z_j) forces all covariance between latent variables to zero, potentially corrupting inference when latents are strongly coupled.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Local optima: Unlike MCMC which theoretically visits the whole support asymptotically, gradient ascent on the ELBO can get trapped in local optima or bad saddle points.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>Why does maximising the Evidence Lower Bound (ELBO) minimise the KL divergence D_KL(q(z) || p(z|x))?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because ELBO equals the exact likelihood multiplied by the prior</span></button><button class="opt" type="button"><b>B</b><span>Because the log evidence log p(x) is constant with respect to q(z), and log p(x) = ELBO(q) + D_KL(q || p)</span></button><button class="opt" type="button"><b>C</b><span>Because variational inference forces the posterior to equal 1 everywhere</span></button><button class="opt" type="button"><b>D</b><span>Because the KL divergence is always negative, so increasing ELBO reduces its absolute magnitude</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The fundamental decomposition is log p(x) = ELBO(q) + D_KL(q || p(z|x)). Since log p(x) does not depend on variational distribution q, increasing ELBO directly forces D_KL down.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>What is a major qualitative difference between the posterior approximation from mean-field VI compared to MCMC?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Mean-field VI cannot be applied to models with continuous latent variables</span></button><button class="opt" type="button"><b>B</b><span>Mean-field VI overestimates posterior variance across all peripheral modes</span></button><button class="opt" type="button"><b>C</b><span>Mean-field VI is guaranteed to be asymptotically exact while MCMC always diverges</span></button><button class="opt" type="button"><b>D</b><span>Mean-field VI tends to underestimate posterior variance and ignores correlations between latent variables</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because reverse KL D_KL(q || p) is zero-forcing and the mean-field assumption forces factorisation q(z) = \prod q_j(z_j), VI fits tightly inside the primary mode and zeroes out off-diagonal posterior covariances.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/mcmc-metropolis-hastings-and-gibbs/"><small class="kicker">Concept</small><b>MCMC: Metropolis &amp; Gibbs</b></a><a href="../../concepts/hamiltonian-monte-carlo/"><small class="kicker">Concept</small><b>Hamiltonian Monte Carlo</b></a><a href="../../concepts/map-and-bayesian-estimation/"><small class="kicker">Concept</small><b>MAP &amp; Bayesian Estimation</b></a><a href="../../concepts/conjugate-priors-beta-binomial/"><small class="kicker">Concept</small><b>Beta–Binomial Conjugacy</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/hamiltonian-monte-carlo/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Statistics</small><b>Hamiltonian Monte Carlo</b></a>
+    <a class="pager-next" href="../../concepts/markov-chains-and-stationary-distributions/"><small>Next · Statistics <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Markov chains</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

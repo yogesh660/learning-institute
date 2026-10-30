@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Classical Planning: STRIPS Formalism, State-Space Search, and Planning Graphs · Learn · Yogesh Awate</title>
+<meta name="description" content="Classical automated planning algorithms using the STRIPS formalism, action schemas with preconditions and effects, forward/backward search, and Graphplan.">
+<meta property="og:title" content="Classical Planning: STRIPS Formalism, State-Space Search, and Planning Graphs · Learn · Yogesh Awate">
+<meta property="og:description" content="Classical automated planning algorithms using the STRIPS formalism, action schemas with preconditions and effects, forward/backward search, and Graphplan.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="planning-strips">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ai">Path 11 · AI</a> / Classical AI / Lesson 7 of 42</span>
+    <h1 class="case-title">Classical Planning: STRIPS Formalism, State-Space Search, and Planning Graphs</h1>
+    <p class="lede rise" style="--d:3">Classical automated planning algorithms using the STRIPS formalism, action schemas with preconditions and effects, forward/backward search, and Graphplan.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>AI · Classical AI</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Automated planning enables autonomous agents to synthesize sequences of actions that transition an environment from an initial state to a desired goal state. The Stanford Research Institute Problem Solver (STRIPS) formalism structures actions into preconditions, add lists, and delete lists, enabling powerful heuristics derived from planning graphs and relaxed problem spaces.</p>
+        <p>In basic pathfinding (like finding a route in a maze), states are atomic coordinates. In classical planning, the world is described by conjunctions of factual fluents (e.g. `At(Robot, RoomA) \land Has(Robot, Key)`). The challenge is that the state space is combinatorially huge: 100 binary fluents produce $2^{100}$ possible world states.</p>
+        <p>STRIPS makes planning tractable by giving actions internal structure: each action specifies what must be true before it can execute (Preconditions), what becomes true after execution (Add list), and what ceases to be true (Delete list). Planners can search forward from the initial state (progression), backward from the goal state (regression), or construct a Planning Graph (Graphplan) to extract mutual exclusions and compute admissible heuristic distances.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Planning is like a flight routing dispatcher coordinating planes and crew. An action ("Fly aircraft from London to Tokyo") has strict preconditions (plane at Heathrow, crew rested, fuel filled) and effects (plane is in Tokyo, fuel is consumed, crew is duty-timed). The planner builds a flight schedule that satisfies all passenger travel goals without violating physical operational constraints.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Define problem specification: identify fluents describing the initial state $S_0$ and conjunction of goal literals $G$.</li><li>Formulate action schemas: define actions with parameters, `Preconditions`, `Add-list` (newly asserted fluents), and `Delete-list` (negated fluents).</li><li>Select search direction: choose progression search (forward from $S_0$), regression search (backward from $G$), or planning graph expansion.</li><li>Compute heuristic guidance: extract delete-relaxation heuristics (e.g. $h_{\text{FF}}$ or $h_{\max}$) by ignoring all action delete lists.</li><li>Enforce mutex constraints: in Graphplan, identify mutually exclusive actions and propositions across alternating action and state levels.</li><li>Extract plan: backtrack through the search graph to extract a conflict-free sequence of instantiated actions achieving all goal literals.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>STRIPS State Transition Function</h3><div class="formula">\text{Result}(S, a) = (S \setminus \text{Delete}(a)) \cup \text{Add}(a), \quad \text{where} \quad \text{Precond}(a) \subseteq S</div><p>An action $a$ is applicable in state $S$ if all preconditions are satisfied; execution removes the delete list and merges the add list.</p></li>
+          <li><h3>Delete-Relaxation Heuristic ($h^+$)</h3><div class="formula">h^+(S) = \min_{P \in \text{Plans}} \text{Cost}(P) \quad \text{in relaxed problem with} \quad \text{Delete}(a) = \emptyset</div><p>Admissible heuristic obtained by dropping all negative effects (delete lists), meaning achieved fluents persist indefinitely.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>STRIPS actions define preconditions, add lists, and delete lists over symbolic world state fluents.</li><li>Delete-relaxation heuristics drop negative effects to construct fast, admissible distance estimates to goal satisfaction.</li><li>Planning graphs identify mutual exclusions between conflicting actions and propositions to prune impossible schedules.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">class</span> STRIPSAction:
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, name, preconds, add_list, delete_list):
+        <span class="k">self</span>.name = name
+        <span class="k">self</span>.preconds = <span class="f">set</span>(preconds)
+        <span class="k">self</span>.add_list = <span class="f">set</span>(add_list)
+        <span class="k">self</span>.delete_list = <span class="f">set</span>(delete_list)
+
+    <span class="k">def</span> <span class="f">is_applicable</span>(<span class="k">self</span>, state):
+        <span class="k">return</span> <span class="k">self</span>.preconds.<span class="f">issubset</span>(state)
+
+    <span class="k">def</span> <span class="f">apply</span>(<span class="k">self</span>, state):
+        <span class="k">return</span> (state - <span class="k">self</span>.delete_list) | <span class="k">self</span>.add_list
+
+<span class="k">def</span> <span class="f">forward_state_planner</span>(initial_state, goal_state, actions, max_depth=<span class="n">10</span>):
+    <span class="s">&quot;&quot;&quot;Simple breadth-first progression forward planner.&quot;&quot;&quot;</span>
+    queue = [(initial_state, [])]
+    visited = <span class="f">set</span>()
+    
+    <span class="k">while</span> queue:
+        state, plan = queue.<span class="f">pop</span>(<span class="n">0</span>)
+        state_key = <span class="f">frozenset</span>(state)
+        
+        <span class="k">if</span> goal_state.<span class="f">issubset</span>(state):
+            <span class="k">return</span> plan
+            
+        <span class="k">if</span> state_key <span class="k">in</span> visited <span class="k">or</span> <span class="k">len</span>(plan) &gt;= max_depth:
+            continue
+        visited.<span class="f">add</span>(state_key)
+        
+        <span class="k">for</span> action <span class="k">in</span> actions:
+            <span class="k">if</span> action.<span class="f">is_applicable</span>(state):
+                next_state = action.<span class="f">apply</span>(state)
+                queue.<span class="f">append</span>((next_state, plan + [action.name]))
+    <span class="k">return</span> <span class="k">None</span>
+
+<span class="c"># Blocks World scenario: Robot must stack Block A on Block B</span>
+actions = [
+    <span class="f">STRIPSAction</span>(<span class="s">&quot;PickUp(A)&quot;</span>, preconds=[<span class="s">&quot;OnTable(A)&quot;</span>, <span class="s">&quot;Clear(A)&quot;</span>, <span class="s">&quot;HandEmpty&quot;</span>],
+                 add_list=[<span class="s">&quot;Holding(A)&quot;</span>], delete_list=[<span class="s">&quot;OnTable(A)&quot;</span>, <span class="s">&quot;Clear(A)&quot;</span>, <span class="s">&quot;HandEmpty&quot;</span>]),
+    <span class="f">STRIPSAction</span>(<span class="s">&quot;Stack(A, B)&quot;</span>, preconds=[<span class="s">&quot;Holding(A)&quot;</span>, <span class="s">&quot;Clear(B)&quot;</span>],
+                 add_list=[<span class="s">&quot;On(A, B)&quot;</span>, <span class="s">&quot;HandEmpty&quot;</span>, <span class="s">&quot;Clear(A)&quot;</span>], delete_list=[<span class="s">&quot;Holding(A)&quot;</span>, <span class="s">&quot;Clear(B)&quot;</span>])
+]
+
+init_state = {<span class="s">&quot;OnTable(A)&quot;</span>, <span class="s">&quot;Clear(A)&quot;</span>, <span class="s">&quot;Clear(B)&quot;</span>, <span class="s">&quot;HandEmpty&quot;</span>}
+goal = {<span class="s">&quot;On(A, B)&quot;</span>}
+
+plan = <span class="f">forward_state_planner</span>(init_state, goal, actions)
+<span class="k">print</span>(<span class="s">&quot;Automated STRIPS Planning Result:&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Goal: {goal}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Generated Plan: {plan}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Suffering from the "Sussman Anomaly" in naive goal decomposition where solving one goal inadvertently destroys an already satisfied goal.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Allowing state-space explosion in forward search without informative domain-independent heuristics like Fast-Forward ($h_{\text{FF}}$).</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>What is the "delete list" of an action in the STRIPS planning formalism?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The set of factual fluents that cease to be true once the action is executed in the world</span></button><button class="opt" type="button"><b>B</b><span>A list of software bugs to remove from the code</span></button><button class="opt" type="button"><b>C</b><span>The conditions that must be satisfied before the action can start</span></button><button class="opt" type="button"><b>D</b><span>A list of actions that have been deprecated</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In STRIPS, execution of an action deletes the fluents in its delete list from the current world state.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>Why is the delete-relaxation heuristic $h^+$ admissible for $A^*$ search?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because it requires quadratic time to calculate</span></button><button class="opt" type="button"><b>B</b><span>Because it uses random numbers</span></button><button class="opt" type="button"><b>C</b><span>Because it only searches backward from the goal</span></button><button class="opt" type="button"><b>D</b><span>Because dropping delete lists means no achieved condition is ever destroyed, making the relaxed problem strictly easier or equal to the real problem</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Dropping negative effects removes obstacles without adding new ones, guaranteeing that the relaxed optimal path is shorter than or equal to the true path cost.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>What is a "mutex" (mutual exclusion) relation between two actions in Graphplan?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>A relation indicating that two actions can only be run in parallel on a dual-core CPU</span></button><button class="opt" type="button"><b>B</b><span>A relation indicating that both actions have zero cost</span></button><button class="opt" type="button"><b>C</b><span>A relation indicating that two actions cannot be executed together because one deletes a precondition or effect of the other</span></button><button class="opt" type="button"><b>D</b><span>A relation indicating that two actions have identical names</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Two actions are mutex if they interfere with each other (e.g. one deletes an effect or precondition of the other) or have competing preconditions.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/intelligent-agents-and-environments/"><small class="kicker">Concept</small><b>Agents &amp; Environments</b></a><a href="../../concepts/constraint-satisfaction/"><small class="kicker">Concept</small><b>Constraint Satisfaction (CSP)</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/logic-and-knowledge-representation/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · AI</small><b>Logic &amp; Knowledge Representation</b></a>
+    <a class="pager-next" href="../../concepts/mdps-and-bellman-equations/"><small>Next · AI <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>MDPs &amp; Bellman Equations</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

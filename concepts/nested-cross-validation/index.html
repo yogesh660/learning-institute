@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Nested Cross-Validation · Learn · Yogesh Awate</title>
+<meta name="description" content="Double cross-validation framework separating hyperparameter optimisation from performance estimation to eliminate optimistic selection bias.">
+<meta property="og:title" content="Nested Cross-Validation · Learn · Yogesh Awate">
+<meta property="og:description" content="Double cross-validation framework separating hyperparameter optimisation from performance estimation to eliminate optimistic selection bias.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="nested-cross-validation">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ml-toolbox">Path 06 · Machine learning toolbox</a> / Model selection / Lesson 26 of 50</span>
+    <h1 class="case-title">Nested Cross-Validation</h1>
+    <p class="lede rise" style="--d:3">Double cross-validation framework separating hyperparameter optimisation from performance estimation to eliminate optimistic selection bias.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/cross-validation/">Cross-validation</a> <a href="../../concepts/bias-variance-tradeoff/">Bias–variance trade-off</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Machine learning toolbox · Model selection</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">In standard cross-validation workflows, practitioners tune hyperparameters across validation folds and report the winning configuration's score as the model's expected future test performance. This common practice introduces optimistic selection bias—the winner's curse—because the reported score reflects the best of many random validation fluctuations. Nested cross-validation resolves this by enclosing hyperparameter tuning inside an outer performance-estimation loop, producing an honest, unbiased assessment of the entire model-building pipeline.</p>
+        <p>Imagine a financial fund manager testing 1,000 different automated trading strategies on historical stock market data from 2020 to 2023. By pure random chance, one strategy will emerge with an astonishing 95% annual return, even if all 1,000 strategies are based on random coin flips. If the manager advertises that 95% figure to investors as the fund's "expected return", investors will be sorely disappointed in 2024. The manager used the same historical data to pick the winning strategy and to evaluate how good the winning strategy was.</p>
+        <p>The exact same trap plagues standard machine learning workflows. When you evaluate 500 combinations of tree depth, learning rate, and regularisation penalties on your cross-validation folds, you pick the parameter set that achieved the lowest validation error. But part of that stellar score is inevitable overfitting to those specific validation splits. Reporting that winning validation score as your model's expected test accuracy guarantees that real-world deployment performance will fall short.</p>
+        <p>Nested cross-validation cures this by establishing two strictly separated loops: an inner loop and an outer loop. The outer loop splits the data into outer training and outer test sets. For each outer fold, the outer test set is locked away in a vault. The outer training data is handed to an inner cross-validation loop, which tunes and selects the best hyperparameters. Once chosen, that winning configuration is evaluated once on the untouched outer test set. By repeating this process across all outer folds, nested cross-validation provides an unpolluted, statistically rigorous estimate of how well the end-to-end modelling procedure generalises.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Running a multi-round competitive tournament: inner qualification rounds select the team's best lineup, but the team's true skill is judged only by matches played against unencountered external opponents.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Partition the full dataset into $K_{\text{outer}}$ folds (e.g. 5 folds) for the outer evaluation loop.</li><li>For each outer fold $k$, hold out fold $k$ as an untouched test set, and designate the remaining $K_{\text{outer}} - 1$ folds as the outer training set.</li><li>Partition the outer training set into $K_{\text{inner}}$ folds (e.g. 3 or 4 folds) for the inner tuning loop.</li><li>Within the inner loop, evaluate all candidate hyperparameter configurations across the inner folds and identify the configuration $\theta_k^*$ that minimises average inner validation error.</li><li>Fit a model on the entire outer training set using the selected hyperparameter $\theta_k^*$, and evaluate its performance on the held-out outer test set.</li><li>Compute the final generalisation estimate as the average test performance across all $K_{\text{outer}}$ outer test evaluations.</li><li>To ship a production model, run inner cross-validation across the entire dataset to select a final hyperparameter $\theta_{\text{final}}^*$ and fit on all available data.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Selection bias in standard cross-validation</h3><div class="formula">$$\hat{\theta} = \arg\min_{\theta \in \Theta} \operatorname{CV}(\theta), \qquad \mathbb{E}\big[\operatorname{CV}(\hat{\theta})\big] &lt; \operatorname{Err}_{\text{true}}(\hat{\theta})$$</div><p>Because $\hat{\theta}$ is chosen as the minimum over many random empirical variables, Jensen's inequality and extreme value theory guarantee that $\min_\theta \operatorname{CV}(\theta)$ is a downward-biased estimator of true error $\operatorname{Err}_{\text{true}}$, especially when sample size $N$ is small and the search space $|\Theta|$ is large.</p></li>
+          <li><h3>Nested cross-validation structure</h3><div class="formula">$$\operatorname{CV}_{\text{nested}} = \frac{1}{K_{\text{out}}} \sum_{k=1}^{K_{\text{out}}} L\left(y_{\text{test}}^{(k)}, \, \hat{f}_{\hat{\theta}_k}\big(x_{\text{test}}^{(k)}\big)\right)$$</div><p>where each $\hat{\theta}_k = \arg\min_{\theta \in \Theta} \frac{1}{K_{\text{in}}} \sum_{j=1}^{K_{\text{in}}} L\big(y_{\text{val}}^{(k, j)}, \hat{f}_\theta(x_{\text{val}}^{(k, j)})\big)$. Because $x_{\text{test}}^{(k)}$ was never seen during the selection of $\hat{\theta}_k$, $\operatorname{CV}_{\text{nested}}$ is an unbiased estimator of expected generalisation error.</p></li>
+          <li><h3>Computational complexity of nested cross-validation</h3><div class="formula">$$\text{Cost} = K_{\text{outer}} \times \left( |\Theta| \cdot K_{\text{inner}} + 1 \right) \approx K_{\text{outer}} \cdot K_{\text{inner}} \cdot |\Theta|$$</div><p>A $5 \times 3$ nested cross-validation evaluating 100 hyperparameter configurations trains $5 \times (100 \times 3 + 1) = 1{,}505$ models, representing a $K_{\text{outer}}$-fold multiplier over standard non-nested cross-validation.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Completely eliminates optimistic selection bias (the winner's curse) in hyperparameter tuning.</li><li>Separates hyperparameter selection (inner loop) from model performance estimation (outer loop).</li><li>Essential for small to medium sample sizes ($n &lt; 1{,}000$) where validation variance is high and selection bias is most severe.</li><li>Evaluates the generalisation capacity of the entire automated modelling pipeline rather than a single parameter configuration.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Synthetic noisy dataset: pure noise targets (true R^2 &lt;= 0)</span>
+rng = np.random.<span class="f">default_rng</span>(<span class="n">42</span>)
+n_samples, n_features = <span class="n">80</span>, <span class="n">20</span>
+X = rng.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">1</span>, (n_samples, n_features))
+y = rng.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">1</span>, n_samples)
+
+<span class="c"># Candidate Ridge regularisation penalties</span>
+alphas = np.<span class="f">logspace</span>(-<span class="n">3</span>, <span class="n">3</span>, <span class="n">20</span>)
+k_outer, k_inner = <span class="n">4</span>, <span class="n">3</span>
+indices = np.<span class="f">arange</span>(n_samples)
+outer_folds = np.<span class="f">array_split</span>(indices, k_outer)
+
+nested_scores = []
+<span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(k_outer):
+    test_idx = outer_folds[i]
+    train_idx = np.<span class="f">setdiff1d</span>(indices, test_idx)
+    X_train, y_train = X[train_idx], y[train_idx]
+    X_test, y_test = X[test_idx], y[test_idx]
+    
+    <span class="c"># Inner CV loop for hyperparameter tuning</span>
+    inner_folds = np.<span class="f">array_split</span>(np.<span class="f">arange</span>(<span class="k">len</span>(train_idx)), k_inner)
+    inner_mses = []
+    <span class="k">for</span> a <span class="k">in</span> alphas:
+        fold_errs = []
+        <span class="k">for</span> j <span class="k">in</span> <span class="k">range</span>(k_inner):
+            in_val = inner_folds[j]
+            in_tr = np.<span class="f">setdiff1d</span>(np.<span class="f">arange</span>(<span class="k">len</span>(train_idx)), in_val)
+            w = np.linalg.<span class="f">solve</span>(X_train[in_tr].T @ X_train[in_tr] + a * np.<span class="f">eye</span>(n_features), X_train[in_tr].T @ y_train[in_tr])
+            fold_errs.<span class="f">append</span>(np.<span class="f">mean</span>((y_train[in_val] - X_train[in_val] @ w) ** <span class="n">2</span>))
+        inner_mses.<span class="f">append</span>(np.<span class="f">mean</span>(fold_errs))
+    
+    <span class="c"># Evaluate best inner hyperparameter on untouched outer test set</span>
+    best_a = alphas[np.<span class="f">argmin</span>(inner_mses)]
+    w_outer = np.linalg.<span class="f">solve</span>(X_train.T @ X_train + best_a * np.<span class="f">eye</span>(n_features), X_train.T @ y_train)
+    nested_scores.<span class="f">append</span>(np.<span class="f">mean</span>((y_test - X_test @ w_outer) ** <span class="n">2</span>))
+
+<span class="k">print</span>(<span class="s">f&quot;Outer fold test MSEs: {[round(float(s), 3) for s in nested_scores]}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Unbiased nested CV MSE: {np.mean(nested_scores):.4f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Believing nested CV outputs a single best model: Nested CV evaluates the performance of the model-building algorithm, not a single static model. Each outer fold may select slightly different optimal hyperparameters.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Computational expense on deep architectures: Multiplying hyperparameter trials by $K_{\text{outer}} \times K_{\text{inner}}$ is computationally prohibitive for deep neural networks taking days to train, where single validation splits are standard.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Preprocessing leakage outside the nested loops: Fitting feature scalers, encoders, or PCA on the full dataset before splitting into outer folds leaks test information and invalidates the unbiased estimate.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Reporting the final production model without refitting: The outer folds exist only to measure expected test error; the final production model must be trained on 100% of the dataset using the best hyperparameter selected from an overall inner loop.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>Why does standard (non-nested) cross-validation produce optimistically biased estimates of model error when tuning many hyperparameters?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because cross-validation only works on classification problems</span></button><button class="opt" type="button"><b>B</b><span>Because picking the minimum validation error across hundreds of configurations capitalises on random validation set noise (the winner's curse)</span></button><button class="opt" type="button"><b>C</b><span>Because standard cross-validation evaluates test data before training</span></button><button class="opt" type="button"><b>D</b><span>Because the number of folds must always equal the number of features</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> When searching through many candidate configurations, some will achieve lower validation errors purely by chance. Reporting the winning score as expected future performance overestimates real-world accuracy due to selection bias.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>In a $5 \times 3$ nested cross-validation, what is the role of the outer loop test sets?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>They are used to perform recursive feature elimination</span></button><button class="opt" type="button"><b>B</b><span>They are used to tune the learning rate</span></button><button class="opt" type="button"><b>C</b><span>They determine the optimal number of inner folds</span></button><button class="opt" type="button"><b>D</b><span>They serve as completely untouched test sets used solely to estimate the unbiased generalisation error of models tuned by the inner loop</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The outer loop's sole function is unbiased performance estimation. The outer test folds are completely isolated from the inner loop's hyperparameter search.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>What does nested cross-validation actually produce as its final output?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>A guaranteed 100% test accuracy score</span></button><button class="opt" type="button"><b>B</b><span>A set of five different production models that must all be deployed simultaneously</span></button><button class="opt" type="button"><b>C</b><span>A single neural network weight vector</span></button><button class="opt" type="button"><b>D</b><span>An unbiased estimate of the generalisation error of the model-building procedure, after which a final model is refit on all data</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Nested CV is an evaluation protocol, not a training algorithm. It estimates how well the pipeline generalises. Once the evaluation is complete, the practitioner runs a single tuning loop on all data to produce the final deployable model.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q4</span>If each outer fold in a 5-fold nested CV selects a slightly different optimal hyperparameter value (e.g. $\alpha \in \{0.1, 0.5, 0.1, 1.0, 0.5\}$), what does this indicate?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The dataset contains corrupted corrupted values</span></button><button class="opt" type="button"><b>B</b><span>Ridge regression cannot be evaluated using nested cross-validation</span></button><button class="opt" type="button"><b>C</b><span>The nested cross-validation failed and must be restarted with different seeds</span></button><button class="opt" type="button"><b>D</b><span>This is normal behaviour reflecting sample variance across subsets; the objective landscape may be relatively flat across those values</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Optimal hyperparameters naturally vary across sample partitions, particularly when multiple configurations yield nearly equivalent validation error. This variation illustrates why nested CV evaluates the procedure rather than a single frozen setting.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/cross-validation/"><small class="kicker">Concept</small><b>Cross-validation</b></a><a href="../../concepts/hyperparameter-search-grid-random-successive-halving/"><small class="kicker">Concept</small><b>Hyperparameter search</b></a><a href="../../concepts/bayesian-optimisation-and-optuna/"><small class="kicker">Concept</small><b>Bayesian opt. &amp; Optuna</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/learning-curves-and-diagnosing-fit/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Machine learning toolbox</small><b>Learning curves &amp; fit</b></a>
+    <a class="pager-next" href="../../concepts/ensemble-theory-bagging-boosting-stacking-compared/"><small>Next · Machine learning toolbox <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Ensemble theory</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

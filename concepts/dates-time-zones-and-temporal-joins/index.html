@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Dates, Time Zones, and Temporal Joins in Data Engineering · Learn · Yogesh Awate</title>
+<meta name="description" content="Mastering ISO 8601 timestamps, UTC normalisation, daylight saving edge cases, as-of joins, and point-in-time correct temporal feature lookups.">
+<meta property="og:title" content="Dates, Time Zones, and Temporal Joins in Data Engineering · Learn · Yogesh Awate">
+<meta property="og:description" content="Mastering ISO 8601 timestamps, UTC normalisation, daylight saving edge cases, as-of joins, and point-in-time correct temporal feature lookups.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="dates-time-zones-and-temporal-joins">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-data-science">Path 07 · Data science</a> / Data wrangling / Lesson 6 of 47</span>
+    <h1 class="case-title">Dates, Time Zones, and Temporal Joins in Data Engineering</h1>
+    <p class="lede rise" style="--d:3">Mastering ISO 8601 timestamps, UTC normalisation, daylight saving edge cases, as-of joins, and point-in-time correct temporal feature lookups.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Data science · Data wrangling</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Temporal data is ubiquitous in real-world machine learning, yet improper handling of time zones, daylight saving shifts, and non-aligned timestamps introduces subtle, silent data corruption and severe lookahead leakage. A single local time mix-up can make an event appear an hour before it actually occurred, or corrupt training targets when matching asynchronous market prices to client orders.</p>
+        <p>Temporal information spans two concepts: physical time (an absolute point on the cosmic timeline, correctly measured in Unix epoch seconds or UTC ISO 8601 strings) and civil time (local wall-clock time subject to political boundaries, time zones, and daylight saving time adjustments).</p>
+        <p>A fundamental rule of data engineering is: ingest and store all timestamps in UTC ($+00:00$), and only convert to local civil time at the presentation layer or when extracting calendar features (such as local hour of day or day of week). Daylight saving transitions create ambiguous times (an hour repeating during autumn fallback) and nonexistent times (an hour skipped during spring forward).</p>
+        <p>Standard relational equijoins require exact timestamp matches ($t_A = t_B$), which almost never occurs across independent distributed telemetry streams. Instead, time-series workflows require temporal inequality joins, most notably the as-of join (or backward merge).</p>
+        <p>An as-of join merges each record from a primary table with the most recent preceding record from a secondary reference table, strictly enforcing $t_{\mathrm{ref}} \le t_{\mathrm{event}}$. This guarantees point-in-time correctness, preventing target leakage where future prices or status changes inadvertently leak into past feature states.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine matching flight departure announcements in Tokyo with passenger bookings recorded in New York. If both systems record "14:00" without specifying time zones or offsets, you cannot know which happened first. Converting every event to Greenwich Mean Time (UTC) establishes a single unambiguous timeline, while an as-of join acts like looking at the departure board right at the moment you step up to the gate, ensuring you only see the latest scheduled boarding gate rather than tomorrow's update.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Ingest and canonicalise: Parse input strings against ISO 8601 standard (`YYYY-MM-DDTHH:MM:SSZ`), resolve timezone offsets immediately, and store as UTC timestamps or epoch nanoseconds.</li><li>Feature extraction in local time: When creating behavioural features (e.g. rush-hour indicators, morning vs evening shopping), convert UTC to user-local civil time using the regional timezone database (IANA tzdb).</li><li>Index sorting: Ensure both event and reference tables are strictly sorted by entity ID and timestamp prior to temporal joining.</li><li>Point-in-time as-of join: Execute backward matching (`join_asof`) on matching keys (e.g. `user_id`, `ticker`) matching the latest reference timestamp $\le$ the query timestamp.</li><li>Tolerance and lookahead audit: Configure a backward tolerance window (e.g. do not match reference data older than 24 hours) and assert zero forward-looking records.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Universal Time Normalisation</h3><div class="formula">t_{\mathrm{UTC}} = t_{\mathrm{local}} - \Delta_{\mathrm{tz}}(\mathrm{date}, \mathrm{location})</div><p>Physical time is invariant. Local civil time is adjusted by the historical offset $\Delta_{\mathrm{tz}}$ dictated by timezone rules and daylight saving time.</p></li>
+          <li><h3>As-Of Temporal Join Specification</h3><div class="formula">j^*(i) = \operatorname*{arg\,max}_{j \in \mathcal{R}_{k_i}} \left\{ t_j \;\middle|\; t_j \le t_i \;\land\; t_i - t_j \le \tau_{\max} \right\}</div><p>For query event $i$ with key $k_i$ at time $t_i$, the as-of join identifies reference index $j^*$ with the latest timestamp $t_j$ strictly before $t_i$, bounded by maximum lookback tolerance $\tau_{\max}$.</p></li>
+          <li><h3>Lookahead Leakage Violation Condition</h3><div class="formula">\exists i, j : \text{Joined}(i, j) \implies t_j > t_i \quad [\text{Fatal Target Leakage}]</div><p>If any feature state incorporated at decision time $t_i$ derives from an event at $t_j &gt; t_i$, the offline validation model evaluates with non-causal future information.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Store and transport timestamps exclusively in UTC; convert to local civil time solely for domain features or reporting.</li><li>As-of joins match each record with the most recent preceding entry from another table, preventing future data leakage.</li><li>Temporal joins require both dataframes to be sorted chronologically on the join timestamp.</li><li>Daylight saving transitions cause duplicate hours in autumn and missing hours in spring in naive local datetimes.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> pandas <span class="k">as</span> pd
+<span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Create trade execution events (primary table)</span>
+trades = pd.<span class="f">DataFrame</span>({
+    <span class="s">'timestamp'</span>: pd.<span class="f">to_datetime</span>([
+        <span class="s">'2026-03-15 10:00:02Z'</span>,
+        <span class="s">'2026-03-15 10:00:07Z'</span>,
+        <span class="s">'2026-03-15 10:00:15Z'</span>
+    ]),
+    <span class="s">'symbol'</span>: [<span class="s">'AAPL'</span>, <span class="s">'AAPL'</span>, <span class="s">'AAPL'</span>],
+    <span class="s">'shares'</span>: [<span class="n">100</span>, <span class="n">250</span>, <span class="n">50</span>]
+})
+
+<span class="c"># Create asynchronous quote updates (reference table)</span>
+quotes = pd.<span class="f">DataFrame</span>({
+    <span class="s">'timestamp'</span>: pd.<span class="f">to_datetime</span>([
+        <span class="s">'2026-03-15 10:00:00Z'</span>,
+        <span class="s">'2026-03-15 10:00:05Z'</span>,
+        <span class="s">'2026-03-15 10:00:12Z'</span>,
+        <span class="s">'2026-03-15 10:00:20Z'</span>
+    ]),
+    <span class="s">'symbol'</span>: [<span class="s">'AAPL'</span>, <span class="s">'AAPL'</span>, <span class="s">'AAPL'</span>, <span class="s">'AAPL'</span>],
+    <span class="s">'bid_price'</span>: [<span class="n">182.10</span>, <span class="n">182.25</span>, <span class="n">182.15</span>, <span class="n">182.40</span>]
+})
+
+<span class="c"># Sort both frames by timestamp (prerequisite for merge_asof)</span>
+trades = trades.<span class="f">sort_values</span>(<span class="s">'timestamp'</span>)
+quotes = quotes.<span class="f">sort_values</span>(<span class="s">'timestamp'</span>)
+
+<span class="c"># Point-in-time backward join: find the latest quote before each trade</span>
+enriched_trades = pd.<span class="f">merge_asof</span>(
+    trades,
+    quotes,
+    on=<span class="s">'timestamp'</span>,
+    by=<span class="s">'symbol'</span>,
+    direction=<span class="s">'backward'</span>,
+    tolerance=pd.<span class="f">Timedelta</span>(<span class="s">'10s'</span>)
+)
+
+<span class="k">print</span>(enriched_trades[[<span class="s">'timestamp'</span>, <span class="s">'symbol'</span>, <span class="s">'shares'</span>, <span class="s">'bid_price'</span>]])
+<span class="c"># Output matches 10:00:02 -&gt; 182.10, 10:00:07 -&gt; 182.25, 10:00:15 -&gt; 182.15</span></code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using naive datetime objects without timezone metadata (`tz_localize(None)`), causing silent 1-to-5 hour offsets when merging across systems.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Performing standard forward joins or nearest joins in trading or medical records, allowing future outcomes to leak into predictive features.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Neglecting daylight saving shifts when aggregating by "local hour of day", resulting in artificial spikes or dips twice a year.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>Why should database timestamps almost always be stored in UTC rather than local time?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>UTC automatically handles categorical variable encodings</span></button><button class="opt" type="button"><b>B</b><span>UTC stores smaller integer values that take half the disk space</span></button><button class="opt" type="button"><b>C</b><span>UTC provides an unambiguous, monotonic timeline free from daylight saving anomalies and timezone shifts</span></button><button class="opt" type="button"><b>D</b><span>Database engines cannot index columns that contain timezone offsets</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> UTC is an invariant, continuous reference standard without discontinuities caused by daylight saving changes or local government decree.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>What distinguishes an as-of join (`merge_asof`) with `direction="backward"` from an inner join?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It requires exact timestamp equivalence across both tables</span></button><button class="opt" type="button"><b>B</b><span>It replaces missing values with the overall column mean</span></button><button class="opt" type="button"><b>C</b><span>It randomly samples rows from the secondary dataset</span></button><button class="opt" type="button"><b>D</b><span>It pairs each row in the left table with the closest preceding timestamp in the right table</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A backward as-of join matches each record with the most recent historical record that occurred at or before that record's timestamp.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>What critical machine learning error occurs if an analyst uses `direction="nearest"` when enriching transaction data with reference prices?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Lookahead leakage, because future reference prices after the transaction could be selected</span></button><button class="opt" type="button"><b>B</b><span>Underfitting due to excessive regularisation</span></button><button class="opt" type="button"><b>C</b><span>Covariate shift between train and test sets</span></button><button class="opt" type="button"><b>D</b><span>Multicollinearity in continuous predictors</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> `direction="nearest"` can select a reference timestamp that occurred in the future relative to the transaction, leaking unavailable future information into features.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/data-leakage/"><small class="kicker">Concept</small><b>Data leakage</b></a><a href="../../concepts/pandas-and-polars-patterns/"><small class="kicker">Concept</small><b>pandas &amp; Polars patterns</b></a><a href="../../concepts/train-validation-test-splits-group-and-time-based/"><small class="kicker">Concept</small><b>Splits: group and time-based</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/outlier-handling/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Data science</small><b>Outlier handling</b></a>
+    <a class="pager-next" href="../../concepts/encoding-categoricals-one-hot-ordinal-target-woe/"><small>Next · Data science <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Encoding categoricals</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

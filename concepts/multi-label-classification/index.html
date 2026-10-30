@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Multi-Label Classification · Learn · Yogesh Awate</title>
+<meta name="description" content="Predict multiple non-mutually exclusive binary labels simultaneously: compare Binary Relevance, Classifier Chains, and label power-sets with Hamming loss.">
+<meta property="og:title" content="Multi-Label Classification · Learn · Yogesh Awate">
+<meta property="og:description" content="Predict multiple non-mutually exclusive binary labels simultaneously: compare Binary Relevance, Classifier Chains, and label power-sets with Hamming loss.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="multi-label-classification">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-classification">Path 04 · Classification</a> / Beyond the basics / Lesson 18 of 19</span>
+    <h1 class="case-title">Multi-Label Classification</h1>
+    <p class="lede rise" style="--d:3">Predict multiple non-mutually exclusive binary labels simultaneously: compare Binary Relevance, Classifier Chains, and label power-sets with Hamming loss.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/logistic-regression-inference-odds-ratios-wald-tests/">Logistic Regression Inference</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Classification · Beyond the basics</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">A document can belong to Politics, Economics, and Tech simultaneously; an image can contain a dog, a frisbee, and a tree. Multi-label learning addresses non-exclusive target vectors while accounting for label correlations.</p>
+        <p>In conventional classification, classes are strictly mutually exclusive: an email is either spam or not spam (binary), or an image is either a cat, dog, or bird (multi-class). In contrast, real-world objects frequently possess multiple simultaneous attributes: a film can belong to Comedy, Drama, and Romance; a biomedical article can discuss Genetics, Oncology, and Immunology; a customer can be tagged as Churn-Risk, High-Spender, and Mobile-User.</p>
+        <p>Multi-label learning maps feature vector $x$ to a binary target vector $y = [y_1, y_2, \dots, y_L]^T \in \{0, 1\}^L$. The fundamental algorithmic choice revolves around how to handle correlations among labels.</p>
+        <p>The simplest strategy is Binary Relevance: decompose the problem into $L$ completely independent binary classification tasks, one per label. While embarrassingly parallel and scalable, Binary Relevance is blind to label dependencies: knowing an image contains a "beach" vastly increases the probability of "ocean" and "sand", but Binary Relevance cannot exploit this co-occurrence.</p>
+        <p>Classifier Chains overcome this blind spot by ordering labels into a sequence and training each classifier with both original features $x$ and the ground-truth/predicted binary labels of all preceding classifiers in the chain. Label Powerset transforms the task into multi-class classification by treating every unique observed label combination as a distinct class, which models correlations perfectly but suffers from severe class explosion on rare combinations. Modern neural architectures employ independent sigmoid heads trained with binary cross-entropy loss.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine assigning tags to songs in a music streaming library (e.g. Acoustic, Rock, Ballad, 90s, Instrumental). Binary Relevance hires five separate interns who sit in isolated soundproof booths and evaluate one tag each without speaking to each other. Classifier Chains seats the interns in a line: each intern listens to the song and glances at the tag decisions made by previous interns before making their own call.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Hamming Loss</h3><div class="formula">\operatorname{HL}(Y, \hat{Y}) = \frac{1}{n \cdot L} \sum_{i=1}^n \sum_{j=1}^L \mathbb{I}(Y_{ij} \neq \hat{Y}_{ij}) = \frac{1}{n \cdot L} \|Y \oplus \hat{Y}\|_1</div><p>Measures the fraction of individual label mistakes across all instances and labels. A lower Hamming loss indicates higher per-label accuracy.</p></li>
+          <li><h3>Subset Accuracy (Exact Match Ratio)</h3><div class="formula">\operatorname{Acc}_{\mathrm{subset}} = \frac{1}{n} \sum_{i=1}^n \mathbb{I}(Y_i = \hat{Y}_i)</div><p>The strictest metric: requires the entire predicted binary label vector to match ground truth exactly. Can be low even when individual label accuracy is above 95%.</p></li>
+          <li><h3>Classifier Chain Conditional Factorisation</h3><div class="formula">P(y_1, \dots, y_L \mid x) = \prod_{j=1}^L P(y_j \mid x, y_1, \dots, y_{j-1})</div><p>By the probability chain rule, joint label probability factorises into a product of conditional probabilities, implemented by conditioning each classifier on previous predictions.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Multi-label classification assigns instances multiple non-mutually exclusive binary labels $y \in \{0, 1\}^L$.</li><li>Binary Relevance trains $L$ independent binary models; fast and scalable but ignores label co-occurrence dependencies.</li><li>Classifier Chains condition each label on predictions of preceding labels, capturing dependencies via the probability chain rule.</li><li>Standard multi-class Softmax activation is replaced with independent Sigmoids $\sigma(z_j)$ trained via binary cross-entropy loss.</li><li>Evaluated via Hamming Loss (per-label error rate) and Subset Accuracy (fraction of instances where all labels match exactly).</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">from</span> sklearn.linear_model <span class="k">import</span> LogisticRegression
+
+<span class="c"># Multi-label classification: Binary Relevance vs Classifier Chains from scratch</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+n_samples = <span class="n">300</span>
+n_features = <span class="n">8</span>
+n_labels = <span class="n">4</span>
+
+<span class="c"># Generate synthetic correlated multi-label dataset</span>
+X = np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">1</span>, (n_samples, n_features))
+<span class="c"># Latent signals generating co-occurring tags</span>
+latent_topic = X[:, <span class="n">0</span>] + X[:, <span class="n">1</span>]
+
+<span class="c"># Labels with strong dependencies (e.g. Label 2 often co-occurs with Label 0)</span>
+y = np.<span class="f">zeros</span>((n_samples, n_labels), dtype=int)
+y[:, <span class="n">0</span>] = (latent_topic + np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">0.5</span>, n_samples) &gt; <span class="n">0</span>).<span class="f">astype</span>(int)
+y[:, <span class="n">1</span>] = (X[:, <span class="n">2</span>] - X[:, <span class="n">3</span>] + np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">0.5</span>, n_samples) &gt; <span class="n">0</span>).<span class="f">astype</span>(int)
+y[:, <span class="n">2</span>] = (y[:, <span class="n">0</span>] * <span class="n">0.7</span> + X[:, <span class="n">4</span>] + np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">0.5</span>, n_samples) &gt; <span class="n">0.3</span>).<span class="f">astype</span>(int)
+y[:, <span class="n">3</span>] = (y[:, <span class="n">1</span>] * <span class="n">0.8</span> + X[:, <span class="n">5</span>] + np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">0.5</span>, n_samples) &gt; <span class="n">0.4</span>).<span class="f">astype</span>(int)
+
+<span class="c"># Train/Test Split</span>
+n_train = <span class="n">200</span>
+X_train, X_test = X[:n_train], X[n_train:]
+y_train, y_test = y[:n_train], y[n_train:]
+
+<span class="c"># 1. Binary Relevance (L independent models)</span>
+br_models = [<span class="f">LogisticRegression</span>(solver=<span class="s">'liblinear'</span>) <span class="k">for</span> _ <span class="k">in</span> <span class="k">range</span>(n_labels)]
+<span class="k">for</span> j <span class="k">in</span> <span class="k">range</span>(n_labels):
+    br_models[j].<span class="f">fit</span>(X_train, y_train[:, j])
+
+y_pred_br = np.<span class="f">column_stack</span>([m.<span class="f">predict</span>(X_test) <span class="k">for</span> m <span class="k">in</span> br_models])
+
+<span class="c"># 2. Classifier Chains (Sequential conditioning)</span>
+chain_order = [<span class="n">0</span>, <span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>]
+chain_models = []
+X_train_augmented = X_train.<span class="f">copy</span>()
+
+<span class="k">for</span> j <span class="k">in</span> chain_order:
+    clf = <span class="f">LogisticRegression</span>(solver=<span class="s">'liblinear'</span>)
+    clf.<span class="f">fit</span>(X_train_augmented, y_train[:, j])
+    chain_models.<span class="f">append</span>(clf)
+    <span class="c"># Augment feature matrix with true labels during training</span>
+    X_train_augmented = np.<span class="f">column_stack</span>([X_train_augmented, y_train[:, j]])
+
+<span class="c"># Predict with Classifier Chain sequentially</span>
+X_test_augmented = X_test.<span class="f">copy</span>()
+y_pred_chain = np.<span class="f">zeros_like</span>(y_test)
+
+<span class="k">for</span> idx, j <span class="k">in</span> <span class="f">enumerate</span>(chain_order):
+    preds_j = chain_models[idx].<span class="f">predict</span>(X_test_augmented)
+    y_pred_chain[:, j] = preds_j
+    <span class="c"># Augment test features with PREDICTED labels</span>
+    X_test_augmented = np.<span class="f">column_stack</span>([X_test_augmented, preds_j])
+
+<span class="c"># Evaluation</span>
+<span class="k">def</span> <span class="f">eval_multilabel</span>(y_true, y_pred):
+    hamming_loss = np.<span class="f">mean</span>(y_true != y_pred)
+    subset_acc = np.<span class="f">mean</span>(np.<span class="f">all</span>(y_true == y_pred, axis=<span class="n">1</span>))
+    <span class="k">return</span> hamming_loss, subset_acc
+
+hl_br, sa_br = <span class="f">eval_multilabel</span>(y_test, y_pred_br)
+hl_chain, sa_chain = <span class="f">eval_multilabel</span>(y_test, y_pred_chain)
+
+<span class="k">print</span>(<span class="s">f&quot;Binary Relevance  - Hamming Loss: {hl_br:.4f}, Subset Accuracy: {sa_br*100:.1f}%&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Classifier Chains - Hamming Loss: {hl_chain:.4f}, Subset Accuracy: {sa_chain*100:.1f}%&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Subset Accuracy Improvement: +{(sa_chain - sa_br)*100:.1f}% by capturing label correlations&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using Softmax instead of Sigmoid: Softmax enforces a sum-to-one constraint across classes, forcing classes to compete and failing on multi-label targets.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Error propagation in Classifier Chains: If early classifiers in a chain make erroneous predictions, downstream classifiers receive corrupted features during inference.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Evaluating multi-label models with multi-class accuracy: Multi-class accuracy assumes a single scalar output; multi-label problems require Hamming loss or Macro/Micro F1.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>Why is independent Sigmoid activation used instead of Softmax in multi-label neural network heads?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Sigmoid is faster to compute than addition</span></button><button class="opt" type="button"><b>B</b><span>Sigmoids eliminate the need for hidden layers</span></button><button class="opt" type="button"><b>C</b><span>Softmax cannot be differentiated during backpropagation</span></button><button class="opt" type="button"><b>D</b><span>Sigmoid outputs independent probabilities for each label in [0, 1], whereas Softmax forces all class probabilities to sum to 1</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Softmax forces probabilities across all classes to sum to 1, assuming mutual exclusivity. Multi-label problems require each label to possess an independent probability in [0, 1] via Sigmoid.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>What is the primary trade-off of Classifier Chains compared to Binary Relevance?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Classifier Chains can only be used with decision trees</span></button><button class="opt" type="button"><b>B</b><span>Classifier Chains have O(1) computational complexity</span></button><button class="opt" type="button"><b>C</b><span>Classifier Chains cannot predict zero labels for an instance</span></button><button class="opt" type="button"><b>D</b><span>Classifier Chains capture label correlations but are sensitive to chain ordering and test-time error propagation</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> By feeding preceding predictions as features, Classifier Chains capture label correlations. However, early classification mistakes propagate down the chain, and training cannot be fully parallelised.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../models/logistic_regression/"><small class="kicker">Classification</small><b>Logistic regression</b></a><a href="../../concepts/ordinal-classification/"><small class="kicker">Concept</small><b>Ordinal classification</b></a><a href="../../concepts/cost-sensitive-learning/"><small class="kicker">Concept</small><b>Cost-sensitive learning</b></a><a href="../../concepts/confusion-matrix/"><small class="kicker">Concept</small><b>Confusion matrix</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/ordinal-classification/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Classification</small><b>Ordinal classification</b></a>
+    <a class="pager-next" href="../../concepts/cost-sensitive-learning/"><small>Next · Classification <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Cost-sensitive learning</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

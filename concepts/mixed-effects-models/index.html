@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Mixed-effects models · Learn · Yogesh Awate</title>
+<meta name="description" content="Linear Mixed-Effects Models (LMMs / hierarchical linear models) extend classical regression to handle clustered, grouped, longitudinal, and repeated-measures data by simultaneously estimating fixed effects (population-level averages) and random effects (cluster-specific deviations drawn from a probability distribution). By pooling information across groups through empirical Bayes shrinkage (&quot;partial pooling&quot;), mixed models avoid the dual pitfalls of complete pooling (ignoring cluster structure) and no pooling (overfitting isolated groups), providing unbiased variance components and robust inference under non-independent errors.">
+<meta property="og:title" content="Mixed-effects models · Learn · Yogesh Awate">
+<meta property="og:description" content="Linear Mixed-Effects Models (LMMs / hierarchical linear models) extend classical regression to handle clustered, grouped, longitudinal, and repeated-measures data by simultaneously estimating fixed effects (population-level averages) and random effects (cluster-specific deviations drawn from a probability distribution). By pooling information across groups through empirical Bayes shrinkage (&quot;partial pooling&quot;), mixed models avoid the dual pitfalls of complete pooling (ignoring cluster structure) and no pooling (overfitting isolated groups), providing unbiased variance components and robust inference under non-independent errors.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="mixed-effects-models">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-statistics">Path 02 · Statistics</a> / Regression inference / Lesson 34 of 51</span>
+    <h1 class="case-title">Mixed-effects models</h1>
+    <p class="lede rise" style="--d:3">Linear Mixed-Effects Models (LMMs / hierarchical linear models) extend classical regression to handle clustered, grouped, longitudinal, and repeated-measures data by simultaneously estimating fixed effects (population-level averages) and random effects (cluster-specific deviations drawn from a probability distribution). By pooling information across groups through empirical Bayes shrinkage ("partial pooling"), mixed models avoid the dual pitfalls of complete pooling (ignoring cluster structure) and no pooling (overfitting isolated groups), providing unbiased variance components and robust inference under non-independent errors.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">20 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/ols-inference-t-tests-f-test-r2-and-adjusted-r2/">OLS Inference: t, F &amp; R-Squared</a> <a href="../../concepts/generalised-linear-models/">Generalised Linear Models</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Statistics · Regression inference</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Suppose you measure patient blood pressure across 50 different hospitals. If you fit a single regression line ignoring hospitals (complete pooling), you violate the independence assumption and produce falsely confident standard errors. If you fit 50 separate regression models for each hospital (no pooling), small clinics with only 3 patients produce wild, noisy estimates. How do you share statistical strength across groups while respecting individual cluster idiosyncrasies? Mixed-effects models provide the mathematically principled answer through partial pooling and variance components.</p>
+        <p>The Three Regimes of Grouped Data:
+- Complete Pooling: Fit one global model y = X\beta + \epsilon. Treats all observations as independent. Violates independence, masks Simpson's paradox, and underestimates standard errors.
+- No Pooling: Fit separate isolated models or dummy indicators for every group. Small groups with few observations overfit wildly. Fails to capitalise on population commonalities.
+- Partial Pooling (Mixed Effects): Treat group differences as random draws from a latent distribution u_j ~ N(0, \sigma_u^2). Groups with abundant data rely on their own observations; groups with sparse data shrink automatically toward the global mean!</p>
+        <p>Fixed Effects vs Random Effects:
+- Fixed Effects (\beta): Non-random parameters representing constant population-wide relationships (e.g. the average effect of a drug dosage across all humans).
+- Random Effects (u): Random variables representing idiosyncratic cluster deviations (e.g. hospital baseline offsets or clinic-specific dosage sensitivities), governed by covariance matrix G.</p>
+        <p>Shrinkage and Empirical Bayes: The estimated random effect u_hat_j for group j shrinks toward 0 by shrinkage factor \sigma_u^2 / (\sigma_u^2 + \sigma_\epsilon^2 / n_j). When group sample size n_j is large, shrinkage is negligible; when n_j is small, shrinkage pulls the group toward the population grand mean, protecting against extreme outliers.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine a school district evaluating teachers based on student test scores. Complete pooling compares raw student scores across all schools, ignoring that some schools are in wealthy suburbs and others in underfunded areas. No pooling ranks teachers strictly within their own school, making a new teacher with only 4 students either the best or worst in the district due to small-sample noise. Mixed-effects models use partial pooling: a teacher with 4 students is gently pulled toward the district average until more student scores are collected, balancing local performance with district-wide context.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Linear Mixed Model Formulation</h3><div class="formula">\mathbf{y} = \mathbf{X}\boldsymbol{\beta} + \mathbf{Z}\mathbf{u} + \boldsymbol{\epsilon}, \quad \mathbf{u} \sim \mathcal{N}(\mathbf{0}, \mathbf{G}), \quad \boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \sigma^2 \mathbf{I}), \quad \mathbf{y} \sim \mathcal{N}(\mathbf{X}\boldsymbol{\beta}, \; \mathbf{V})</div><p>Here \mathbf{X}\boldsymbol{\beta} represents fixed effects across the population, and \mathbf{Z}\mathbf{u} represents group-specific random effects. The total marginal covariance matrix is \mathbf{V} = \mathbf{Z}\mathbf{G}\mathbf{Z}^\top + \sigma^2 \mathbf{I}, inducing non-zero correlations among observations from the same cluster.</p></li>
+          <li><h3>Empirical Bayes Shrinkage Factor (Random Intercept)</h3><div class="formula">\hat{u}_j = \frac{n_j \sigma_u^2}{\sigma^2 + n_j \sigma_u^2} \left( \bar{y}_j - \bar{\mathbf{x}}_j^\top \hat{\boldsymbol{\beta}} \right) = \lambda_j \left( \bar{y}_j - \bar{\mathbf{x}}_j^\top \hat{\boldsymbol{\beta}} \right), \quad \lambda_j \in [0, 1)</div><p>The random effect prediction for group j shrinks the observed group residual toward zero by shrinkage multiplier \lambda_j. For large sample sizes n_j, \lambda_j \approx 1 (no pooling); for small sample sizes n_j \to 0, \lambda_j \to 0, borrowing strength from the population grand mean (complete pooling).</p></li>
+          <li><h3>Intraclass Correlation Coefficient (ICC)</h3><div class="formula">\text{ICC} = \frac{\sigma_u^2}{\sigma_u^2 + \sigma^2} = \text{Corr}(y_{ij}, y_{ik}) \quad \text{for } j \neq k</div><p>The ICC quantifies the proportion of total variance attributable to differences between clusters. It represents the expected correlation between two randomly drawn observations from the same cluster.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Linear Mixed-Effects Models combine fixed effects (population averages) and random effects (cluster deviations).</li><li>Partial pooling via empirical Bayes shrinkage borrows statistical strength across groups, protecting small clusters from noisy overfitting.</li><li>Restricted Maximum Likelihood (REML) provides unbiased variance component estimation by accounting for fixed effect degrees of freedom.</li><li>The Intraclass Correlation Coefficient (ICC) measures the proportion of variance attributable to grouping structure.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="s">&quot;&quot;&quot;
+Linear Mixed-Effects Model Simulation
+Demonstrates complete pooling vs no pooling vs partial pooling (LMM)
+and empirical Bayes shrinkage across groups of varying sample sizes.
+&quot;&quot;&quot;</span>
+
+<span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Simulate hierarchical multi-centre clinical trial</span>
+<span class="c"># 8 clinics with vastly different patient counts (from 3 to 100 patients)</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+num_clinics = <span class="n">8</span>
+clinic_sizes = [<span class="n">3</span>, <span class="n">4</span>, <span class="n">6</span>, <span class="n">10</span>, <span class="n">20</span>, <span class="n">35</span>, <span class="n">60</span>, <span class="n">100</span>]
+
+true_beta_0 = <span class="n">10.0</span>   <span class="c"># Population baseline score</span>
+true_beta_1 = <span class="n">2.5</span>    <span class="c"># Population treatment effect</span>
+true_sigma_u = <span class="n">3.0</span>   <span class="c"># Between-clinic standard deviation</span>
+true_sigma_e = <span class="n">2.0</span>   <span class="c"># Within-clinic residual noise</span>
+
+<span class="c"># Sample clinic random baseline offsets u_j ~ N(0, sigma_u^2)</span>
+clinic_offsets = np.random.<span class="f">normal</span>(<span class="n">0</span>, true_sigma_u, num_clinics)
+
+records = []
+<span class="k">for</span> j <span class="k">in</span> <span class="k">range</span>(num_clinics):
+    n_j = clinic_sizes[j]
+    x_dosage = np.random.<span class="f">uniform</span>(<span class="n">0.5</span>, <span class="n">4.0</span>, n_j)
+    noise = np.random.<span class="f">normal</span>(<span class="n">0</span>, true_sigma_e, n_j)
+    y_response = (true_beta_0 + clinic_offsets[j]) + true_beta_1 * x_dosage + noise
+    <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(n_j):
+        records.<span class="f">append</span>({
+            <span class="s">&quot;clinic&quot;</span>: j,
+            <span class="s">&quot;x&quot;</span>: x_dosage[i],
+            <span class="s">&quot;y&quot;</span>: y_response[i]
+        })
+
+<span class="k">print</span>(<span class="s">f&quot;=== Hierarchical Dataset: {len(records)} patients across {num_clinics} clinics ===&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;Clinic sizes:&quot;</span>, clinic_sizes)
+<span class="k">print</span>(<span class="s">f&quot;True Population Intercept: {true_beta_0:.2f} | True Between-Clinic Std: {true_sigma_u:.2f}\n&quot;</span>)
+
+<span class="c"># Calculate group sample means and residuals</span>
+clinic_means = []
+<span class="k">for</span> j <span class="k">in</span> <span class="k">range</span>(num_clinics):
+    y_j = [r[<span class="s">&quot;y&quot;</span>] <span class="k">for</span> r <span class="k">in</span> records <span class="k">if</span> r[<span class="s">&quot;clinic&quot;</span>] == j]
+    clinic_means.<span class="f">append</span>(np.<span class="f">mean</span>(y_j))
+
+grand_mean = np.<span class="f">mean</span>([r[<span class="s">&quot;y&quot;</span>] <span class="k">for</span> r <span class="k">in</span> records])
+
+<span class="c"># Partial Pooling (Empirical Bayes Shrinkage calculation)</span>
+<span class="c"># Shrinkage weight lambda_j = n_j * sigma_u^2 / (sigma_e^2 + n_j * sigma_u^2)</span>
+var_u = true_sigma_u ** <span class="n">2</span>
+var_e = true_sigma_e ** <span class="n">2</span>
+
+<span class="k">print</span>(<span class="s">&quot;=== Comparison: No Pooling vs Partial Pooling (Shrinkage) ===&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;{'Clinic':7s} | {'Size':5s} | {'Raw Mean':10s} | {'Shrinkage lambda':18s} | {'Partial Pooled':15s} | {'Offset from Grand':18s}&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;-&quot;</span> * <span class="n">82</span>)
+
+<span class="k">for</span> j <span class="k">in</span> <span class="k">range</span>(num_clinics):
+    n_j = clinic_sizes[j]
+    raw_mean = clinic_means[j]
+    lambda_j = (n_j * var_u) / (var_e + n_j * var_u)
+    <span class="c"># Shrunk estimate: grand_mean + lambda_j * (raw_mean - grand_mean)</span>
+    partial_pooled = grand_mean + lambda_j * (raw_mean - grand_mean)
+    
+    <span class="k">print</span>(<span class="s">f&quot;Clinic {j:1d} | {n_j:5d} | {raw_mean:10.2f} | {lambda_j:18.3f} | {partial_pooled:15.2f} | {(partial_pooled - grand_mean):18.2f}&quot;</span>)
+
+icc = var_u / (var_u + var_e)
+<span class="k">print</span>(<span class="s">&quot;-&quot;</span> * <span class="n">82</span>)
+<span class="k">print</span>(<span class="s">f&quot;Grand Mean: {grand_mean:.2f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;True Intraclass Correlation Coefficient (ICC): {icc:.3f}&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;Notice: Small clinics (n=3, 4) experience heavy shrinkage toward the grand mean (lambda ~ 0.85),&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;while large clinics (n=100) retain their observed data with virtually zero shrinkage (lambda ~ 0.99).&quot;</span>)
+</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Treating cluster variables as fixed effect dummies when predicting on new clusters: Fixed effect models cannot generalise to unseen clusters; random effects models quantify the population distribution of cluster effects.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using standard Maximum Likelihood instead of REML for small sample sizes: ML variance estimates have downward bias of order O(p/n).</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Ignoring random slopes: If treatment effects vary systematically across clusters, fitting only random intercepts yields overconfident standard errors for treatment.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>Why does partial pooling in mixed-effects models outperform 'no pooling' (separate models per group) on small clusters?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because empirical Bayes shrinkage pulls noisy small-sample estimates toward the population grand mean, borrowing statistical strength from the rest of the dataset</span></button><button class="opt" type="button"><b>B</b><span>Because partial pooling deletes small groups entirely</span></button><button class="opt" type="button"><b>C</b><span>Because no pooling requires GPU supercomputers</span></button><button class="opt" type="button"><b>D</b><span>Because mixed models do not allow regression slopes</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> No pooling overfits small groups due to high sampling variance. Partial pooling shrinks small groups toward the population mean while allowing large groups to remain close to their sample means.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>What does the Intraclass Correlation Coefficient (ICC) represent?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The Pearson correlation between x and y</span></button><button class="opt" type="button"><b>B</b><span>The R-squared value of the residuals</span></button><button class="opt" type="button"><b>C</b><span>The proportion of total variance explained by grouping structure, or the expected correlation between two observations from the same cluster</span></button><button class="opt" type="button"><b>D</b><span>The p-value of the fixed effect slopes</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> ICC = \sigma_u^2 / (\sigma_u^2 + \sigma^2). It measures how much variance is between clusters versus within clusters, defining intra-cluster correlation.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>Why is Restricted Maximum Likelihood (REML) preferred over standard Maximum Likelihood (ML) for estimating variance components?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because ML cannot invert positive-definite matrices</span></button><button class="opt" type="button"><b>B</b><span>Because REML forces random effects to equal zero</span></button><button class="opt" type="button"><b>C</b><span>Because REML runs faster than standard matrix multiplication</span></button><button class="opt" type="button"><b>D</b><span>Because REML accounts for the degrees of freedom consumed by fixed effect parameters, eliminating the downward bias inherent in standard ML variance estimates</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Just as Bessel's correction divides by n-1 instead of n in sample variance, REML adjusts for estimated fixed effects \hat{\boldsymbol{\beta}}, yielding strictly unbiased variance component estimates.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/ols-inference-t-tests-f-test-r2-and-adjusted-r2/"><small class="kicker">Concept</small><b>OLS Inference: t, F &amp; R-Squared</b></a><a href="../../concepts/residual-diagnostics-and-heteroscedasticity/"><small class="kicker">Concept</small><b>Residuals &amp; Heteroscedasticity</b></a><a href="../../concepts/anova-and-post-hoc-tests/"><small class="kicker">Concept</small><b>ANOVA and Post-Hoc Tests</b></a><a href="../../models/bayesian_linear_regression/"><small class="kicker">Regression</small><b>Bayesian linear regression</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/logistic-regression-inference-odds-ratios-wald-tests/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Statistics</small><b>Logistic Regression Inference</b></a>
+    <a class="pager-next" href="../../concepts/a-b-testing-end-to-end/"><small>Next · Statistics <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>A/B Testing End-to-End</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

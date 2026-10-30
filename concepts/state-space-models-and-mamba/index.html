@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>State-Space Models and Mamba: Linear-Time Sequence Modelling via Selective State Spaces · Learn · Yogesh Awate</title>
+<meta name="description" content="Replacing quadratic self-attention with linear-time continuous state spaces, selective time-varying matrices, and hardware-aware associative scans.">
+<meta property="og:title" content="State-Space Models and Mamba: Linear-Time Sequence Modelling via Selective State Spaces · Learn · Yogesh Awate">
+<meta property="og:description" content="Replacing quadratic self-attention with linear-time continuous state spaces, selective time-varying matrices, and hardware-aware associative scans.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="state-space-models-and-mamba">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-neural">Path 08 · Deep learning</a> / Architectures / Lesson 29 of 42</span>
+    <h1 class="case-title">State-Space Models and Mamba: Linear-Time Sequence Modelling via Selective State Spaces</h1>
+    <p class="lede rise" style="--d:3">Replacing quadratic self-attention with linear-time continuous state spaces, selective time-varying matrices, and hardware-aware associative scans.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="3"><i><b></b></i>Advanced</span></span>
+      <span class="tagline">18 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Deep learning · Architectures</dd>
+          <dt>Level</dt><dd>Advanced</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">The Transformer's self-attention mechanism is the cornerstone of modern language modelling, but it suffers from a fundamental computational bottleneck: sequence length complexity scales quadratically $O(L^2)$ in compute and memory. Processing 100,000-token contexts in Transformers requires astronomical VRAM. State-Space Models (SSMs), culminating in Mamba (Gu & Dao, 2023), achieve Transformer-grade language quality with linear $O(L)$ scaling and constant-time inference.</p>
+        <p>Classical Structured State-Space Models (S4) map a continuous 1D input signal $x(t)$ to continuous latent state $h(t) \in \mathbb{R}^N$ and output $y(t)$ via continuous linear differential equations: $h'(t) = \mathbf{A} h(t) + \mathbf{B} x(t)$ and $y(t) = \mathbf{C} h(t)$.</p>
+        <p>Continuous SSMs are discretized using step size $\Delta$ (Euler or Bilinear transform) into recurrence forms: $h_t = \bar{\mathbf{A}} h_{t-1} + \bar{\mathbf{B}} x_t$. This recurrence enables $O(1)$ constant-time inference per step, like an RNN.</p>
+        <p>During training, because system matrices $(\mathbf{A}, \mathbf{B}, \mathbf{C})$ were time-invariant (LTI), the entire sequence recurrence can be unrolled into a single global convolution $y = x * \bar{\mathbf{K}}$, computable in $O(L \log L)$ time using Fast Fourier Transforms (FFTs).</p>
+        <p>However, LTI models cannot perform content-based reasoning (e.g. selectively storing an important token and forgetting trivia). Mamba introduces Selective State Spaces: making $\mathbf{B}, \mathbf{C},$ and $\Delta$ dynamic input-dependent functions of $x_t$. While this breaks global convolution, Mamba preserves parallel training using hardware-aware parallel associative scans implemented in GPU SRAM.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine reading an epic novel series like War and Peace. A Transformer is like an analyst who re-reads every single previous page from chapter 1 every time they read a new sentence to cross-reference every word. Mamba is like a brilliant detective who maintains a dynamic mental summary notebook: as each new line of dialogue arrives, they update their mental state in constant time, effortlessly remembering vital plot clues without rescanning thousands of earlier pages.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Input projection: Project input token $x_t$ through linear expansion layers into dimension $D$.</li><li>Input-dependent selection: Compute dynamic time-step $\Delta_t = \operatorname{softplus}(\operatorname{Linear}(x_t))$, input matrix $\mathbf{B}_t = \operatorname{Linear}(x_t)$, and output matrix $\mathbf{C}_t = \operatorname{Linear}(x_t)$.</li><li>Discretise continuous parameters: Compute discrete transition $\bar{\mathbf{A}}_t = \exp(\Delta_t \mathbf{A})$ and discrete input scale $\bar{\mathbf{B}}_t = \Delta_t \mathbf{B}_t$.</li><li>Parallel associative scan (Training): Compute sequence recurrence in $O(\log L)$ parallel depth using associative scan operations directly inside high-speed GPU SRAM.</li><li>Recurrent generation (Inference): Execute sequential state update $h_t = \bar{\mathbf{A}}_t h_{t-1} + \bar{\mathbf{B}}_t x_t$ with constant $O(1)$ step latency and zero KV-cache memory expansion.</li><li>Output gating & projection: Modulate output with gating branch and project back to model dimension.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Continuous State-Space Differential Equation</h3><div class="formula">h'(t) = \mathbf{A} h(t) + \mathbf{B} x(t), \quad y(t) = \mathbf{C} h(t)</div><p>Maps 1D continuous driving function $x(t)$ through continuous evolution matrix $\mathbf{A} \in \mathbb{R}^{N \times N}$ and input matrix $\mathbf{B}$.</p></li>
+          <li><h3>Zero-Order Hold (ZOH) Discretisation</h3><div class="formula">\bar{\mathbf{A}} = \exp(\Delta \mathbf{A}), \quad \bar{\mathbf{B}} = (\Delta \mathbf{A})^{-1} (\exp(\Delta \mathbf{A}) - \mathbf{I}) \cdot \Delta \mathbf{B} \approx \Delta \mathbf{B}</div><p>Transforms continuous parameters into discrete recurrence matrices using step size parameter $\Delta$.</p></li>
+          <li><h3>Selective Input-Dependent Parameterisation (Mamba)</h3><div class="formula">\mathbf{B}_t = \mathbf{W}_B x_t, \quad \mathbf{C}_t = \mathbf{W}_C x_t, \quad \Delta_t = \operatorname{softplus}(\mathbf{W}_\Delta x_t + \mathbf{b}_\Delta)</div><p>Parameters $\mathbf{B}, \mathbf{C}, \Delta$ vary dynamically with input $x_t$, allowing the network to filter out noise and selectively store key information.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Mamba achieves linear $O(L)$ training time and constant $O(1)$ inference memory per step.</li><li>Overcomes quadratic $O(L^2)$ attention bottlenecks for long sequence processing.</li><li>Selective state spaces make transition parameters input-dependent, unlocking selective memory and forgetting.</li><li>Hardware-aware parallel associative scans compute sequential recurrences efficiently in GPU SRAM.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> torch
+<span class="k">import</span> torch.nn <span class="k">as</span> nn
+<span class="k">import</span> torch.nn.functional <span class="k">as</span> F
+
+<span class="k">class</span> <span class="f">MinimalSSM</span>(nn.Module):
+    <span class="s">&quot;&quot;&quot;Educational demonstration of 1D Selective State-Space recurrence.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, d_model: int, d_state: int = <span class="n">16</span>):
+        <span class="k">super</span>().<span class="f">__init__</span>()
+        <span class="k">self</span>.d_model = d_model
+        <span class="k">self</span>.d_state = d_state
+        
+        <span class="c"># Continuous diagonal A parameter</span>
+        <span class="k">self</span>.A_log = nn.<span class="f">Parameter</span>(torch.<span class="f">log</span>(torch.<span class="f">arange</span>(<span class="n">1</span>, d_state + <span class="n">1</span>, dtype=torch.float32)))
+        
+        <span class="c"># Linear projections for selective B, C, Delta</span>
+        <span class="k">self</span>.x_proj = nn.<span class="f">Linear</span>(d_model, d_state * <span class="n">2</span> + <span class="n">1</span>, bias=<span class="k">False</span>)
+        <span class="k">self</span>.out_proj = nn.<span class="f">Linear</span>(d_model, d_model)
+
+    <span class="k">def</span> <span class="f">forward</span>(<span class="k">self</span>, x: torch.Tensor):
+        <span class="c"># x shape: [batch, seq_len, d_model]</span>
+        batch, seq_len, _ = x.shape
+        A = -torch.<span class="f">exp</span>(<span class="k">self</span>.A_log)  <span class="c"># [d_state] (enforce stability: negative real values)</span>
+        
+        y_out = []
+        <span class="c"># Sequential inference recurrence: O(1) memory per step!</span>
+        <span class="k">for</span> b <span class="k">in</span> <span class="k">range</span>(batch):
+            h = torch.<span class="f">zeros</span>(<span class="k">self</span>.d_model, <span class="k">self</span>.d_state, device=x.device)
+            y_seq = []
+            <span class="k">for</span> t <span class="k">in</span> <span class="k">range</span>(seq_len):
+                x_t = x[b, t]  <span class="c"># [d_model]</span>
+                proj = <span class="k">self</span>.<span class="f">x_proj</span>(x_t)
+                B_t = proj[:<span class="k">self</span>.d_state]
+                C_t = proj[<span class="k">self</span>.d_state:<span class="n">2</span>*<span class="k">self</span>.d_state]
+                delta_t = F.<span class="f">softplus</span>(proj[-<span class="n">1</span>:])
+                
+                <span class="c"># Discretise: A_bar = exp(delta * A), B_bar = delta * B</span>
+                A_bar = torch.<span class="f">exp</span>(delta_t * A)  <span class="c"># [d_state]</span>
+                B_bar = delta_t * B_t          <span class="c"># [d_state]</span>
+                
+                <span class="c"># Update latent state</span>
+                h = h * A_bar + x_t.<span class="f">unsqueeze</span>(-<span class="n">1</span>) * B_bar
+                <span class="c"># Emit output: y = h * C</span>
+                y_t = torch.<span class="f">sum</span>(h * C_t, dim=-<span class="n">1</span>)  <span class="c"># [d_model]</span>
+                y_seq.<span class="f">append</span>(y_t)
+            y_out.<span class="f">append</span>(torch.<span class="f">stack</span>(y_seq))
+            
+        <span class="k">return</span> <span class="k">self</span>.<span class="f">out_proj</span>(torch.<span class="f">stack</span>(y_out))
+
+ssm = <span class="f">MinimalSSM</span>(d_model=<span class="n">32</span>, d_state=<span class="n">8</span>)
+tokens = torch.<span class="f">randn</span>(<span class="n">2</span>, <span class="n">10</span>, <span class="n">32</span>)
+out = <span class="f">ssm</span>(tokens)
+<span class="k">print</span>(<span class="s">&quot;SSM Processed sequence shape:&quot;</span>, out.shape)
+<span class="k">print</span>(<span class="s">&quot;Inference scales O(1) in memory: Zero KV-cache footprint!&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Loss of global associative recall: While Mamba excels at compression and reasoning, standard SSMs struggle with literal verbatim document retrieval compared to full KV-cache attention.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Sequential Python implementation slowness: Writing sequential loops in PyTorch is extremely slow; Mamba requires custom CUDA kernels with SRAM associative scans for training throughput.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Initialization sensitivity: Initializing matrix $\mathbf{A}$ randomly causes gradient explosion; $\mathbf{A}$ must be initialized with HiPPO (High-order Polynomial Projection) theory.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>What is the primary computational bottleneck of the Transformer self-attention mechanism that State-Space Models (SSMs) solve?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Transformers cannot run on GPUs</span></button><button class="opt" type="button"><b>B</b><span>Transformers only support binary inputs</span></button><button class="opt" type="button"><b>C</b><span>Attention cannot process text tokens</span></button><button class="opt" type="button"><b>D</b><span>Self-attention scales quadratically $O(L^2)$ in compute and memory with sequence length $L$, making long contexts prohibitive</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Pairwise dot-product attention computes an $L \times L$ attention matrix, scaling quadratically $O(L^2)$. SSMs process sequences with linear $O(L)$ complexity.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>What crucial breakthrough did Mamba introduce over classical LTI (Linear Time-Invariant) State-Space Models like S4?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Mamba eliminated backpropagation</span></button><button class="opt" type="button"><b>B</b><span>Mamba removed all matrix multiplications</span></button><button class="opt" type="button"><b>C</b><span>Mamba replaced neural networks with decision trees</span></button><button class="opt" type="button"><b>D</b><span>Selective State Spaces: making parameters $(\mathbf{B}, \mathbf{C}, \Delta)$ dynamic functions of the input token, allowing content-based filtering and selective memory</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Classical S4 used fixed time-invariant matrices, preventing content-dependent memory. Mamba makes matrices input-dependent, enabling selective filtering and forgetting.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>How does Mamba's inference memory consumption compare to a Transformer with KV-cache during autoregressive generation?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Mamba requires storing the full dataset in RAM</span></button><button class="opt" type="button"><b>B</b><span>Both models consume identical memory</span></button><button class="opt" type="button"><b>C</b><span>Mamba maintains a constant-size $O(1)$ hidden state per step, requiring zero growing KV-cache regardless of how many thousands of tokens are generated</span></button><button class="opt" type="button"><b>D</b><span>Mamba requires 10x more memory than a Transformer</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Transformers store keys and values for every past token in a growing KV-cache. Mamba maintains a fixed-size latent state vector, updating it in $O(1)$ constant time.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/the-attention-mechanism/"><small class="kicker">Concept</small><b>The attention mechanism</b></a><a href="../../models/recurrent_neural_networks/"><small class="kicker">Deep learning</small><b>RNNs</b></a><a href="../../models/lstm_networks/"><small class="kicker">Deep learning</small><b>LSTMs</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/mixture-of-experts/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>Mixture of experts (MoE)</b></a>
+    <a class="pager-next" href="../../concepts/normalising-flows/"><small>Next · Deep learning <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Normalising flows</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Vanishing and Exploding Gradients, Gradient Clipping · Learn · Yogesh Awate</title>
+<meta name="description" content="In deep architectures, backpropagation repeatedly chains Jacobian matrices across layers: if their singular values average less than 1, gradients decay to zero; if greater than 1, they blow up to NaN.">
+<meta property="og:title" content="Vanishing and Exploding Gradients, Gradient Clipping · Learn · Yogesh Awate">
+<meta property="og:description" content="In deep architectures, backpropagation repeatedly chains Jacobian matrices across layers: if their singular values average less than 1, gradients decay to zero; if greater than 1, they blow up to NaN.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="vanishing-and-exploding-gradients-clipping">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-neural">Path 08 · Deep learning</a> / Training fundamentals / Lesson 8 of 42</span>
+    <h1 class="case-title">Vanishing and Exploding Gradients, Gradient Clipping</h1>
+    <p class="lede rise" style="--d:3">In deep architectures, backpropagation repeatedly chains Jacobian matrices across layers: if their singular values average less than 1, gradients decay to zero; if greater than 1, they blow up to NaN.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/backpropagation-and-autodiff/">Backprop and autodiff</a> <a href="../../concepts/activation-functions/">Activation functions</a> <a href="../../concepts/weight-initialisation-xavier-and-he/">Weight initialisation: Xavier, He</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Deep learning · Training fundamentals</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Training networks with dozens or hundreds of layers requires gradients to propagate reliably from loss to input. Without architectural safeguards, repeated matrix products cause gradients to vanish exponentially into numerical insignificance or explode into non-finite NaNs. Modern deep learning addresses this through gradient norm clipping, non-saturating activations, normalisation, and residual skip connections.</p>
+        <p>Backpropagation computes the gradient of the loss with respect to early layer weights by chaining together partial derivatives across every intervening layer. In an $L$-layer network, the derivative at layer 1 is proportional to the product of $L-1$ weight matrices and activation Jacobian matrices. If the effective amplification factor at each layer is even slightly below one—say, $0.8$—then after 50 layers the gradient scales as $0.8^{50} \approx 1.4 \times 10^{-5}$. The earliest layers receive virtually no update signal and freeze in their random initialisation state.</p>
+        <p>Conversely, if the effective amplification factor exceeds one—for instance, $1.2$—the product over 50 layers compounds to $1.2^{50} \approx 9,100$. A single step with this inflated gradient sends parameters flying into regions of extreme loss, overflowing floating-point limits and producing `NaN` loss values. This exploding gradient phenomenon is especially acute in recurrent networks unrolled across long sequences and in deep networks encountering sharp, steep loss cliffs.</p>
+        <p>Gradient clipping is the primary algorithmic safeguard against exploding gradients. Rather than letting an unexpectedly large gradient take a disastrous leap, clipping caps the global vector norm at a predetermined threshold $c$ (typically $1.0$). By rescaling the entire gradient vector proportionally when its length exceeds $c$, the update preserves its exact descent direction while strictly bounding the maximum spatial displacement.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Like whispering a message down a telephone line of 50 people: if each participant speaks at 80% volume, the message fades to complete silence (vanishing); if each shouts 20% louder than the last, the final output is a deafening, blown-out screech (exploding).</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Monitor layer-wise gradient norms: record $\lVert \nabla_{W_l} \mathcal{L} \rVert_2$ across depth during training to spot early decay or sudden magnitude spikes.</li><li>Deploy non-saturating activations: replace sigmoid ($\sigma'(z) \le 0.25$) and tanh ($\tanh'(z) \le 1.0$) with <a class="inline" href="../../concepts/activation-functions/">ReLU or GELU</a> to prevent derivative saturation.</li><li>Enforce variance-preserving initialisation: apply <a class="inline" href="../../concepts/weight-initialisation-xavier-and-he/">He/Kaiming initialisation</a> so weight tensors maintain signal variance across forward and backward sweeps.</li><li>Apply global gradient norm clipping: compute the concatenated Euclidean norm across all parameter gradients and rescale by $c / \lVert g \rVert_2$ whenever $\lVert g \rVert_2 &gt; c$.</li><li>Incorporate residual pathways: insert skip connections ($x + f(x)$) to grant backpropagated gradients an unhindered linear highway directly to early layers.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Backpropagated gradient product across layers</h3><div class="formula">$$\frac{\partial \mathcal{L}}{\partial h_1} = \frac{\partial \mathcal{L}}{\partial h_L} \prod_{l=1}^{L-1} \left( W_{l+1}^T \operatorname{diag}\big(\sigma'(z_l)\big) \right)$$</div><p>$h_l$ is the hidden representation at layer $l$, $W_{l+1}$ is the weight matrix, and $\operatorname{diag}(\sigma'(z_l))$ is the diagonal Jacobian of the activation function. If the spectral radius of the transition matrix satisfies $\rho &lt; 1$, the gradient norm shrinks as $O(\rho^L)$ (vanishing); if $\rho &gt; 1$, it expands as $O(\rho^L)$ (exploding).</p></li>
+          <li><h3>Global gradient norm clipping</h3><div class="formula">$$g_{\text{clipped}} = \begin{cases} g &amp; \text{if } \lVert g \rVert_2 \le c \\ c \frac{g}{\lVert g \rVert_2} &amp; \text{if } \lVert g \rVert_2 &gt; c \end{cases}, \qquad \lVert g \rVert_2 = \sqrt{\sum_{i=1}^P g_i^2}$$</div><p>$g$ is the unrolled vector of all $P$ model parameter gradients, $\lVert g \rVert_2$ is its global Euclidean length, and $c$ is the maximum permitted clipping threshold (commonly $0.5$ to $1.0$). Global norm clipping preserves the exact geometric angle and descent direction of $g$, scaling only its step length.</p></li>
+          <li><h3>Value-based clipping comparison</h3><div class="formula">$$g_i' = \operatorname{clip}(g_i, -c, c) = \min(\max(g_i, -c), c)$$</div><p>Element-wise clipping truncates each gradient scalar independently. While computationally trivial, clipping by value alters the orientation of the gradient vector in multi-dimensional space, skewing the optimiser away from the true steepest descent trajectory.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Vanishing gradients freeze parameter updates in early layers, preventing the network from learning rich hierarchical representations.</li><li>Global norm clipping rescales the gradient vector without altering its directional angle, protecting against catastrophic steps near steep loss cliffs.</li><li>While clipping halts gradient explosions, vanishing gradients require structural remedies: non-saturating activations (ReLU/GELU), He initialisation, and residual skip connections.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># 1. Compare derivative decay across a 10-layer depth</span>
+depth = <span class="n">10</span>
+sig_max_deriv = <span class="n">0.25</span>  <span class="c"># max derivative of standard sigmoid is 0.25</span>
+relu_deriv = <span class="n">1.0</span>      <span class="c"># active ReLU derivative is exactly 1.0</span>
+
+sig_decay = sig_max_deriv ** depth
+relu_decay = relu_deriv ** depth
+<span class="k">print</span>(<span class="s">f&quot;10-layer derivative product (sigmoid): {sig_decay:.2e}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;10-layer derivative product (active ReLU): {relu_decay:.2f}&quot;</span>)
+
+<span class="c"># 2. Global gradient norm clipping demonstration</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+grads = np.<span class="f">array</span>([<span class="n">30.0</span>, -<span class="n">25.0</span>, <span class="n">15.0</span>, <span class="n">10.0</span>])
+norm = np.linalg.<span class="f">norm</span>(grads)
+threshold = <span class="n">1.0</span>
+
+<span class="k">if</span> norm &gt; threshold:
+    clipped = grads * (threshold / norm)
+<span class="k">else</span>:
+    clipped = grads
+
+clipped_norm = np.linalg.<span class="f">norm</span>(clipped)
+cos_sim = np.<span class="f">dot</span>(grads, clipped) / (norm * clipped_norm)
+
+<span class="k">print</span>(<span class="s">f&quot;Original gradient vector: {grads.tolist()}, norm = {norm:.2f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Clipped gradient vector:  {np.round(clipped, 4).tolist()}, norm = {clipped_norm:.4f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Cosine directional similarity: {cos_sim:.4f} (direction perfectly preserved)&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Clipping coordinate-wise by value instead of global norm, which distorts the search direction and degrades optimisation trajectories.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Setting the clipping threshold $c$ excessively small (e.g. $10^{-4}$), which effectively degenerates gradient descent into fixed-step sign navigation.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming gradient clipping cures vanishing gradients: clipping only bounds maximum gradient magnitude and cannot resurrect derivatives that have collapsed to zero.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>Why does global norm clipping preserve the search direction of gradient descent while element-wise value clipping does not?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because global norm clipping converts the gradient to a probability distribution</span></button><button class="opt" type="button"><b>B</b><span>Because element-wise clipping only operates on the final output layer</span></button><button class="opt" type="button"><b>C</b><span>Because global norm clipping sets negative gradients to zero</span></button><button class="opt" type="button"><b>D</b><span>Because global norm clipping applies the exact same scalar multiplier to every gradient coordinate</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Global norm clipping multiplies the entire gradient vector $g$ by the scalar $c / \lVert g \rVert_2$, scaling its magnitude without rotating its spatial angle in parameter space. Value clipping truncates individual components independently, shifting the vector direction.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>Why did deep neural networks built with sigmoid activation functions suffer severely from vanishing gradients?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because sigmoid derivatives are discontinuous at zero</span></button><button class="opt" type="button"><b>B</b><span>Because sigmoid functions cannot be computed on modern GPUs</span></button><button class="opt" type="button"><b>C</b><span>Because sigmoid activations produce negative variance in hidden layers</span></button><button class="opt" type="button"><b>D</b><span>Because the maximum value of the sigmoid derivative is only 0.25, guaranteeing exponential decay $(0.25)^L$ across depth</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Since $\sigma'(z) = \sigma(z)(1 - \sigma(z)) \le 0.25$, chaining $L$ sigmoid activations multiplies gradients by at most $0.25$ per layer, shrinking early layer gradients to near zero even with ideal weight scales.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>Which of the following architectural innovations provides a direct structural solution to vanishing gradients in 100+ layer networks?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Replacing AdamW with vanilla SGD without momentum</span></button><button class="opt" type="button"><b>B</b><span>Increasing the learning rate by a factor of 10 every epoch</span></button><button class="opt" type="button"><b>C</b><span>Residual skip connections ($x + f(x)$)</span></button><button class="opt" type="button"><b>D</b><span>Element-wise gradient clipping by value</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Residual connections introduce an additive identity pathway $h_{l+1} = h_l + f(h_l)$. During backpropagation, $\frac{\partial \mathcal{L}}{\partial h_l} = \frac{\partial \mathcal{L}}{\partial h_{l+1}}(I + \frac{\partial f}{\partial h_l})$, ensuring that gradients can pass back unattenuated through the identity matrix term.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q4</span>If a model experiences exploding gradients causing loss values to display as NaN, what is the immediate recommended operational fix?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Add global gradient norm clipping (e.g. threshold = 1.0) and verify weight initialisation</span></button><button class="opt" type="button"><b>B</b><span>Double the batch size while keeping weights unclipped</span></button><button class="opt" type="button"><b>C</b><span>Increase the learning rate to bypass the unstable loss region</span></button><button class="opt" type="button"><b>D</b><span>Remove all normalisation layers from the network</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Global gradient norm clipping immediately halts runaway update magnitudes near steep ravines, preventing parameters from jumping into invalid floating-point overflow regimes.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/optimisers-sgd-momentum-rmsprop-adam-adamw/"><small class="kicker">Concept</small><b>Optimisers: SGD to AdamW</b></a><a href="../../concepts/learning-rate-schedules-and-warm-up/"><small class="kicker">Concept</small><b>LR schedules and warm-up</b></a><a href="../../concepts/normalisation-batch-layer-rms/"><small class="kicker">Concept</small><b>Normalisation: Batch, Layer, RMS</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/learning-rate-schedules-and-warm-up/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>LR schedules and warm-up</b></a>
+    <a class="pager-next" href="../../concepts/normalisation-batch-layer-rms/"><small>Next · Deep learning <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Normalisation: Batch, Layer, RMS</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

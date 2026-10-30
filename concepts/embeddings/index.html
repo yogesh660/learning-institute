@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Embeddings and Positional Encoding · Learn · Yogesh Awate</title>
+<meta name="description" content="An embedding turns each token id into a learned vector, so that similar tokens end up close together. Positional encodings add the word order that attention would otherwise ignore.">
+<meta property="og:title" content="Embeddings and Positional Encoding · Learn · Yogesh Awate">
+<meta property="og:description" content="An embedding turns each token id into a learned vector, so that similar tokens end up close together. Positional encodings add the word order that attention would otherwise ignore.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="embeddings">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-nlp">Path 10 · Natural language processing</a> / Meaning / Lesson 23 of 52</span>
+    <h1 class="case-title">Embeddings and Positional Encoding</h1>
+    <p class="lede rise" style="--d:3">An embedding turns each token id into a learned vector, so that similar tokens end up close together. Positional encodings add the word order that attention would otherwise ignore.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">22 min</span>
+      <span class="tagline lab">Live lab</span>
+      <span class="prereq">Before this: <a href="../../concepts/tokenization/">Tokenization (BPE)</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Natural language processing · Meaning</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>3 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#arch"><span>03</span>The architecture</a></li><li><a href="#watch"><span>04</span>Watch it work</a></li><li><a href="#lab"><span>05</span>Try it</a></li><li><a href="#maths"><span>06</span>The maths</a></li><li><a href="#takeaways"><span>07</span>Key takeaways</a></li><li><a href="#code"><span>08</span>In code</a></li><li><a href="#quiz"><span>09</span>Check yourself</a></li><li><a href="#related"><span>10</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">A token id like <code class="no-math">2746</code> is just a name: id 2746 is not “bigger” or “closer” to anything than id 12. An <strong>embedding</strong> replaces each id with a row of a learned table, a vector of a few hundred numbers, and training arranges those vectors so that their geometry means something: similar words point in similar directions.</p>
+        <p>The naive way to feed ids to a network is <strong>one-hot</strong> vectors: 50,257 numbers, all zero except a single 1. They are huge, and every pair of words is equally far apart, so “cat” is no more similar to “kitten” than to “carburettor”. Multiplying a one-hot vector by a weight matrix just picks out one row of it, so in practice we skip the multiplication and <strong>look the row up</strong>. That table of rows is the embedding layer: a matrix of shape vocabulary × d.</p>
+        <p>The rows start random and are learned. Words that appear in similar contexts receive similar gradients and drift together (“You shall know a word by the company it keeps”). Directions in the space can become meaningful too: the step from <em>man</em> to <em>woman</em> is roughly the same as from <em>king</em> to <em>queen</em>. Word2vec and GloVe learned such vectors on their own; in a Transformer the table is simply the first layer and is trained together with everything else.</p>
+        <p>Self-attention compares every token with every other token but has no idea where they are: “dog bites man” and “man bites dog” would look identical. So a <strong>positional encoding</strong> is added to each token’s embedding. The original Transformer used fixed sine and cosine waves of different wavelengths; GPT-2 and BERT learn one vector per position; many current LLMs (Llama, Mistral) use rotary embeddings (RoPE), which rotate queries and keys by an angle that depends on position.</p>
+        <p>Embeddings at the input are <strong>static</strong>: “bank” has one vector whether it is a river bank or a money bank. After a few attention layers the vector is mixed with its context and becomes <strong>contextual</strong>. Those contextual vectors, pooled over a sentence, are the “sentence embeddings” used for semantic search and retrieval-augmented generation.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>A map of a city where every word is a building. At first the buildings are scattered at random. Over training, words that are used for the same purposes move into the same neighbourhood, and the streets between neighbourhoods start to mean something: walking “north” might always mean “more formal”, walking “east” “female rather than male”.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Tokenize the text into ids (<a class="inline" href="../../concepts/tokenization/">see tokenization</a>).</li><li>Create an embedding matrix $E$ of shape $|V| \times d$ (for GPT-2 small: $50{,}257 \times 768$), initialised with small random numbers.</li><li>For each id, take its row: $e_t = E[\text{id}_t]$. A sentence of $T$ tokens becomes a $T \times d$ matrix.</li><li>Add a position vector $p_t$ for each position $t$ (sinusoidal, learned, or applied later as a rotation with RoPE).</li><li>Feed the result into the first <a class="inline" href="../../models/transformer_networks/">Transformer</a> block. Gradients from the loss flow all the way back into the rows of $E$ that were used.</li><li>Optionally reuse $E^\top$ as the output layer (weight tying), so the same table maps ids to vectors and vectors back to scores over ids.</li></ol>
+      </section>
+      <section class="reveal" id="arch">
+        <h2 class="h3"><span>03</span> The architecture</h2>
+        <p>The input layer of a GPT-2-sized Transformer, from token ids to the vectors the first attention layer reads. Hover over any part (or tap it on a phone) for its shape, its parameter count and what it learns.</p>
+        <div class="arch" data-architecture="embedding" style="margin-top:18px"><noscript><p class="lab-noscript">The diagram needs JavaScript.</p></noscript></div>
+      </section>
+      <section class="reveal" id="watch">
+        <h2 class="h3"><span>04</span> Watch it work</h2>
+        <p>Press play, or step through at your own pace. Each step adds one idea.</p>
+        <div class="explainer" data-explainer="embed" style="margin-top:18px"><noscript><p class="lab-noscript">The animation needs JavaScript.</p></noscript></div>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>05</span> Try it</h2>
+        <p>Sixteen words and about a hundred short sentences (“the queen lives in the palace”, “the puppy chased the ball”). Press <em>Train</em> to learn 8-dimensional word vectors from scratch with a GloVe-style objective, right here in your browser; the map shows them projected to 2-D. Then click words to find their nearest neighbours, or try a vector analogy.</p>
+        <div class="lab" data-lab="embeddings" data-kind="concepts" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>Press <em>Train</em> and watch the random cloud sort itself into royals, ordinary people, animals and food.</li><li>Click “cat”: its nearest neighbour is “dog”, not “kitten”. Both are adult pets that sleep all day, so they share more contexts.</li><li>Switch to <em>Analogy</em> and pick king − man + woman: the arrow from man to woman, added to king, lands next to queen.</li><li>Press <em>Random start</em> and look at the analogy again: before training, the arithmetic finds nothing.</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>06</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Lookup = one-hot times a matrix</h3><div class="formula">$$e = \mathbf 1_{\text{id}}^\top E = E[\text{id}, :] \in \mathbb R^{d}$$</div><p>Mathematically a linear layer applied to a one-hot vector, implemented as an index operation because the one-hot vector would be enormous.</p></li>
+          <li><h3>Similarity is an angle</h3><div class="formula">$$\cos(u, v) = \frac{u \cdot v}{\lVert u\rVert\,\lVert v\rVert} \in [-1, 1]$$</div><p>1 means the same direction, 0 unrelated, −1 opposite. Nearest-neighbour search over embeddings almost always uses cosine similarity or a dot product.</p></li>
+          <li><h3>Learning from co-occurrence (GloVe)</h3><div class="formula">$$J = \sum_{i,j} f(X_{ij})\,\big(w_i \cdot \tilde w_j + b_i + \tilde b_j - \log X_{ij}\big)^2$$</div><p>$X_{ij}$ counts how often word $j$ appears near word $i$. Fitting dot products to log counts forces words with similar neighbours to have similar vectors. The lab on this page trains exactly this kind of objective.</p></li>
+          <li><h3>Sinusoidal positional encoding</h3><div class="formula">$$PE_{(t,\,2i)} = \sin\!\Big(\frac{t}{10000^{2i/d}}\Big), \qquad PE_{(t,\,2i+1)} = \cos\!\Big(\frac{t}{10000^{2i/d}}\Big)$$</div><p>Each pair of dimensions is a clock ticking at a different speed: early dimensions change every token, late ones barely change across thousands. Any shift $k$ is a fixed rotation, so relative positions are easy to read off.</p></li>
+          <li><h3>What the first block receives</h3><div class="formula">$$x_t = E[\text{id}_t] + p_t, \qquad X \in \mathbb R^{T \times d}$$</div><p>The original Transformer also multiplied $E[\text{id}_t]$ by $\sqrt d$ so the embedding is not drowned out by the position signal.</p></li>
+          <li><h3>Parameter count</h3><div class="formula">$$|V| \cdot d = 50{,}257 \times 768 \approx 38.6\text{ M}$$</div><p>About 31% of GPT-2 small’s 124 M parameters sit in this one table, which is why output layers usually share (tie) it.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>07</span> Key takeaways</h2>
+        <div class="box use"><ul><li>An embedding layer is a learned lookup table: id in, vector out. It is trained like any other weight.</li><li>Closeness in embedding space (cosine similarity) reflects similar usage, not dictionary meaning.</li><li>Attention is blind to order; positional information must be added (sinusoidal, learned or RoPE).</li><li>Input embeddings are static; vectors after attention layers are contextual, and those are what sentence embeddings and semantic search use.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>08</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> math, torch, torch.nn <span class="k">as</span> nn
+
+vocab, d, T = <span class="n">50257</span>, <span class="n">768</span>, <span class="n">8</span>
+ids = torch.<span class="f">randint</span>(<span class="n">0</span>, vocab, (<span class="n">1</span>, T))              <span class="c"># stand-in for one tokenized sentence</span>
+
+tok_emb = nn.<span class="f">Embedding</span>(vocab, d)                 <span class="c"># the lookup table, vocab x d</span>
+pos_emb = nn.<span class="f">Embedding</span>(<span class="n">1024</span>, d)                  <span class="c"># learned positions (GPT-2 / BERT style)</span>
+x = <span class="f">tok_emb</span>(ids) + <span class="f">pos_emb</span>(torch.<span class="f">arange</span>(T))      <span class="c"># (1, T, d): what the first block reads</span>
+
+<span class="c"># fixed sinusoidal positions (original Transformer)</span>
+<span class="k">def</span> <span class="f">sinusoidal</span>(T, d):
+    pos = torch.<span class="f">arange</span>(T).<span class="f">unsqueeze</span>(<span class="n">1</span>)
+    freq = torch.<span class="f">exp</span>(torch.<span class="f">arange</span>(<span class="n">0</span>, d, <span class="n">2</span>) * (-math.<span class="f">log</span>(<span class="n">10000.0</span>) / d))
+    pe = torch.<span class="f">zeros</span>(T, d)
+    pe[:, <span class="n">0</span>::<span class="n">2</span>], pe[:, <span class="n">1</span>::<span class="n">2</span>] = torch.<span class="f">sin</span>(pos * freq), torch.<span class="f">cos</span>(pos * freq)
+    <span class="k">return</span> pe
+
+<span class="c"># cosine similarity between two token vectors</span>
+cos = nn.functional.<span class="f">cosine_similarity</span>(tok_emb.weight[ids[<span class="n">0</span>, <span class="n">1</span>]], tok_emb.weight[ids[<span class="n">0</span>, <span class="n">2</span>]], dim=<span class="n">0</span>)
+
+<span class="c"># pre-trained sentence embeddings for search (pip install sentence-transformers)</span>
+<span class="c"># from sentence_transformers import SentenceTransformer</span>
+<span class="c"># model = SentenceTransformer(&quot;all-MiniLM-L6-v2&quot;)          # 384-dimensional vectors</span>
+<span class="c"># vecs = model.encode([&quot;a cat on a mat&quot;, &quot;a kitten on a rug&quot;], normalize_embeddings=True)</span></code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Comparing embeddings from two different models; each model has its own space and the axes do not line up.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Reading analogies like king − man + woman ≈ queen as proof of understanding: they work for some relations and fail quietly for many others, and they inherit biases from the training text.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using the raw input embeddings of a Transformer as sentence embeddings; use a model trained for sentence similarity.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Forgetting positional information in a custom attention model, then wondering why word order has no effect.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>09</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>An embedding layer is mathematically equivalent to:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Multiplying a one-hot vector by a weight matrix</span></button><button class="opt" type="button"><b>B</b><span>A softmax over the vocabulary</span></button><button class="opt" type="button"><b>C</b><span>A convolution</span></button><button class="opt" type="button"><b>D</b><span>A fixed hash function</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The product picks out one row, so frameworks implement it as a lookup.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>Why do Transformers need positional encodings?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To make embeddings smaller</span></button><button class="opt" type="button"><b>B</b><span>Self-attention treats its input as an unordered set</span></button><button class="opt" type="button"><b>C</b><span>To speed up the softmax</span></button><button class="opt" type="button"><b>D</b><span>To normalise the vectors</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Without positions, shuffling the words gives the same set of outputs.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>Two words have cosine similarity close to 1. That means:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>They always appear next to each other</span></button><button class="opt" type="button"><b>B</b><span>They are spelled similarly</span></button><button class="opt" type="button"><b>C</b><span>They have the same token id</span></button><button class="opt" type="button"><b>D</b><span>Their vectors point in nearly the same direction, usually because they are used in similar contexts</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Similar contexts produce similar gradients, which pull the vectors together.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q4</span>How many parameters does a 50,257 × 768 embedding table have?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>About 124 million</span></button><button class="opt" type="button"><b>B</b><span>About 38.6 million</span></button><button class="opt" type="button"><b>C</b><span>50,257</span></button><button class="opt" type="button"><b>D</b><span>768</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> One 768-number row per token: $50{,}257 \times 768$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q5</span>What is the key difference between a token's input embedding and its representation after passing through several Transformer attention layers?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The input embedding has 10 times more dimensions than the contextual representation</span></button><button class="opt" type="button"><b>B</b><span>The input embedding is static (identical regardless of sentence context), while the representation after attention is contextual (tailored to surrounding words)</span></button><button class="opt" type="button"><b>C</b><span>The input embedding only represents vowels</span></button><button class="opt" type="button"><b>D</b><span>The input embedding is non-differentiable, while the contextual representation is learned</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In the input lookup table $E$, "bank" has one fixed vector. Self-attention layers mix information across tokens, transforming it into a contextual embedding that distinguishes between a financial bank and a river bank.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q6</span>Why do many language model architectures (such as GPT-2) tie the weights of the input embedding matrix $E$ with the final output linear projection layer ($E^\top$)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To save memory and parameters (about 31% of GPT-2 small's parameters) while enforcing that input and output token representations live in the same geometric space</span></button><button class="opt" type="button"><b>B</b><span>To make the model run without GPU memory</span></button><button class="opt" type="button"><b>C</b><span>To force output logits to sum to 1 without needing a softmax</span></button><button class="opt" type="button"><b>D</b><span>To prevent the model from learning non-linear functions</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The input embedding table and output projection matrix both have shape $|V| \times d$. Reusing $E^\top$ at the output eliminates nearly 38.6 million redundant parameters in GPT-2 small and links input and output semantic representations.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q7</span>Two token embedding vectors are $u = [3.0, 4.0]^\top$ and $v = [1.0, 0.0]^\top$. What is the cosine similarity $\cos(u, v) = \frac{u \cdot v}{\|u\| \|v\|}$ between these two embeddings?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$0.75$</span></button><button class="opt" type="button"><b>B</b><span>$0.30$</span></button><button class="opt" type="button"><b>C</b><span>$0.60$</span></button><button class="opt" type="button"><b>D</b><span>$0.50$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The dot product is $u \cdot v = (3 \times 1) + (4 \times 0) = 3.0$. The Euclidean norms are $\|u\| = \sqrt{3^2 + 4^2} = \sqrt{25} = 5.0$ and $\|v\| = 1.0$. Thus $\cos(u, v) = \frac{3.0}{5.0 \times 1.0} = 0.60$.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q8</span>What is the main operational limitation of learned absolute positional embeddings (as in GPT-2 and BERT) compared with sinusoidal or relative positional encodings?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Learned positional embeddings make the attention matrix non-invertible</span></button><button class="opt" type="button"><b>B</b><span>Learned positional embeddings prevent the network from attending to the first token</span></button><button class="opt" type="button"><b>C</b><span>Learned positional embeddings cannot be stored in GPU memory</span></button><button class="opt" type="button"><b>D</b><span>Learned positional embeddings have a fixed maximum length (e.g. 1024 tokens) and cannot easily generalise to sequence lengths longer than seen during training</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A learned positional table has a hard capacity limit (e.g. nn.Embedding(1024, d)). Any sequence longer than 1024 has no allocated position vector to look up, whereas mathematical sinusoidal or rotary encodings can naturally extrapolate to arbitrary sequence lengths.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q9</span>During a training step on a batch of text containing 100 distinct token IDs from a vocabulary of 50,000 tokens, how many rows of the input embedding matrix $E$ receive non-zero gradient updates during backpropagation?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Exactly half the vocabulary (25,000 rows)</span></button><button class="opt" type="button"><b>B</b><span>Exactly the 100 rows corresponding to the tokens present in that batch</span></button><button class="opt" type="button"><b>C</b><span>All 50,000 rows</span></button><button class="opt" type="button"><b>D</b><span>0 rows, because embeddings are fixed lookup tables</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because each token position looks up exactly one row $E[\text{id}]$, gradients only flow back to the rows that were indexed during the forward pass. The remaining 49,900 rows receive zero gradient, which is why optimisers often support sparse updates for embedding layers.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q10</span>In the original Transformer paper ("Attention Is All You Need"), what is the usual explanation for multiplying the token embeddings by $\sqrt{d_{\text{model}}}$ before adding the sinusoidal positional encodings ($x_t = \sqrt{d} \cdot E[\text{id}_t] + p_t$)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To make the embedding matrix orthogonal</span></button><button class="opt" type="button"><b>B</b><span>To convert cosine distances into Euclidean distances</span></button><button class="opt" type="button"><b>C</b><span>Because embedding tables are typically initialised with variance $\sim 1/d$, giving vectors an expected L2 norm of $\sim 1.0$, whereas positional encodings have an L2 norm of $\sqrt{d/2}$; multiplying by $\sqrt{d}$ scales embedding magnitudes up so the semantic content is not overwhelmed by the positional signal</span></button><button class="opt" type="button"><b>D</b><span>To ensure that the embedding vectors sum to 1.0 across the sequence</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> With standard initialisation, embedding vector entries have standard deviation $\approx 1/\sqrt{d}$, giving the vector norm $\mathcal{O}(1)$. Sinusoidal positional vectors, composed of sines and cosines, have an expected norm of $\sqrt{d/2}$. Multiplying embeddings by $\sqrt{d}$ boosts their norm to $\mathcal{O}(\sqrt{d})$, keeping semantic word identity and positional information balanced in magnitude.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q11</span>Under the standard sinusoidal positional encoding formulas $PE_{(t, 2i)} = \sin\left(\frac{t}{10000^{2i/d}}\right)$ and $PE_{(t, 2i+1)} = \cos\left(\frac{t}{10000^{2i/d}}\right)$, what are the values of the first two dimensions $(PE_{(0, 0)}, PE_{(0, 1)})$ for the very first token at position $t = 0$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$(0.0, \, 0.0)$</span></button><button class="opt" type="button"><b>B</b><span>$(1.0, \, 0.0)$</span></button><button class="opt" type="button"><b>C</b><span>$(0.0, \, 1.0)$</span></button><button class="opt" type="button"><b>D</b><span>$(1.0, \, 1.0)$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> At position $t = 0$, for index $i=0$: $PE_{(0, 0)} = \sin\left(\frac{0}{10000^0}\right) = \sin(0) = 0.0$. For the odd dimension $2i+1 = 1$: $PE_{(0, 1)} = \cos(0) = 1.0$. Thus the vector begins with $(0.0, 1.0)$.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q12</span>A language model has a vocabulary of 64,000 tokens and an embedding dimension of $d_{\text{model}} = 1,024$. How many learnable parameters reside in the input embedding table alone?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Approximately 6.55 million</span></button><button class="opt" type="button"><b>B</b><span>65,536</span></button><button class="opt" type="button"><b>C</b><span>Approximately 65.5 million</span></button><button class="opt" type="button"><b>D</b><span>Approximately 131.1 million</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The embedding table is a matrix of size $|V| \times d = 64{,}000 \times 1{,}024 = 65{,}536{,}000 \approx 65.5$ million parameters. Untied embeddings would require a second table of identical size at the output head ($\approx 131.1$ million total).</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>10</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/tokenization/"><small class="kicker">Concept</small><b>Tokenization (BPE)</b></a><a href="../../models/transformer_networks/"><small class="kicker">Natural language processing</small><b>Transformers</b></a><a href="../../concepts/gradient-descent/"><small class="kicker">Concept</small><b>Gradient descent</b></a><a href="../../models/recurrent_neural_networks/"><small class="kicker">Deep learning</small><b>RNNs</b></a><a href="../../models/lstm_networks/"><small class="kicker">Deep learning</small><b>LSTMs</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/glove-and-fasttext/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Natural language processing</small><b>GloVe &amp; FastText</b></a>
+    <a class="pager-next" href="../../concepts/sentence-embeddings-and-sbert/"><small>Next · Natural language processing <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Sentence Embeddings &amp; SBERT</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/language.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/explainers.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/architecture.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

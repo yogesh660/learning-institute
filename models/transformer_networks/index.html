@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Transformers and Self-Attention · Learn · Yogesh Awate</title>
+<meta name="description" content="No recurrence at all: every token looks directly at every other token through attention, all in parallel. The architecture behind modern LLMs.">
+<meta property="og:title" content="Transformers and Self-Attention · Learn · Yogesh Awate">
+<meta property="og:description" content="No recurrence at all: every token looks directly at every other token through attention, all in parallel. The architecture behind modern LLMs.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="transformer_networks">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-nlp">Path 10 · Natural language processing</a> / Language models / Lesson 32 of 52</span>
+    <h1 class="case-title">Transformers and Self-Attention</h1>
+    <p class="lede rise" style="--d:3">No recurrence at all: every token looks directly at every other token through attention, all in parallel. The architecture behind modern LLMs.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="3"><i><b></b></i>Advanced</span></span>
+      <span class="tagline">24 min</span>
+      <span class="tagline lab">Live lab</span>
+      <span class="prereq">Before this: <a href="../../concepts/embeddings/">Embeddings</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Task</dt><dd>Classification</dd>
+          <dt>Family</dt><dd>Attention network</dd>
+          <dt>What it learns</dt><dd>Embeddings, Q/K/V projections, feed-forward weights</dd>
+          <dt>Training cost</dt><dd>$O(T^2 d + T d^2)$ per layer, parallel over $T$</dd>
+          <dt>Prediction cost</dt><dd>Same per sequence</dd>
+          <dt>In code</dt><dd><code class="no-math">torch.<wbr>nn.<wbr>TransformerEncoder</code></dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>How it works</a></li><li><a href="#arch"><span>03</span>The architecture</a></li><li><a href="#watch"><span>04</span>Watch it work</a></li><li><a href="#lab"><span>05</span>Try it</a></li><li><a href="#maths"><span>06</span>The maths</a></li><li><a href="#tuning"><span>07</span>Hyperparameters</a></li><li><a href="#when"><span>08</span>When to use it</a></li><li><a href="#code"><span>09</span>In code</a></li><li><a href="#quiz"><span>10</span>Check yourself</a></li><li><a href="#related"><span>11</span>Related lessons</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">A Transformer replaces "read step by step" with "look everywhere at once". Each token asks a question (a <strong>query</strong>), every token advertises what it contains (a <strong>key</strong>), and each token collects information (the <strong>values</strong>) from the tokens whose keys best match its query.</p>
+        <p>In "The animal did not cross the street because it was tired", the word "it" needs to find "animal". An RNN would have to carry "animal" through six steps of memory. Self-attention lets "it" compare itself with every word directly and pull in information from the best match, however far away it is. Distance stops mattering.</p>
+        <p>The comparison is a dot product between the query of one token and the key of another, scaled and turned into weights with a <a class="inline" href="../../concepts/sigmoid-and-link-functions/">softmax</a>. The output for a token is the weighted average of all value vectors. Several <strong>heads</strong> do this in parallel, each with its own query/key/value projections, so one head can track meaning ("which noun is this pronoun about?") while another tracks position ("what came just before me?"). Since attention ignores order, <strong>positional encodings</strong> are added to the inputs. Stack attention with small feed-forward layers, residual connections and layer norm, and you have a Transformer block.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>A room where everyone holds up a sign describing themselves (keys), each person has a question in mind (query), and each listens most closely to the people whose signs match their question.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> How it works</h2>
+        <ol class="steps"><li><a class="inline" href="../../concepts/tokenization/">Tokenize</a> the text into ids, turn each id into a vector with an <a class="inline" href="../../concepts/embeddings/">embedding</a> table and add positional encodings.</li><li>For each token, compute query $q = xW_Q$, key $k = xW_K$ and value $v = xW_V$.</li><li>Score every pair: $q_i \cdot k_j / \sqrt{d_k}$; mask future tokens in decoders.</li><li>Softmax each row of scores into attention weights that sum to 1.</li><li>Output for token $i$: $\sum_j a_{ij} v_j$. Do this in several heads, concatenate, and project.</li><li>Add a feed-forward layer, residual connections and layer norm; stack many blocks; pool (or use a [CLS] token) and classify.</li></ol>
+      </section>
+      <section class="reveal" id="arch">
+        <h2 class="h3"><span>03</span> The architecture</h2>
+        <p>The full GPT-2 small architecture (124 million parameters), from raw text to the next-token prediction. Hover over any part (or tap it on a phone) for its shape, its parameter count and what it does; the amber tags open the details inside each part.</p>
+        <div class="arch" data-architecture="transformer" style="margin-top:18px"><noscript><p class="lab-noscript">The diagram needs JavaScript.</p></noscript></div>
+      </section>
+      <section class="reveal" id="watch">
+        <h2 class="h3"><span>04</span> Watch it work</h2>
+        <p>Press play, or step through at your own pace. Each step adds one idea.</p>
+        <div class="explainer" data-explainer="transformer" style="margin-top:18px"><noscript><p class="lab-noscript">The animation needs JavaScript.</p></noscript></div>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>05</span> Try it</h2>
+        <p>A toy Transformer you can read. Each word has a small, labelled embedding (is it a noun, an animal, a place, a pronoun, a verb). Click a word to make it the query: the arcs show where it looks, and the panel below works through the scores, softmax and output. Two heads are available: one matches meaning, one looks at position.</p>
+        <div class="lab" data-lab="transformer_networks" data-kind="models" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>Click "it": the meaning head sends most of its attention to "animal", six words away.</li><li>Switch to the position head: every word now looks mainly at the word just before it.</li><li>Lower the temperature: attention becomes almost one-hot. Raise it: attention spreads evenly and the output becomes an average of everything.</li><li>Turn on the causal mask and click the first word: it can only attend to itself.</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>06</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Scaled dot-product attention</h3><div class="formula">$$\operatorname{Attention}(Q, K, V) = \operatorname{softmax}\!\Big(\frac{QK^\top}{\sqrt{d_k}}\Big)V$$</div><p>Row $i$ of the softmax matrix is the attention distribution of token $i$ over all tokens.</p></li>
+          <li><h3>Why divide by √d</h3><div class="formula">$$q, k \sim \mathcal N(0, I_{d}) \;\Rightarrow\; \operatorname{Var}(q\cdot k) = d$$</div><p>Without scaling, larger dimensions give larger scores, the softmax becomes nearly one-hot, and its gradients vanish. The lab’s temperature slider shows that effect.</p></li>
+          <li><h3>Multi-head attention</h3><div class="formula">$$\operatorname{MHA}(X) = [\text{head}_1; \dots; \text{head}_h]\,W_O, \qquad \text{head}_j = \operatorname{Attention}(XW_Q^{j}, XW_K^{j}, XW_V^{j})$$</div><p>Each head can specialise in a different kind of relationship.</p></li>
+          <li><h3>One Transformer block (pre-norm, as in GPT-2)</h3><div class="formula">$$H = X + \operatorname{MHA}(\operatorname{LN}(X)), \qquad Y = H + \operatorname{FFN}(\operatorname{LN}(H)), \qquad \operatorname{FFN}(h) = \operatorname{GELU}(hW_1 + b_1)W_2 + b_2$$</div><p>Attention mixes information <em>between</em> tokens; the feed-forward network (usually 4× wider) processes each token <em>on its own</em>. The residual additions keep a direct path for gradients through dozens of layers, and layer norm keeps every vector at a stable scale.</p></li>
+          <li><h3>Predicting the next token</h3><div class="formula">$$p(\text{next} = w \mid x_{\le t}) = \operatorname{softmax}\!\big(h_t E^\top / \tau\big)_w, \qquad \mathcal L = -\frac1T\sum_t \log p(x_{t+1} \mid x_{\le t})$$</div><p>The last vector is scored against every row of the (tied) embedding table $E$. Training uses cross-entropy at every position at once; generation samples one token, appends it and repeats. $\tau$ is the sampling temperature.</p></li>
+          <li><h3>Cost</h3><div class="formula">$$\text{time and memory} \propto T^2 d$$</div><p>Every token attends to every token, so long contexts are expensive; much current research is about making this cheaper.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="tuning">
+        <h2 class="h3"><span>07</span> Hyperparameters</h2>
+        <div class="table-wrap"><table class="kv">
+          <thead><tr><th>Setting</th><th>What it does</th><th>Typical choice</th></tr></thead>
+          <tbody><tr><td><span class="hp">d_model, heads, layers</span></td><td>Model width, attention heads, depth.</td><td>Start from a pre-trained checkpoint.</td></tr><tr><td><span class="hp">max sequence length</span></td><td>Context window.</td><td>Cost grows with its square.</td></tr><tr><td><span class="hp">learning rate + warm-up</span></td><td>Fine-tuning schedule.</td><td>2e-5 to 5e-5 with linear warm-up.</td></tr><tr><td><span class="hp">dropout</span></td><td>Regularisation.</td><td>0.1.</td></tr></tbody>
+        </table></div>
+      </section>
+      <section class="reveal" id="when">
+        <h2 class="h3"><span>08</span> When to use it</h2>
+        <div class="split2">
+          <div class="box good"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Strengths</h3><ul><li>Direct access between any two positions: long-range context is easy.</li><li>Fully parallel over the sequence, so training scales on GPUs.</li><li>Pre-trained models transfer to new tasks with little labelled data.</li></ul></div>
+          <div class="box bad"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg> Limitations</h3><ul><li>Quadratic cost in sequence length.</li><li>Data- and compute-hungry when trained from scratch.</li><li>Large models are expensive to serve.</li></ul></div>
+          <div class="box use"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> Reach for it when</h3><p>Text, code, and increasingly images, audio and time series, especially when a pre-trained model exists.</p></div>
+          <div class="box avoid"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Think twice when</h3><p>Tiny datasets with no pre-trained model, or short simple sequences where a GRU or a linear model is enough.</p></div>
+        </div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>09</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> torch, torch.nn <span class="k">as</span> nn
+<span class="k">from</span> sklearn.datasets <span class="k">import</span> load_digits
+
+<span class="c"># read each 8x8 digit image as a sequence: 8 time steps, 8 pixels per step</span>
+digits = <span class="f">load_digits</span>()
+X = torch.<span class="f">tensor</span>(digits.images / <span class="n">16.0</span>, dtype=torch.float32)    <span class="c"># (n, 8, 8)</span>
+y = torch.<span class="f">tensor</span>(digits.target)
+
+<span class="k">class</span> <span class="f">TinyTransformer</span>(nn.Module):
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, d=<span class="n">64</span>, heads=<span class="n">4</span>, layers=<span class="n">2</span>):
+        <span class="k">super</span>().<span class="f">__init__</span>()
+        <span class="k">self</span>.embed = nn.<span class="f">Linear</span>(<span class="n">8</span>, d)
+        <span class="k">self</span>.pos = nn.<span class="f">Parameter</span>(torch.<span class="f">zeros</span>(<span class="n">1</span>, <span class="n">8</span>, d))                <span class="c"># learned positional encoding</span>
+        block = nn.<span class="f">TransformerEncoderLayer</span>(d, heads, dim_feedforward=<span class="n">128</span>, batch_first=<span class="k">True</span>)
+        <span class="k">self</span>.encoder = nn.<span class="f">TransformerEncoder</span>(block, layers)
+        <span class="k">self</span>.out = nn.<span class="f">Linear</span>(d, <span class="n">10</span>)
+
+    <span class="k">def</span> <span class="f">forward</span>(<span class="k">self</span>, x):
+        h = <span class="k">self</span>.<span class="f">encoder</span>(<span class="k">self</span>.<span class="f">embed</span>(x) + <span class="k">self</span>.pos)                   <span class="c"># every row attends to every row</span>
+        <span class="k">return</span> <span class="k">self</span>.<span class="f">out</span>(h.<span class="f">mean</span>(dim=<span class="n">1</span>))
+
+<span class="c"># for real text, fine-tune a pre-trained model instead:</span>
+<span class="c"># from transformers import AutoModelForSequenceClassification</span></code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Training a Transformer from scratch on a few thousand examples; fine-tune a pre-trained one.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Forgetting positional information: without it, "dog bites man" and "man bites dog" look identical.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Reading attention weights as explanations. They show where information flows, not why the model decided.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>10</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>In self-attention, what does a token’s query get compared with?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Its own value</span></button><button class="opt" type="button"><b>B</b><span>The keys of every token</span></button><button class="opt" type="button"><b>C</b><span>The output layer</span></button><button class="opt" type="button"><b>D</b><span>The previous hidden state</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Scores are $q_i \cdot k_j$ for all $j$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>Why are positional encodings needed?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To mask future tokens</span></button><button class="opt" type="button"><b>B</b><span>Attention by itself ignores word order</span></button><button class="opt" type="button"><b>C</b><span>To speed up training</span></button><button class="opt" type="button"><b>D</b><span>To normalise the values</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Shuffling the tokens would otherwise give the same set of outputs.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>How does attention’s cost grow with sequence length $T$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Not at all</span></button><button class="opt" type="button"><b>B</b><span>Linearly</span></button><button class="opt" type="button"><b>C</b><span>Quadratically</span></button><button class="opt" type="button"><b>D</b><span>Logarithmically</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A $T \times T$ score matrix.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q4</span>What does a causal mask do?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Hides future tokens so each token only attends to itself and the past</span></button><button class="opt" type="button"><b>B</b><span>Drops attention heads</span></button><button class="opt" type="button"><b>C</b><span>Removes padding</span></button><button class="opt" type="button"><b>D</b><span>Reverses the sequence</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Needed for text generation, where the next token must not be visible.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q5</span>Why is the dot product $QK^\top$ divided by $\sqrt{d_k}$ in scaled dot-product attention?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To prevent negative values in the resulting score matrix</span></button><button class="opt" type="button"><b>B</b><span>Without scaling, for large key dimensions $d_k$ the dot products grow large, pushing the softmax into regions with extremely small gradients</span></button><button class="opt" type="button"><b>C</b><span>To enforce that the attention weights sum to $\sqrt{d_k}$ rather than 1.0</span></button><button class="opt" type="button"><b>D</b><span>To convert the matrix into an orthogonal basis</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> When components of $q$ and $k$ are independent with zero mean and unit variance, $\operatorname{Var}(q \cdot k) = d_k$. As $d_k$ increases, dot products have large magnitudes, driving softmax probabilities towards 0 and 1, which causes vanishing gradients during backpropagation.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q6</span>Token 1 has computed attention weights of $0.80$ to itself and $0.20$ to Token 2. The value vectors are $v_1 = [10.0, 0.0]^\top$ and $v_2 = [0.0, 20.0]^\top$. What is the resulting attention output vector for Token 1?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$[8.0, 4.0]^\top$</span></button><button class="opt" type="button"><b>B</b><span>$[2.0, 8.0]^\top$</span></button><button class="opt" type="button"><b>C</b><span>$[5.0, 10.0]^\top$</span></button><button class="opt" type="button"><b>D</b><span>$[10.0, 20.0]^\top$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The output is the weighted average of the value vectors: $0.80 \times [10.0, 0.0]^\top + 0.20 \times [0.0, 20.0]^\top = [8.0, 0.0]^\top + [0.0, 4.0]^\top = [8.0, 4.0]^\top$.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q7</span>What is the primary benefit of using Multi-Head Attention rather than a single large attention head with the same total dimension $d_{\text{model}}$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It prevents the quadratic complexity of self-attention</span></button><button class="opt" type="button"><b>B</b><span>It eliminates the need for feed-forward sub-layers</span></button><button class="opt" type="button"><b>C</b><span>It reduces the overall parameter count of the Transformer by half</span></button><button class="opt" type="button"><b>D</b><span>It allows the model to jointly attend to information from different representation subspaces and positions simultaneously</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Multiple heads project queries, keys, and values into different lower-dimensional subspaces. This allows distinct heads to specialise in different relationships—such as grammatical dependencies, coreference resolution, or relative position—which a single averaging operation would blur together.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q8</span>Inside a standard Transformer block (such as GPT or BERT), what is the function of the position-wise Feed-Forward Network (FFN) that follows the multi-head attention layer?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It aggregates all token vectors into a single sentence representation</span></button><button class="opt" type="button"><b>B</b><span>It downsamples the sequence length by half</span></button><button class="opt" type="button"><b>C</b><span>It computes cross-token attention between adjacent sentences</span></button><button class="opt" type="button"><b>D</b><span>It processes each token position independently and identically, applying a non-linear feature transformation (typically expanding 4× wider before projecting back)</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> While attention mixes information across different token positions, the FFN operates position-wise: it applies the same two-layer MLP with non-linearity (e.g. GELU or ReLU) to each token vector separately, allowing complex feature processing per token.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q9</span>In modern Transformer blocks (Pre-LN formulation, as used in GPT-2 and LLaMA), how is the residual connection and Layer Normalisation (LN) structured for input $X$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$H = \operatorname{MHA}(X) + \operatorname{LN}(X)$</span></button><button class="opt" type="button"><b>B</b><span>$H = \operatorname{MHA}(X) / \sqrt{d}$</span></button><button class="opt" type="button"><b>C</b><span>$H = X + \operatorname{MHA}(\operatorname{LN}(X))$</span></button><button class="opt" type="button"><b>D</b><span>$H = \operatorname{LN}(X + \operatorname{MHA}(X))$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In Pre-LN, normalisation is applied to the input branch before entering the attention sub-layer, and the original input $X$ is added directly via the residual connection: $H = X + \operatorname{MHA}(\operatorname{LN}(X))$. This preserves an unhindered gradient highway throughout dozens of stacked blocks.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q10</span>Given query vector $q = [2.0, -1.0, 2.0, 1.0]$ and key vector $k = [1.0, 2.0, 3.0, 2.0]$ with key dimension $d_k = 4$, what is the scaled attention score $\frac{q \cdot k}{\sqrt{d_k}}$ before softmax?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$4.0$</span></button><button class="opt" type="button"><b>B</b><span>$2.0$</span></button><button class="opt" type="button"><b>C</b><span>$8.0$</span></button><button class="opt" type="button"><b>D</b><span>$16.0$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The raw dot product is $q \cdot k = (2 \times 1) + (-1 \times 2) + (2 \times 3) + (1 \times 2) = 2 - 2 + 6 + 2 = 8.0$. Dividing by $\sqrt{d_k} = \sqrt{4} = 2.0$ yields $\frac{8.0}{2.0} = 4.0$. Failing to divide by $\sqrt{d_k}$ leaves the unscaled score $8.0$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q11</span>In a Transformer with model embedding dimension $d_{\text{model}} = 768$ and $h = 12$ attention heads, how is each head's query, key, and value dimension $d_k$ typically configured, and why?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$d_k = \sqrt{768} \approx 28$, to match the scaling denominator</span></button><button class="opt" type="button"><b>B</b><span>$d_k = d_{\text{model}} / h = 768 / 12 = 64$, ensuring that concatenating all 12 head outputs yields dimension 768 with computational cost matching single-head attention</span></button><button class="opt" type="button"><b>C</b><span>$d_k = 768$, so the total concatenated projection size is $12 \times 768 = 9,216$</span></button><button class="opt" type="button"><b>D</b><span>$d_k = 12$, matching the number of heads</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Standard Transformer architectures split the model width across the heads: $d_k = d_v = d_{\text{model}} / h = 768 / 12 = 64$. Concatenating the twelve 64-dimensional outputs reconstructs a 768-dimensional vector, keeping parameter count and FLOPs roughly equal to a single full-rank head.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q12</span>In next-token generation with logit vector $z$, what happens mathematically to the probability distribution as the sampling temperature $\tau \to 0$ versus when $\tau \to \infty$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>As $\tau \to 0$, the distribution becomes uniform over all tokens; as $\tau \to \infty$, it becomes deterministic</span></button><button class="opt" type="button"><b>B</b><span>The temperature only modifies negative logits, leaving positive logits unaffected</span></button><button class="opt" type="button"><b>C</b><span>As $\tau \to 0$, the distribution converges to a one-hot distribution placed entirely on the highest logit ($\operatorname{argmax}$ greedy selection); as $\tau \to \infty$, it converges to a uniform distribution over the entire vocabulary</span></button><button class="opt" type="button"><b>D</b><span>As $\tau \to 0$, all token probabilities become 0.0</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Dividing logits by small $\tau &gt; 0$ magnifies differences between scores: in the limit $\tau \to 0$, the largest logit dominates the softmax sum, yielding probability 1.0 for the top token (greedy decoding). Conversely, as $\tau \to \infty$, $z / \tau \to 0$, and $e^0 = 1$ for all tokens, converging to a completely uniform random distribution.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>11</span> Related lessons</h2>
+        <div class="related"><a href="../../models/lstm_networks/"><small class="kicker">Deep learning</small><b>LSTMs</b></a><a href="../../models/gru_networks/"><small class="kicker">Deep learning</small><b>GRUs</b></a><a href="../../models/convolutional_neural_networks/"><small class="kicker">Deep learning</small><b>CNNs</b></a><a href="../../concepts/tokenization/"><small class="kicker">Concept</small><b>Tokenization (BPE)</b></a><a href="../../concepts/embeddings/"><small class="kicker">Concept</small><b>Embeddings</b></a><a href="../../concepts/sigmoid-and-link-functions/"><small class="kicker">Concept</small><b>Sigmoid &amp; link functions</b></a><a href="../../concepts/gradient-descent/"><small class="kicker">Concept</small><b>Gradient descent</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/evaluating-embeddings-similarity-analogy-bias/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Natural language processing</small><b>Evaluating Embeddings &amp; Bias</b></a>
+    <a class="pager-next" href="../../concepts/bert-and-masked-language-models/"><small>Next · Natural language processing <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>BERT &amp; Masked LMs</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/sequences.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/explainers.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/architecture.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

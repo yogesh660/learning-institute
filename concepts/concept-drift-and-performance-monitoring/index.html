@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Concept Drift and Performance Monitoring · Learn · Yogesh Awate</title>
+<meta name="description" content="Tracking degradation in the statistical relationship between features and targets over time, separating label delay from true relationship decay.">
+<meta property="og:title" content="Concept Drift and Performance Monitoring · Learn · Yogesh Awate">
+<meta property="og:description" content="Tracking degradation in the statistical relationship between features and targets over time, separating label delay from true relationship decay.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="concept-drift-and-performance-monitoring">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-data-science">Path 07 · Data science</a> / Monitoring and drift / Lesson 27 of 47</span>
+    <h1 class="case-title">Concept Drift and Performance Monitoring</h1>
+    <p class="lede rise" style="--d:3">Tracking degradation in the statistical relationship between features and targets over time, separating label delay from true relationship decay.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/data-drift-psi-ks-and-jensen-shannon/">Data drift: PSI, KS and JS</a> <a href="../../concepts/cross-validation/">Cross-validation</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Data science · Monitoring and drift</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Data drift occurs when input features P(X) change; concept drift occurs when the fundamental relationship between inputs and targets P(Y | X) alters over time. A model trained on pre-pandemic consumer behaviour or historical fraud tactics will fail when human habits evolve, even if feature distributions appear normal. Monitoring concept drift through rolling performance tracking and sequential change-point detection (such as Page–Hinkley) ensures timely model retraining.</p>
+        <p>Imagine an automated fraud detection model protecting an online electronics store. Prior to holiday clearance sales, a purchase of £800 at 2:00 AM on a newly created customer account had a 95% probability of being fraudulent. During a flash holiday clearance sale, legitimate customers wake up at 2:00 AM to buy £800 discounted laptops. The input features (time = 2:00 AM, amount = £800) have not necessarily changed their individual ranges, but the conditional probability P(Fraud | Time, Amount) has dramatically flipped. This is concept drift: the underlying rules and causal relationships connecting features to targets have evolved.</p>
+        <p>Concept drift manifests in diverse temporal patterns: sudden drift (an abrupt change, such as a major tax law or quarantine policy introduced overnight), gradual drift (competitors slowly releasing alternative products over several months), incremental drift (gradual inflation steadily eroding purchasing power), or recurring cyclical drift (holiday spending patterns returning every November and December). Identifying the type of drift determines whether the model requires a quick retraining patch or a dynamic seasonal architecture.</p>
+        <p>The principal operational challenge in concept drift monitoring is ground-truth label delay. While input features are observed at the exact millisecond of inference, outcome labels require time to resolve. In credit lending, whether a borrower defaults might not be known for 180 days; in customer subscription churn, inactivity can only be confirmed after 60 days. Performance monitoring frameworks must track cohort maturity carefully, avoiding false alarms caused by incomplete recent label windows.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>A chess grandmaster who memorised opening books from the 19th century discovering that contemporary opponents play completely different defensive responses to the same opening moves.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Classify drift dynamics: determine whether relationship shifts are sudden (policy changes), gradual (inflation), or recurrent (holiday seasons).</li><li>Characterise label maturation latency: quantify the label delay distribution $T_{\text{delay}} = t_{\text{ground\_truth}} - t_{\text{prediction}}$ to define mature evaluation windows.</li><li>Track rolling operational metrics: compute rolling log-loss, Brier score, ROC-AUC, or WAPE strictly on cohorts with mature, fully resolved labels.</li><li>Deploy sequential change-point detection: run online statistical change detectors (such as the Page–Hinkley test) on prediction loss residuals to flag statistically significant shifts.</li><li>Execute tiered mitigation policies: fall back to conservative business rules upon detection, retrain models on recent temporal windows, or update prediction calibration curves.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Decomposition of joint distribution shift</h3><div class="formula">P_{\text{curr}}(X, Y) = P_{\text{curr}}(X) \cdot P_{\text{curr}}(Y \mid X)</div><p>Where pure data drift (covariate shift) corresponds to $P_{\text{curr}}(X) \ne P_{\text{ref}}(X)$ while $P(Y \mid X)$ remains fixed, whereas pure concept drift corresponds to $P_{\text{curr}}(Y \mid X) \ne P_{\text{ref}}(Y \mid X)$ even if input distribution $P(X)$ is completely unaltered.</p></li>
+          <li><h3>Page–Hinkley sequential change detection test</h3><div class="formula">m_t = \sum_{i=1}^t (e_i - \bar{e}_{\text{ref}} - \delta), \qquad M_t = \min_{1 \le i \le t} m_i, \qquad \text{Alarm if } (m_t - M_t) > \lambda</div><p>Where $e_i = L(y_i, \hat{y}_i)$ is prediction loss at time $i$, $\bar{e}_{\text{ref}}$ is the baseline error mean, $\delta$ is an allowable drift tolerance magnitude, and $\lambda$ is a detection threshold controlling false alarm rate.</p></li>
+          <li><h3>Exponential forgetting loss weighting</h3><div class="formula">\boldsymbol{\theta}^* = \arg\min_{\boldsymbol{\theta}} \sum_{t=1}^T \gamma^{T-t} L\left(y_t, f(x_t; \boldsymbol{\theta})\right), \qquad 0 < \gamma \le 1</div><p>Where decay factor $\gamma$ down-weights older observations exponentially relative to recent events, allowing continuous online retraining to adapt fluidly to evolving target concepts.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Concept drift represents changes in P(Y | X), altering the predictive mapping between inputs and outcomes.</li><li>Label delay is the central bottleneck in concept drift monitoring, requiring separate tracking of mature and immature cohorts.</li><li>Sequential change-point algorithms like Page–Hinkley detect statistically significant error increases without requiring arbitrary sliding window sizes.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">def</span> <span class="f">page_hinkley</span>(errors, ref_mean, delta=<span class="n">0.05</span>, threshold=<span class="n">8.0</span>):
+    cum_sum, min_cum_sum = <span class="n">0.0</span>, <span class="n">0.0</span>
+    <span class="k">for</span> t, e <span class="k">in</span> <span class="f">enumerate</span>(errors):
+        cum_sum += (e - ref_mean - delta)
+        <span class="k">if</span> cum_sum &lt; min_cum_sum:
+            min_cum_sum = cum_sum
+        <span class="k">if</span> (cum_sum - min_cum_sum) &gt; threshold:
+            <span class="k">return</span> t
+    <span class="k">return</span> -<span class="n">1</span>
+
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+<span class="c"># 100 stationary predictions (mean error ~0.15) followed by concept drift (~0.45)</span>
+stationary = np.random.<span class="f">exponential</span>(<span class="n">0.15</span>, size=<span class="n">100</span>)
+drifted = np.random.<span class="f">exponential</span>(<span class="n">0.45</span>, size=<span class="n">50</span>)
+stream = np.<span class="f">concatenate</span>([stationary, drifted])
+ref_mean = np.<span class="f">mean</span>(stationary[:<span class="n">50</span>])
+
+alarm_step = <span class="f">page_hinkley</span>(stream, ref_mean=ref_mean, delta=<span class="n">0.05</span>, threshold=<span class="n">8.0</span>)
+<span class="k">print</span>(<span class="s">f&quot;Baseline mean error: {ref_mean:.2f}, Post-drift mean: {np.mean(drifted):.2f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Drift introduced at step 100 -&gt; Alarm raised at step {alarm_step}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Confusing label maturation delay with model degradation: declaring false alarm failures on recent cohorts whose positive outcomes have not yet arrived.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Retraining blindly on recent data during cyclical drift: retraining exclusively on summer data deletes critical knowledge required for winter demand.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Relying on aggregate accuracy for imbalanced classification: overall accuracy can remain at 98% while recall on the critical positive class drops to zero.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>What distinguishes concept drift from data drift?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Concept drift alters the underlying relationship P(Y | X) between features and target, whereas data drift changes only the input distribution P(X)</span></button><button class="opt" type="button"><b>B</b><span>Concept drift only occurs in deep neural networks</span></button><button class="opt" type="button"><b>C</b><span>Data drift changes the relationship P(Y | X), whereas concept drift changes only input distributions P(X)</span></button><button class="opt" type="button"><b>D</b><span>Data drift can only be measured after ground-truth labels arrive</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Data drift (covariate shift) means the input distribution P(X) shifted. Concept drift means the actual relationship between inputs and outputs P(Y | X) changed, degrading model accuracy even if P(X) remains unchanged.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>Why is label verification delay a major challenge when monitoring concept drift in applications like credit default prediction?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because credit scores cannot be computed on weekends</span></button><button class="opt" type="button"><b>B</b><span>Because loan defaults take months or years to materialize, preventing instant measurement of true model error on recent cohorts</span></button><button class="opt" type="button"><b>C</b><span>Because banks are legally forbidden from storing historical predictions</span></button><button class="opt" type="button"><b>D</b><span>Because delayed labels cause models to train in reverse order</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Whether a loan defaults or a subscriber churns cannot be confirmed immediately at prediction time. Evaluating recent performance requires waiting for labels to mature or tracking leading proxy metrics.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>How does the Page–Hinkley sequential test detect concept drift in a streaming production environment?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By fitting an ARIMA model to the input features</span></button><button class="opt" type="button"><b>B</b><span>By accumulating deviations of prediction errors above an allowable tolerance delta and raising an alarm when the cumulative sum exceeds a threshold lambda</span></button><button class="opt" type="button"><b>C</b><span>By calculating the correlation between training features and test features</span></button><button class="opt" type="button"><b>D</b><span>By retraining the model at fixed 24-hour intervals regardless of error</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Page–Hinkley tracks cumulative deviations of error residuals against a baseline mean and tolerance parameter delta, signaling a change point when the difference from the running minimum exceeds threshold lambda.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/train-validation-test-splits-group-and-time-based/"><small class="kicker">Concept</small><b>Splits: group and time-based</b></a><a href="../../concepts/time-series-cross-validation/"><small class="kicker">Concept</small><b>Time-series cross-validation</b></a><a href="../../concepts/forecast-metrics-mae-mase-smape-wape/"><small class="kicker">Concept</small><b>Forecast metrics: MAE, MASE</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/data-drift-psi-ks-and-jensen-shannon/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Data science</small><b>Data drift: PSI, KS and JS</b></a>
+    <a class="pager-next" href="../../concepts/model-decay-and-retraining-policies/"><small>Next · Data science <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Model decay &amp; retraining</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

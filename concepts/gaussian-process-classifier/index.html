@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Gaussian Process Classification · Learn · Yogesh Awate</title>
+<meta name="description" content="Non-parametric Bayesian classification with principled uncertainty: master latent Gaussian processes, non-conjugate Bernoulli likelihoods, and the Laplace approximation.">
+<meta property="og:title" content="Gaussian Process Classification · Learn · Yogesh Awate">
+<meta property="og:description" content="Non-parametric Bayesian classification with principled uncertainty: master latent Gaussian processes, non-conjugate Bernoulli likelihoods, and the Laplace approximation.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="gaussian-process-classifier">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ml-toolbox">Path 06 · Machine learning toolbox</a> / Probabilistic models / Lesson 17 of 50</span>
+    <h1 class="case-title">Gaussian Process Classification</h1>
+    <p class="lede rise" style="--d:3">Non-parametric Bayesian classification with principled uncertainty: master latent Gaussian processes, non-conjugate Bernoulli likelihoods, and the Laplace approximation.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="3"><i><b></b></i>Advanced</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../models/bayesian_linear_regression/">Bayesian linear regression</a> <a href="../../concepts/logistic-regression-inference-odds-ratios-wald-tests/">Logistic Regression Inference</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Machine learning toolbox · Probabilistic models</dd>
+          <dt>Level</dt><dd>Advanced</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">While Gaussian Process Regression has a closed-form Gaussian posterior, GP classification involves a discrete non-Gaussian likelihood that destroys exact conjugacy. Approximate inference methods (Laplace approximation and Expectation Propagation) yield well-calibrated class probabilities and epistemic uncertainty.</p>
+        <p>In safety-critical classification domains—such as autonomous vehicle pedestrian detection, medical radiology triage, or financial stress forecasting—predicting a class label is insufficient; the model must communicate how confident it is in its prediction, distinguishing between familiar operational regimes and alien out-of-distribution inputs (epistemic uncertainty).</p>
+        <p>Gaussian Process Classification (GPC) models classification non-parametrically by placing a Gaussian Process prior over an unobserved continuous latent function $f(x) \sim \mathcal{GP}(m(x), k(x, x'))$. This latent function $f(x)$ represents log-odds scores across input space. To transform latent real numbers into valid probabilities, $f(x)$ is squashed through a sigmoid or probit link function: $\pi(x) = P(y = 1 \mid f(x)) = \sigma(f(x))$.</p>
+        <p>However, a fundamental mathematical hurdle arises: unlike Gaussian noise in regression, the discrete Bernoulli likelihood $p(y \mid f) = \prod_{i=1}^n \sigma(y_i f_i)$ is non-Gaussian. Multiplying a Gaussian prior $p(f)$ by a non-Gaussian likelihood yields a non-Gaussian posterior distribution $p(f \mid y) = p(y \mid f) p(f) / p(y)$ whose normalising marginal evidence integral is analytically intractable.</p>
+        <p>To resolve this intractability, GPC employs deterministic approximations. The Laplace Approximation fits a Gaussian $\mathcal{N}(\hat{f}, \Sigma)$ centred at the posterior mode $\hat{f} = \arg\max \log p(f \mid y)$ by taking the second-order Taylor expansion (negative Hessian) of the unnormalized log posterior. Test predictions are obtained by integrating the sigmoid link over the resulting Gaussian predictive distribution.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine a sound engineer setting an audio volume threshold. The underlying acoustics of the room vary smoothly across different corners (the continuous latent Gaussian process f(x)). A red warning light blinks on whenever the noise exceeds a decibel threshold (the discrete binary observation y in {0, 1}). We cannot measure the exact decibel level directly, only whether the red light blinked. The Laplace approximation acts as an acoustic reconstruction tool, calculating the most probable decibel level and uncertainty bands at every coordinate in the room.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Laplace Approximation Objective and Mode Finding</h3><div class="formula">\nabla \Psi(f) = -K^{-1} f + (t - \pi), \quad \nabla^2 \Psi(f) = -(K^{-1} + W), \quad W = \operatorname{diag}(\pi_i (1 - \pi_i))</div><p>Gradient and Hessian of unnormalized log posterior over latent vector f, where t_i = (y_i + 1)/2 and pi_i = sigma(f_i). Because W is positive semi-definite, the objective is strictly concave.</p></li>
+          <li><h3>Newton Update for Posterior Mode</h3><div class="formula">f^{\mathrm{new}} = (K^{-1} + W)^{-1} (W f + t - \pi) = K (I + W K)^{-1} (W f + t - \pi)</div><p>Numerically stable mode-finding iteration avoiding inversion of K directly, evaluating Cholesky factorisation on (B = I + W^{1/2} K W^{1/2}).</p></li>
+          <li><h3>Probit Sigmoid Approximation for Predictive Class Probability</h3><div class="formula">\bar{\pi}_* = \mathbb{E}_{f_* \sim \mathcal{N}(\mu_*, \sigma_*^2)}[\sigma(f_*)] \approx \sigma\left(\frac{\mu_*}{\sqrt{1 + \frac{\pi}{8} \sigma_*^2}}\right)</div><p>Convoluting a Gaussian distribution with a sigmoid is analytically intractable, but substituting a cumulative probit link yields this accurate closed-form approximation.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Non-parametric Bayesian classification placing a Gaussian Process prior over continuous latent log-odds function $f(x)$.</li><li>Discrete Bernoulli likelihood breaks conjugacy; exact posterior is non-Gaussian and intractable.</li><li>Laplace approximation fits a Gaussian distribution around the posterior mode $\hat{f}$ using the negative Hessian of the log posterior.</li><li>Produces principled epistemic uncertainty: on distant out-of-distribution inputs, latent variance increases and probabilities revert toward 0.50.</li><li>Provides superior probability calibration compared to uncalibrated neural networks and support vector machines.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Gaussian Process Classifier with Laplace Approximation from scratch</span>
+<span class="k">class</span> GPClassifierLaplace:
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, gamma=<span class="n">1.0</span>, max_iters=<span class="n">30</span>, tol=<span class="n">1e-6</span>):
+        <span class="k">self</span>.gamma = gamma
+        <span class="k">self</span>.max_iters = max_iters
+        <span class="k">self</span>.tol = tol
+        <span class="k">self</span>.X_train = <span class="k">None</span>
+        <span class="k">self</span>.y_train = <span class="k">None</span>
+        <span class="k">self</span>.f_hat = <span class="k">None</span>
+        <span class="k">self</span>.K = <span class="k">None</span>
+        <span class="k">self</span>.W = <span class="k">None</span>
+        
+    <span class="k">def</span> <span class="f">_rbf_kernel</span>(<span class="k">self</span>, X1, X2):
+        dists_sq = np.<span class="f">sum</span>(X1**<span class="n">2</span>, axis=<span class="n">1</span>)[:, <span class="k">None</span>] + np.<span class="f">sum</span>(X2**<span class="n">2</span>, axis=<span class="n">1</span>)[<span class="k">None</span>, :] - <span class="n">2</span> * (X1 @ X2.T)
+        <span class="k">return</span> np.<span class="f">exp</span>(-<span class="k">self</span>.gamma * np.<span class="f">maximum</span>(dists_sq, <span class="n">0</span>))
+        
+    <span class="k">def</span> <span class="f">fit</span>(<span class="k">self</span>, X, y):
+        <span class="k">self</span>.X_train = X
+        <span class="k">self</span>.y_train = y  <span class="c"># y in {0, 1}</span>
+        n = <span class="k">len</span>(X)
+        
+        <span class="c"># 1. Compute kernel matrix with jitter for numerical stability</span>
+        <span class="k">self</span>.K = <span class="k">self</span>.<span class="f">_rbf_kernel</span>(X, X) + <span class="n">1e-6</span> * np.<span class="f">eye</span>(n)
+        
+        <span class="c"># 2. Newton-Raphson iteration to find posterior mode f_hat</span>
+        f = np.<span class="f">zeros</span>(n)
+        <span class="k">for</span> it <span class="k">in</span> <span class="k">range</span>(<span class="k">self</span>.max_iters):
+            pi = <span class="n">1.0</span> / (<span class="n">1.0</span> + np.<span class="f">exp</span>(-np.<span class="f">clip</span>(f, -<span class="n">30</span>, <span class="n">30</span>)))
+            <span class="c"># W = diag(pi * (1 - pi))</span>
+            w = pi * (<span class="n">1.0</span> - pi)
+            W = np.<span class="f">diag</span>(w)
+            
+            <span class="c"># Stable Cholesky factorisation of (I + W^{1/2} K W^{1/2})</span>
+            W_sqrt = np.<span class="f">diag</span>(np.<span class="f">sqrt</span>(w))
+            B = np.<span class="f">eye</span>(n) + W_sqrt @ <span class="k">self</span>.K @ W_sqrt
+            L = np.linalg.<span class="f">cholesky</span>(B)
+            
+            grad = <span class="k">self</span>.y_train - pi
+            b = W @ f + grad
+            <span class="c"># Solve (K^{-1} + W) f_new = b via Woodbury identity</span>
+            a = b - W_sqrt @ np.linalg.<span class="f">solve</span>(L.T, np.linalg.<span class="f">solve</span>(L, W_sqrt @ <span class="k">self</span>.K @ b))
+            f_new = <span class="k">self</span>.K @ a
+            
+            diff = np.<span class="f">max</span>(np.<span class="f">abs</span>(f_new - f))
+            f = f_new
+            <span class="k">if</span> diff &lt; <span class="k">self</span>.tol:
+                break
+                
+        <span class="k">self</span>.f_hat = f
+        <span class="k">self</span>.pi_hat = <span class="n">1.0</span> / (<span class="n">1.0</span> + np.<span class="f">exp</span>(-np.<span class="f">clip</span>(f, -<span class="n">30</span>, <span class="n">30</span>)))
+        <span class="k">self</span>.w_hat = <span class="k">self</span>.pi_hat * (<span class="n">1.0</span> - <span class="k">self</span>.pi_hat)
+        
+    <span class="k">def</span> <span class="f">predict_proba</span>(<span class="k">self</span>, X_test):
+        n_train = <span class="k">len</span>(<span class="k">self</span>.X_train)
+        n_test = <span class="k">len</span>(X_test)
+        
+        K_star = <span class="k">self</span>.<span class="f">_rbf_kernel</span>(<span class="k">self</span>.X_train, X_test)
+        K_star_star = <span class="k">self</span>.<span class="f">_rbf_kernel</span>(X_test, X_test) + <span class="n">1e-6</span> * np.<span class="f">eye</span>(n_test)
+        
+        <span class="c"># Predictive latent mean: mu_* = K_*^T (y - pi)</span>
+        grad = <span class="k">self</span>.y_train - <span class="k">self</span>.pi_hat
+        mu_star = K_star.T @ grad
+        
+        <span class="c"># Predictive latent variance: sigma_*^2</span>
+        W_sqrt = np.<span class="f">diag</span>(np.<span class="f">sqrt</span>(<span class="k">self</span>.w_hat))
+        B = np.<span class="f">eye</span>(n_train) + W_sqrt @ <span class="k">self</span>.K @ W_sqrt
+        L = np.linalg.<span class="f">cholesky</span>(B)
+        v = np.linalg.<span class="f">solve</span>(L, W_sqrt @ K_star)
+        sigma2_star = np.<span class="f">diag</span>(K_star_star) - np.<span class="f">sum</span>(v**<span class="n">2</span>, axis=<span class="n">0</span>)
+        sigma2_star = np.<span class="f">maximum</span>(sigma2_star, <span class="n">1e-8</span>)
+        
+        <span class="c"># Probit link approximation for predictive probability</span>
+        kappa = <span class="n">1.0</span> / np.<span class="f">sqrt</span>(<span class="n">1.0</span> + np.pi * sigma2_star / <span class="n">8.0</span>)
+        p_star = <span class="n">1.0</span> / (<span class="n">1.0</span> + np.<span class="f">exp</span>(-kappa * mu_star))
+        
+        <span class="k">return</span> p_star, sigma2_star
+
+<span class="c"># Synthetic non-linear classification dataset</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+n_samples = <span class="n">80</span>
+X = np.random.<span class="f">uniform</span>(-<span class="n">3</span>, <span class="n">3</span>, (n_samples, <span class="n">2</span>))
+<span class="c"># True non-linear boundary: circle x1^2 + x2^2 &lt; 3.0</span>
+y = ((X[:, <span class="n">0</span>]**<span class="n">2</span> + X[:, <span class="n">1</span>]**<span class="n">2</span>) &lt; <span class="n">3.0</span>).<span class="f">astype</span>(int)
+
+gpc = <span class="f">GPClassifierLaplace</span>(gamma=<span class="n">0.5</span>)
+gpc.<span class="f">fit</span>(X, y)
+
+<span class="c"># Predict on inlier and far out-of-distribution point</span>
+test_points = np.<span class="f">array</span>([
+    [<span class="n">0.0</span>, <span class="n">0.0</span>],    <span class="c"># Firmly inside circle (Class 1)</span>
+    [<span class="n">1.8</span>, <span class="n">1.8</span>],    <span class="c"># Firmly outside circle (Class 0)</span>
+    [<span class="n">10.0</span>, <span class="n">10.0</span>],  <span class="c"># Far out-of-distribution point!</span>
+])
+
+probs, latent_vars = gpc.<span class="f">predict_proba</span>(test_points)
+
+<span class="k">print</span>(<span class="s">&quot;Gaussian Process Classification (Laplace Approximation):&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Point [0, 0] (Inside):      P(Y=1) = {probs[0]:.4f}, Latent Var = {latent_vars[0]:.3f} (High certainty)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Point [1.8, 1.8] (Outside):  P(Y=1) = {probs[1]:.4f}, Latent Var = {latent_vars[1]:.3f} (High certainty)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Point [10, 10] (OOD Alien): P(Y=1) = {probs[2]:.4f}, Latent Var = {latent_vars[2]:.3f} (High uncertainty reverting to 0.50!)&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Computational scaling: Mode finding and covariance inversion scale as $O(n^3)$ per Newton step, limiting vanilla GPC to a few thousand samples.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Laplace mode underestimation: The Laplace approximation fits the curvature at the mode; if the true posterior is skewed or multimodal, Expectation Propagation (EP) is more accurate.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Overfitting hyperparameter selection: Optimising marginal likelihood with respect to kernel lengthscales on small datasets can collapse onto narrow lengthscales.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>Why does Gaussian Process Classification require approximate inference (such as Laplace approximation) whereas GP Regression has a closed-form solution?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Classification has no training labels</span></button><button class="opt" type="button"><b>B</b><span>Kernel matrices cannot be computed for classification data</span></button><button class="opt" type="button"><b>C</b><span>The discrete Bernoulli/sigmoid likelihood is non-Gaussian, so the posterior distribution cannot be computed in closed form</span></button><button class="opt" type="button"><b>D</b><span>GP classification requires infinite samples</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In GP regression, Gaussian prior multiplied by Gaussian likelihood yields a Gaussian posterior. In classification, the Bernoulli likelihood is non-conjugate to the Gaussian prior, making the posterior integral intractable.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>What occurs to the predicted class probability of a Gaussian Process Classifier when presented with an input far outside the training support?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The algorithm crashes with a division by zero error</span></button><button class="opt" type="button"><b>B</b><span>It outputs exactly 1.0 with 100% confidence</span></button><button class="opt" type="button"><b>C</b><span>It outputs negative probabilities</span></button><button class="opt" type="button"><b>D</b><span>The latent variance increases toward prior variance, driving the probit scaling factor kappa down and reverting predicted probability toward 0.50 (maximum uncertainty)</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Far from training data, latent variance sigma_*^2 explodes. The probit convolution factor 1/sqrt(1 + pi/8 * sigma^2) dampens the latent mean toward zero, reverting the probability safely to 0.50.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../models/gaussian_process_regressor/"><small class="kicker">Regression</small><b>Gaussian process regression</b></a><a href="../../concepts/variational-inference/"><small class="kicker">Concept</small><b>Variational inference</b></a><a href="../../models/logistic_regression/"><small class="kicker">Classification</small><b>Logistic regression</b></a><a href="../../concepts/kernel-pca/"><small class="kicker">Concept</small><b>Kernel PCA</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/markov-random-fields/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Machine learning toolbox</small><b>Markov random fields</b></a>
+    <a class="pager-next" href="../../concepts/convex-optimisation-and-duality/"><small>Next · Machine learning toolbox <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Convex Optimisation &amp; Duality</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

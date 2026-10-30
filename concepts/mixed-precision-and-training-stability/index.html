@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Mixed Precision and Training Stability: FP16, BF16, Loss Scaling, and Numerical Underflow · Learn · Yogesh Awate</title>
+<meta name="description" content="Accelerating neural network training by 2–3x and halving memory using FP16/BF16, master FP32 weights, and dynamic loss scaling.">
+<meta property="og:title" content="Mixed Precision and Training Stability: FP16, BF16, Loss Scaling, and Numerical Underflow · Learn · Yogesh Awate">
+<meta property="og:description" content="Accelerating neural network training by 2–3x and halving memory using FP16/BF16, master FP32 weights, and dynamic loss scaling.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="mixed-precision-and-training-stability">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-neural">Path 08 · Deep learning</a> / Training fundamentals / Lesson 11 of 42</span>
+    <h1 class="case-title">Mixed Precision and Training Stability: FP16, BF16, Loss Scaling, and Numerical Underflow</h1>
+    <p class="lede rise" style="--d:3">Accelerating neural network training by 2–3x and halving memory using FP16/BF16, master FP32 weights, and dynamic loss scaling.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Deep learning · Training fundamentals</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">For decades, deep learning was trained exclusively in 32-bit single-precision floating point (FP32). Modern GPUs (NVIDIA Volta, Ampere, Hopper) feature dedicated Tensor Cores that execute 16-bit matrix multiplications up to 8x faster while consuming half the memory bandwidth. However, naive 16-bit training causes gradients to vanish into numerical zero (underflow) or explode into infinity. Mixed precision training combines 16-bit computation with 32-bit master weights and dynamic loss scaling.</p>
+        <p>Standard IEEE 754 FP32 consists of 1 sign bit, 8 exponent bits, and 23 mantissa (fraction) bits, offering a dynamic range of $\approx 10^{-38}$ to $10^{38}$. Standard FP16 has only 5 exponent bits and 10 mantissa bits, with a narrow dynamic range of $2^{-14} \approx 6.1 \times 10^{-5}$ to $65,504$.</p>
+        <p>In deep networks, backpropagated gradients are frequently tiny (e.g. $10^{-6}$). In raw FP16, any gradient smaller than $6.1 \times 10^{-5}$ flushes to exact zero (underflow), stalling learning completely. Conversely, activations larger than 65,504 overflow to `+Inf` / `NaN`.</p>
+        <p>Mixed precision solves this via three techniques: 1) Master Weights: Weights and optimiser momentum states are maintained in full FP32, while forward and backward passes execute in fast FP16. 2) Dynamic Loss Scaling: Loss is multiplied by a large scale factor $S$ (e.g. 1024 or 65536) before backpropagation, shifting small gradients upward into the representable FP16 range. Gradients are then unscaled by $1/S$ before applying weight updates. 3) Precision-sensitive ops (Softmax, LayerNorm, loss) remain in FP32.</p>
+        <p>BF16 (Bfloat16, Brain Floating Point) preserves the full 8 exponent bits of FP32 with 7 mantissa bits. It matches FP32's dynamic range, eliminating the need for complex loss scaling entirely.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine an architect sketching blueprints. When brainstorming room layouts and drawing wall lengths, quick pencil sketches on half-sheet paper (16-bit) are fast and take up little desk space. But when calculating precise structural beam load equations where millimeter rounding errors could collapse the building, the engineer switches to an ultra-precise digital computer with double precision (32-bit). Mixed precision sketches quickly in 16-bit while anchoring critical structural sums in 32-bit.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Select precision format: Choose BF16 on modern hardware (Ampere, Hopper, TPU) or FP16 with dynamic loss scaling on older GPUs (Turing, Volta).</li><li>Maintain FP32 master weights: Store canonical model weights and optimiser states (Adam $m_t$ and $v_t$) in 32-bit precision.</li><li>Cast activations for forward pass: Automatically cast input tensors and weights to FP16/BF16 during matrix multiplications and convolutions.</li><li>Apply dynamic loss scaling: Multiply calculated scalar loss by scale factor $S$ prior to calling `.backward()`.</li><li>Detect overflow and unscale: Inspect FP16 gradients for `Inf` or `NaN`. If detected, skip the optimiser step and decrease $S$; otherwise unscale gradients by $1/S$ and update FP32 master weights.</li><li>Cast weights back to 16-bit: Copy updated FP32 master weights into 16-bit tensors for the subsequent training iteration.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Floating Point Bit Layout Comparison</h3><div class="formula">\begin{aligned} \text{FP32:} & \quad 1 \text{ sign}, \; 8 \text{ exp}, \; 23 \text{ mantissa} \quad [\text{Range } 10^{\pm 38}] \\ \text{FP16:} & \quad 1 \text{ sign}, \; 5 \text{ exp}, \; 10 \text{ mantissa} \quad [\text{Range } 10^{\pm 5}, \; \max = 65,504] \\ \text{BF16:} & \quad 1 \text{ sign}, \; 8 \text{ exp}, \; 7 \text{ mantissa} \quad [\text{Range } 10^{\pm 38}, \; \max = 3.39 \times 10^{38}] \end{aligned}</div><p>BF16 allocates 8 exponent bits identical to FP32, preventing gradient underflow without requiring loss scaling.</p></li>
+          <li><h3>Dynamic Loss Scaling Gradient Shift</h3><div class="formula">g_{\mathrm{scaled}} = \nabla_w (S \cdot \mathcal{L}) = S \cdot \nabla_w \mathcal{L}, \quad g_{\mathrm{true}} = \frac{1}{S} \cdot g_{\mathrm{scaled}}</div><p>Multiplying loss by scale factor $S$ shifts tiny gradients into the representable positive exponent range of FP16.</p></li>
+          <li><h3>Dynamic Scale Factor Adaptation Rule</h3><div class="formula">S_{t+1} = \begin{cases} S_t \cdot \frac{1}{2} & \text{if } \operatorname{has\_inf\_nan}(g_{\mathrm{scaled}}) \\ S_t \cdot 2 & \text{if no inf/nan for } M \text{ consecutive steps} \\ S_t & \text{otherwise} \end{cases}</div><p>Adapts loss scale dynamically: shrinking immediately upon numerical overflow and expanding when training is stable.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Mixed precision accelerates training 2–3x and cuts activation memory in half using Tensor Cores.</li><li>FP16 has a narrow dynamic range, requiring dynamic loss scaling to prevent tiny gradients from flushing to zero.</li><li>BF16 shares FP32's 8-bit exponent, matching FP32 dynamic range and eliminating loss scaling.</li><li>Master weights and optimiser states must remain in FP32 to accumulate tiny weight delta updates.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> torch
+<span class="k">import</span> torch.nn <span class="k">as</span> nn
+
+<span class="c"># Standard PyTorch Automatic Mixed Precision (AMP) training pattern</span>
+device = <span class="s">'cuda'</span> <span class="k">if</span> torch.cuda.<span class="f">is_available</span>() <span class="k">else</span> <span class="s">'cpu'</span>
+
+model = nn.<span class="f">Sequential</span>(
+    nn.<span class="f">Linear</span>(<span class="n">1024</span>, <span class="n">2048</span>),
+    nn.<span class="f">ReLU</span>(),
+    nn.<span class="f">Linear</span>(<span class="n">2048</span>, <span class="n">10</span>)
+).<span class="f">to</span>(device)
+
+optimiser = torch.optim.<span class="f">AdamW</span>(model.<span class="f">parameters</span>(), lr=<span class="n">1e-3</span>)
+criterion = nn.<span class="f">CrossEntropyLoss</span>()
+
+<span class="c"># Initialise GradScaler for FP16 loss scaling (on CUDA)</span>
+scaler = torch.amp.<span class="f">GradScaler</span>(<span class="s">'cuda'</span>, enabled=(device == <span class="s">'cuda'</span>))
+
+<span class="c"># Dummy input batch</span>
+x = torch.<span class="f">randn</span>(<span class="n">64</span>, <span class="n">1024</span>, device=device)
+target = torch.<span class="f">randint</span>(<span class="n">0</span>, <span class="n">10</span>, (<span class="n">64</span>,), device=device)
+
+optimiser.<span class="f">zero_grad</span>()
+
+<span class="c"># Forward pass under autocast context</span>
+<span class="c"># Tensor Core operations (Linear, Conv) run in fast FP16/BF16</span>
+<span class="k">with</span> torch.amp.<span class="f">autocast</span>(device_type=device, dtype=torch.float16, enabled=(device == <span class="s">'cuda'</span>)):
+    output = <span class="f">model</span>(x)
+    loss = <span class="f">criterion</span>(output, target)
+
+<span class="c"># Backward pass with scaled gradients to prevent underflow</span>
+scaler.<span class="f">scale</span>(loss).<span class="f">backward</span>()
+
+<span class="c"># Unscale gradients and update FP32 master weights</span>
+scaler.<span class="f">step</span>(optimiser)
+scaler.<span class="f">update</span>()
+
+<span class="k">print</span>(<span class="s">f&quot;Mixed precision step completed on {device}. Current scale factor: {scaler.get_scale()}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Applying FP16 to Softmax or LayerNorm: Operations that sum exponents (Softmax) or compute variances easily overflow 65,504; always run normalisation in FP32.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Accumulating Adam optimiser states in FP16: In Adam, $v_t$ squares tiny gradients ($10^{-8}$), causing complete underflow in 16-bit; optimiser states must be FP32.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using FP16 without GradScaler: Running raw FP16 backward passes without gradient scaling causes 30–50% of gradients to underflow to zero, stalling convergence.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>Why are master weights and optimiser momentum states stored in FP32 even during mixed precision training?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because FP32 weights run faster than FP16 weights</span></button><button class="opt" type="button"><b>B</b><span>Because individual weight updates $\eta \cdot g_t$ are tiny; adding a tiny 16-bit delta to a larger weight causes arithmetic cancellation and underflow in 16-bit</span></button><button class="opt" type="button"><b>C</b><span>Because PyTorch models cannot be saved to disk in 16-bit</span></button><button class="opt" type="button"><b>D</b><span>Because GPUs cannot write to 16-bit memory</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Learning rate multiplied by gradient is often small ($10^{-5}$). Adding this tiny delta to an FP16 weight results in no change due to lack of mantissa bits. FP32 master weights preserve small accumulations.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>What is the primary advantage of BF16 (Brain Floating Point) over classical FP16?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>BF16 works on standard consumer laptops without GPUs</span></button><button class="opt" type="button"><b>B</b><span>BF16 uses only 8 bits in total</span></button><button class="opt" type="button"><b>C</b><span>BF16 has higher fractional precision than FP32</span></button><button class="opt" type="button"><b>D</b><span>BF16 allocates 8 exponent bits (same as FP32), matching FP32's broad dynamic range and eliminating the need for loss scaling</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> By keeping 8 exponent bits, BF16 spans the same dynamic range ($10^{\pm 38}$) as FP32, making underflow and overflow virtually non-existent without complex loss scalers.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>What is the purpose of dynamic loss scaling when training in FP16?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To prevent the GPU from overheating</span></button><button class="opt" type="button"><b>B</b><span>To multiply the loss by a large factor before backpropagation, shifting small gradients upward into the representable range of FP16 to prevent underflow</span></button><button class="opt" type="button"><b>C</b><span>To increase the learning rate of the optimiser</span></button><button class="opt" type="button"><b>D</b><span>To normalise input image pixels between 0 and 1</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Many backpropagated gradients are smaller than $2^{-14} \approx 6 \times 10^{-5}$. Scaling loss by e.g. 1024 shifts gradients into the representable positive exponent range.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/the-pytorch-training-loop/"><small class="kicker">Concept</small><b>PyTorch training loop</b></a><a href="../../concepts/weight-initialisation-xavier-and-he/"><small class="kicker">Concept</small><b>Weight initialisation: Xavier, He</b></a><a href="../../concepts/vanishing-and-exploding-gradients-clipping/"><small class="kicker">Concept</small><b>Vanishing/exploding gradients</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/regularisation-dropout-weight-decay-early-stopping/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>Regularisation: dropout, decay</b></a>
+    <a class="pager-next" href="../../concepts/the-pytorch-training-loop/"><small>Next · Deep learning <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>PyTorch training loop</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

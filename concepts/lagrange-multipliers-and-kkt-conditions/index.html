@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Lagrange Multipliers and KKT Conditions · Learn · Yogesh Awate</title>
+<meta name="description" content="Mathematical conditions for constrained optimisation, extending Lagrange multipliers to inequality constraints via the Karush–Kuhn–Tucker conditions.">
+<meta property="og:title" content="Lagrange Multipliers and KKT Conditions · Learn · Yogesh Awate">
+<meta property="og:description" content="Mathematical conditions for constrained optimisation, extending Lagrange multipliers to inequality constraints via the Karush–Kuhn–Tucker conditions.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="lagrange-multipliers-and-kkt-conditions">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ml-toolbox">Path 06 · Machine learning toolbox</a> / Optimisation / Lesson 19 of 50</span>
+    <h1 class="case-title">Lagrange Multipliers and KKT Conditions</h1>
+    <p class="lede rise" style="--d:3">Mathematical conditions for constrained optimisation, extending Lagrange multipliers to inequality constraints via the Karush–Kuhn–Tucker conditions.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/convex-optimisation-and-duality/">Convex Optimisation &amp; Duality</a> <a href="../../concepts/gradient-descent/">Gradient descent</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Machine learning toolbox · Optimisation</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>1 model lesson</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Constrained optimisation problems govern much of machine learning, from Support Vector Machines maximising geometric margins to LASSO shrinking coefficients within an $\\ell_1$ budget. Lagrange multipliers provide the analytical machinery to handle equality constraints by balancing objective gradients against constraint normals. The Karush–Kuhn–Tucker (KKT) conditions extend this principle to inequality constraints, providing necessary (and often sufficient) conditions that identify active constraints and optimal solutions.</p>
+        <p>Imagine rolling a marble down a smooth, bowl-shaped wooden track. If the track has no barriers, the marble rolls straight down to the bottom where the surface is flat (gradient equals zero). Now place a stiff circular fence on the slope. The marble rolls downhill until it collides with the fence and comes to a dead stop. At that resting point, gravity is still pulling the marble downward, but the fence pushes back with an equal and opposite force perpendicular to the barrier.</p>
+        <p>This physical balance illustrates the Lagrange multiplier. The gradient of the objective function $\\nabla f_0(x)$ represents the downhill pull of gravity. The gradient of the constraint boundary $\\nabla h(x)$ represents the normal force exerted by the fence. At the constrained optimum, these two vectors must align in opposite directions: $\\nabla f_0(x^*) + \\nu^* \\nabla h(x^*) = 0$. The scalar multiplier $\\nu^*$ measures the exact intensity of force the constraint fence exerts to keep the marble in place.</p>
+        <p>When constraints are inequalities ($f_i(x) \\le 0$), a new question arises: does the marble hit the fence, or does it settle naturally in the interior before reaching it? This is governed by complementary slackness: $\\lambda_i^* f_i(x^*) = 0$. If the unconstrained minimum lies inside the fenced area ($f_i(x^*) &lt; 0$), the fence is inactive and exerts zero force ($\\lambda_i^* = 0$). If the marble is pressed against the fence ($f_i(x^*) = 0$), the fence is active and exerts positive resistance ($\\lambda_i^* &gt; 0$). In Support Vector Machines, this simple condition determines which data points become support vectors.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>A dog resting on a lead: if the dog sits inside the yard, the lead is slack and exerts zero tension; if the dog tries to run past the gate, the lead pulls taut with positive tension exactly counteracting the dog's forward momentum.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Formulate the constrained problem: minimise objective $f_0(x)$ subject to inequality constraints $f_i(x) \\le 0$ ($i=1,\\dots,m$) and equality constraints $h_j(x) = 0$ ($j=1,\\dots,p$).</li><li>Construct the Lagrangian: $L(x, \\lambda, \\nu) = f_0(x) + \\sum_{i=1}^m \\lambda_i f_i(x) + \\sum_{j=1}^p \\nu_j h_j(x)$.</li><li>Check Stationarity: set the gradient with respect to $x$ to zero: $\\nabla_x L(x^*, \\lambda^*, \\nu^*) = \\nabla f_0(x^*) + \\sum \\lambda_i^* \\nabla f_i(x^*) + \\sum \\nu_j^* \\nabla h_j(x^*) = 0$.</li><li>Enforce Primal Feasibility: verify all constraints are satisfied: $f_i(x^*) \\le 0$ and $h_j(x^*) = 0$.</li><li>Enforce Dual Feasibility: ensure inequality multipliers are non-negative: $\\lambda_i^* \\ge 0$.</li><li>Enforce Complementary Slackness: verify $\\lambda_i^* f_i(x^*) = 0$ for each inequality constraint, separating active constraints ($\\lambda_i^* &gt; 0, f_i(x^*) = 0$) from inactive ones ($\\lambda_i^* = 0, f_i(x^*) &lt; 0$).</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>The four Karush–Kuhn–Tucker (KKT) conditions</h3><div class="formula">$$\\begin{aligned}
+\\text{1. Stationarity:} &amp; \\quad \\nabla f_0(x^*) + \\sum_{i=1}^m \\lambda_i^* \\nabla f_i(x^*) + \\sum_{j=1}^p \\nu_j^* \\nabla h_j(x^*) = 0 \\\\
+\\text{2. Primal Feasibility:} &amp; \\quad f_i(x^*) \\le 0 \\quad (\\forall i), \qquad h_j(x^*) = 0 \\quad (\\forall j) \\\\
+\\text{3. Dual Feasibility:} &amp; \\quad \\lambda_i^* \\ge 0 \\quad (\\forall i) \\\\
+\\text{4. Complementary Slackness:} &amp; \\quad \\lambda_i^* f_i(x^*) = 0 \\quad (\\forall i)
+\\end{aligned}$$</div><p>For any optimisation problem with zero duality gap, any pair of primal and dual optimal points $(x^*, \\lambda^*, \\nu^*)$ must satisfy these four conditions. If the primal problem is convex, the KKT conditions are both necessary and sufficient for global optimality.</p></li>
+          <li><h3>Geometric interpretation of stationarity</h3><div class="formula">$$-\\nabla f_0(x^*) = \\sum_{i \in \\mathcal{A}} \\lambda_i^* \\nabla f_i(x^*) + \\sum_{j=1}^p \\nu_j^* \\nabla h_j(x^*)$$</div><p>where $\\mathcal{A} = \\{i : f_i(x^*) = 0\\}$ is the active constraint set. The negative gradient of the objective (the direction of steepest descent) lies inside the cone spanned by the outward normal vectors of the active constraints.</p></li>
+          <li><h3>Complementary slackness in Support Vector Machines</h3><div class="formula">$$\\alpha_i^* \\big(y_i(w^T x_i + b) - 1\\big) = 0$$</div><p>If a training point lies strictly outside the margin ($y_i(w^T x_i + b) &gt; 1$), its multiplier $\\alpha_i^* = 0$, meaning the point exerts no influence on the decision boundary. Only points lying directly on the margin boundary have $\\alpha_i^* &gt; 0$, forming the sparse set of support vectors.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Stationarity balances objective gradients against the linear combination of active constraint gradients.</li><li>Complementary slackness ($\\lambda_i^* f_i(x^*) = 0$) guarantees that non-binding constraints exert zero force on the optimal solution.</li><li>For convex optimisation problems satisfying Slater's condition, the KKT conditions are both necessary and sufficient for global optimality.</li><li>Forms the core mathematical justification for support vectors in SVMs, lasso sparsity, and barrier/interior-point algorithms.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Problem: min 0.5 * ||x - x0||^2 subject to a^T x &lt;= b (halfspace projection)</span>
+x0 = np.<span class="f">array</span>([<span class="n">3.0</span>, <span class="n">4.0</span>])
+a = np.<span class="f">array</span>([<span class="n">1.0</span>, <span class="n">2.0</span>])
+b = <span class="n">5.0</span>
+
+<span class="c"># Check unconstrained violation: a^T x0 - b</span>
+viol = a @ x0 - b  <span class="c"># 3*1 + 4*2 - 5 = 6 &gt; 0 (infeasible)</span>
+<span class="k">if</span> viol &lt;= <span class="n">0</span>:
+    x_star = x0
+    lam_star = <span class="n">0.0</span>
+<span class="k">else</span>:
+    <span class="c"># Active constraint: lam = (a^T x0 - b) / ||a||^2</span>
+    lam_star = viol / np.<span class="f">sum</span>(a ** <span class="n">2</span>)
+    x_star = x0 - lam_star * a
+
+<span class="c"># Verify the 4 KKT conditions</span>
+grad_L = (x_star - x0) + lam_star * a       <span class="c"># 1. Stationarity (~ 0)</span>
+primal_feas = a @ x_star - b &lt;= <span class="n">1e-9</span>        <span class="c"># 2. Primal feasibility</span>
+dual_feas = lam_star &gt;= <span class="n">0.0</span>                 <span class="c"># 3. Dual feasibility</span>
+comp_slack = lam_star * (a @ x_star - b)    <span class="c"># 4. Complementary slackness (~ 0)</span>
+
+<span class="k">print</span>(<span class="s">f&quot;Unconstrained point: {x0}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Optimal constrained point x*: {x_star.round(4)}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Lagrange multiplier lambda*: {lam_star:.4f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;1. Stationarity norm: {np.linalg.norm(grad_L):.6f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;2. Primal feasible: {primal_feas}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;3. Dual feasible: {dual_feas}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;4. Complementary slackness: {comp_slack:.6f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Neglecting dual feasibility sign ($\\lambda_i \\ge 0$): For inequality constraints $f_i(x) \\le 0$, $\\lambda_i$ must be non-negative. A negative $\\lambda_i$ means the constraint is pulling the solution into the forbidden region rather than repelling it.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming KKT is sufficient for non-convex problems: In non-convex optimisation, points satisfying the KKT conditions can be saddle points, local maxima, or suboptimal local minima. Sufficiency requires convexity of the objective and constraint functions.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Ignoring constraint qualification failure: When gradients of active constraints are linearly dependent at the optimum (such as touching tangent constraints), the standard KKT conditions may fail to hold even at the true global minimum.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Misinterpreting inactive constraints: An inactive constraint ($f_i(x^*) &lt; 0$) has $\\lambda_i^* = 0$, meaning removing that constraint entirely leaves the optimal solution unchanged.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>What does the complementary slackness condition $\\lambda_i^* f_i(x^*) = 0$ signify about an inequality constraint $f_i(x) \\le 0$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The Lagrange multiplier must equal the value of the objective function</span></button><button class="opt" type="button"><b>B</b><span>Either the constraint is active ($f_i(x^*) = 0$) with a non-negative multiplier, or the constraint is strictly inactive ($f_i(x^*) &lt; 0$) and its multiplier is zero</span></button><button class="opt" type="button"><b>C</b><span>All data points must be equidistant from the decision boundary</span></button><button class="opt" type="button"><b>D</b><span>The objective function must evaluate to zero at the optimal point</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Complementary slackness dictates that if a point lies in the strict interior of the feasible region ($f_i(x^*) &lt; 0$), the constraint imposes no restriction and $\\lambda_i^* = 0$. If $\\lambda_i^* &gt; 0$, the point must lie precisely on the boundary fence ($f_i(x^*) = 0$).</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>Why are the KKT conditions both necessary AND sufficient for global optimality in convex problems, but only necessary in general problems?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because non-convex problems cannot have equality constraints</span></button><button class="opt" type="button"><b>B</b><span>Because convexity guarantees that all Lagrange multipliers are equal to 1.0</span></button><button class="opt" type="button"><b>C</b><span>In convex problems, any stationary point of the Lagrangian is guaranteed to be a global minimum with no deceptive local valleys</span></button><button class="opt" type="button"><b>D</b><span>Because non-convex problems do not have gradient vectors</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> For convex functions, zero gradient implies a global minimum. When paired with constraint qualifications, any point satisfying the KKT conditions is certified to be the global optimum. In non-convex problems, KKT points can be local minima, local maxima, or saddle points.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>In a Support Vector Machine, how does complementary slackness explain why only a small subset of training points become support vectors?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Points correctly classified beyond the margin satisfy $y_i(w^T x_i + b) &gt; 1$, forcing their dual multiplier $\\alpha_i = 0$ so they do not affect the hyperplane</span></button><button class="opt" type="button"><b>B</b><span>SVMs only compute gradients for the first ten training instances</span></button><button class="opt" type="button"><b>C</b><span>Points beyond the margin are deleted during data pre-processing</span></button><button class="opt" type="button"><b>D</b><span>The kernel trick converts all non-margin points into imaginary numbers</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The margin constraint is $1 - y_i(w^T x_i + b) \\le 0$. For any point strictly beyond the margin, $1 - y_i(w^T x_i + b) &lt; 0$. By complementary slackness $\\alpha_i (1 - y_i(w^T x_i + b)) = 0$, the multiplier $\\alpha_i$ must be zero, leaving only boundary points with $\\alpha_i &gt; 0$ as support vectors.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q4</span>What does the magnitude of a Lagrange multiplier $\\lambda_i^*$ represent from an economic or sensitivity perspective?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The probability that the constraint will be violated in test data</span></button><button class="opt" type="button"><b>B</b><span>The shadow price: the rate of change in the optimal objective value with respect to relaxing the constraint boundary ($\\partial p^* / \\partial b_i = -\\lambda_i^*$)</span></button><button class="opt" type="button"><b>C</b><span>The percentage of training iterations required for convergence</span></button><button class="opt" type="button"><b>D</b><span>The curvature of the objective function along the principal axis</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In sensitivity analysis, $\\lambda_i^*$ measures how much the optimal objective value improves if the $i$-th constraint is relaxed by an infinitesimal amount: $\\frac{\\partial p^*}{\\partial b_i} = -\\lambda_i^*$. It represents the marginal cost of the constraint.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/convex-optimisation-and-duality/"><small class="kicker">Concept</small><b>Convex Optimisation &amp; Duality</b></a><a href="../../models/support_vector_classifier/"><small class="kicker">Classification</small><b>Support vector classifier</b></a><a href="../../concepts/quasi-newton-and-lbfgs/"><small class="kicker">Concept</small><b>Newton, BFGS &amp; L-BFGS</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/convex-optimisation-and-duality/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Machine learning toolbox</small><b>Convex Optimisation &amp; Duality</b></a>
+    <a class="pager-next" href="../../concepts/coordinate-descent/"><small>Next · Machine learning toolbox <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Coordinate descent</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Residual Networks and Skip Connections · Learn · Yogesh Awate</title>
+<meta name="description" content="Standard deep networks degrade as layers multiply. By reformulating layers to learn residual differences F(x) = H(x) - x, skip connections establish unbroken gradient superhighways across hundreds of layers.">
+<meta property="og:title" content="Residual Networks and Skip Connections · Learn · Yogesh Awate">
+<meta property="og:description" content="Standard deep networks degrade as layers multiply. By reformulating layers to learn residual differences F(x) = H(x) - x, skip connections establish unbroken gradient superhighways across hundreds of layers.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="residual-networks-and-skip-connections">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-neural">Path 08 · Deep learning</a> / Architectures / Lesson 21 of 42</span>
+    <h1 class="case-title">Residual Networks and Skip Connections</h1>
+    <p class="lede rise" style="--d:3">Standard deep networks degrade as layers multiply. By reformulating layers to learn residual differences $\mathcal{F}(x) = \mathcal{H}(x) - x$, skip connections establish unbroken gradient superhighways across hundreds of layers.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/vanishing-and-exploding-gradients-clipping/">Vanishing/exploding gradients</a> <a href="../../concepts/backpropagation-and-autodiff/">Backprop and autodiff</a> <a href="../../concepts/weight-initialisation-xavier-and-he/">Weight initialisation: Xavier, He</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Deep learning · Architectures</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Before 2015, stacking more than 20 or 30 layers in a deep network caused training accuracy to degrade sharply—not due to overfitting, but because optimisation collapsed completely. Residual Networks (ResNets, He et al. 2015) solved this fundamental architectural hurdle by introducing identity shortcut connections, transforming loss surfaces and enabling stable optimisation across hundreds or thousands of layers.</p>
+        <p>In a conventional plain network, each stacked layer attempts to approximate an underlying target mapping $\mathcal{H}(x)$. Imagine constructing a 50-layer network when a 20-layer network already suffices for the problem. To match the shallower model's performance, the remaining 30 layers must learn the identity function $\mathcal{H}(x) = x$. However, fitting an exact identity mapping through non-linear weight transformations ($W_2 \sigma(W_1 x)$) is surprisingly difficult for stochastic gradient descent, causing deep plain networks to achieve higher training error than their shallow counterparts.</p>
+        <p>ResNet reframes the objective: instead of tasking parameterised layers with fitting $\mathcal{H}(x)$ directly, the layers fit the **residual** difference $\mathcal{F}(x) = \mathcal{H}(x) - x$. The original input is then reintroduced via an identity skip connection: $\mathcal{H}(x) = \mathcal{F}(x) + x$. Under this reformulation, if an identity mapping is optimal, the optimiser can simply drive the residual weights towards zero ($\mathcal{F}(x) \to 0$), which standard weight decay achieves naturally.</p>
+        <p>The profound mathematical consequence occurs during backpropagation. The derivative of a residual block with respect to its input is $\frac{\partial \mathcal{H}}{\partial x} = \frac{\partial \mathcal{F}}{\partial x} + I$. Because of the additive identity matrix $I$, the backpropagated gradient contains an unattenuated term that flows backward through the skip connection completely independent of weight magnitudes. Even if the parameterised gradient $\frac{\partial \mathcal{F}}{\partial x}$ vanishes, the identity pathway ensures gradient signals reach early layers with full fidelity.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Like an expressway with local detour loops: instead of forcing all traffic through 50 congested city intersections (plain layers), the highway lets traffic cruise unimpeded from start to finish (skip connection), exiting into local workshops (residuals) only when specialized modifications are needed.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Construct the residual transformation: build two or three convolutional or linear layers with <a class="inline" href="../../concepts/normalisation-batch-layer-rms/">normalisation</a> and non-linear activations ($\mathcal{F}(x)$).</li><li>Add the identity shortcut: route the unmodified input $x$ parallel to the transformations and add it element-wise ($y = \mathcal{F}(x) + x$).</li><li>Handle dimension changes: when downsampling spatial dimensions or doubling channels, apply a $1 \times 1$ projection convolution on the shortcut path ($y = \mathcal{F}(x) + W_s x$) to align tensor shapes.</li><li>Position post-addition activations: apply the non-linear activation (e.g. ReLU or GELU) immediately following the element-wise addition ($\sigma(\mathcal{F}(x) + x)$).</li><li>Stack modular stages: assemble residual blocks into hierarchical stages (e.g. 64 → 128 → 256 → 512 channels) to construct deep backbones for vision, speech, or Transformer architectures.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Residual block formulation</h3><div class="formula">$$\mathcal{H}(x) = \mathcal{F}(x; \{W_i\}) + x$$</div><p>$x$ is the input tensor, $\mathcal{F}$ represents the residual mapping to be learned across parameterised layers $\{W_i\}$, and $\mathcal{H}(x)$ is the output tensor. If the optimal transformation is the identity function, parameter weights shrink to zero ($\mathcal{F} = 0$), leaving $\mathcal{H}(x) = x$ without distortion.</p></li>
+          <li><h3>Unattenuated gradient highway across depth</h3><div class="formula">$$\frac{\partial \mathcal{L}}{\partial x_l} = \frac{\partial \mathcal{L}}{\partial x_L}\frac{\partial x_L}{\partial x_l} = \frac{\partial \mathcal{L}}{\partial x_L} \left( I + \frac{\partial}{\partial x_l}\sum_{k=l}^{L-1} \mathcal{F}_k(x_k) \right)$$</div><p>$x_l$ is the activation at block $l$, and $x_L = x_l + \sum_{k=l}^{L-1} \mathcal{F}_k(x_k)$ is the activation at block $L$. The gradient contains an additive identity component $I$, guaranteeing that the gradient cannot vanish across depth even if the Jacobians of intermediate residual transformations $\frac{\partial \mathcal{F}_k}{\partial x_l}$ approach zero.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Residual connections reparameterise layers to learn the differential mapping $\mathcal{F}(x) = \mathcal{H}(x) - x$, making identity functions trivial to approximate.</li><li>The additive identity term in backpropagation ($\frac{\partial \mathcal{F}}{\partial x} + I$) creates a gradient superhighway, solving the degradation problem in deep networks.</li><li>Skip connections are standard architecture components across modern deep learning, including ResNets, ConvNeXts, Transformers, and diffusion models.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Simulate gradient propagation across a 10-layer depth</span>
+depth = <span class="n">10</span>
+w_scale = <span class="n">0.5</span>  <span class="c"># Sub-unitary Jacobian weight per layer</span>
+
+<span class="c"># 1. Plain feedforward network: gradients multiply sequentially</span>
+grad_plain = <span class="n">1.0</span>
+<span class="k">for</span> _ <span class="k">in</span> <span class="k">range</span>(depth):
+    grad_plain *= w_scale  <span class="c"># grad * W</span>
+
+<span class="c"># 2. Residual network: gradients add identity term (W + I)</span>
+grad_res = <span class="n">1.0</span>
+<span class="k">for</span> _ <span class="k">in</span> <span class="k">range</span>(depth):
+    grad_res *= (w_scale + <span class="n">1.0</span>)  <span class="c"># grad * (W + I)</span>
+
+<span class="k">print</span>(<span class="s">f&quot;Depth = {depth} layers (layer weight scale = {w_scale}):&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Plain network backpropagated gradient:    {grad_plain:.6f} (vanished to zero)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Residual network backpropagated gradient: {grad_res:.2f} (unbroken gradient flow)&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Confusing the degradation problem with overfitting: deeper plain networks suffered from higher *training* error, proving it was an optimisation failure, not excessive variance.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Adding heavy non-linear operations onto the skip path itself, which obstructs the clean linear flow of gradients.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Failing to project shortcut dimensions when spatial resolution or channel depth changes, causing dimension mismatch errors during tensor addition.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>What was the degradation problem that motivated the invention of ResNets in 2015?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Deeper plain networks exhibited higher training error than their shallower counterparts, caused by optimisation failure rather than overfitting</span></button><button class="opt" type="button"><b>B</b><span>Convolutions ran out of GPU memory when image sizes exceeded 256 pixels</span></button><button class="opt" type="button"><b>C</b><span>Batch Normalisation failed to compute running means on deep networks</span></button><button class="opt" type="button"><b>D</b><span>Deeper plain networks began to overfit because they had too many parameters</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> He et al. showed that a 56-layer plain network suffered higher training error than a 20-layer plain network on CIFAR-10. Because the 56-layer network could theoretically mimic the 20-layer network via identity layers, higher training error demonstrated an optimisation breakdown.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>Why does backpropagation through a residual block prevent vanishing gradients?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The skip connection sets negative gradients to zero</span></button><button class="opt" type="button"><b>B</b><span>Residual blocks double the learning rate at every backward step</span></button><button class="opt" type="button"><b>C</b><span>Residual blocks eliminate all activation functions</span></button><button class="opt" type="button"><b>D</b><span>The derivative of $\mathcal{F}(x) + x$ contains an additive identity matrix $+ I$, providing an unhindered linear path for gradients to flow backward</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because $\frac{\partial (\mathcal{F}(x) + x)}{\partial x} = \frac{\partial \mathcal{F}}{\partial x} + I$, the gradient always contains $+ I$, guaranteeing that gradient information reaches early layers even if $\frac{\partial \mathcal{F}}{\partial x}$ is small.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>When downsampling feature maps (e.g. stride 2) in a ResNet, what must be done to the skip connection?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The input must be repeated twice</span></button><button class="opt" type="button"><b>B</b><span>The skip connection must be deleted entirely</span></button><button class="opt" type="button"><b>C</b><span>The batch size must be halved</span></button><button class="opt" type="button"><b>D</b><span>A $1 \times 1$ convolution with stride 2 must be applied to the shortcut to match spatial and channel dimensions</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because element-wise addition requires matching spatial height, width, and channel counts, a $1 \times 1$ strided projection convolution is applied to the shortcut path to align dimensions with the residual branch.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q4</span>Why is it easier for a residual block to learn an identity mapping than a plain layer?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Driving residual weights to zero ($\mathcal{F}(x) \to 0$) naturally produces the identity mapping $\mathcal{H}(x) = 0 + x = x$, which weight decay facilitates</span></button><button class="opt" type="button"><b>B</b><span>Residual connections force all weight matrices to be orthogonal</span></button><button class="opt" type="button"><b>C</b><span>Residual blocks do not use floating-point numbers</span></button><button class="opt" type="button"><b>D</b><span>Identity mappings are strictly forbidden in plain networks</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In a residual block $\mathcal{H}(x) = \mathcal{F}(x) + x$, setting weights to zero trivially yields $\mathcal{H}(x) = x$. In a plain network, learning an identity function requires finding precise non-zero weights that cancel non-linear activations.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/normalisation-batch-layer-rms/"><small class="kicker">Concept</small><b>Normalisation: Batch, Layer, RMS</b></a><a href="../../concepts/transfer-learning-and-fine-tuning/"><small class="kicker">Concept</small><b>Transfer learning &amp; fine-tuning</b></a><a href="../../concepts/the-pytorch-training-loop/"><small class="kicker">Concept</small><b>PyTorch training loop</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../models/lstm_networks/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>LSTMs</b></a>
+    <a class="pager-next" href="../../concepts/the-attention-mechanism/"><small>Next · Deep learning <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>The attention mechanism</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

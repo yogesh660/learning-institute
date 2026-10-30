@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Propensity scores and matching · Learn · Yogesh Awate</title>
+<meta name="description" content="Propensity score methods estimate causal treatment effects from observational data by addressing non-random treatment assignment and covariate imbalance. The propensity score e(\mathbf{x}) = P(D = 1 | \mathbf{X} = \mathbf{x}) acts as a balancing score: conditional on e(\mathbf{x}), the distribution of measured baseline covariates \mathbf{X} is statistically independent of treatment assignment D. By pairing, stratifying, or weighting units via Inverse Probability Weighting (IPW), propensity methods emulate randomised controlled trials, isolating the Average Treatment Effect (ATE) and Average Treatment Effect on the Treated (ATT) under the assumption of unconfoundedness.">
+<meta property="og:title" content="Propensity scores and matching · Learn · Yogesh Awate">
+<meta property="og:description" content="Propensity score methods estimate causal treatment effects from observational data by addressing non-random treatment assignment and covariate imbalance. The propensity score e(\mathbf{x}) = P(D = 1 | \mathbf{X} = \mathbf{x}) acts as a balancing score: conditional on e(\mathbf{x}), the distribution of measured baseline covariates \mathbf{X} is statistically independent of treatment assignment D. By pairing, stratifying, or weighting units via Inverse Probability Weighting (IPW), propensity methods emulate randomised controlled trials, isolating the Average Treatment Effect (ATE) and Average Treatment Effect on the Treated (ATT) under the assumption of unconfoundedness.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="propensity-scores-and-matching">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-statistics">Path 02 · Statistics</a> / Experiments and causality / Lesson 40 of 51</span>
+    <h1 class="case-title">Propensity scores and matching</h1>
+    <p class="lede rise" style="--d:3">Propensity score methods estimate causal treatment effects from observational data by addressing non-random treatment assignment and covariate imbalance. The propensity score e(\mathbf{x}) = P(D = 1 | \mathbf{X} = \mathbf{x}) acts as a balancing score: conditional on e(\mathbf{x}), the distribution of measured baseline covariates \mathbf{X} is statistically independent of treatment assignment D. By pairing, stratifying, or weighting units via Inverse Probability Weighting (IPW), propensity methods emulate randomised controlled trials, isolating the Average Treatment Effect (ATE) and Average Treatment Effect on the Treated (ATT) under the assumption of unconfoundedness.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">20 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/a-b-testing-end-to-end/">A/B Testing End-to-End</a> <a href="../../concepts/simpsons-paradox-and-confounding/">Simpson's Paradox &amp; Confounding</a> <a href="../../models/logistic_regression/">Logistic regression</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Statistics · Experiments and causality</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Suppose you want to know whether a premium customer subscription increases annual spending. In observational logs, customers who purchase the subscription already spend vastly more than non-subscribers before ever buying the membership. Comparing raw averages is wildly confounded by selection bias. Randomised controlled trials are often impossible, unethical, or prohibitively expensive. How can we synthesise a fair "apples-to-apples" comparison from observational data? Propensity score matching creates balanced synthetic cohorts, pairing each subscriber with an identical non-subscriber who had the exact same propensity to subscribe.</p>
+        <p>The Balancing Score Property (Rosenbaum & Rubin, 1983): If you have 50 baseline covariates (age, income, browsing frequency, geography), matching on all 50 dimensions simultaneously suffers from the curse of dimensionality—no two humans are identical across 50 features. Rosenbaum and Rubin proved a remarkable theorem: you do not need to match on all 50 covariates. You only need to match on a single 1D scalar: the propensity score e(x) = P(D=1 | X=x)! Conditional on having the same probability of receiving treatment, the distribution of all 50 covariates is balanced between treated and control units.</p>
+        <p>Common Support and Positivity: For a valid causal comparison, there must be "common support" (positivity: 0 < e(x) < 1). If certain customers have a 100% probability of subscribing (e.g. enterprise accounts), no comparable control unit exists. Units outside the common support overlap region must be trimmed.</p>
+        <p>Matching vs Weighting (IPW):
+- Propensity Score Matching (PSM): For each treated unit, find the nearest control unit with the closest propensity score (e.g. within a caliper of 0.05).
+- Inverse Probability Weighting (IPW): Keep all data, but weight each unit by the inverse probability of receiving their actual treatment: w_i = D_i / e(x_i) + (1 - D_i) / (1 - e(x_i)). This upweights under-represented units to create a balanced pseudo-population.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine comparing the driving performance of sports car owners versus minivan drivers. Sports car owners might speed more, but is it the car or the fact that sports car owners are younger and more aggressive? A propensity score model calculates each driver's probability of buying a sports car based on age, income, and lifestyle. Matching then pairs a 28-year-old sports car owner with a 28-year-old minivan driver who had the exact same 70% probability of buying a sports car but happened to buy a minivan instead. Comparing these matched twins isolates the true causal effect of the vehicle.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>The Propensity Score Balancing Property</h3><div class="formula">e(\mathbf{x}) \equiv P(D = 1 \mid \mathbf{X} = \mathbf{x}), \qquad \mathbf{X} \perp D \mid e(\mathbf{x})</div><p>The propensity score is the coarsest balancing score. Conditioning on e(\mathbf{x}) renders the multi-dimensional covariate vector \mathbf{X} statistically independent of treatment assignment D, removing all observable confounding.</p></li>
+          <li><h3>Unconfoundedness (Conditional Independence Assumption)</h3><div class="formula">\big(Y(1), Y(0)\big) \perp D \mid \mathbf{X} \implies \big(Y(1), Y(0)\big) \perp D \mid e(\mathbf{x})</div><p>If potential outcomes (Y(1), Y(0)) are independent of treatment conditional on \mathbf{X} (no unmeasured confounders), then conditional independence holds given the one-dimensional propensity score e(\mathbf{x}).</p></li>
+          <li><h3>Inverse Probability Weighting (IPW) Estimator for ATE</h3><div class="formula">\hat{\tau}_{\text{ATE}} = \frac{1}{N} \sum_{i=1}^N \left( \frac{D_i Y_i}{\hat{e}(\mathbf{x}_i)} - \frac{(1 - D_i) Y_i}{1 - \hat{e}(\mathbf{x}_i)} \right)</div><p>IPW reweights the sample so that both treated and control groups reflect the covariate distribution of the combined population. Treated units with low propensity and control units with high propensity receive higher weights.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>The propensity score e(x) collapses high-dimensional baseline covariates into a 1D scalar balancing score.</li><li>Conditional on the propensity score, treatment assignment is independent of measured baseline covariates: X \perp D | e(x).</li><li>Propensity score matching creates balanced synthetic cohorts, isolating true causal effects from observational selection bias.</li><li>Standardised Mean Difference (SMD) < 0.10 confirms that matched treatment and control groups achieve satisfactory covariate balance.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="s">&quot;&quot;&quot;
+Propensity Score Matching (PSM) vs Naive Comparison
+Demonstrating confounding correction, covariate balance diagnostics,
+and nearest-neighbour caliper matching on observational data.
+&quot;&quot;&quot;</span>
+
+<span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Simulate observational customer study</span>
+<span class="c"># True Causal Effect of Premium Membership on Annual Spend = £50.00</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+N = <span class="n">1000</span>
+
+<span class="c"># Confounders: Age and Prior Year Spending (in £)</span>
+age = np.random.<span class="f">normal</span>(<span class="n">38.0</span>, <span class="n">8.0</span>, N)
+prior_spend = np.random.<span class="f">normal</span>(<span class="n">300.0</span>, <span class="n">80.0</span>, N)
+
+<span class="c"># Treatment assignment D (Premium Membership): Older and higher-spending users are far more likely to buy</span>
+<span class="c"># Logit propensity = -6.0 + 0.08 * age + 0.012 * prior_spend</span>
+logit_prop = -<span class="n">6.0</span> + <span class="n">0.08</span> * age + <span class="n">0.012</span> * prior_spend
+true_propensity = <span class="n">1.0</span> / (<span class="n">1.0</span> + np.<span class="f">exp</span>(-logit_prop))
+membership = np.random.<span class="f">binomial</span>(<span class="n">1</span>, true_propensity)
+
+<span class="c"># Observed Outcome Y (Annual Spend in £):</span>
+<span class="c"># True effect is +£50, but prior spend and age strongly drive spending</span>
+true_effect = <span class="n">50.0</span>
+annual_spend = <span class="n">100.0</span> + true_effect * membership + <span class="n">1.2</span> * prior_spend + <span class="n">2.0</span> * age + np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">25</span>, N)
+
+<span class="c"># 1. Naive Comparison (Raw Difference in Means)</span>
+naive_treated_mean = np.<span class="f">mean</span>(annual_spend[membership == <span class="n">1</span>])
+naive_control_mean = np.<span class="f">mean</span>(annual_spend[membership == <span class="n">0</span>])
+naive_diff = naive_treated_mean - naive_control_mean
+
+<span class="k">print</span>(<span class="s">&quot;=== Observational Data Summary ===&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Total Customers: {N} | Treated (Members): {np.sum(membership)} | Control: {N - np.sum(membership)}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Naive Observed Difference: £{naive_diff:.2f} (True Causal Effect is £{true_effect:.2f} -&gt; Massively Overestimated!)&quot;</span>)
+
+<span class="c"># 2. Estimate Propensity Scores via Logistic Regression</span>
+<span class="c"># Design matrix</span>
+X_cov = np.<span class="f">column_stack</span>([np.<span class="f">ones</span>(N), age, prior_spend])
+<span class="c"># Quick Newton-Raphson logistic fit</span>
+beta_prop = np.<span class="f">zeros</span>(<span class="n">3</span>)
+<span class="k">for</span> _ <span class="k">in</span> <span class="k">range</span>(<span class="n">15</span>):
+    p_hat = <span class="n">1.0</span> / (<span class="n">1.0</span> + np.<span class="f">exp</span>(-np.<span class="f">clip</span>(X_cov @ beta_prop, -<span class="n">30</span>, <span class="n">30</span>)))
+    w = np.<span class="f">maximum</span>(p_hat * (<span class="n">1</span> - p_hat), <span class="n">1e-10</span>)
+    grad = X_cov.T @ (membership - p_hat)
+    hess = -X_cov.T @ (w[:, np.newaxis] * X_cov)
+    beta_prop += np.linalg.<span class="f">solve</span>(-hess, grad)
+
+est_propensity = <span class="n">1.0</span> / (<span class="n">1.0</span> + np.<span class="f">exp</span>(-np.<span class="f">clip</span>(X_cov @ beta_prop, -<span class="n">30</span>, <span class="n">30</span>)))
+
+<span class="c"># 3. Nearest-Neighbour Caliper Matching (1:1 with replacement)</span>
+treated_indices = np.<span class="f">where</span>(membership == <span class="n">1</span>)[<span class="n">0</span>]
+control_indices = np.<span class="f">where</span>(membership == <span class="n">0</span>)[<span class="n">0</span>]
+caliper = <span class="n">0.05</span>
+
+matched_pairs = []
+<span class="k">for</span> t_idx <span class="k">in</span> treated_indices:
+    p_t = est_propensity[t_idx]
+    diffs = np.<span class="f">abs</span>(est_propensity[control_indices] - p_t)
+    best_c_idx = control_indices[np.<span class="f">argmin</span>(diffs)]
+    <span class="k">if</span> diffs[np.<span class="f">argmin</span>(diffs)] &lt;= caliper:
+        matched_pairs.<span class="f">append</span>((t_idx, best_c_idx))
+
+matched_t = [pair[<span class="n">0</span>] <span class="k">for</span> pair <span class="k">in</span> matched_pairs]
+matched_c = [pair[<span class="n">1</span>] <span class="k">for</span> pair <span class="k">in</span> matched_pairs]
+
+<span class="c"># 4. Covariate Balance Check: Standardised Mean Difference (SMD)</span>
+<span class="k">def</span> <span class="f">calc_smd</span>(feat, treat_mask):
+    m1, m0 = np.<span class="f">mean</span>(feat[treat_mask]), np.<span class="f">mean</span>(feat[~treat_mask])
+    v1, v0 = np.<span class="f">var</span>(feat[treat_mask]), np.<span class="f">var</span>(feat[~treat_mask])
+    <span class="k">return</span> (m1 - m0) / np.<span class="f">sqrt</span>((v1 + v0) / <span class="n">2.0</span>)
+
+smd_age_before = <span class="f">calc_smd</span>(age, membership == <span class="n">1</span>)
+smd_spend_before = <span class="f">calc_smd</span>(prior_spend, membership == <span class="n">1</span>)
+
+smd_age_after = (np.<span class="f">mean</span>(age[matched_t]) - np.<span class="f">mean</span>(age[matched_c])) / np.<span class="f">std</span>(age)
+smd_spend_after = (np.<span class="f">mean</span>(prior_spend[matched_t]) - np.<span class="f">mean</span>(prior_spend[matched_c])) / np.<span class="f">std</span>(prior_spend)
+
+<span class="k">print</span>(<span class="s">&quot;\n=== Covariate Balance Diagnostics ===&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Age SMD:         Before Matching = {smd_age_before:+.3f} | After Matching = {smd_age_after:+.3f} (Balanced!)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Prior Spend SMD: Before Matching = {smd_spend_before:+.3f} | After Matching = {smd_spend_after:+.3f} (Balanced!)&quot;</span>)
+
+<span class="c"># 5. Treatment Effect on Matched Sample (ATT)</span>
+matched_diff = np.<span class="f">mean</span>(annual_spend[matched_t]) - np.<span class="f">mean</span>(annual_spend[matched_c])
+<span class="k">print</span>(<span class="s">f&quot;\nMatched Cohort Size: {len(matched_pairs)} pairs&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Propensity Matched ATT Estimate: £{matched_diff:.2f} (True: £{true_effect:.2f} -&gt; Causal Effect Recovered!)&quot;</span>)
+</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Unmeasured confounding: Propensity scores only balance measured covariates; if an unobserved variable influences both treatment and outcome, estimates remain confounded.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Violating common support: Including treated units with extreme propensity scores that have zero counterpart controls forces dangerous extrapolation.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Extreme weights in IPW: When propensity scores approach 0 or 1, inverse probability weights explode, causing extreme variance; weight trimming or stabilised weights are required.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>What is the primary theorem proved by Rosenbaum and Rubin regarding propensity scores?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Conditional on the propensity score e(x) = P(D=1 | X=x), baseline covariates X are statistically independent of treatment assignment D</span></button><button class="opt" type="button"><b>B</b><span>Propensity scores eliminate the need for training data</span></button><button class="opt" type="button"><b>C</b><span>Propensity score matching works even when confounders are unmeasured</span></button><button class="opt" type="button"><b>D</b><span>Propensity scores are always equal to 0.5</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Rosenbaum & Rubin (1983) proved the balancing score property: adjusting for the 1D propensity score balances all underlying covariates simultaneously, overcoming the curse of dimensionality.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>What threshold of Standardised Mean Difference (SMD) is widely accepted as indicating satisfactory covariate balance after matching?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>SMD = 1.0</span></button><button class="opt" type="button"><b>B</b><span>SMD < 0.10 (less than 10% of a standard deviation)</span></button><button class="opt" type="button"><b>C</b><span>SMD = 0.50</span></button><button class="opt" type="button"><b>D</b><span>SMD > 2.0</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> An SMD below 0.10 indicates that the difference in covariate means between treated and control cohorts is negligible, mirroring a randomised trial.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>Why must units outside the common support overlap region be trimmed in propensity score analysis?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because logistic regression cannot process negative numbers</span></button><button class="opt" type="button"><b>B</b><span>To make the sample size an even number</span></button><button class="opt" type="button"><b>C</b><span>Because treatment effects cannot be causally identified for individuals who have zero probability of receiving the alternative treatment</span></button><button class="opt" type="button"><b>D</b><span>Because p-values cannot be computed on unbalanced datasets</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The positivity assumption requires 0 < P(D=1 | X) < 1. If a unit has a propensity of 1.0, there are no comparable controls, making counterfactual comparison impossible without speculative extrapolation.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/causal-graphs-dags-and-adjustment/"><small class="kicker">Concept</small><b>Causal Graphs &amp; Adjustment</b></a><a href="../../concepts/difference-in-differences/"><small class="kicker">Concept</small><b>Difference-in-Differences</b></a><a href="../../concepts/a-b-testing-end-to-end/"><small class="kicker">Concept</small><b>A/B Testing End-to-End</b></a><a href="../../concepts/simpsons-paradox-and-confounding/"><small class="kicker">Concept</small><b>Simpson's Paradox &amp; Confounding</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/causal-graphs-dags-and-adjustment/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Statistics</small><b>Causal Graphs &amp; Adjustment</b></a>
+    <a class="pager-next" href="../../concepts/difference-in-differences/"><small>Next · Statistics <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Difference-in-Differences</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

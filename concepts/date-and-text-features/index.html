@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Date and Text Features: Engineering Tabular Signals from Unstructured Inputs · Learn · Yogesh Awate</title>
+<meta name="description" content="Extracting high-value cyclical calendar signals and bag-of-words or embedding representations for tabular machine learning models.">
+<meta property="og:title" content="Date and Text Features: Engineering Tabular Signals from Unstructured Inputs · Learn · Yogesh Awate">
+<meta property="og:description" content="Extracting high-value cyclical calendar signals and bag-of-words or embedding representations for tabular machine learning models.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="date-and-text-features">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-data-science">Path 07 · Data science</a> / Feature engineering / Lesson 12 of 47</span>
+    <h1 class="case-title">Date and Text Features: Engineering Tabular Signals from Unstructured Inputs</h1>
+    <p class="lede rise" style="--d:3">Extracting high-value cyclical calendar signals and bag-of-words or embedding representations for tabular machine learning models.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Data science · Feature engineering</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Tabular machine learning models cannot directly process raw timestamps or free-form text strings. Converting calendar timestamps into cyclical trigonometric components and holiday indicators, while extracting term statistics, TF-IDF weights, or dense pretrained embeddings from text fields, unlocks high-signal tabular predictors without full deep language model infrastructure.</p>
+        <p>Raw dates contain rich multi-scale periodicity: intraday hour (24-hour cycle), day of week (7-day cycle), day of month (payday effects), month of year (seasonal cycle), and boolean holiday flags.</p>
+        <p>Treating cyclical calendar variables as simple integers (e.g. mapping hours to $0, 1, \dots, 23$) introduces a severe false discontinuity: hour 23 and hour 0 appear 23 units apart despite being consecutive 60-minute neighbours. Sine and cosine trigonometric encodings $\sin(2\pi t / T)$ and $\cos(2\pi t / T)$ map time onto a smooth continuous 2D circle where 23:59 wraps seamlessly into 00:00.</p>
+        <p>Text fields in tabular datasets (product descriptions, customer support tickets, error logs) range from short categorical phrases to long paragraphs. Lightweight tabular text engineering uses token length, uppercase character ratios, punctuation counts, and n-gram TF-IDF representations.</p>
+        <p>Alternatively, passing short text through a small pretrained sentence transformer generates dense 384-dimensional embeddings, which can be compressed via TruncatedSVD or PCA into 8–16 dense numerical columns for gradient boosted decision trees.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine a shopkeeper tracking sales notes. A timestamp like "2026-12-25 09:30" means little to an arithmetic equation until separated into "Christmas Day", "Friday", "Morning rush", and "Month 12". Similarly, a customer review saying "the battery melted immediately" is useless as a string, but highly predictive once flagged with high-severity sentiment terms and n-gram keyword counts.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Calendar component decomposition: Extract year, month, day, day of week, day of year, hour, and is_weekend booleans from canonical UTC timestamps.</li><li>Trigonometric cyclical encoding: Transform periodic variables (hour, day of week, month) into paired sine and cosine coordinates to preserve circle topology.</li><li>Calendar event enrichment: Join country-specific public holiday calendars, commercial sales events (e.g. Black Friday), and financial reporting period closes.</li><li>Text surface feature extraction: Compute character lengths, word counts, uppercase letter ratios, exclamation frequencies, and language identification.</li><li>Dense text representation: Compute TF-IDF matrices (with n-gram range (1, 2) and minimum document frequency threshold) or SVD-reduced sentence embeddings, concatenating them with tabular feature arrays.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Cyclical Periodic Coordinate Projection</h3><div class="formula">x_{\sin} = \sin\left(\frac{2\pi t}{T}\right), \quad x_{\cos} = \cos\left(\frac{2\pi t}{T}\right)</div><p>Projects periodic index $t \in [0, T)$ onto the 2D unit circle, ensuring Euclidean distance between boundary values $t=0$ and $t=T-1$ reflects true temporal proximity.</p></li>
+          <li><h3>Circular Euclidean Distance Invariance</h3><div class="formula">\|(\sin\theta_1 - \sin\theta_2)^2 + (\cos\theta_1 - \cos\theta_2)^2\| = 2 - 2\cos(\theta_1 - \theta_2) = 4\sin^2\left(\frac{\theta_1 - \theta_2}{2}\right)</div><p>The Euclidean distance between two points in projected sinusoidal space is a monotonic function of the angular difference along the cycle.</p></li>
+          <li><h3>Term Frequency-Inverse Document Frequency (TF-IDF)</h3><div class="formula">\mathrm{tfidf}(t, d, D) = \mathrm{tf}(t, d) \times \ln\left(\frac{1 + |D|}{1 + |\{d \in D : t \in d\}|}\right) + 1</div><p>Measures the informational specificity of token $t$ in document $d$ relative to the entire tabular corpus $D$.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Trigonometric sine/cosine encodings eliminate artificial boundary gaps between consecutive cyclical times (e.g. 23:59 and 00:00).</li><li>Decomposing dates into hierarchical calendar units (day of week, holiday flag, quarter) reveals seasonality to tree algorithms.</li><li>Text fields can be efficiently represented using word counts, TF-IDF weights, or SVD-reduced sentence embeddings.</li><li>Always fit text vectorisers and normalisers exclusively on training data to prevent out-of-fold vocabulary leakage.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">import</span> pandas <span class="k">as</span> pd
+<span class="k">from</span> sklearn.feature_extraction.text <span class="k">import</span> TfidfVectorizer
+<span class="k">from</span> sklearn.decomposition <span class="k">import</span> TruncatedSVD
+
+<span class="c"># Sample tabular data with timestamps and customer support notes</span>
+df = pd.<span class="f">DataFrame</span>({
+    <span class="s">'timestamp'</span>: pd.<span class="f">to_datetime</span>([
+        <span class="s">'2026-01-01 23:45:00'</span>,
+        <span class="s">'2026-01-02 00:15:00'</span>,
+        <span class="s">'2026-07-15 14:30:00'</span>
+    ]),
+    <span class="s">'ticket_text'</span>: [
+        <span class="s">'Payment gateway returned fatal timeout error'</span>,
+        <span class="s">'Unable to complete purchase during checkout timeout'</span>,
+        <span class="s">'How do I update my profile mailing address'</span>
+    ]
+})
+
+<span class="c"># 1. Cyclical hour encoding</span>
+hours = df[<span class="s">'timestamp'</span>].dt.hour + df[<span class="s">'timestamp'</span>].dt.minute / <span class="n">60.0</span>
+df[<span class="s">'hour_sin'</span>] = np.<span class="f">sin</span>(<span class="n">2</span> * np.pi * hours / <span class="n">24.0</span>)
+df[<span class="s">'hour_cos'</span>] = np.<span class="f">cos</span>(<span class="n">2</span> * np.pi * hours / <span class="n">24.0</span>)
+
+<span class="c"># 2. Text feature extraction: character count and TF-IDF</span>
+df[<span class="s">'text_len'</span>] = df[<span class="s">'ticket_text'</span>].str.<span class="k">len</span>()
+tfidf = <span class="f">TfidfVectorizer</span>(max_features=<span class="n">10</span>, stop_words=<span class="s">'english'</span>)
+tfidf_matrix = tfidf.<span class="f">fit_transform</span>(df[<span class="s">'ticket_text'</span>])
+
+<span class="c"># Reduce text dimensionality for tabular inclusion</span>
+svd = <span class="f">TruncatedSVD</span>(n_components=<span class="n">2</span>, random_state=<span class="n">42</span>)
+text_dense = svd.<span class="f">fit_transform</span>(tfidf_matrix)
+df[<span class="s">'text_svd_1'</span>] = text_dense[:, <span class="n">0</span>]
+df[<span class="s">'text_svd_2'</span>] = text_dense[:, <span class="n">1</span>]
+
+<span class="k">print</span>(df[[<span class="s">'hour_sin'</span>, <span class="s">'hour_cos'</span>, <span class="s">'text_len'</span>, <span class="s">'text_svd_1'</span>]])
+<span class="c"># Observe hour 23:45 and 00:15 have nearly identical trigonometric coordinates</span></code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using only sine without cosine: Sine alone creates an ambiguous mapping where two distinct times of day (e.g. 06:00 and 18:00) share the exact same value.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>High-dimensional sparse text vectors in tree models: Passing raw 50,000-column TF-IDF matrices to LightGBM or XGBoost causes memory thrashing; reduce via SVD first.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Ignoring local time when calculating "hour of day": UTC 02:00 corresponds to mid-morning in Tokyo but late evening in London.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>Why is it necessary to include both sine and cosine terms when cyclically encoding hours of the day?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because linear regression requires even numbers of input variables</span></button><button class="opt" type="button"><b>B</b><span>Cosine removes the effect of leap years</span></button><button class="opt" type="button"><b>C</b><span>Decision trees cannot split on negative floating point numbers</span></button><button class="opt" type="button"><b>D</b><span>A single trigonometric wave produces identical values for two distinct times within each 24-hour cycle</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The sine function is non-monotonic on $[0, 2\pi)$, producing identical values for distinct hours (e.g. $\sin(\pi/4) = \sin(3\pi/4)$). Paired sine and cosine coordinates uniquely identify every point on the circle.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>What is the most effective way to include free-text descriptions into a gradient boosted tree model alongside tabular columns?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Train an end-to-end 70-billion parameter LLM for every single tabular row</span></button><button class="opt" type="button"><b>B</b><span>Convert the entire text into a single integer hash</span></button><button class="opt" type="button"><b>C</b><span>Delete the text column because decision trees only support binary indicators</span></button><button class="opt" type="button"><b>D</b><span>Extract length/token metadata and reduce TF-IDF or embedding vectors to a small number of dense components via SVD</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Gradient boosted trees handle a moderate number of continuous dense signals well. Compressing text representations with SVD or sentence embeddings preserves semantic variance without overwhelming tree splits.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>What issue arises when integer encoding the month of the year (1 to 12) in distance-based algorithms like k-NN?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>December (12) and January (1) appear maximally distant (distance 11) despite being consecutive months</span></button><button class="opt" type="button"><b>B</b><span>The algorithm will fail to converge to a global minimum</span></button><button class="opt" type="button"><b>C</b><span>The target distribution becomes multimodal</span></button><button class="opt" type="button"><b>D</b><span>Matrix inversion yields an ill-conditioned determinant</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In linear integer encoding, 12 and 1 have an artificial distance of 11, obscuring winter seasonality across year boundaries.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/dates-time-zones-and-temporal-joins/"><small class="kicker">Concept</small><b>Dates, time zones &amp; joins</b></a><a href="../../concepts/bag-of-words-and-tf-idf/"><small class="kicker">Concept</small><b>BoW &amp; TF-IDF</b></a><a href="../../concepts/encoding-categoricals-one-hot-ordinal-target-woe/"><small class="kicker">Concept</small><b>Encoding categoricals</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/interactions-and-polynomial-features/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Data science</small><b>Interactions &amp; polynomials</b></a>
+    <a class="pager-next" href="../../concepts/feature-hashing-and-high-cardinality-columns/"><small>Next · Data science <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Feature hashing &amp; cardinality</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

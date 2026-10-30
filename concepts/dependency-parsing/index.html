@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Dependency parsing · Learn · Yogesh Awate</title>
+<meta name="description" content="Dependency parsing analyses the grammatical structure of a sentence by establishing directed, typed relations between words. Unlike constituency grammars that partition sentences into nested hierarchical phrases, dependency representations connect lexical heads directly to their dependents (e.g. subject, direct object, modifier). Transition-based dependency parsers use a shift-reduce state machine to build projective parse trees in linear O(n) time.">
+<meta property="og:title" content="Dependency parsing · Learn · Yogesh Awate">
+<meta property="og:description" content="Dependency parsing analyses the grammatical structure of a sentence by establishing directed, typed relations between words. Unlike constituency grammars that partition sentences into nested hierarchical phrases, dependency representations connect lexical heads directly to their dependents (e.g. subject, direct object, modifier). Transition-based dependency parsers use a shift-reduce state machine to build projective parse trees in linear O(n) time.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="dependency-parsing">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-nlp">Path 10 · Natural language processing</a> / Syntax / Lesson 15 of 52</span>
+    <h1 class="case-title">Dependency parsing</h1>
+    <p class="lede rise" style="--d:3">Dependency parsing analyses the grammatical structure of a sentence by establishing directed, typed relations between words. Unlike constituency grammars that partition sentences into nested hierarchical phrases, dependency representations connect lexical heads directly to their dependents (e.g. subject, direct object, modifier). Transition-based dependency parsers use a shift-reduce state machine to build projective parse trees in linear O(n) time.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/part-of-speech-tagging/">POS Tagging</a> <a href="../../concepts/word-and-sentence-tokenization/">Word &amp; Sentence Tokenization</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Natural language processing · Syntax</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">When an NLP system needs to extract information from the sentence "The large enterprise acquired a promising robotics startup", it does not merely care that words occurred near each other. It must answer: Who acquired whom? What was large, and what was promising? Dependency parsing answers these semantic questions directly by revealing the grammatical skeleton: "enterprise" is the subject of "acquired", "startup" is the direct object, and "robotics" is a modifier.</p>
+        <p>Constituency versus dependency syntax: Phrase structure grammars (constituency) group words into nested syntactic brackets: sentences are divided into Noun Phrases and Verb Phrases. While mathematically elegant, constituency trees do not explicitly state which word is in charge. Dependency grammar cuts directly to the chase: words link directly to words through directed binary arcs. Every phrase has a single head word (the governor) that determines its syntactic category, and all other words in the phrase are dependents modifying that head.</p>
+        <p>The conveyor belt intuition of shift-reduce parsing: Think of transition-based parsing like an assembly line. Words arrive one by one on an input buffer (the conveyor belt). You pick up words and place them on a stack (your workbench). At each step, you decide whether to pull another word onto the workbench (SHIFT), link the top two words on the bench with a directed relationship where the second modifies the first (LEFT-ARC), or link them where the first modifies the second (RIGHT-ARC). When an arc is formed, the dependent word is removed, keeping only the head available to link with future words.</p>
+        <p>Projectivity and crossing arcs: When words are written out in linear order, a dependency tree is projective if every dependency arc can be drawn as an arc above the words without any lines crossing. Most English sentences are projective. However, languages with flexible word order (such as German, Latin, or Russian) and long-distance topicalisation produce crossing arcs (non-projectivity), requiring graph-based parsing algorithms like Chu-Liu-Edmonds maximum spanning trees.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine building a family tree or corporate organisational chart. Constituency parsing is like drawing circles around departments: "Engineering Department", "Backend Team", "Platform Squad". It tells you which group people belong to, but does not tell you who reports to whom. Dependency parsing is the actual reporting tree: Employee A reports to Team Lead B, who reports to Director C, who reports to the Chief Executive (the ROOT). Finding who is responsible for an action is as simple as tracing the directed arrows from manager to subordinate.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Formal dependency tree structural axioms</h3><div class="formula">d_{\text{in}}(w_0) = 0, \quad \forall i \ge 1: d_{\text{in}}(w_i) = 1, \quad G = (V, A) \text{ is acyclic}</div><p>A valid dependency tree over vocabulary nodes $V = \{w_0 = \text{ROOT}, w_1, \dots, w_n\}$ must be a directed spanning tree rooted at $w_0$, where every non-root word has in-degree exactly 1 with no directed cycles.</p></li>
+          <li><h3>Arc-Standard transition operators</h3><div class="formula">\begin{aligned} \text{SHIFT} &: (\sigma, b_0 \mid \beta, A) \implies (\sigma \mid b_0, \beta, A) \\ \text{LEFT-ARC}_r &: (\sigma \mid s_1 \mid s_0, \beta, A) \implies (\sigma \mid s_0, \beta, A \cup \{(s_0, r, s_1)\}) \\ \text{RIGHT-ARC}_r &: (\sigma \mid s_1 \mid s_0, \beta, A) \implies (\sigma \mid s_1, \beta, A \cup \{(s_1, r, s_0)\}) \end{aligned}</div><p>Here $\sigma$ denotes the stack with elements $s_1, s_0$, $\beta$ is the buffer with head $b_0$, and $A$ is the accumulated set of dependency arcs. LEFT-ARC requires $s_1 \ne \text{ROOT}$.</p></li>
+          <li><h3>Unlabelled (UAS) and Labelled (LAS) Attachment Scores</h3><div class="formula">\operatorname{UAS} = \frac{\sum_{i=1}^n \mathbb{I}(\hat{h}_i = h_i^*)}{n}, \quad \operatorname{LAS} = \frac{\sum_{i=1}^n \mathbb{I}(\hat{h}_i = h_i^* \land \hat{r}_i = r_i^*)}{n}</div><p>UAS evaluates whether token $i$ is assigned the correct head index $h_i^*$. LAS is the stricter standard metric requiring simultaneous correctness of both the parent head $h_i^*$ and the grammatical relation label $r_i^*$.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Dependency parsing represents syntax as directed, labelled binary relations between head words and their dependent modifiers.</li><li>A well-formed dependency tree is a rooted, connected, acyclic directed graph where each word has in-degree exactly 1 except ROOT.</li><li>Transition-based parsers build projective trees in linear O(n) time using a shift-reduce state machine over a stack and buffer.</li><li>Projective trees have no crossing dependency arcs; non-projective trees require graph-based parsing algorithms or swap transitions.</li><li>Parsing accuracy is measured by Unlabelled Attachment Score (UAS) for head accuracy and Labelled Attachment Score (LAS) for typed relation accuracy.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">class</span> ArcStandardParser:
+    <span class="s">&quot;&quot;&quot;
+    Deterministic Arc-Standard Transition-Based Dependency Parser.
+    Simulates stack, buffer, and arc transitions with an oracle policy.
+    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, sentence, gold_arcs=<span class="k">None</span>):
+        <span class="k">self</span>.words = [<span class="s">&quot;ROOT&quot;</span>] + sentence
+        <span class="k">self</span>.stack = [<span class="n">0</span>]
+        <span class="k">self</span>.buffer = <span class="f">list</span>(<span class="k">range</span>(<span class="n">1</span>, <span class="k">len</span>(<span class="k">self</span>.words)))
+        <span class="k">self</span>.arcs = []
+        <span class="k">self</span>.gold_arcs = gold_arcs <span class="k">or</span> []
+        <span class="k">self</span>.history = []
+
+    <span class="k">def</span> <span class="f">can_left_arc</span>(<span class="k">self</span>):
+        <span class="k">return</span> <span class="k">len</span>(<span class="k">self</span>.stack) &gt;= <span class="n">2</span> <span class="k">and</span> <span class="k">self</span>.stack[-<span class="n">2</span>] != <span class="n">0</span>
+
+    <span class="k">def</span> <span class="f">can_right_arc</span>(<span class="k">self</span>):
+        <span class="k">return</span> <span class="k">len</span>(<span class="k">self</span>.stack) &gt;= <span class="n">2</span>
+
+    <span class="k">def</span> <span class="f">can_shift</span>(<span class="k">self</span>):
+        <span class="k">return</span> <span class="k">len</span>(<span class="k">self</span>.buffer) &gt; <span class="n">0</span>
+
+    <span class="k">def</span> <span class="f">shift</span>(<span class="k">self</span>):
+        tok = <span class="k">self</span>.buffer.<span class="f">pop</span>(<span class="n">0</span>)
+        <span class="k">self</span>.stack.<span class="f">append</span>(tok)
+        <span class="k">self</span>.history.<span class="f">append</span>(<span class="s">f&quot;SHIFT -&gt; pushed '{self.words[tok]}'&quot;</span>)
+
+    <span class="k">def</span> <span class="f">left_arc</span>(<span class="k">self</span>, relation=<span class="s">&quot;dep&quot;</span>):
+        s0 = <span class="k">self</span>.stack[-<span class="n">1</span>]
+        s1 = <span class="k">self</span>.stack[-<span class="n">2</span>]
+        <span class="k">self</span>.arcs.<span class="f">append</span>((s0, relation, s1))
+        <span class="k">self</span>.stack.<span class="f">pop</span>(-<span class="n">2</span>)
+        <span class="k">self</span>.history.<span class="f">append</span>(<span class="s">f&quot;LEFT-ARC ({relation}): '{self.words[s0]}' -&gt; '{self.words[s1]}'&quot;</span>)
+
+    <span class="k">def</span> <span class="f">right_arc</span>(<span class="k">self</span>, relation=<span class="s">&quot;dep&quot;</span>):
+        s0 = <span class="k">self</span>.stack[-<span class="n">1</span>]
+        s1 = <span class="k">self</span>.stack[-<span class="n">2</span>]
+        <span class="k">self</span>.arcs.<span class="f">append</span>((s1, relation, s0))
+        <span class="k">self</span>.stack.<span class="f">pop</span>(-<span class="n">1</span>)
+        <span class="k">self</span>.history.<span class="f">append</span>(<span class="s">f&quot;RIGHT-ARC ({relation}): '{self.words[s1]}' -&gt; '{self.words[s0]}'&quot;</span>)
+
+    <span class="k">def</span> <span class="f">is_terminal</span>(<span class="k">self</span>):
+        <span class="k">return</span> <span class="k">len</span>(<span class="k">self</span>.buffer) == <span class="n">0</span> <span class="k">and</span> <span class="k">len</span>(<span class="k">self</span>.stack) == <span class="n">1</span> <span class="k">and</span> <span class="k">self</span>.stack[<span class="n">0</span>] == <span class="n">0</span>
+
+    <span class="k">def</span> <span class="f">display_tree</span>(<span class="k">self</span>):
+        <span class="k">print</span>(<span class="s">&quot;\nExtracted Dependency Arcs:&quot;</span>)
+        sorted_arcs = <span class="f">sorted</span>(<span class="k">self</span>.arcs, key=<span class="k">lambda</span> x: x[<span class="n">2</span>])
+        <span class="k">for</span> head, rel, dep <span class="k">in</span> sorted_arcs:
+            h_word = <span class="k">self</span>.words[head]
+            d_word = <span class="k">self</span>.words[dep]
+            <span class="k">print</span>(<span class="s">f&quot;  {d_word:&lt;12} (id={dep}) &lt;--[{rel}]-- {h_word:&lt;10} (id={head})&quot;</span>)
+
+<span class="c"># Example Sentence: &quot;The quick cat caught the mouse&quot;</span>
+tokens = [<span class="s">&quot;The&quot;</span>, <span class="s">&quot;quick&quot;</span>, <span class="s">&quot;cat&quot;</span>, <span class="s">&quot;caught&quot;</span>, <span class="s">&quot;the&quot;</span>, <span class="s">&quot;mouse&quot;</span>]
+
+parser = <span class="f">ArcStandardParser</span>(tokens)
+
+<span class="c"># Oracle transition sequence:</span>
+parser.<span class="f">shift</span>()                          <span class="c"># Push 'The'</span>
+parser.<span class="f">shift</span>()                          <span class="c"># Push 'quick'</span>
+parser.<span class="f">shift</span>()                          <span class="c"># Push 'cat'</span>
+parser.<span class="f">left_arc</span>(relation=<span class="s">&quot;amod&quot;</span>)        <span class="c"># 'cat' -&gt; 'quick'</span>
+parser.<span class="f">left_arc</span>(relation=<span class="s">&quot;det&quot;</span>)         <span class="c"># 'cat' -&gt; 'The'</span>
+parser.<span class="f">shift</span>()                          <span class="c"># Push 'caught'</span>
+parser.<span class="f">left_arc</span>(relation=<span class="s">&quot;nsubj&quot;</span>)       <span class="c"># 'caught' -&gt; 'cat'</span>
+parser.<span class="f">shift</span>()                          <span class="c"># Push 'the'</span>
+parser.<span class="f">shift</span>()                          <span class="c"># Push 'mouse'</span>
+parser.<span class="f">left_arc</span>(relation=<span class="s">&quot;det&quot;</span>)         <span class="c"># 'mouse' -&gt; 'the'</span>
+parser.<span class="f">right_arc</span>(relation=<span class="s">&quot;obj&quot;</span>)        <span class="c"># 'caught' -&gt; 'mouse'</span>
+parser.<span class="f">right_arc</span>(relation=<span class="s">&quot;root&quot;</span>)       <span class="c"># 'ROOT' -&gt; 'caught'</span>
+
+<span class="k">print</span>(<span class="s">f&quot;Terminal state reached? {parser.is_terminal()}&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;\nTransition History:&quot;</span>)
+<span class="k">for</span> step, action <span class="k">in</span> <span class="f">enumerate</span>(parser.history, <span class="n">1</span>):
+    <span class="k">print</span>(<span class="s">f&quot;  {step:2d}. {action}&quot;</span>)
+
+parser.<span class="f">display_tree</span>()
+
+<span class="k">def</span> <span class="f">evaluate_scores</span>(predicted_arcs, gold_arcs, num_words):
+    pred_heads = {dep: head <span class="k">for</span> head, rel, dep <span class="k">in</span> predicted_arcs}
+    pred_labels = {dep: rel <span class="k">for</span> head, rel, dep <span class="k">in</span> predicted_arcs}
+    
+    gold_heads = {dep: head <span class="k">for</span> head, rel, dep <span class="k">in</span> gold_arcs}
+    gold_labels = {dep: rel <span class="k">for</span> head, rel, dep <span class="k">in</span> gold_arcs}
+    
+    uas_correct = <span class="f">sum</span>(<span class="n">1</span> <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(<span class="n">1</span>, num_words + <span class="n">1</span>) <span class="k">if</span> pred_heads.<span class="f">get</span>(i) == gold_heads.<span class="f">get</span>(i))
+    las_correct = <span class="f">sum</span>(<span class="n">1</span> <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(<span class="n">1</span>, num_words + <span class="n">1</span>) <span class="k">if</span> (pred_heads.<span class="f">get</span>(i) == gold_heads.<span class="f">get</span>(i) <span class="k">and</span> pred_labels.<span class="f">get</span>(i) == gold_labels.<span class="f">get</span>(i)))
+    
+    <span class="k">return</span> uas_correct / num_words, las_correct / num_words
+
+uas, las = <span class="f">evaluate_scores</span>(parser.arcs, parser.arcs, <span class="k">len</span>(tokens))
+<span class="k">print</span>(<span class="s">f&quot;\nUAS (Unlabelled Attachment Score): {uas * 100:.1f}%&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;LAS (Labelled Attachment Score):   {las * 100:.1f}%&quot;</span>)
+</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Inverting arc direction: In Universal Dependencies, arcs point from governor head to dependent modifier (head -> dependent). Reversing the direction creates an upside-down tree that fails grammatical validation.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming all sentences are projective: While English is over 99% projective, languages with flexible word order (German, Russian, Hindi, Latin) have widespread crossing arcs that cannot be parsed by standard Arc-Standard without swap actions.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Cascading error propagation in greedy transition systems: Because transition decisions are hard and irrevocable, an early incorrect shift or reduction permanently corrupts subsequent stack states. Beam search or graph-based parsers help avoid early commitment.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Including the ROOT token in UAS/LAS scores: Evaluation standards (such as CoNLL) explicitly exclude the artificial ROOT token (id 0) from the scoring denominator. Including it artificially inflates accuracy metrics.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>In Universal Dependencies parsing, what is the single-head structural constraint?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>A head word can never have more than one dependent modifier</span></button><button class="opt" type="button"><b>B</b><span>Every word in the sentence (except the artificial ROOT token) must have exactly one incoming dependency arc</span></button><button class="opt" type="button"><b>C</b><span>Every sentence must contain exactly one noun phrase</span></button><button class="opt" type="button"><b>D</b><span>Every word must be linked directly to the ROOT token</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In dependency grammar, every word depends on exactly one syntactic governor (in-degree d_in = 1). The only exception is the artificial ROOT token, which has in-degree 0 and serves as the structural anchor of the entire sentence.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>Why is the computational time complexity of Arc-Standard transition-based dependency parsing strictly O(n) linear with sentence length?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because it converts the input string into a regular expression</span></button><button class="opt" type="button"><b>B</b><span>Because it skips parsing all words that are not verbs</span></button><button class="opt" type="button"><b>C</b><span>Because each of the n words is pushed onto the stack exactly once via SHIFT and removed from the stack exactly once via an ARC reduction, yielding exactly 2n total transitions</span></button><button class="opt" type="button"><b>D</b><span>Because it computes matrix inversions in constant time</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In Arc-Standard parsing, each token in the buffer is shifted onto the stack exactly once (n shifts) and popped during a left-arc or right-arc reduction exactly once (n reductions). The total number of state transitions is bounded by 2n, proving strictly linear time complexity.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>What is the difference between Unlabelled Attachment Score (UAS) and Labelled Attachment Score (LAS)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>UAS evaluates verbs while LAS evaluates nouns</span></button><button class="opt" type="button"><b>B</b><span>UAS uses cross-entropy loss while LAS uses Mean Squared Error</span></button><button class="opt" type="button"><b>C</b><span>UAS is evaluated on training data while LAS is evaluated on test data</span></button><button class="opt" type="button"><b>D</b><span>UAS measures only whether words are assigned the correct parent head, whereas LAS requires both the correct head and the correct grammatical relation label (e.g. nsubj, obj)</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> UAS (Unlabelled Attachment Score) counts a word as correct if its assigned head matches the ground truth. LAS (Labelled Attachment Score) is a stricter metric that demands that both the head index and the specific dependency relation label match ground truth.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/part-of-speech-tagging/"><small class="kicker">Concept</small><b>POS Tagging</b></a><a href="../../concepts/word-and-sentence-tokenization/"><small class="kicker">Concept</small><b>Word &amp; Sentence Tokenization</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/part-of-speech-tagging/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Natural language processing</small><b>POS Tagging</b></a>
+    <a class="pager-next" href="../../concepts/named-entity-recognition-and-iob-tagging/"><small>Next · Natural language processing <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>NER &amp; IOB Tagging</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

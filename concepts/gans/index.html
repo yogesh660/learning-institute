@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Generative Adversarial Networks (GANs) · Learn · Yogesh Awate</title>
+<meta name="description" content="Pitting two neural networks against each other in a zero-sum minimax game: a generator creates synthetic counterfeits while a discriminator learns to detect them.">
+<meta property="og:title" content="Generative Adversarial Networks (GANs) · Learn · Yogesh Awate">
+<meta property="og:description" content="Pitting two neural networks against each other in a zero-sum minimax game: a generator creates synthetic counterfeits while a discriminator learns to detect them.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="gans">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-neural">Path 08 · Deep learning</a> / Architectures / Lesson 25 of 42</span>
+    <h1 class="case-title">Generative Adversarial Networks (GANs)</h1>
+    <p class="lede rise" style="--d:3">Pitting two neural networks against each other in a zero-sum minimax game: a generator creates synthetic counterfeits while a discriminator learns to detect them.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/variational-autoencoders/">Variational autoencoders</a> <a href="../../concepts/the-pytorch-training-loop/">PyTorch training loop</a> <a href="../../concepts/backpropagation-and-autodiff/">Backprop and autodiff</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Deep learning · Architectures</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Rather than relying on hand-crafted pixel reconstruction metrics that encourage blurry outputs, Generative Adversarial Networks (GANs, Goodfellow et al. 2014) cast generative modelling as an adversarial game. A generator learns to synthesize realistic data from random noise, while a discriminator acts as an adaptive loss function, continually learning to distinguish genuine training examples from synthetic fakes.</p>
+        <p>Consider an art counterfeiter and an art detective:
+- The **Generator** ($G$) is the counterfeiter: it accepts random Gaussian noise $z \sim \mathcal{N}(0, I)$ and attempts to paint a convincing fake artwork $G(z)$.
+- The **Discriminator** ($D$) is the detective: it receives an image $x$ (which is either an authentic museum masterpiece or a counterfeit from the generator) and outputs a probability score $D(x) \in [0, 1]$ indicating whether the image is authentic.
+At the beginning, both networks are unskilled: the generator outputs random static noise, and the discriminator guesses at chance levels.</p>
+        <p>Training proceeds as a competitive two-player alternating game:
+1. **Train the Discriminator**: Present it with a batch of authentic images (labelled 1) and a batch of generator fakes (labelled 0). Update discriminator weights to maximise classification accuracy.
+2. **Train the Generator**: Feed noise through the generator, pass the generated fakes to the discriminator, and update generator weights to fool the discriminator into classifying fakes as authentic ($D(G(z)) \to 1$).
+As the discriminator learns to detect increasingly subtle visual flaws, the generator is forced to eliminate those flaws, producing sharper textures, higher fidelity, and convincing spatial details.</p>
+        <p>At theoretical equilibrium (the **Nash equilibrium**), the generator captures the true underlying data distribution ($p_g = p_{\text{data}}$), and the discriminator can do no better than guessing with probability $D(x) = 0.5$ for every candidate image. Because the generator is guided by a learned discriminator rather than an inflexible pixel-wise distance metric like Mean Squared Error, GANs avoid the blurriness typical of standard autoencoders and produce crisp, photorealistic imagery.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Like a currency counterfeiter and a bank teller: as the counterfeiter refines their printing techniques, the teller learns new counterfeit-detection checks, perpetually driving both to higher levels of mastery.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Design dual architectures: construct Generator $G_\theta: \mathbb{R}^{d_z} \to \mathbb{R}^D$ and Discriminator $D_\phi: \mathbb{R}^D \to [0, 1]$ using convolutional or dense layers with LeakyReLU activations.</li><li>Train the discriminator on real and fake batches: freeze generator parameters, evaluate $D(x_{\text{real}})$ and $D(G(z))$, and update discriminator weights using binary cross-entropy loss.</li><li>Train the generator with non-saturating loss: freeze discriminator parameters, sample fresh noise $z$, and update generator weights to maximise $\log D(G(z))$ (minimising $-\log D(G(z))$).</li><li>Alternate training updates: execute one or more discriminator steps per generator step to ensure the discriminator provides informative gradients.</li><li>Monitor adversarial equilibrium: verify that discriminator loss does not collapse to zero (which eliminates generator gradients) or diverge uncontrollably.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>The minimax zero-sum game objective</h3><div class="formula">$$\min_G \max_D V(D, G) = \mathbb{E}_{x \sim p_{\text{data}}}\big[\log D(x)\big] + \mathbb{E}_{z \sim p_z}\big[\log\big(1 - D(G(z))\big)\big]$$</div><p>$D(x)$ is the discriminator's predicted probability that $x$ is real, and $G(z)$ is the generator's synthesized sample from noise prior $p_z$. The discriminator seeks to maximise $V(D, G)$ by correctly classifying real and fake inputs; the generator seeks to minimise it by producing fakes that drive $D(G(z)) \to 1$.</p></li>
+          <li><h3>Optimal discriminator and Jensen-Shannon Divergence</h3><div class="formula">$$D^*(x) = \frac{p_{\text{data}}(x)}{p_{\text{data}}(x) + p_g(x)} \implies V(D^*, G) = -\log(4) + 2 \cdot D_{\text{JS}}(p_{\text{data}} \parallel p_g)$$</div><p>For any fixed generator $G$, the optimal discriminator is the density ratio of real data to combined data. When substituted into the objective, minimising $V(D^*, G)$ is mathematically equivalent to minimising the Jensen-Shannon divergence between real data distribution $p_{\text{data}}$ and generated distribution $p_g$.</p></li>
+          <li><h3>Non-saturating generator loss (practical implementation)</h3><div class="formula">$$\mathcal{L}_G = -\mathbb{E}_{z \sim p_z}\big[\log D(G(z))\big] \quad \text{instead of} \quad \mathcal{L}_G^{\text{orig}} = \mathbb{E}_{z \sim p_z}\big[\log(1 - D(G(z)))\big]$$</div><p>Early in training when the generator is weak, the discriminator easily identifies fakes ($D(G(z)) \approx 0$). In this regime, the original minimax loss $\log(1 - D(G(z)))$ has flat gradients. Maximising $\log D(G(z))$ provides steep, non-zero gradients early on, dramatically accelerating generator learning.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>GANs replace hand-crafted loss functions with an adaptive discriminator network that dynamically discovers the criteria for realism.</li><li>The non-saturating generator loss ($-\log D(G(z))$) overcomes vanishing gradients early in training when the discriminator easily outmatches the generator.</li><li>Theoretical Nash equilibrium is reached when the generator reproduces the true data distribution ($p_g = p_{\text{data}}$) and the discriminator predicts $0.5$ for all samples.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Simulate one step of GAN training on 1D Gaussian target N(4.0, 0.5^2)</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+N = <span class="n">20</span>
+w_g, b_g = <span class="n">1.0</span>, <span class="n">1.0</span>  <span class="c"># Generator: G(z) = w_g * z + b_g</span>
+w_d, b_d = <span class="n">0.5</span>, <span class="n">0.0</span>  <span class="c"># Discriminator: D(x) = sigmoid(w_d * x + b_d)</span>
+
+<span class="c"># 1. Evaluate Discriminator on real data vs generated fakes</span>
+z_noise = np.random.<span class="f">randn</span>(N)
+x_fake = w_g * z_noise + b_g
+x_real = np.random.<span class="f">normal</span>(<span class="n">4.0</span>, <span class="n">0.5</span>, size=N)
+
+d_real = <span class="n">1.0</span> / (<span class="n">1.0</span> + np.<span class="f">exp</span>(-(w_d * x_real + b_d)))
+d_fake = <span class="n">1.0</span> / (<span class="n">1.0</span> + np.<span class="f">exp</span>(-(w_d * x_fake + b_d)))
+
+loss_d = -<span class="f">float</span>(np.<span class="f">mean</span>(np.<span class="f">log</span>(d_real + <span class="n">1e-8</span>) + np.<span class="f">log</span>(<span class="n">1.0</span> - d_fake + <span class="n">1e-8</span>)))
+
+<span class="c"># 2. Evaluate Generator using non-saturating loss: -log(D(G(z)))</span>
+z_fresh = np.random.<span class="f">randn</span>(N)
+x_gen = w_g * z_fresh + b_g
+d_gen = <span class="n">1.0</span> / (<span class="n">1.0</span> + np.<span class="f">exp</span>(-(w_d * x_gen + b_d)))
+loss_g = -<span class="f">float</span>(np.<span class="f">mean</span>(np.<span class="f">log</span>(d_gen + <span class="n">1e-8</span>)))
+
+<span class="k">print</span>(<span class="s">f&quot;Discriminator loss on mixed batch: {loss_d:.4f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Generator non-saturating loss:     {loss_g:.4f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Avg discriminator score on real data: {float(np.mean(d_real)):.4f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Avg discriminator score on fake data: {float(np.mean(d_fake)):.4f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Mode collapse: the generator discovers a narrow subset of convincing samples (or a single class) that reliably fools the discriminator, ignoring the rest of the target distribution.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Discriminator overpowering: if the discriminator learns too fast and achieves 100% accuracy, generator gradients vanish to zero, freezing training.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using training loss curves to judge visual quality: GAN loss curves fluctuate and do not correlate monotonically with sample fidelity; use metrics like FID (Fréchet Inception Distance) instead.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>What is "mode collapse" in Generative Adversarial Networks?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The generator produces only a limited variety of outputs (or a single sample) that fools the discriminator, ignoring the diversity of the true distribution</span></button><button class="opt" type="button"><b>B</b><span>The model runs out of GPU memory during backward passes</span></button><button class="opt" type="button"><b>C</b><span>The discriminator learning rate drops to zero during training</span></button><button class="opt" type="button"><b>D</b><span>The generator weights collapse to zero due to excessive weight decay</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Mode collapse occurs when the generator finds a small region of the data space that consistently fools the discriminator, repeatedly producing that single pattern rather than learning the entire multimodal distribution.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>Why is the non-saturating generator loss $-\log D(G(z))$ preferred over the original minimax formulation $\log(1 - D(G(z)))$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because it forces the discriminator to predict negative probabilities</span></button><button class="opt" type="button"><b>B</b><span>Because it guarantees that the generator converges in exactly one epoch</span></button><button class="opt" type="button"><b>C</b><span>Because it eliminates the discriminator network entirely</span></button><button class="opt" type="button"><b>D</b><span>Because it provides strong, non-vanishing gradients early in training when the discriminator easily rejects poor generator fakes</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Early in training, $D(G(z)) \approx 0$. The slope of $\log(1 - D(G(z)))$ is near zero in this regime, causing vanishing gradients. In contrast, $-\log D(G(z))$ has a steep slope near zero, providing large initial gradient updates.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>What is the theoretical Nash equilibrium state of the ideal GAN minimax game?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The generator outputs only negative numbers</span></button><button class="opt" type="button"><b>B</b><span>The generator produces zero loss and the discriminator achieves 100% accuracy</span></button><button class="opt" type="button"><b>C</b><span>The discriminator loss diverges to infinity</span></button><button class="opt" type="button"><b>D</b><span>The generated distribution matches the real data distribution ($p_g = p_{\text{data}}$) and the discriminator predicts 0.5 for all samples</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> At Nash equilibrium, the generator perfectly replicates the true data distribution ($p_g = p_{\text{data}}$), leaving the discriminator unable to distinguish real from fake and forcing its optimal prediction to be chance ($D(x) = 0.5$).</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q4</span>Why are training loss curves often uninformative for assessing the quality of a GAN?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because GAN loss curves do not record floating-point numbers</span></button><button class="opt" type="button"><b>B</b><span>Because the generator does not use backpropagation</span></button><button class="opt" type="button"><b>C</b><span>Because binary cross-entropy cannot be computed on images</span></button><button class="opt" type="button"><b>D</b><span>Because the discriminator and generator improve adversarially against each other; an equilibrium game can exhibit oscillating or static losses while visual quality steadily improves</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In a zero-sum game, as the generator gets better, the discriminator also adapts. Both losses can remain roughly constant even as sample realism improves dramatically, necessitating sample-based metrics like Fréchet Inception Distance (FID).</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/autoencoders/"><small class="kicker">Concept</small><b>Autoencoders</b></a><a href="../../concepts/residual-networks-and-skip-connections/"><small class="kicker">Concept</small><b>ResNets and skip connections</b></a><a href="../../concepts/the-attention-mechanism/"><small class="kicker">Concept</small><b>The attention mechanism</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/variational-autoencoders/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>Variational autoencoders</b></a>
+    <a class="pager-next" href="../../concepts/diffusion-models/"><small>Next · Deep learning <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Diffusion models</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

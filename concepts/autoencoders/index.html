@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Autoencoders · Learn · Yogesh Awate</title>
+<meta name="description" content="Compressing data into a low-dimensional bottleneck and reconstructing it back forces the network to discover the compact generative manifold of the dataset.">
+<meta property="og:title" content="Autoencoders · Learn · Yogesh Awate">
+<meta property="og:description" content="Compressing data into a low-dimensional bottleneck and reconstructing it back forces the network to discover the compact generative manifold of the dataset.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="autoencoders">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-neural">Path 08 · Deep learning</a> / Architectures / Lesson 23 of 42</span>
+    <h1 class="case-title">Autoencoders</h1>
+    <p class="lede rise" style="--d:3">Compressing data into a low-dimensional bottleneck and reconstructing it back forces the network to discover the compact generative manifold of the dataset.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/the-pytorch-training-loop/">PyTorch training loop</a> <a href="../../concepts/pca/">PCA</a> <a href="../../concepts/backpropagation-and-autodiff/">Backprop and autodiff</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Deep learning · Architectures</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">How can a neural network learn informative representations without human labels? Autoencoders accomplish unsupervised representation learning by posing an input reconstruction objective: an encoder compresses the input into a low-dimensional latent code, and a decoder attempts to reconstruct the original input from that bottleneck representation.</p>
+        <p>Suppose you want to describe thousands of different face photographs over a radio channel, but bandwidth restricts you to transmitting only 10 numbers per image. You cannot describe individual pixels. To succeed, those 10 numbers must capture the dominant axes of variance across human faces: head shape, eye spacing, skin tone, hair length, and smile width. The sketch artist on the receiving end uses those 10 parameters to recreate the portrait.</p>
+        <p>An **Autoencoder** builds this compression pipeline with two mirrored networks:
+1. **Encoder** ($z = f_\theta(x)$): Compresses the high-dimensional input $x \in \mathbb{R}^D$ into a lower-dimensional latent bottleneck $z \in \mathbb{R}^d$ ($d \ll D$).
+2. **Decoder** ($\hat{x} = g_\phi(z)$): Expands the latent code $z$ back to reconstruct the original input $\hat{x} \approx x$.
+The network trains by minimising a reconstruction loss (such as Mean Squared Error or Binary Cross-Entropy). If the encoder and decoder were strictly linear, the learned bottleneck would span the exact same subspace as <a class="inline" href="../../concepts/pca/">Principal Component Analysis (PCA)</a>. But with non-linear activation functions, autoencoders learn curved, non-linear manifolds that linear projections cannot capture.</p>
+        <p>Beyond simple dimensional bottlenecks, regularised autoencoders prevent trivial memorisation. **Denoising Autoencoders (DAEs)** corrupt the input with noise ($\tilde{x} = x + \epsilon$) and train the decoder to recover the clean original $x$, learning an orthogonal projection field that pushes corrupted points back onto the true data manifold. This makes autoencoders exceptionally useful for anomaly detection: inputs that deviate from the normal training distribution cannot be reconstructed accurately, producing telltale spikes in reconstruction error.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Like summarising a 500-page historical treatise into a 5-page brief (encoder) and having a historian reconstruct the full event timeline using only those 5 pages (decoder).</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Choose the bottleneck dimension: select latent dimensionality $d$ reflecting the anticipated intrinsic dimensionality of the data manifold.</li><li>Construct the encoder network: stack feedforward or convolutional layers tapering down in width from input dimensionality $D$ to latent code $z$.</li><li>Construct the decoder network: mirror the encoder architecture, progressively expanding from latent code $z$ back to input dimensionality $D$.</li><li>Define the reconstruction criterion: select Mean Squared Error for continuous real-valued features or Binary Cross-Entropy for normalised pixel intensities.</li><li>Train and deploy: train end-to-end with <a class="inline" href="../../concepts/the-pytorch-training-loop/">the PyTorch training loop</a>; detach the decoder and use the encoder as a feature extractor or anomaly detector.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Autoencoder reconstruction objective</h3><div class="formula">$$\min_{\theta, \phi} \frac{1}{N}\sum_{i=1}^N \mathcal{L}\Big(x_i, g_\phi\big(f_\theta(x_i)\big)\Big), \quad z_i = f_\theta(x_i), \; \hat{x}_i = g_\phi(z_i)$$</div><p>$f_\theta: \mathbb{R}^D \to \mathbb{R}^d$ is the encoder parameterised by $\theta$, $g_\phi: \mathbb{R}^d \to \mathbb{R}^D$ is the decoder parameterised by $\phi$, and $\mathcal{L}$ is the reconstruction loss. Minimising $\mathcal{L}$ forces $z$ to retain maximum information about $x$.</p></li>
+          <li><h3>Relationship to Principal Component Analysis (linear autoencoders)</h3><div class="formula">$$\text{If } f(x) = W_1 x \text{ and } g(z) = W_2 z, \quad \min_{W_1, W_2} \lVert X - W_2 W_1 X \rVert_F^2 \implies \operatorname{Span}(W_2) = \operatorname{Span}(U_d)$$</div><p>For linear transformations under squared error loss, the global minimum of the autoencoder objective spans the exact same $d$-dimensional subspace as the top $d$ eigenvectors ($U_d$) of PCA. Non-linear activations enable autoencoders to learn non-linear manifolds.</p></li>
+          <li><h3>Denoising autoencoder objective</h3><div class="formula">$$\mathcal{L}_{\text{DAE}}(\theta, \phi) = \mathbb{E}_{x \sim p_{\text{data}}, \tilde{x} \sim q(\tilde{x}|x)}\left[ \lVert x - g_\phi(f_\theta(\tilde{x})) \rVert_2^2 \right]$$</div><p>$q(\tilde{x}|x)$ is a corruption process (such as additive Gaussian noise or random zero-masking). The network learns a vector field that projects corrupted points back onto the true low-dimensional manifold.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>An undercomplete bottleneck ($d \ll D$) forces the network to discard noise and retain only the highest-variance generative factors of the data.</li><li>Linear autoencoders under MSE loss span the same subspace as PCA; non-linear activations generalise this to non-linear manifold learning.</li><li>Reconstruction error acts as an effective unsupervised anomaly detector: novel or corrupted inputs produce high reconstruction loss because they lie off the learned manifold.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Synthetic non-linear manifold in 2D: x2 = sin(x1)</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+x1 = np.<span class="f">linspace</span>(-np.pi, np.pi, <span class="n">25</span>)
+x2 = np.<span class="f">sin</span>(x1)
+X = np.<span class="f">stack</span>([x1, x2], axis=<span class="n">1</span>)
+
+<span class="c"># Undercomplete autoencoder: 2 inputs -&gt; 1 latent unit -&gt; 2 outputs</span>
+W_enc = np.random.<span class="f">randn</span>(<span class="n">2</span>, <span class="n">1</span>) * <span class="n">0.5</span>
+b_enc = np.<span class="f">zeros</span>(<span class="n">1</span>)
+W_dec = np.random.<span class="f">randn</span>(<span class="n">1</span>, <span class="n">2</span>) * <span class="n">0.5</span>
+b_dec = np.<span class="f">zeros</span>(<span class="n">2</span>)
+lr = <span class="n">0.05</span>
+
+<span class="k">for</span> epoch <span class="k">in</span> <span class="k">range</span>(<span class="n">100</span>):
+    <span class="c"># Forward pass: non-linear encoder, linear decoder</span>
+    z = np.<span class="f">tanh</span>(X @ W_enc + b_enc)
+    X_hat = z @ W_dec + b_dec
+    loss = <span class="f">float</span>(np.<span class="f">mean</span>((X - X_hat)**<span class="n">2</span>))
+    <span class="c"># Backward pass</span>
+    d_out = <span class="n">2.0</span> * (X_hat - X) / <span class="k">len</span>(X)
+    dW_dec, db_dec = z.T @ d_out, np.<span class="f">sum</span>(d_out, axis=<span class="n">0</span>)
+    dz = (d_out @ W_dec.T) * (<span class="n">1.0</span> - z**<span class="n">2</span>)
+    dW_enc, db_enc = X.T @ dz, np.<span class="f">sum</span>(dz, axis=<span class="n">0</span>)
+    <span class="c"># Optimiser step</span>
+    W_dec -= lr * dW_dec; b_dec -= lr * db_dec
+    W_enc -= lr * dW_enc; b_enc -= lr * db_enc
+
+<span class="c"># Evaluate reconstruction on normal point vs anomaly</span>
+normal_pt = np.<span class="f">array</span>([[<span class="n">0.0</span>, <span class="n">0.0</span>]])
+anom_pt = np.<span class="f">array</span>([[<span class="n">0.0</span>, <span class="n">5.0</span>]])  <span class="c"># Lies completely off the manifold</span>
+
+rec_normal = np.<span class="f">tanh</span>(normal_pt @ W_enc + b_enc) @ W_dec + b_dec
+err_normal = <span class="f">float</span>(np.<span class="f">mean</span>((normal_pt - rec_normal)**<span class="n">2</span>))
+
+rec_anom = np.<span class="f">tanh</span>(anom_pt @ W_enc + b_enc) @ W_dec + b_dec
+err_anom = <span class="f">float</span>(np.<span class="f">mean</span>((anom_pt - rec_anom)**<span class="n">2</span>))
+
+<span class="k">print</span>(<span class="s">f&quot;Final training reconstruction loss: {loss:.4f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Normal point reconstruction error:  {err_normal:.4f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Anomaly reconstruction error:       {err_anom:.4f} (anomaly flagged)&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using an overcomplete bottleneck ($d \ge D$) without regularisation (such as sparsity or denoising), allowing the network to trivially learn the identity mapping without extracting features.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using standard autoencoders as generative models: their latent space contains empty gaps and holes; sampling random vectors $z$ produces nonsensical decoded outputs.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Minimising Mean Squared Error on complex multimodal image distributions, which encourages decoders to produce blurry, averaged reconstructions.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>What subspace does a linear autoencoder trained with Mean Squared Error loss learn?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The subspace spanned by the top principal components of the data, equivalent to PCA</span></button><button class="opt" type="button"><b>B</b><span>A random orthogonal projection subspace</span></button><button class="opt" type="button"><b>C</b><span>The Fourier transform frequency domain</span></button><button class="opt" type="button"><b>D</b><span>An overcomplete dictionary of wavelets</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> It is a classical theorem that a linear autoencoder with squared reconstruction error converges to the subspace spanned by the principal components of the training data.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>Why are standard deterministic autoencoders generally ineffective as generative models?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because their decoder parameters are always frozen</span></button><button class="opt" type="button"><b>B</b><span>Because they cannot be trained using gradient descent</span></button><button class="opt" type="button"><b>C</b><span>Because their latent space is unconstrained, leaving empty gaps and discontinuities where arbitrary sampled points decode to nonsensical noise</span></button><button class="opt" type="button"><b>D</b><span>Because their encoder requires labels during training</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Standard autoencoders only organise points they have seen during training. The spaces between clusters are unregularised voids; picking a random vector $z$ yields incoherent outputs.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>How does a Denoising Autoencoder (DAE) differ from a standard undercomplete autoencoder?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It corrupts inputs with noise during training and forces the decoder to reconstruct the original clean input</span></button><button class="opt" type="button"><b>B</b><span>It uses reinforcement learning rather than backpropagation</span></button><button class="opt" type="button"><b>C</b><span>It forces the latent bottleneck dimension to be zero</span></button><button class="opt" type="button"><b>D</b><span>It removes all non-linear activation functions from the encoder</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> By tasking the network with recovering uncorrupted data from noisy inputs, DAEs learn an orthogonal projection operator that pulls off-manifold points back onto the true data manifold.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q4</span>How can an autoencoder be applied to unsupervised anomaly detection?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By calculating reconstruction error: novel or anomalous inputs produce high reconstruction error because the network has never learned their manifold</span></button><button class="opt" type="button"><b>B</b><span>By measuring the learning rate of the optimiser</span></button><button class="opt" type="button"><b>C</b><span>By counting the number of non-zero parameters in the decoder</span></button><button class="opt" type="button"><b>D</b><span>By training exclusively on anomalous samples</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because the autoencoder is trained to reconstruct normal patterns, anomalous observations that deviate from normal data distributions cannot be compressed and reconstructed accurately, resulting in high reconstruction error.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/variational-autoencoders/"><small class="kicker">Concept</small><b>Variational autoencoders</b></a><a href="../../concepts/the-attention-mechanism/"><small class="kicker">Concept</small><b>The attention mechanism</b></a><a href="../../concepts/gans/"><small class="kicker">Concept</small><b>GANs</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/the-attention-mechanism/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>The attention mechanism</b></a>
+    <a class="pager-next" href="../../concepts/variational-autoencoders/"><small>Next · Deep learning <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Variational autoencoders</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

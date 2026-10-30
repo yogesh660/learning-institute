@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>pandas and Polars Patterns · Learn · Yogesh Awate</title>
+<meta name="description" content="Modern idiomatic tabular data manipulation, contrasting pandas eager in-memory index model with Polars lazy, multithreaded query optimisation.">
+<meta property="og:title" content="pandas and Polars Patterns · Learn · Yogesh Awate">
+<meta property="og:description" content="Modern idiomatic tabular data manipulation, contrasting pandas eager in-memory index model with Polars lazy, multithreaded query optimisation.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="pandas-and-polars-patterns">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-data-science">Path 07 · Data science</a> / Data wrangling / Lesson 2 of 47</span>
+    <h1 class="case-title">pandas and Polars Patterns</h1>
+    <p class="lede rise" style="--d:3">Modern idiomatic tabular data manipulation, contrasting pandas eager in-memory index model with Polars lazy, multithreaded query optimisation.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/sql-for-analysis-joins-and-window-functions/">SQL joins &amp; window functions</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Data science · Data wrangling</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>1 model lesson</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Tabular data wrangling in Python has evolved from imperative loops and fragmented pandas operations to declarative expression chains and columnar execution engines. While pandas relies on an eager, index-oriented memory model, Polars uses Apache Arrow memory layouts and a Rust query engine to evaluate lazy expressions in parallel with query optimisation. Choosing the right paradigms eliminates copy overhead and prevents out-of-memory crashes on multi-gigabyte datasets.</p>
+        <p>Imagine preparing a complex five-course dinner from a written recipe. In an eager cooking approach, as soon as step 1 says "slice ten onions", you slice all ten, put them in a bowl, and store them. When step 2 says "dice ten potatoes", you dice all ten and store them. By step 4, your kitchen counter is overflowing with bowls of prepared food, consuming all available space. If step 5 suddenly says "throw away half the vegetables because only five portions are needed", all that earlier slicing and storage was completely wasted effort.</p>
+        <p>This is eager execution, the default mode of pandas. Every intermediate transformation immediately allocates a new DataFrame in memory and computes values sequentially on a single CPU core. If your initial CSV is 5 GB, chaining three intermediate transformations can demand 20 GB of RAM, triggering an Out-of-Memory (OOM) operating system crash. Furthermore, pandas relies heavily on custom Index structures that add overhead and complicate joins.</p>
+        <p>Polars introduces lazy execution and expression-based pipelining. Instead of executing transformations step by step, Polars builds a directed acyclic graph (logical plan) of the intended operations. When you call .collect(), the query optimiser inspects the entire graph: it pushes filters down to the file scan so unnecessary rows are never read from disk (predicate pushdown), discards unused columns before parsing (projection pushdown), and parallelises group aggregations across all CPU cores using lock-free Apache Arrow arrays.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Handing an entire blueprint to an architect who reorganises the steps for maximum speed and minimum materials, rather than hiring bricklayers who immediately pour concrete before the site is cleared.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Define pipelines using declarative method chaining rather than imperative for-loops or in-place mutations.</li><li>Select columnar expressions: in Polars, leverage pl.col() to express parallel column projections without intermediate DataFrame copies.</li><li>Construct a lazy query plan (df.lazy()) when processing large datasets, inspecting the execution strategy with .explain().</li><li>Enable predicate and projection pushdowns by filtering rows and selecting target columns before resource-intensive joins or group-bys.</li><li>Trigger execution via .collect(), converting query outputs back to eager memory only when final tabular results or ML features are required.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Columnar contiguous memory addressing vs row-major stride</h3><div class="formula">$$\text{Address}(\text{col}_j, \text{row}_i) = \text{Base}_j + i \cdot w$$</div><p>In Apache Arrow and Polars columnar memory layout, values for column $j$ are stored in a contiguous memory block with uniform byte width $w$. SIMD CPU vectorisation loads contiguous elements in single cache lines without cache misses, whereas row-major formats require strided memory jumps.</p></li>
+          <li><h3>Predicate pushdown filter reduction</h3><div class="formula">$$\text{Memory}_{\text{lazy}} = \int_{\sigma_P(D)} dD = \rho \cdot \text{Memory}_{\text{eager}}, \qquad \rho = \frac{|\sigma_P(D)|}{|D|} \ll 1$$</div><p>Predicate pushdown applies selection condition $P$ directly at the storage scan layer ($\sigma_P(D)$). If only $5\%$ of rows match the filter ($\rho = 0.05$), $95\%$ of raw bytes are never loaded into memory, avoiding memory exhaustion during joins and aggregations.</p></li>
+          <li><h3>Multithreaded partition speedup (Amdahl's Law)</h3><div class="formula">$$S(p) = \frac{1}{(1 - f) + \frac{f}{p}}$$</div><p>Here $p$ is the number of CPU execution cores and $f$ is the fraction of embarrassingly parallel partition hash calculations. Polars leverages lock-free chunked Arrow arrays to execute partition hash maps in parallel across all $p$ threads, delivering near-linear throughput scaling over single-threaded pandas.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Declarative expressions: writing operations as functional expressions allows execution engines to reorder and optimise query evaluation plans.</li><li>Arrow memory standard: contiguous columnar formats minimise memory fragmentation and enable zero-copy sharing between tools.</li><li>Eager vs lazy distinction: eager systems compute intermediate tables immediately; lazy systems compile and optimise the execution plan before execution.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Columnar representation: contiguous 1D arrays (Apache Arrow / Polars memory model)</span>
+data = {
+    <span class="s">'user_id'</span>: np.<span class="f">array</span>([<span class="n">101</span>, <span class="n">101</span>, <span class="n">102</span>, <span class="n">101</span>, <span class="n">102</span>, <span class="n">103</span>]),
+    <span class="s">'amount'</span>: np.<span class="f">array</span>([<span class="n">45.0</span>, <span class="n">120.0</span>, <span class="n">80.0</span>, <span class="n">30.0</span>, <span class="n">150.0</span>, <span class="n">20.0</span>]),
+    <span class="s">'active'</span>: np.<span class="f">array</span>([<span class="k">True</span>, <span class="k">True</span>, <span class="k">True</span>, <span class="k">False</span>, <span class="k">True</span>, <span class="k">False</span>]),
+}
+
+<span class="c"># Declarative expression: predicate pushdown + vectorised aggregation</span>
+<span class="c"># Filter active transactions &gt; $40, then group sum by user_id</span>
+mask = data[<span class="s">'active'</span>] &amp; (data[<span class="s">'amount'</span>] &gt; <span class="n">40.0</span>)
+filtered_users = data[<span class="s">'user_id'</span>][mask]
+filtered_amts = data[<span class="s">'amount'</span>][mask]
+
+<span class="c"># Group-by hash aggregation without python loops</span>
+unique_users, inverse_idx = np.<span class="f">unique</span>(filtered_users, return_inverse=<span class="k">True</span>)
+group_sums = np.<span class="f">bincount</span>(inverse_idx, weights=filtered_amts)
+
+<span class="k">print</span>(<span class="s">f&quot;Total rows: {len(data['user_id'])}, Filtered rows: {np.sum(mask)}&quot;</span>)
+<span class="k">for</span> u, s <span class="k">in</span> <span class="f">zip</span>(unique_users, group_sums):
+    <span class="k">print</span>(<span class="s">f&quot;User {u}: aggregated total = {s:.2f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Iterating over rows with Python for-loops: row iteration in pandas is 100 to 1,000 times slower than vectorised columnar operations.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>SettingWithCopyWarning: modifying sliced pandas views without explicit .copy() causes unpredictable silent assignment failures.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>High memory churn from chained eager copies: calling multiple .drop() or .fillna() steps in eager pandas duplicates full DataFrames in RAM.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>Why does Polars lazy execution (LazyFrame) consume significantly less memory than pandas on large datasets?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It optimises the query plan, pushing filters down to the file scan so unnecessary rows and columns are never loaded into RAM</span></button><button class="opt" type="button"><b>B</b><span>It stores all numbers as 8-bit integers</span></button><button class="opt" type="button"><b>C</b><span>It executes calculations on a remote cloud cluster automatically</span></button><button class="opt" type="button"><b>D</b><span>It converts all text data into binary booleans</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Polars query optimiser inspects the complete computation graph before execution, applying predicate pushdown (reading only rows that match filter criteria) and projection pushdown (loading only referenced columns), dramatically slashing memory usage.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>Why is iterating over DataFrame rows with a Python for-loop considered an anti-pattern in tabular data engineering?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Python loops cause the underlying CSV files to become read-only</span></button><button class="opt" type="button"><b>B</b><span>Python loops can only process up to 256 rows before overflowing</span></button><button class="opt" type="button"><b>C</b><span>Python loops automatically delete missing NULL values</span></button><button class="opt" type="button"><b>D</b><span>Python-level loops bypass vectorised CPU instructions and Arrow memory locality, running up to 1,000 times slower</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Vectorised operations and expression engines dispatch batch operations directly to compiled C/Rust kernels using SIMD instructions. Python row iterations incur Python interpreter overhead and pointer indirection on every single cell.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>What causes the infamous SettingWithCopyWarning in pandas?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Joining two tables with differing column numbers</span></button><button class="opt" type="button"><b>B</b><span>Sorting a DataFrame without ascending=True</span></button><button class="opt" type="button"><b>C</b><span>Modifying a DataFrame slice where pandas cannot determine if the slice is an independent copy or a view of original memory</span></button><button class="opt" type="button"><b>D</b><span>Writing a DataFrame to disk without specifying an index column</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Chained indexing like df[mask]['col'] = val creates ambiguity over whether the slice is a view or a copy. If it is a copy, mutations silently discard changes without updating the parent DataFrame.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/sql-for-analysis-joins-and-window-functions/"><small class="kicker">Concept</small><b>SQL joins &amp; window functions</b></a><a href="../../concepts/data-cleaning-and-validation/"><small class="kicker">Concept</small><b>Data cleaning &amp; validation</b></a><a href="../../concepts/missing-data-mcar-mar-mnar-and-imputation/"><small class="kicker">Concept</small><b>Missing data: MCAR, MAR, MNAR</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/sql-for-analysis-joins-and-window-functions/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Data science</small><b>SQL joins &amp; window functions</b></a>
+    <a class="pager-next" href="../../concepts/data-cleaning-and-validation/"><small>Next · Data science <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Data cleaning &amp; validation</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

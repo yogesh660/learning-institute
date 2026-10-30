@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>OLS Inference: t-Tests, F-Test, R² and Adjusted R² · Learn · Yogesh Awate</title>
+<meta name="description" content="Conduct rigorous hypothesis tests on regression coefficients with t-tests, evaluate overall model significance with the F-test, and penalise overfitting with adjusted R².">
+<meta property="og:title" content="OLS Inference: t-Tests, F-Test, R² and Adjusted R² · Learn · Yogesh Awate">
+<meta property="og:description" content="Conduct rigorous hypothesis tests on regression coefficients with t-tests, evaluate overall model significance with the F-test, and penalise overfitting with adjusted R².">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="ols-inference-t-tests-f-test-r2-and-adjusted-r2">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-statistics">Path 02 · Statistics</a> / Regression inference / Lesson 29 of 51</span>
+    <h1 class="case-title">OLS Inference: t-Tests, F-Test, R² and Adjusted R²</h1>
+    <p class="lede rise" style="--d:3">Conduct rigorous hypothesis tests on regression coefficients with t-tests, evaluate overall model significance with the F-test, and penalise overfitting with adjusted R².</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="1"><i><b></b></i>Beginner</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/hypothesis-testing-and-p-values/">Hypothesis Tests &amp; p-Values</a> <a href="../../concepts/z-test-and-t-tests/">z-Test and Student's t-Tests</a> <a href="../../concepts/anova-and-post-hoc-tests/">ANOVA and Post-Hoc Tests</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Statistics · Regression inference</dd>
+          <dt>Level</dt><dd>Beginner</dd>
+          <dt>Used by</dt><dd>3 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Fitting an ordinary least squares (OLS) regression line is only the first step in linear modelling. To determine whether estimated slopes represent genuine population relationships rather than sampling noise, we must perform statistical inference. Individual coefficient t-tests evaluate specific predictors, the omnibus F-test assesses whether the model explains more variance than a simple average, and adjusted R² prevents the deceptive inflation of goodness-of-fit as redundant variables are added.</p>
+        <p>Suppose an analyst fits an OLS regression predicting house prices using three features: square footage, number of bedrooms, and the homeowner's lucky lottery number. Least squares outputs estimated slopes: square footage has $\hat{\beta}_1 = 3.350$ (£3,350 per unit), bedrooms has $\hat{\beta}_2 = 12.901$ (£12,900 per bedroom), and lucky number has $\hat{\beta}_3 = -0.031$.</p>
+        <p>Did the owner's lucky number genuinely influence property price? The estimated slope is $-0.031$, but its standard error is $0.036$. Dividing the coefficient by its standard error gives a $t$-statistic of $t = -0.856$, producing a p-value of $p = 0.394$. Because this p-value is far above the conventional significance threshold $\alpha = 0.05$, we fail to reject the null hypothesis $\beta_3 = 0$ and conclude that lucky number has zero statistical relationship with house prices. Conversely, square footage achieves $t = 25.91$ ($p &lt; 10^{-15}$), demonstrating an overwhelmingly reliable effect.</p>
+        <p>Next, look at the overall model: the coefficient of determination $R^2$ indicates that the model accounts for $90.7\%$ of total price variance ($R^2 = 0.907$). However, least squares mathematically guarantees that adding any extra variable—even pure random noise—will never decrease $R^2$. Adjusted $R^2$ corrects for this by penalising model complexity: for our model, adjusted $R^2$ is $0.904$. Finally, the omnibus $F$-test evaluates whether all three predictors jointly explain significant variance compared to an intercept-only baseline: an $F$-statistic of $310.4$ ($p &lt; 10^{-15}$) decisively rejects the global null hypothesis.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>The coefficient t-test is like interviewing individual job candidates to verify each person pulls their weight; the omnibus F-test checks whether the team as a whole beats random noise; and adjusted R² penalises the manager for hiring unnecessary staff.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Fit the OLS regression model $\mathbf{y} = \mathbf{X}\boldsymbol{\beta} + \boldsymbol{\epsilon}$ via normal equations: $\hat{\boldsymbol{\beta}} = (\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y}$.</li><li>Compute the residual variance estimate $s^2 = \frac{\mathbf{e}^T\mathbf{e}}{n - p - 1}$ and the covariance matrix $\widehat{\text{Var}}(\hat{\boldsymbol{\beta}}) = s^2 (\mathbf{X}^T\mathbf{X})^{-1}$.</li><li>Extract standard errors $\text{SE}(\hat{\beta}_j) = s\sqrt{[(\mathbf{X}^T\mathbf{X})^{-1}]_{jj}}$ and compute $t$-statistics $t_j = \hat{\beta}_j / \text{SE}(\hat{\beta}_j)$ with $n - p - 1$ degrees of freedom.</li><li>Calculate the unadjusted coefficient of determination $R^2 = 1 - SS_{\text{res}} / SS_{\text{tot}}$.</li><li>Calculate adjusted $R^2 = 1 - \left(1 - R^2\right)\frac{n - 1}{n - p - 1}$ to penalise over-parameterisation.</li><li>Compute the omnibus $F$-statistic $F = \frac{(SS_{\text{tot}} - SS_{\text{res}}) / p}{SS_{\text{res}} / (n - p - 1)}$ to assess the collective significance of all predictors.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Coefficient t-Statistic and Standard Errors</h3><div class="formula">$$t_j = \frac{\hat{\beta}_j - 0}{\text{SE}(\hat{\beta}_j)} = \frac{\hat{\beta}_j}{s \sqrt{[(\mathbf{X}^T\mathbf{X})^{-1}]_{jj}}} \sim t(n - p - 1)$$</div><p>Here $\hat{\beta}_j$ is the estimated slope, $s = \sqrt{SS_{\text{res}} / (n - p - 1)}$ is the residual standard error, and $[(\mathbf{X}^T\mathbf{X})^{-1}]_{jj}$ is the $j$-th diagonal element of the inverted Gram matrix. Under the null hypothesis $H_0: \beta_j = 0$, $t_j$ follows Student's $t$-distribution with $n - p - 1$ degrees of freedom ($n$ observations, $p$ predictors, 1 intercept).</p></li>
+          <li><h3>R-Squared and Adjusted R-Squared</h3><div class="formula">$$R^2 = 1 - \frac{SS_{\text{res}}}{SS_{\text{tot}}}, \qquad R_{\text{adj}}^2 = 1 - \left(1 - R^2\right)\frac{n - 1}{n - p - 1}$$</div><p>Here $SS_{\text{res}} = \sum (y_i - \hat{y}_i)^2$ is the residual sum of squares and $SS_{\text{tot}} = \sum (y_i - \bar{y})^2$ is the total sum of squares. Unadjusted $R^2$ measures the proportion of variance explained by the model, but monotonically increases whenever a new feature is added. Adjusted $R^2$ divides sums of squares by their degrees of freedom, increasing only if the added feature improves model fit by more than expected by chance ($t^2 &gt; 1$).</p></li>
+          <li><h3>Omnibus F-Statistic</h3><div class="formula">$$F = \frac{(SS_{\text{tot}} - SS_{\text{res}}) / p}{SS_{\text{res}} / (n - p - 1)} = \frac{R^2 / p}{(1 - R^2) / (n - p - 1)} \sim F(p, \, n - p - 1)$$</div><p>The omnibus $F$-test evaluates the joint null hypothesis $H_0: \beta_1 = \beta_2 = \dots = \beta_p = 0$ against the alternative that at least one coefficient is non-zero. It tests whether the regression model as a whole explains significantly more variance than a flat horizontal line through the sample mean.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Individual $t$-tests assess the marginal contribution of each predictor given that all other predictors are already included in the model.</li><li>$R^2$ never decreases when adding variables; adjusted $R^2$ penalises degrees of freedom to protect against spurious model complexity.</li><li>The omnibus $F$-test guards against false discovery by evaluating whether all explanatory variables jointly explain significant outcome variance.</li><li>In the presence of multicollinearity, the omnibus $F$-test can be highly significant even if no individual $t$-test achieves significance.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">import</span> scipy.stats <span class="k">as</span> stats
+
+rng = np.random.<span class="f">default_rng</span>(<span class="n">42</span>)
+n = <span class="n">100</span>
+p = <span class="n">3</span>
+
+<span class="c"># Predict house prices using sqft (x1), bedrooms (x2), and lucky number (x3)</span>
+x1 = rng.<span class="f">uniform</span>(<span class="n">10.0</span>, <span class="n">40.0</span>, size=n)
+x2 = rng.<span class="f">integers</span>(<span class="n">1</span>, <span class="n">6</span>, size=n)
+x3 = rng.<span class="f">uniform</span>(<span class="n">1.0</span>, <span class="n">100.0</span>, size=n)  <span class="c"># Pure noise variable</span>
+y = <span class="n">50.0</span> + <span class="n">3.5</span> * x1 + <span class="n">12.0</span> * x2 + rng.<span class="f">normal</span>(<span class="n">0.0</span>, <span class="n">10.0</span>, size=n)
+
+<span class="c"># OLS normal equations: beta = (X^T X)^(-1) X^T y</span>
+X = np.<span class="f">column_stack</span>([np.<span class="f">ones</span>(n), x1, x2, x3])
+beta = np.linalg.<span class="f">inv</span>(X.T @ X) @ X.T @ y
+residuals = y - X @ beta
+
+<span class="c"># Inference: standard errors, t-statistics, p-values</span>
+s2 = np.<span class="f">sum</span>(residuals**<span class="n">2</span>) / (n - p - <span class="n">1</span>)
+se_beta = np.<span class="f">sqrt</span>(np.<span class="f">diag</span>(s2 * np.linalg.<span class="f">inv</span>(X.T @ X)))
+t_stats = beta / se_beta
+p_vals = <span class="n">2.0</span> * (<span class="n">1.0</span> - stats.t.<span class="f">cdf</span>(np.<span class="f">abs</span>(t_stats), df=n - p - <span class="n">1</span>))
+
+<span class="c"># Goodness-of-fit: R2, Adjusted R2, F-statistic</span>
+ss_tot = np.<span class="f">sum</span>((y - np.<span class="f">mean</span>(y))**<span class="n">2</span>)
+ss_res = np.<span class="f">sum</span>(residuals**<span class="n">2</span>)
+r2 = <span class="n">1.0</span> - ss_res / ss_tot
+r2_adj = <span class="n">1.0</span> - (ss_res / (n - p - <span class="n">1</span>)) / (ss_tot / (n - <span class="n">1</span>))
+f_stat = ((ss_tot - ss_res) / p) / (ss_res / (n - p - <span class="n">1</span>))
+
+<span class="k">print</span>(<span class="s">f&quot;R2: {r2:.3f}, Adjusted R2: {r2_adj:.3f}, F-stat: {f_stat:.1f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;SqFt:   beta={beta[1]:.3f}, SE={se_beta[1]:.3f}, t={t_stats[1]:.2f}, p={p_vals[1]:.4e}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Lucky:  beta={beta[3]:.3f}, SE={se_beta[3]:.3f}, t={t_stats[3]:.2f}, p={p_vals[3]:.3f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Mistaking high $R^2$ for causal validity: an overfitted model with 50 irrelevant polynomial terms can achieve $R^2 &gt; 0.98$ while failing completely on new data.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Interpreting a non-significant $t$-test as proof that a feature has no relationship with $Y$; collinearity with another feature can inflate standard errors.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Comparing unadjusted $R^2$ values across models with different numbers of predictors.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Trusting standard OLS p-values when errors are heteroscedastic or serially correlated, which violates Gauss–Markov assumptions.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>Why does adding a completely random noise feature to a linear regression model always increase (or leave unchanged) the unadjusted $R^2$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because the F-statistic forces $R^2$ upward</span></button><button class="opt" type="button"><b>B</b><span>Because random noise always correlates with the target variable</span></button><button class="opt" type="button"><b>C</b><span>Because degrees of freedom increase</span></button><button class="opt" type="button"><b>D</b><span>Because least squares minimises residual sum of squares over an expanded parameter space, making $SS_{\text{res}}$ weakly decrease</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Adding any column to $\mathbf{X}$ gives least squares an extra dimension to fit the training points, so $SS_{\text{res}}$ cannot increase and $R^2 = 1 - SS_{\text{res}} / SS_{\text{tot}}$ never decreases.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>What does a non-significant coefficient t-test ($p = 0.45$) for predictor $X_1$ strictly indicate in a multiple regression model?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$X_1$ should be replaced with its logarithm</span></button><button class="opt" type="button"><b>B</b><span>The entire regression model is statistically invalid</span></button><button class="opt" type="button"><b>C</b><span>Given the other predictors already in the model, $X_1$ provides no statistically significant marginal explanatory power</span></button><button class="opt" type="button"><b>D</b><span>$X_1$ has zero correlation with the response variable $Y$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Regression $t$-tests measure marginal significance conditioned on all other included variables; $X_1$ might have strong univariate correlation with $Y$, but be redundant in the presence of other features.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>Under what condition does adding a new explanatory variable cause the adjusted $R^2$ to increase?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Only when the new variable's individual $t$-statistic has $|t| &gt; 1$</span></button><button class="opt" type="button"><b>B</b><span>Whenever sample size $n &gt; 100$</span></button><button class="opt" type="button"><b>C</b><span>Whenever the new variable has a positive slope</span></button><button class="opt" type="button"><b>D</b><span>Adjusted $R^2$ always increases when features are added</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Mathematically, adjusted $R^2$ increases if and only if the absolute $t$-statistic of the added variable exceeds 1.0 (or its partial $F$-statistic exceeds 1.0).</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q4</span>In an OLS regression with 100 observations and 3 predictors (plus intercept), how many degrees of freedom does the residual variance estimator possess?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>3</span></button><button class="opt" type="button"><b>B</b><span>97</span></button><button class="opt" type="button"><b>C</b><span>100</span></button><button class="opt" type="button"><b>D</b><span>96</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Residual degrees of freedom are $n - p - 1 = 100 - 3 - 1 = 96$, where $p = 3$ is the number of predictors and 1 accounts for the intercept.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../models/ols_linear_regression/"><small class="kicker">Regression</small><b>Linear regression (OLS)</b></a><a href="../../concepts/residual-diagnostics-and-heteroscedasticity/"><small class="kicker">Concept</small><b>Residuals &amp; Heteroscedasticity</b></a><a href="../../concepts/multicollinearity-and-vif/"><small class="kicker">Concept</small><b>Multicollinearity &amp; VIF</b></a><a href="../../models/polynomial_regression/"><small class="kicker">Regression</small><b>Polynomial regression</b></a><a href="../../concepts/regression-metrics/"><small class="kicker">Concept</small><b>Regression metrics</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/total-variation-hellinger-and-bhattacharyya-distances/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Statistics</small><b>TV, Hellinger &amp; Bhattacharyya</b></a>
+    <a class="pager-next" href="../../concepts/residual-diagnostics-and-heteroscedasticity/"><small>Next · Statistics <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Residuals &amp; Heteroscedasticity</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

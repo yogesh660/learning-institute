@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Edge detection: Sobel and Canny · Learn · Yogesh Awate</title>
+<meta name="description" content="Edge detection identifies spatial intensity boundaries where physical scene properties—such as surface orientation, depth discontinuity, illumination gradients, or material reflectance—undergo abrupt changes. The Sobel operator computes discrete spatial derivative approximations using separable convolution kernels combining binomial smoothing with finite differences. The Canny edge detector extends gradient filtering into a multi-stage optimal pipeline incorporating Gaussian noise smoothing, directional gradient orientation, non-maximum suppression (NMS) for thin 1-pixel ridges, and dual-threshold hysteresis tracking.">
+<meta property="og:title" content="Edge detection: Sobel and Canny · Learn · Yogesh Awate">
+<meta property="og:description" content="Edge detection identifies spatial intensity boundaries where physical scene properties—such as surface orientation, depth discontinuity, illumination gradients, or material reflectance—undergo abrupt changes. The Sobel operator computes discrete spatial derivative approximations using separable convolution kernels combining binomial smoothing with finite differences. The Canny edge detector extends gradient filtering into a multi-stage optimal pipeline incorporating Gaussian noise smoothing, directional gradient orientation, non-maximum suppression (NMS) for thin 1-pixel ridges, and dual-threshold hysteresis tracking.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="edge-detection-sobel-and-canny">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-vision">Path 09 · Computer vision</a> / Image basics / Lesson 3 of 37</span>
+    <h1 class="case-title">Edge detection: Sobel and Canny</h1>
+    <p class="lede rise" style="--d:3">Edge detection identifies spatial intensity boundaries where physical scene properties—such as surface orientation, depth discontinuity, illumination gradients, or material reflectance—undergo abrupt changes. The Sobel operator computes discrete spatial derivative approximations using separable convolution kernels combining binomial smoothing with finite differences. The Canny edge detector extends gradient filtering into a multi-stage optimal pipeline incorporating Gaussian noise smoothing, directional gradient orientation, non-maximum suppression (NMS) for thin 1-pixel ridges, and dual-threshold hysteresis tracking.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/pixels-channels-and-colour-spaces/">Pixels &amp; Colours</a> <a href="../../models/convolutional_neural_networks/">CNNs</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Computer vision · Image basics</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">To perceive objects, parse geometry, and navigate environments, natural and artificial visual systems first discard redundant interior textures and extract boundary contours. A solid wall, a roadway boundary, and a pedestrian silhouette are primarily defined by their edges. Edge detection formalises this principle mathematically: edges correspond to local extrema in spatial image gradients. From the discrete derivative approximations of the Sobel filter to John Canny's mathematically optimal edge criteria, boundary detection constitutes the cornerstone of classical vision and underpins early feature extraction in convolutional neural networks.</p>
+        <p>Edges as spatial derivative peaks: In a continuous two-dimensional image $I(x, y)$, brightness changes most rapidly in the direction of its spatial gradient vector $\nabla I = \left[\frac{\partial I}{\partial x}, \frac{\partial I}{\partial y}\right]^T$. The gradient magnitude $\|\nabla I\| = \sqrt{(\partial I/\partial x)^2 + (\partial I/\partial y)^2}$ quantifies the rate of intensity change, while the gradient orientation $\theta = \arctan2\left(\frac{\partial I}{\partial y}, \frac{\partial I}{\partial x}\right)$ points perpendicular (orthogonal) to the edge boundary, pointing in the direction of greatest brightening.</p>
+        <p>Discrete approximation and the Sobel kernels: On a discrete pixel grid, spatial derivatives cannot be evaluated analytically; they must be approximated using finite differences. Simple forward or backward differences like $I(x+1, y) - I(x, y)$ are severely vulnerable to sensor noise. The Sobel operator resolves this by convolving with separable $3 \times 3$ kernels that compute a central difference along one dimension while simultaneously applying a triangular binomial smoothing filter $[1, 2, 1]^T$ along the perpendicular dimension. This orthogonal smoothing dampens high-frequency noise while preserving derivative sensitivity.</p>
+        <p>The limitations of raw gradient magnitude: A raw Sobel gradient map produces thick, blurry ridges rather than crisp geometric boundaries. Thresholding the magnitude map with a single global cutoff creates an inescapable dilemma: setting the cutoff low introduces vast clouds of spurious texture noise, while setting it high fractures genuine object silhouettes into disconnected fragments.</p>
+        <p>Canny's optimal edge detection pipeline: In 1986, John Canny formulated three mathematical criteria for optimal edge detection: low error rate (marking true edges without false detections), precise localisation (minimising spatial distance between marked edges and actual physical boundaries), and single response (preventing multiple duplicate responses for a single edge). Canny resolved these demands through a four-stage pipeline: Gaussian pre-filtering $\to$ directional Sobel gradients $\to$ Non-Maximum Suppression (thinning ridges to exactly 1 pixel by checking neighbours along the gradient normal) $\to$ Hysteresis thresholding with dual high and low cutoffs to preserve continuous contours.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine hiking in thick mountain fog trying to trace the knife-edge ridgeline along a mountain range. The Sobel gradient operates like an altimeter and compass: it tells you how steep the terrain is right under your boots and points in the direction of steepest ascent. But standing on a broad mountain flank, it is difficult to know if you are on the true knife-edge peak or merely a steep slope. Non-maximum suppression is like checking whether you stand at the absolute summit along the direction of slope: if a point just one metre uphill or downhill from you is higher, you are not on the true ridgeline crest. Hysteresis thresholding acts like an experienced mountaineering protocol: you only commit to following a ridge if its peak reaches an unmistakable alpine elevation (above the high threshold), but once safely on that ridge, you continue following it as long as the rock stays above the valley floor (above the low threshold), ignoring isolated low mounds.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Sobel convolution kernels</h3><div class="formula">K_x = \begin{bmatrix}-1 & 0 & 1 \\ -2 & 0 & 2 \\ -1 & 0 & 1\end{bmatrix} = \begin{bmatrix}1 \\ 2 \\ 1\end{bmatrix} \begin{bmatrix}-1 & 0 & 1\end{bmatrix}, \quad K_y = \begin{bmatrix}-1 & -2 & -1 \\ 0 & 0 & 0 \\ 1 & 2 & 1\end{bmatrix} = \begin{bmatrix}-1 \\ 0 \\ 1\end{bmatrix} \begin{bmatrix}1 & 2 & 1\end{bmatrix}</div><p>The horizontal kernel $K_x$ is the outer product of a vertical binomial smoothing filter $[1, 2, 1]^T$ and a horizontal central difference filter $[-1, 0, 1]$. Separability allows convolution in $O(2K)$ operations rather than $O(K^2)$ per pixel.</p></li>
+          <li><h3>Spatial gradient vector magnitude and orientation</h3><div class="formula">\|\nabla I\| = \sqrt{G_x^2 + G_y^2}, \quad \theta = \arctan2(G_y, G_x)</div><p>The magnitude $\|\nabla I\|$ reflects local edge contrast sharpness. The direction angle $\theta \in [-\pi, \pi]$ points in the direction of maximum intensity increase, which is orthogonal to the edge contour tangent.</p></li>
+          <li><h3>Non-maximum suppression condition along gradient normal</h3><div class="formula">NMS(r, c) = \begin{cases} G(r, c) & \text{if } G(r, c) \ge G(p_1) \text{ and } G(r, c) \ge G(p_2) \\ 0 & \text{otherwise} \end{cases}</div><p>Here $p_1$ and $p_2$ are the two adjacent grid positions along the quantised gradient orientation line $\theta(r, c)$. This thinning operation ensures that only local ridge maxima survive, eliminating blurry multi-pixel transitions.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Edge detection identifies spatial intensity discontinuities corresponding to physical boundaries and depth changes.</li><li>The Sobel operator combines discrete central difference differentiation with orthogonal binomial smoothing to mitigate noise.</li><li>Raw gradient magnitude maps produce thick, blurry ridges; Canny's non-maximum suppression thins ridges to exactly 1 pixel width.</li><li>Canny hysteresis uses two thresholds ($T_{\text{high}}$ and $T_{\text{low}}$), preserving weak edges only when they are topologically connected to strong edges.</li><li>The gradient vector $\nabla I$ is strictly perpendicular (orthogonal) to the direction of the edge boundary contour.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Synthetic test image: 8x8 with a sharp vertical boundary</span>
+img = np.<span class="f">zeros</span>((<span class="n">8</span>, <span class="n">8</span>), dtype=np.float32)
+img[:, <span class="n">4</span>:] = <span class="n">100.0</span>  <span class="c"># Step edge from 0 to 100 intensity at column 4</span>
+
+<span class="c"># 1. Sobel separable 3x3 kernels for horizontal and vertical derivatives</span>
+Kx = np.<span class="f">array</span>([
+    [-<span class="n">1</span>, <span class="n">0</span>, <span class="n">1</span>],
+    [-<span class="n">2</span>, <span class="n">0</span>, <span class="n">2</span>],
+    [-<span class="n">1</span>, <span class="n">0</span>, <span class="n">1</span>]
+], dtype=np.float32)
+
+Ky = np.<span class="f">array</span>([
+    [-<span class="n">1</span>, -<span class="n">2</span>, -<span class="n">1</span>],
+    [ <span class="n">0</span>,  <span class="n">0</span>,  <span class="n">0</span>],
+    [ <span class="n">1</span>,  <span class="n">2</span>,  <span class="n">1</span>]
+], dtype=np.float32)
+
+<span class="c"># 2. 2D convolution (valid border)</span>
+H, W = img.shape
+Gx = np.<span class="f">zeros</span>((H - <span class="n">2</span>, W - <span class="n">2</span>), dtype=np.float32)
+Gy = np.<span class="f">zeros</span>((H - <span class="n">2</span>, W - <span class="n">2</span>), dtype=np.float32)
+
+<span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(H - <span class="n">2</span>):
+    <span class="k">for</span> j <span class="k">in</span> <span class="k">range</span>(W - <span class="n">2</span>):
+        patch = img[i:i+<span class="n">3</span>, j:j+<span class="n">3</span>]
+        Gx[i, j] = np.<span class="f">sum</span>(patch * Kx)
+        Gy[i, j] = np.<span class="f">sum</span>(patch * Ky)
+
+<span class="c"># 3. Gradient magnitude and orientation</span>
+magnitude = np.<span class="f">sqrt</span>(Gx**<span class="n">2</span> + Gy**<span class="n">2</span>)
+angle = (np.<span class="f">arctan2</span>(Gy, Gx) * (<span class="n">180.0</span> / np.pi)) % <span class="n">180.0</span>
+
+<span class="k">print</span>(<span class="s">&quot;Gradient Magnitude (Gx horizontal response at vertical edge):&quot;</span>)
+<span class="k">print</span>(np.<span class="f">round</span>(magnitude, <span class="n">1</span>))
+
+<span class="c"># 4. Non-Maximum Suppression (thinning to 1-pixel ridge)</span>
+nms = np.<span class="f">zeros_like</span>(magnitude)
+mH, mW = magnitude.shape
+
+<span class="k">for</span> r <span class="k">in</span> <span class="k">range</span>(<span class="n">1</span>, mH - <span class="n">1</span>):
+    <span class="k">for</span> c <span class="k">in</span> <span class="k">range</span>(<span class="n">1</span>, mW - <span class="n">1</span>):
+        mag = magnitude[r, c]
+        ang = angle[r, c]
+
+        <span class="c"># Determine neighbours along gradient normal (0, 45, 90, 135 deg)</span>
+        <span class="k">if</span> (ang &lt; <span class="n">22.5</span>) <span class="k">or</span> (ang &gt;= <span class="n">157.5</span>):
+            q, p = magnitude[r, c+<span class="n">1</span>], magnitude[r, c-<span class="n">1</span>]
+        <span class="k">elif</span> <span class="n">22.5</span> &lt;= ang &lt; <span class="n">67.5</span>:
+            q, p = magnitude[r-<span class="n">1</span>, c+<span class="n">1</span>], magnitude[r+<span class="n">1</span>, c-<span class="n">1</span>]
+        <span class="k">elif</span> <span class="n">67.5</span> &lt;= ang &lt; <span class="n">112.5</span>:
+            q, p = magnitude[r-<span class="n">1</span>, c], magnitude[r+<span class="n">1</span>, c]
+        <span class="k">else</span>:
+            q, p = magnitude[r-<span class="n">1</span>, c-<span class="n">1</span>], magnitude[r+<span class="n">1</span>, c+<span class="n">1</span>]
+
+        <span class="k">if</span> mag &gt;= q <span class="k">and</span> mag &gt;= p:
+            nms[r, c] = mag
+
+<span class="k">print</span>(<span class="s">&quot;\nAfter Non-Maximum Suppression (thinned 1-pixel edge):&quot;</span>)
+<span class="k">print</span>(np.<span class="f">round</span>(nms, <span class="n">1</span>))
+
+<span class="c"># 5. Dual thresholding and hysteresis</span>
+T_high = <span class="n">200.0</span>
+T_low = <span class="n">80.0</span>
+strong = nms &gt;= T_high
+weak = (nms &gt;= T_low) &amp; (~strong)
+
+<span class="k">print</span>(<span class="s">f&quot;\nStrong edge pixels (&gt;= {T_high}): {np.sum(strong)}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Weak edge pixels ({T_low} to {T_high}): {np.sum(weak)}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Skipping Gaussian pre-smoothing: Calculating spatial derivatives directly on un-smoothed images amplifies high-frequency camera noise, spawning hundreds of false edge detections.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Confusing gradient direction with edge contour direction: The gradient vector $\nabla I$ points across the edge boundary in the direction of steepest increase; the physical edge contour runs perpendicular to $\nabla I$ (rotated by $90^\circ$).</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using a single global threshold: A single threshold inevitably fails; it either fractures faint genuine contours or floods the image with irrelevant background texture noise.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Setting hysteresis thresholds without inspecting noise floor: Setting $T_{\text{low}}$ below the image sensor noise floor causes spurious background texture chains to connect with true objects, creating sprawling false contours.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Convolving colour channels independently without magnitude fusion: Computing edges independently on R, G, and B channels and adding them naively creates phase misalignment; compute gradients across channels and take maximum magnitude across spectra.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>Why does the Sobel operator incorporate a binomial kernel $[1, 2, 1]^T$ perpendicular to the finite difference direction?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To rotate the image by 90 degrees before convolving</span></button><button class="opt" type="button"><b>B</b><span>To compress 8-bit integers into 4-bit floating point representations</span></button><button class="opt" type="button"><b>C</b><span>To smooth and dampen high-frequency image noise along the orthogonal dimension while computing spatial differences</span></button><button class="opt" type="button"><b>D</b><span>To invert negative pixel intensities back to positive ranges</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Pure finite differences amplify high-frequency noise. The Sobel operator pairs differentiation in one direction with smoothing ($[1, 2, 1]$) in the orthogonal direction, mitigating sensor noise.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>What is the geometric relationship between the spatial gradient vector $\nabla I = [G_x, G_y]^T$ and the edge boundary contour?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The gradient vector points in random directions unrelated to edge orientation</span></button><button class="opt" type="button"><b>B</b><span>The gradient vector points parallel to and along the edge contour</span></button><button class="opt" type="button"><b>C</b><span>The gradient vector is strictly perpendicular (orthogonal) to the edge contour, pointing in the direction of steepest intensity increase</span></button><button class="opt" type="button"><b>D</b><span>The gradient vector always points toward the centre of the image</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The gradient vector points in the direction of maximal brightness change, which is normal (perpendicular) to the edge tangent contour.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>What is the primary function of Non-Maximum Suppression (NMS) in the Canny edge detector?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To thin wide, blurry gradient response ridges down to crisp 1-pixel-wide edge candidates by comparing pixels against neighbours along the gradient normal</span></button><button class="opt" type="button"><b>B</b><span>To invert the brightness histogram for contrast normalisation</span></button><button class="opt" type="button"><b>C</b><span>To compute the Fast Fourier Transform of spatial frequencies</span></button><button class="opt" type="button"><b>D</b><span>To remove all colour information from multi-channel images</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Gradient filters produce wide ridges of high response across boundaries. Non-Maximum Suppression suppresses any pixel that is not a local maximum along its gradient normal vector, thinning edges to a 1-pixel width.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q4</span>In Canny edge detection, how does hysteresis thresholding prevent edge fragmentation while rejecting noise?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It uses two thresholds: pixels above $T_{\text{high}}$ are strong edges, and pixels between $T_{\text{low}}$ and $T_{\text{high}}$ are retained only if topologically connected to a strong edge</span></button><button class="opt" type="button"><b>B</b><span>It averages all pixels within a $5 \times 5$ window before thresholding</span></button><button class="opt" type="button"><b>C</b><span>It discards all edges that are shorter than 100 pixels in length</span></button><button class="opt" type="button"><b>D</b><span>It adjusts the camera exposure dynamically during frame capture</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A single threshold creates either noise specks or broken edges. Hysteresis establishes confident strong edges with $T_{\text{high}}$ and traces contiguous boundaries through weaker candidate pixels above $T_{\text{low}}$.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/thresholding-histograms-and-morphology/"><small class="kicker">Concept</small><b>Thresholds &amp; Morphology</b></a><a href="../../concepts/gradient-descent/"><small class="kicker">Concept</small><b>Gradient descent</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/pixels-channels-and-colour-spaces/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Computer vision</small><b>Pixels &amp; Colours</b></a>
+    <a class="pager-next" href="../../concepts/thresholding-histograms-and-morphology/"><small>Next · Computer vision <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Thresholds &amp; Morphology</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

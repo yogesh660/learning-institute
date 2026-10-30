@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Graph Neural Networks: Message Passing, GCN, Graph Attention, and GraphSAGE · Learn · Yogesh Awate</title>
+<meta name="description" content="Learning node, edge, and graph representations using permutation-equivariant message passing, spectral convolutions, and inductive neighbourhood sampling.">
+<meta property="og:title" content="Graph Neural Networks: Message Passing, GCN, Graph Attention, and GraphSAGE · Learn · Yogesh Awate">
+<meta property="og:description" content="Learning node, edge, and graph representations using permutation-equivariant message passing, spectral convolutions, and inductive neighbourhood sampling.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="graph-neural-networks-gcn-gat-graphsage">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-neural">Path 08 · Deep learning</a> / Architectures / Lesson 27 of 42</span>
+    <h1 class="case-title">Graph Neural Networks: Message Passing, GCN, Graph Attention, and GraphSAGE</h1>
+    <p class="lede rise" style="--d:3">Learning node, edge, and graph representations using permutation-equivariant message passing, spectral convolutions, and inductive neighbourhood sampling.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="3"><i><b></b></i>Advanced</span></span>
+      <span class="tagline">18 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Deep learning · Architectures</dd>
+          <dt>Level</dt><dd>Advanced</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Standard deep learning architectures assume Euclidean data: images are regular 2D grids, and text is a 1D sequence. However, many real-world systems are non-Euclidean graphs: social networks, molecule bonds, financial transaction webs, and knowledge graphs. Graph Neural Networks (GNNs) extend deep learning to arbitrary graphs through neural message passing, aggregating local neighbourhood information while respecting graph permutation symmetries.</p>
+        <p>A graph consists of nodes $\mathcal{V}$, edges $\mathcal{E}$, and node feature matrix $\mathbf{X} \in \mathbb{R}^{N \times d}$. A GNN must be permutation equivariant: renumbering the nodes in the input must produce the exact same renumbering in output representations.</p>
+        <p>Message Passing Neural Networks (MPNN) generalise GNNs into three steps at each layer: 1) Message: compute messages along edges $m_{uv} = M(h_u, h_v, e_{uv})$; 2) Aggregate: combine incoming messages using a permutation-invariant aggregator (sum, mean, max); 3) Update: combine aggregated message with the node's own state $h_v^{(l+1)} = U(h_v^{(l)}, m_v)$.</p>
+        <p>Graph Convolutional Networks (GCN; Kipf & Welling) implement isotropic averaging using a renormalized symmetric Laplacian $\tilde{\mathbf{D}}^{-1/2} \tilde{\mathbf{A}} \tilde{\mathbf{D}}^{-1/2} \mathbf{H} \mathbf{W}$, weighting neighbours by degree.</p>
+        <p>Graph Attention Networks (GAT; Veličković et al.) replace fixed degree weights with learned self-attention coefficients $\alpha_{uv}$, allowing a node to dynamically focus on its most relevant neighbours. GraphSAGE (Hamilton et al.) solves scalability on massive web graphs by sampling a fixed number of neighbours per node rather than loading the entire global adjacency matrix into memory.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine a neighbourhood where rumours spread. At time zero, each resident knows only their personal secrets. In round one, everyone walks to their fence and chats with their immediate neighbours, blending what they hear into an updated mental worldview. In round two, chatting again spreads information from two streets away. After $K$ rounds, every resident's understanding incorporates the entire $K$-hop neighbourhood surrounding their house.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Construct graph representation: Form node feature matrix $\mathbf{X}$ and edge list / sparse adjacency matrix $\mathbf{A}$ with self-loops added.</li><li>Define neighbourhood aggregation function: Select GCN (degree-normalised mean), GAT (multi-head attention), or GraphSAGE (sampled mean/max pooling).</li><li>Sample local neighbourhoods (GraphSAGE): For massive graphs, sample fixed-size sub-neighbourhoods (e.g. $S_1 = 25, S_2 = 10$) to bound minibatch memory.</li><li>Compute layer-wise message passing: Transform node features through linear projections $\mathbf{W}^{(l)}$, aggregate messages across incoming edges, and apply non-linear activations.</li><li>Add skip connections: Incorporate residual connections or jumping knowledge networks to prevent oversmoothing in deep architectures.</li><li>Downstream readout: Extract updated node embeddings for node classification, link prediction, or pool across the graph via global mean/sum for graph classification.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Message Passing Neural Network (MPNN) Formulation</h3><div class="formula">h_v^{(l+1)} = \operatorname{UPDATE}^{(l)}\left( h_v^{(l)}, \; \operatorname{AGG}_{u \in \mathcal{N}(v)}^{(l)}\left( \operatorname{MSG}^{(l)}(h_v^{(l)}, h_u^{(l)}, e_{vu}) \right) \right)</div><p>General message passing update: aggregating edge messages from neighbours $u \in \mathcal{N}(v)$ via permutation-invariant reduction AGG.</p></li>
+          <li><h3>Graph Convolutional Network (GCN) Layer</h3><div class="formula">\mathbf{H}^{(l+1)} = \sigma\left( \tilde{\mathbf{D}}^{-\frac{1}{2}} \tilde{\mathbf{A}} \tilde{\mathbf{D}}^{-\frac{1}{2}} \mathbf{H}^{(l)} \mathbf{W}^{(l)} \right), \quad \tilde{\mathbf{A}} = \mathbf{A} + \mathbf{I}_N</div><p>GCN normalises adjacency matrix with self-loops $\tilde{\mathbf{A}}$ using symmetric diagonal degree matrix $\tilde{\mathbf{D}}_{ii} = \sum_j \tilde{\mathbf{A}}_{ij}$.</p></li>
+          <li><h3>Graph Attention Network (GAT) Attention Weights</h3><div class="formula">\alpha_{uv} = \frac{\exp\left( \operatorname{LeakyReLU}\left( \mathbf{a}^T [\mathbf{W} h_u \parallel \mathbf{W} h_v] \right) \right)}{\sum_{k \in \mathcal{N}(v) \cup \{v\}} \exp\left( \operatorname{LeakyReLU}\left( \mathbf{a}^T [\mathbf{W} h_k \parallel \mathbf{W} h_v] \right) \right)}</div><p>Computes anisotropic softmax attention coefficients $\alpha_{uv}$ over concatenated linear projections $[mathbf{W} h_u \parallel \mathbf{W} h_v]$.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>GNNs learn representations on non-Euclidean graph topologies through iterative message passing.</li><li>Message passing combines localized node transformations with permutation-invariant neighbour aggregations.</li><li>GCN performs isotropic degree-normalised smoothing; GAT introduces anisotropic learned attention weights.</li><li>GraphSAGE samples fixed-size sub-neighbourhoods, enabling scalable minibatch training on billion-node graphs.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> torch
+<span class="k">import</span> torch.nn <span class="k">as</span> nn
+<span class="k">import</span> torch.nn.functional <span class="k">as</span> F
+
+<span class="k">class</span> <span class="f">SimpleGCNLayer</span>(nn.Module):
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, in_features: int, out_features: int):
+        <span class="k">super</span>().<span class="f">__init__</span>()
+        <span class="k">self</span>.linear = nn.<span class="f">Linear</span>(in_features, out_features, bias=<span class="k">False</span>)
+
+    <span class="k">def</span> <span class="f">forward</span>(<span class="k">self</span>, x: torch.Tensor, adj: torch.Tensor) -&gt; torch.Tensor:
+        <span class="c"># 1. Add self-loops: A_tilde = A + I</span>
+        N = x.<span class="f">size</span>(<span class="n">0</span>)
+        adj_tilde = adj + torch.<span class="f">eye</span>(N, device=adj.device)
+        
+        <span class="c"># 2. Symmetric degree normalisation: D^-0.5 * A_tilde * D^-0.5</span>
+        deg = torch.<span class="f">sum</span>(adj_tilde, dim=<span class="n">1</span>)
+        deg_inv_sqrt = torch.<span class="f">pow</span>(deg, -<span class="n">0.5</span>)
+        deg_inv_sqrt[torch.<span class="f">isinf</span>(deg_inv_sqrt)] = <span class="n">0.0</span>
+        d_mat = torch.<span class="f">diag</span>(deg_inv_sqrt)
+        norm_adj = d_mat @ adj_tilde @ d_mat
+        
+        <span class="c"># 3. Message passing: norm_adj @ X @ W</span>
+        support = <span class="k">self</span>.<span class="f">linear</span>(x)
+        out = norm_adj @ support
+        <span class="k">return</span> F.<span class="f">relu</span>(out)
+
+<span class="c"># 4 nodes, 3 features each</span>
+X = torch.<span class="f">tensor</span>([
+    [<span class="n">1.0</span>, <span class="n">0.0</span>, <span class="n">0.5</span>],
+    [<span class="n">0.0</span>, <span class="n">1.0</span>, <span class="n">0.2</span>],
+    [<span class="n">0.5</span>, <span class="n">0.5</span>, <span class="n">0.0</span>],
+    [<span class="n">0.0</span>, <span class="n">0.0</span>, <span class="n">1.0</span>]
+])
+<span class="c"># Adjacency matrix: undirected ring graph (0-1, 1-2, 2-3, 3-0)</span>
+A = torch.<span class="f">tensor</span>([
+    [<span class="n">0.0</span>, <span class="n">1.0</span>, <span class="n">0.0</span>, <span class="n">1.0</span>],
+    [<span class="n">1.0</span>, <span class="n">0.0</span>, <span class="n">1.0</span>, <span class="n">0.0</span>],
+    [<span class="n">0.0</span>, <span class="n">1.0</span>, <span class="n">0.0</span>, <span class="n">1.0</span>],
+    [<span class="n">1.0</span>, <span class="n">0.0</span>, <span class="n">1.0</span>, <span class="n">0.0</span>]
+])
+
+gcn = <span class="f">SimpleGCNLayer</span>(in_features=<span class="n">3</span>, out_features=<span class="n">4</span>)
+H1 = <span class="f">gcn</span>(X, A)
+<span class="k">print</span>(<span class="s">&quot;Updated node embeddings shape:&quot;</span>, H1.shape)
+<span class="k">print</span>(<span class="s">&quot;Node 0 aggregated representation:\n&quot;</span>, H1[<span class="n">0</span>].<span class="f">detach</span>().<span class="f">numpy</span>())</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Oversmoothing in deep GNNs: Stacking more than 3–4 GCN layers causes all node embeddings to converge to identical vectors, destroying discriminative power.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Neighbourhood explosion in dense graphs: A node with 10,000 neighbours causes the $K$-hop computation graph to expand exponentially; use GraphSAGE sampling.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Missing self-loops: If self-loops are omitted from the adjacency matrix, a node ignores its own existing feature state when aggregating messages.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>What is the "oversmoothing" problem in Graph Neural Networks (GNNs)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>When stacking many message passing layers causes node embeddings across the entire graph to converge to uniform, identical representations, losing distinction</span></button><button class="opt" type="button"><b>B</b><span>Gradients exploding to infinity during training</span></button><button class="opt" type="button"><b>C</b><span>When images lose their sharpness during convolution</span></button><button class="opt" type="button"><b>D</b><span>When the learning rate decays too quickly</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Repeated Laplacian smoothing averages representations across wide network diameters. After many layers, every node embedding becomes nearly indistinguishable from its neighbours.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>How does Graph Attention Network (GAT) improve upon the standard Graph Convolutional Network (GCN)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>GAT only works on graphs with fewer than 10 nodes</span></button><button class="opt" type="button"><b>B</b><span>GAT computes learned attention weights between pairs of connected nodes, allowing nodes to assign different importance to different neighbours rather than using static degree weights</span></button><button class="opt" type="button"><b>C</b><span>GAT eliminates all non-linear activation functions</span></button><button class="opt" type="button"><b>D</b><span>GAT replaces GPUs with quantum processors</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> GCN treats all connected neighbours with fixed isotropic degree normalisation. GAT learns anisotropic attention weights $\alpha_{uv}$, attending selectively to critical neighbours.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>Why is GraphSAGE capable of training on massive multi-million node graphs where standard full-batch GCN fails?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>GraphSAGE requires zero memory</span></button><button class="opt" type="button"><b>B</b><span>GraphSAGE converts graph nodes into text tokens</span></button><button class="opt" type="button"><b>C</b><span>GraphSAGE deletes all edges in the graph</span></button><button class="opt" type="button"><b>D</b><span>GraphSAGE samples a fixed number of neighbours at each hop, allowing scalable minibatch training without loading the entire graph into VRAM</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Full GCN requires computing matrix operations on the full global adjacency matrix. GraphSAGE samples a fixed number of neighbours per node, enabling standard minibatch SGD.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/the-attention-mechanism/"><small class="kicker">Concept</small><b>The attention mechanism</b></a><a href="../../concepts/residual-networks-and-skip-connections/"><small class="kicker">Concept</small><b>ResNets and skip connections</b></a><a href="../../concepts/contrastive-learning-simclr-and-infonce/"><small class="kicker">Concept</small><b>SimCLR and InfoNCE</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/diffusion-models/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>Diffusion models</b></a>
+    <a class="pager-next" href="../../concepts/mixture-of-experts/"><small>Next · Deep learning <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Mixture of experts (MoE)</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

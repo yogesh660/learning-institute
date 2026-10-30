@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Collocations and Pointwise Mutual Information (PMI) · Learn · Yogesh Awate</title>
+<meta name="description" content="Collocations (e.g. &quot;heavy rain&quot;, &quot;pay attention&quot;, &quot;machine learning&quot;) are multi-word expressions with non-random semantic cohesion. Pointwise Mutual Information (PMI) measures the log ratio of joint co-occurrence probability against independent marginal probabilities. Positive PMI (PPMI) truncates negative values to zero, mitigating noise and uninformative negative correlations for low-frequency events. Statistical significance filtering using t-tests or Pearson's chi-squared test prevents rare pairs from dominating PMI rankings.">
+<meta property="og:title" content="Collocations and Pointwise Mutual Information (PMI) · Learn · Yogesh Awate">
+<meta property="og:description" content="Collocations (e.g. &quot;heavy rain&quot;, &quot;pay attention&quot;, &quot;machine learning&quot;) are multi-word expressions with non-random semantic cohesion. Pointwise Mutual Information (PMI) measures the log ratio of joint co-occurrence probability against independent marginal probabilities. Positive PMI (PPMI) truncates negative values to zero, mitigating noise and uninformative negative correlations for low-frequency events. Statistical significance filtering using t-tests or Pearson's chi-squared test prevents rare pairs from dominating PMI rankings.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="collocations-and-pmi">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-nlp">Path 10 · Natural language processing</a> / Words and text / Lesson 10 of 52</span>
+    <h1 class="case-title">Collocations and Pointwise Mutual Information (PMI)</h1>
+    <p class="lede rise" style="--d:3">Collocations (e.g. "heavy rain", "pay attention", "machine learning") are multi-word expressions with non-random semantic cohesion. Pointwise Mutual Information (PMI) measures the log ratio of joint co-occurrence probability against independent marginal probabilities. Positive PMI (PPMI) truncates negative values to zero, mitigating noise and uninformative negative correlations for low-frequency events. Statistical significance filtering using t-tests or Pearson's chi-squared test prevents rare pairs from dominating PMI rankings.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Natural language processing · Words and text</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Collocations are habitual word co-occurrences whose combined meaning exceeds or differs from the sum of their individual parts. Pointwise Mutual Information (PMI) and statistical hypothesis tests quantify whether words appear together significantly more often than expected by random chance, forming the mathematical foundation for phrase extraction, idiom detection, and distributional embeddings.</p>
+        <p>If you see the word "heavy", what words follow? You often say "heavy rain" or "heavy smoker", but rarely "heavy wind" or "heavy worker" (we say "strong wind" and "hard worker" instead). Grammatically, all these pairings are valid adjective-noun combinations, yet native speakers naturally favour specific pairings. These established pairings are called collocations. If two words are completely independent, the probability of seeing them together $P(x, y)$ equals the product of their individual occurrences $P(x)P(y)$. Pointwise Mutual Information (PMI) mathematically measures how many times more often words co-occur compared to pure independent chance. A high PMI indicates strong linguistic affinity, whereas a PMI near zero indicates random coincidence.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine monitoring people entering a coffee shop. If two patrons frequently walk through the door within seconds of each other far more often than their individual visit rates would suggest, you conclude they are friends or colleagues who travel together, rather than two unrelated strangers who happened to arrive at the exact same moment.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Define a sliding context window of size $k$ across the tokenised corpus (or treat immediate bigram sequences as candidate pairs).</li><li>Compute unigram counts $C(w)$ for all vocabulary words and total token count $N$.</li><li>Compute co-occurrence counts $C(u, v)$ for all word pairs appearing within the context window.</li><li>Filter rare candidates: discard pairs with co-occurrence counts below a minimum frequency threshold (e.g. $C(u, v) &lt; 5$).</li><li>Calculate PMI and PPMI values for all surviving candidate pairs.</li><li>Rank pairs by PPMI score to extract meaningful collocations, multi-word terminology, or construct term-context association matrices.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Collocations and Pointwise Mutual Information (PMI) formulation (Part 1)</h3><div class="formula">\text{PMI}(x, y) = \log_2 \frac{P(x, y)}{P(x) P(y)} = \log_2 \frac{C(x, y) \cdot N}{C(x) \cdot C(y)}</div><p>where $C(x, y)$ is the co-occurrence count within a sliding context window, $C(x)$ and $C(y)$ are individual word counts, and $N$ is the total number of observed tokens. Because unobserved or extre...</p></li>
+          <li><h3>Collocations and Pointwise Mutual Information (PMI) formulation (Part 2)</h3><div class="formula">\text{PPMI}(x, y) = \max(0, \text{PMI}(x, y))</div><p>To counter the tendency of raw PMI to overvalue rare words (e.g. two words occurring once each together yielding huge PMI), frequency-weighted $\text{PMI}_\alpha$ raises context probability to powe...</p></li>
+          <li><h3>Collocations and Pointwise Mutual Information (PMI) formulation (Part 3)</h3><div class="formula">\text{PMI}_\alpha(x, y) = \log_2 \frac{P(x, y)}{P(x) P_\alpha(y)}, \quad P_\alpha(y) = \frac{C(y)^\alpha}{\sum_w C(w)^\alpha}</div><p>To counter the tendency of raw PMI to overvalue rare words (e.g. two words occurring once each together yielding huge PMI), frequency-weighted $\text{PMI}_\alpha$ raises context probability to powe...</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Collocations represent multi-word phrases whose co-occurrence reflects semantic and idiomatic association beyond random syntactic assembly.</li><li>PMI contrasts empirical joint occurrence with independent marginal probability, identifying statistically cohesive expressions.</li><li>Clipping to PPMI and applying smoothing exponents (such as $\alpha = 0.75$) mitigates frequency bias towards rare vocabulary items.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">from</span> collections <span class="k">import</span> Counter
+
+<span class="k">def</span> <span class="f">extract_collocations</span>(corpus, window_size=<span class="n">2</span>, min_count=<span class="n">2</span>):
+    <span class="s">&quot;&quot;&quot;Computes PPMI scores for word pairs in a sliding window.&quot;&quot;&quot;</span>
+    tokens = [t.<span class="f">lower</span>() <span class="k">for</span> doc <span class="k">in</span> corpus <span class="k">for</span> t <span class="k">in</span> doc.<span class="f">split</span>()]
+    N = <span class="k">len</span>(tokens)
+    
+    unigram_counts = <span class="f">Counter</span>(tokens)
+    cooccur_counts = <span class="f">Counter</span>()
+    
+    <span class="c"># 1. Tally co-occurrences within sliding window</span>
+    <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(<span class="k">len</span>(tokens)):
+        target = tokens[i]
+        start = <span class="f">max</span>(<span class="n">0</span>, i - window_size)
+        end = <span class="f">min</span>(<span class="k">len</span>(tokens), i + window_size + <span class="n">1</span>)
+        <span class="k">for</span> j <span class="k">in</span> <span class="k">range</span>(start, end):
+            <span class="k">if</span> i != j:
+                context = tokens[j]
+                cooccur_counts[(target, context)] += <span class="n">1</span>
+                
+    <span class="c"># 2. Compute PPMI</span>
+    ppmi_scores = {}
+    <span class="k">for</span> (w1, w2), count <span class="k">in</span> cooccur_counts.<span class="f">items</span>():
+        <span class="k">if</span> count &lt; min_count:
+            continue
+        <span class="c"># Joint and marginal probabilities</span>
+        p_joint = count / (N * <span class="n">2</span> * window_size)
+        p_w1 = unigram_counts[w1] / N
+        p_w2 = unigram_counts[w2] / N
+        
+        pmi = np.<span class="f">log2</span>(p_joint / (p_w1 * p_w2))
+        ppmi = <span class="f">max</span>(<span class="n">0.0</span>, pmi)
+        ppmi_scores[(w1, w2)] = (ppmi, count)
+        
+    <span class="k">return</span> ppmi_scores
+
+<span class="c"># Synthetic domain corpus</span>
+corpus = [
+    <span class="s">&quot;natural language processing models natural language understanding&quot;</span>,
+    <span class="s">&quot;deep learning and natural language processing techniques&quot;</span>,
+    <span class="s">&quot;machine learning models process natural language text&quot;</span>,
+    <span class="s">&quot;deep learning algorithms power modern language processing&quot;</span>
+]
+
+results = <span class="f">extract_collocations</span>(corpus, window_size=<span class="n">2</span>, min_count=<span class="n">2</span>)
+<span class="c"># Sort by PPMI descending</span>
+sorted_collocations = <span class="f">sorted</span>(results.<span class="f">items</span>(), key=<span class="k">lambda</span> x: x[<span class="n">1</span>][<span class="n">0</span>], reverse=<span class="k">True</span>)
+
+<span class="k">print</span>(<span class="s">&quot;Top Discovered Collocations by PPMI:&quot;</span>)
+<span class="k">for</span> (w1, w2), (score, count) <span class="k">in</span> sorted_collocations[:<span class="n">6</span>]:
+    <span class="k">print</span>(<span class="s">f&quot;  ({w1:8}, {w2:10}) -&gt; PPMI: {score:.3f} (Count: {count})&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Applying unregularised PMI to small corpora without frequency thresholds; rare words appearing together once can achieve artificially massive PMI scores.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Treating PMI as an absolute probability metric rather than a scale-sensitive relative co-occurrence ratio.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Confusing grammatical constituency with collocation; non-collocated common stopwords like "of the" have high co-occurrence counts but low PMI because their marginal frequencies are enormous.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>What does a Pointwise Mutual Information (PMI) value of zero signify between two words?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>One of the words is an out-of-vocabulary token</span></button><button class="opt" type="button"><b>B</b><span>The words never appear in the same document</span></button><button class="opt" type="button"><b>C</b><span>The words co-occur at exactly the rate expected if their distributions were completely independent</span></button><button class="opt" type="button"><b>D</b><span>The words are strict antonyms with mutually exclusive meanings</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> When $P(x, y) = P(x)P(y)$, their ratio is 1, and $\log_2(1) = 0$. This indicates that co-occurrence occurs at random baseline chance.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>Why does standard PMI tend to over-rank rare word pairings over common phrases?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because rare words have near-zero marginal probabilities $P(x)$ and $P(y)$ in the denominator</span></button><button class="opt" type="button"><b>B</b><span>Because logarithm functions cannot handle floating point decimals below 0.1</span></button><button class="opt" type="button"><b>C</b><span>Because rare words are automatically filtered out by tokenisers</span></button><button class="opt" type="button"><b>D</b><span>Because common words always receive negative PMI scores</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> If two rare words occur only once in the entire corpus, but happen to appear in the same window, $P(x,y) = 1/N$ while $P(x)P(y) = 1/N^2$, producing an inflated PMI of $\log_2(N)$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>Why is Positive PMI (PPMI) used instead of raw PMI when building term-context embedding matrices?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>PPMI guarantees that the resulting matrix is diagonal</span></button><button class="opt" type="button"><b>B</b><span>Negative PMI values are uninformative and noisy, indicating negative correlation that is unreliable on finite corpora</span></button><button class="opt" type="button"><b>C</b><span>PPMI normalises matrix values strictly between 0 and 1</span></button><button class="opt" type="button"><b>D</b><span>Negative PMI scores require imaginary numbers to compute</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Negative PMI indicates that two words occur together less often than chance, which is noisy and difficult to estimate accurately on finite text corpora. Clipping to zero stabilizes downstream representations.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/distributional-semantics/"><small class="kicker">Concept</small><b>Distributional Semantics</b></a><a href="../../concepts/bm25-and-search-ranking/"><small class="kicker">Concept</small><b>BM25 &amp; Search Ranking</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/phonetic-matching-soundex/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Natural language processing</small><b>Phonetic Matching &amp; Soundex</b></a>
+    <a class="pager-next" href="../../concepts/multilingual-text-scripts-and-the-tokenisation-tax/"><small>Next · Natural language processing <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Multilingual Text &amp; Token Tax</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

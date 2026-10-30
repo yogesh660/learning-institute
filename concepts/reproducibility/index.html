@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Reproducibility in Machine Learning: Determinism, Seeds, and Environments · Learn · Yogesh Awate</title>
+<meta name="description" content="Achieving scientific and production reproducibility across pseudorandom number generators, multi-threading, GPU nondeterminism, and environment locks.">
+<meta property="og:title" content="Reproducibility in Machine Learning: Determinism, Seeds, and Environments · Learn · Yogesh Awate">
+<meta property="og:description" content="Achieving scientific and production reproducibility across pseudorandom number generators, multi-threading, GPU nondeterminism, and environment locks.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="reproducibility">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-data-science">Path 07 · Data science</a> / Pipelines and validation / Lesson 18 of 47</span>
+    <h1 class="case-title">Reproducibility in Machine Learning: Determinism, Seeds, and Environments</h1>
+    <p class="lede rise" style="--d:3">Achieving scientific and production reproducibility across pseudorandom number generators, multi-threading, GPU nondeterminism, and environment locks.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">15 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Data science · Pipelines and validation</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">In software engineering, compiling the same source code with the same compiler always yields identical binaries. In machine learning, however, re-running identical code on identical data often produces different weights, fluctuating metrics, and divergent decisions. Achieving true end-to-end reproducibility requires controlling random seeds, hardware thread scheduling, GPU CUDA operations, and software dependency locks.</p>
+        <p>Machine learning pipelines contain dozens of stochastic elements: train/test split sampling, random weight initialisation, minibatch shuffling, dropout masks, and tree feature subsampling. Each relies on pseudorandom number generators (PRNGs).</p>
+        <p>Setting a single seed (e.g. `np.random.seed(42)`) is insufficient because modern frameworks run multiple independent PRNGs across Python built-in `random`, NumPy, PyTorch CPU, and PyTorch CUDA.</p>
+        <p>Beyond seeds, parallel hardware execution introduces non-determinism. Multi-threaded operations like OpenMP matrix multiplications and asynchronous CUDA atomic additions sum floating point numbers in varying orders. Because floating point addition is non-associative ($ (a + b) + c \ne a + (b + c) $ due to rounding), different thread arrival orders produce different rounding errors that compound over millions of gradient steps.</p>
+        <p>Finally, environment drift (a minor patch update to scikit-learn, CUDA drivers, or BLAS linear algebra libraries) can alter default parameters or algorithmic implementations. Hermetic reproducibility requires containerised environment locks (Docker, conda-lock, or poetry.lock).</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine following a baking recipe where the recipe specifies "add yeast and stir until bubbly". Depending on room temperature, humidity, and the vigour of your whisking, the dough rises differently every time. Achieving commercial culinary reproducibility requires an automated climate-controlled chamber, exact gram weights, and a mechanical mixer running at a fixed RPM for exactly 180 seconds.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Multi-engine PRNG seeding: Seed all active random generators: Python `random`, NumPy, PyTorch CPU, PyTorch CUDA, and environment variable `PYTHONHASHSEED`.</li><li>Enforce algorithmic determinism: Configure deep learning frameworks to enforce deterministic algorithms (`torch.use_deterministic_algorithms(True)` and `CUBLAS_WORKSPACE_CONFIG=:4096:8`).</li><li>Pin hardware concurrency: Constrain multi-threaded math libraries (MKL, OpenMP, BLAS) to fixed thread counts (`torch.set_num_threads(1)` during strict testing).</li><li>Dependency locking: Export explicit hash-pinned dependency manifests (`pip freeze` with hashes, `poetry.lock`, or Docker image digest).</li><li>Data version pinning: Reference immutable dataset commits using tools like DVC, LakeFS, or Delta Lake time-travel rather than mutable database tables.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Floating Point Non-Associativity</h3><div class="formula">(a \oplus b) \oplus c \ne a \oplus (b \oplus c)</div><p>Due to finite precision truncation in IEEE 754 floating point arithmetic, differing summation orders in parallel threads produce non-identical results.</p></li>
+          <li><h3>Atomic Float Accumulation Divergence</h3><div class="formula">\hat{g} = \bigoplus_{k=1}^K g_{\pi(k)}, \quad \pi \in \mathcal{S}_K</div><p>When $K$ CUDA threads execute atomic additions, the thread arrival permutation $\pi$ varies across runs, causing slight divergence in computed gradients $\hat{g}$.</p></li>
+          <li><h3>Deterministic State Transition Function</h3><div class="formula">\mathcal{S}_{t+1} = f(\mathcal{S}_t, \mathcal{D}_t; \xi_t), \quad \xi_t = \mathrm{PRNG}(\sigma, t)</div><p>Model state $\mathcal{S}$ evolves deterministically if and only if initial seed $\sigma$, dataset batch order $\mathcal{D}_t$, and framework operations $f$ are strictly invariant.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>True reproducibility requires seeding Python, NumPy, PyTorch, and locking `PYTHONHASHSEED`.</li><li>Floating point operations are non-associative; thread race conditions in multi-GPU and multi-CPU environments introduce variation.</li><li>Enforcing strict GPU determinism may incur a modest throughput penalty (10–20%) because fast non-deterministic atomic operations are disabled.</li><li>Containerisation (Docker) and pinned lockfiles guarantee identical compiler, driver, and library versions.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> random
+<span class="k">import</span> os
+<span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">import</span> torch
+
+<span class="k">def</span> <span class="f">set_strict_determinism</span>(seed: int = <span class="n">42</span>):
+    <span class="s">&quot;&quot;&quot;Enforce complete determinism across all random number generators and hardware.&quot;&quot;&quot;</span>
+    <span class="c"># 1. Python built-in and hash seed</span>
+    random.<span class="f">seed</span>(seed)
+    os.environ[<span class="s">'PYTHONHASHSEED'</span>] = <span class="f">str</span>(seed)
+    
+    <span class="c"># 2. NumPy PRNG</span>
+    np.random.<span class="f">seed</span>(seed)
+    
+    <span class="c"># 3. PyTorch CPU and CUDA</span>
+    torch.<span class="f">manual_seed</span>(seed)
+    <span class="k">if</span> torch.cuda.<span class="f">is_available</span>():
+        torch.cuda.<span class="f">manual_seed</span>(seed)
+        torch.cuda.<span class="f">manual_seed_all</span>(seed)
+        
+        <span class="c"># Enforce deterministic convolution algorithms</span>
+        torch.backends.cudnn.deterministic = <span class="k">True</span>
+        torch.backends.cudnn.benchmark = <span class="k">False</span>
+        
+        <span class="c"># Configure cuBLAS workspace for deterministic operations</span>
+        os.environ[<span class="s">'CUBLAS_WORKSPACE_CONFIG'</span>] = <span class="s">':4096:8'</span>
+    
+    <span class="c"># Throw an error if a non-deterministic operation is invoked</span>
+    try:
+        torch.<span class="f">use_deterministic_algorithms</span>(<span class="k">True</span>)
+    except AttributeError:
+        pass
+    <span class="k">print</span>(<span class="s">f&quot;Deterministic seed locked: {seed}&quot;</span>)
+
+<span class="f">set_strict_determinism</span>(<span class="n">42</span>)
+
+<span class="c"># Verify reproducible tensor operations</span>
+t1 = torch.<span class="f">randn</span>(<span class="n">3</span>, <span class="n">3</span>)
+<span class="f">set_strict_determinism</span>(<span class="n">42</span>)
+t2 = torch.<span class="f">randn</span>(<span class="n">3</span>, <span class="n">3</span>)
+assert torch.<span class="f">equal</span>(t1, t2), <span class="s">&quot;Tensors must be strictly identical across identical seeds!&quot;</span>
+<span class="k">print</span>(<span class="s">&quot;Determinism verified successfully.&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming `torch.manual_seed` seeds NumPy: PyTorch and NumPy use completely separate PRNG states; seeding one does not affect the other.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Multi-worker DataLoader leakage: In PyTorch DataLoaders with `num_workers > 0`, workers inherit identical seed states unless configured with a `worker_init_fn`.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Running on different GPU architectures: A model trained on an NVIDIA A100 vs an RTX 4090 will produce slightly different floating point weights even with identical seeds due to microarchitecture math differences.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>Why does multi-threaded parallel floating point summation produce different numbers across runs even with identical random seeds?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>CPUs intentionally inject random noise to avoid overheating</span></button><button class="opt" type="button"><b>B</b><span>Operating system kernel memory leaks randomly modify bit registers</span></button><button class="opt" type="button"><b>C</b><span>Random seeds expire after 100 milliseconds</span></button><button class="opt" type="button"><b>D</b><span>Floating point addition is non-associative; varying thread execution orders sum numbers in different sequences</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because $(a + b) + c \ne a + (b + c)$ in IEEE 754 arithmetic, changing the order in which parallel threads accumulate numbers alters the lowest-order bits.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>What is the consequence of setting `torch.backends.cudnn.benchmark = True` in PyTorch?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It disables GPU acceleration and runs everything on the CPU</span></button><button class="opt" type="button"><b>B</b><span>It guarantees bitwise reproducibility across different hardware devices</span></button><button class="opt" type="button"><b>C</b><span>It tests multiple convolution algorithms and selects the fastest, which may introduce non-determinism across runs</span></button><button class="opt" type="button"><b>D</b><span>It forces all neural network weights to zero</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> `cudnn.benchmark = True` benchmarks several convolution algorithms on the fly to pick the fastest one, which may change between runs and cause non-deterministic behaviour.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>In a multi-worker PyTorch DataLoader (`num_workers=4`), what happens if you do not provide a custom `worker_init_fn`?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Training becomes completely deterministic</span></button><button class="opt" type="button"><b>B</b><span>Each worker process may generate identical sequences of random augmentations, reducing data diversity</span></button><button class="opt" type="button"><b>C</b><span>The script crashes with a memory allocation fault</span></button><button class="opt" type="button"><b>D</b><span>The DataLoader converts all images to grayscale</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Forked worker processes inherit the exact same base PRNG seed, causing each worker to perform identical augmentations on different items unless re-seeded per worker.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/experiment-tracking/"><small class="kicker">Concept</small><b>Experiment tracking</b></a><a href="../../concepts/docker-and-reproducible-environments/"><small class="kicker">Concept</small><b>Docker and reproducibility</b></a><a href="../../concepts/the-pytorch-training-loop/"><small class="kicker">Concept</small><b>PyTorch training loop</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/experiment-tracking/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Data science</small><b>Experiment tracking</b></a>
+    <a class="pager-next" href="../../concepts/forecast-metrics-mae-mase-smape-wape/"><small>Next · Data science <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Forecast metrics: MAE, MASE</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

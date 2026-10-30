@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Receptive field, stride and pooling · Learn · Yogesh Awate</title>
+<meta name="description" content="The receptive field of a neuron in a convolutional neural network (CNN) defines the spatial sub-region of the input image that directly influences its activation. While a single 3 3 convolutional kernel has a local receptive field of only 3 3, stacking layers expands the theoretical receptive field linearly as rL = rL-1 + (kL - 1) SL-1, where SL-1 is the cumulative network stride. Downsampling operations—strided convolutions and pooling operators (Max-Pooling, Average-Pooling, and Global Average Pooling)—exponentially accelerate receptive field expansion, reduce spatial memory, and confer translation tolerance. Crucially, the effective receptive field (ERF) follows a 2D Gaussian distribution, concentrating representational impact heavily at the spatial centre.">
+<meta property="og:title" content="Receptive field, stride and pooling · Learn · Yogesh Awate">
+<meta property="og:description" content="The receptive field of a neuron in a convolutional neural network (CNN) defines the spatial sub-region of the input image that directly influences its activation. While a single 3 3 convolutional kernel has a local receptive field of only 3 3, stacking layers expands the theoretical receptive field linearly as rL = rL-1 + (kL - 1) SL-1, where SL-1 is the cumulative network stride. Downsampling operations—strided convolutions and pooling operators (Max-Pooling, Average-Pooling, and Global Average Pooling)—exponentially accelerate receptive field expansion, reduce spatial memory, and confer translation tolerance. Crucially, the effective receptive field (ERF) follows a 2D Gaussian distribution, concentrating representational impact heavily at the spatial centre.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="receptive-field-stride-and-pooling">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-vision">Path 09 · Computer vision</a> / CNN foundations / Lesson 16 of 37</span>
+    <h1 class="case-title">Receptive field, stride and pooling</h1>
+    <p class="lede rise" style="--d:3">The receptive field of a neuron in a convolutional neural network (CNN) defines the spatial sub-region of the input image that directly influences its activation. While a single $3 \times 3$ convolutional kernel has a local receptive field of only $3 \times 3$, stacking layers expands the theoretical receptive field linearly as $r_L = r_{L-1} + (k_L - 1) \cdot S_{L-1}$, where $S_{L-1}$ is the cumulative network stride. Downsampling operations—strided convolutions and pooling operators (Max-Pooling, Average-Pooling, and Global Average Pooling)—exponentially accelerate receptive field expansion, reduce spatial memory, and confer translation tolerance. Crucially, the effective receptive field (ERF) follows a 2D Gaussian distribution, concentrating representational impact heavily at the spatial centre.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../models/convolutional_neural_networks/">CNNs</a> <a href="../../concepts/pixels-channels-and-colour-spaces/">Pixels &amp; Colours</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Computer vision · CNN foundations</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>2 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">To recognize that an image contains a Golden Retriever, a deep network cannot rely solely on examining individual fur textures; it must perceive how ears, muzzle, eyes, paws, and torso relate across the entire photograph. Yet individual convolutional filters examine only tiny local windows (such as $3 \times 3$ or $5 \times 5$ pixels). How does a network composed of microscopic local filters assemble global holistic scene understanding? The answer lies in the receptive field: the compounding spatial reach formed by stacking convolutions, strides, and pooling layers throughout the depth of the network.</p>
+        <p>Theoretical receptive field expansion: In layer 1, an output unit computed from a $3 \times 3$ kernel depends directly on a $3 \times 3$ patch of input pixels. In layer 2, another $3 \times 3$ convolution is applied over layer 1's activations. Because each of those 9 activation units already viewed a $3 \times 3$ patch of input pixels, the layer 2 neuron observes a $5 \times 5$ spatial patch of original pixels. Stacking a third $3 \times 3$ layer expands the reach to $7 \times 7$. Thus, stacking two $3 \times 3$ convolutions achieves the identical receptive field of a single $5 \times 5$ convolution, but uses only $2 \times (3^2) = 18$ parameters rather than $5^2 = 25$ parameters, while introducing an extra non-linear activation function.</p>
+        <p>The acceleration power of stride: While un-strided convolutions expand the receptive field by only $(k-1)$ pixels per layer, adding a stride of $s &gt; 1$ doubles the jump of subsequent kernels across the input image. When an operation has stride $s$, every subsequent unit step in deep feature maps corresponds to $s$ pixels in the preceding representation. Stride acts as an exponential multiplier: combining strided convolutions with pooling allows a 50-layer ResNet to expand its receptive field from 3 pixels to over 400 pixels, covering high-resolution input images entirely.</p>
+        <p>Max-pooling versus average-pooling: Pooling operations aggregate spatial information across rectangular patches without introducing trainable weight parameters. Max-pooling extracts the maximum activation $\max(x_1, \dots, x_k)$, acting as a non-linear feature detector that records whether a specific visual pattern (such as an edge or texture) was detected anywhere in that window, providing local translation tolerance. Average-pooling computes the arithmetic mean, smoothing activations across regions. Global Average Pooling (GAP) collapses an entire $H \times W$ feature map into a single scalar per channel, replacing parameter-heavy fully connected classifier layers and acting as a powerful spatial regulariser.</p>
+        <p>The Effective Receptive Field (ERF): While the theoretical receptive field outlines the maximum bounding box of input pixels that could mathematically influence a neuron, not all pixels contribute equally. In 2016, Luo et al. demonstrated that the gradient of an output unit with respect to input pixels follows a 2D Gaussian distribution that decays rapidly away from the centre. The central pixels participate in exponentially more computational paths through the network than peripheral pixels. As a result, the "Effective Receptive Field" (ERF)—the region carrying $95\%$ of the gradient impact—occupies only a fraction of the theoretical receptive field, necessitating much deeper networks than simple theoretical calculations imply.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Think of an army's chain of command reporting intelligence from the battlefield. A frontline scout (layer 1) uses binoculars to observe a small 30-metre patch of terrain. A squad sergeant (layer 2) reads reports from three adjacent scouts, assembling a combined situational view covering 50 metres. A platoon lieutenant (layer 3) reads reports from three sergeants, synthesizing an overview of 70 metres. If the army introduces a regional commander (striding/pooling by 2), the commander aggregates summaries from large sectors, doubling the territory covered at each subsequent leadership tier. The supreme general at headquarters (the final classification neuron) reads a concise summary covering the entire 10-kilometre battlefront. Furthermore, central events mentioned by all scouts carry immense weight, whereas peripheral events at the far flanks barely influence headquarters (the Gaussian Effective Receptive Field).</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Recursive theoretical receptive field formula</h3><div class="formula">r_l = r_{l-1} + (k_l - 1) \cdot S_{l-1}, \quad S_l = S_{l-1} \cdot s_l</div><p>Here $r_l$ denotes the receptive field size of layer $l$, $k_l$ is the kernel size, $s_l$ is the layer stride, and $S_{l-1} = \prod_{i=1}^{l-1} s_i$ represents the cumulative stride of all preceding layers up to layer $l-1$ (with $r_0 = 1, S_0 = 1$).</p></li>
+          <li><h3>Feature map output spatial dimension</h3><div class="formula">O = \left\lfloor \frac{I - k + 2p}{s} \right\rfloor + 1</div><p>Here $I$ is the input spatial dimension, $k$ is kernel size, $p$ is zero-padding applied to each side, and $s$ is the convolution stride. Setting $p = \frac{k-1}{2}$ for odd kernels with stride $s=1$ yields identical input and output dimensions ($O = I$, known as "same" padding).</p></li>
+          <li><h3>Gaussian distribution of the Effective Receptive Field (ERF)</h3><div class="formula">\frac{\partial y_{\text{centre}}}{\partial x_{i, j}} \approx \frac{1}{2\pi \sigma_{\text{ERF}}^2} \exp\left(-\frac{(i - c_x)^2 + (j - c_y)^2}{2\sigma_{\text{ERF}}^2}\right)</div><p>By the Central Limit Theorem, composing many independent convolution passes causes the derivative of the central output unit $y_{\text{centre}}$ with respect to input pixels $x_{i, j}$ to converge asymptotically to a 2D Gaussian bell curve with standard deviation $\sigma_{\text{ERF}} \propto \sqrt{L}$.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>The theoretical receptive field defines the maximum input window that mathematically connects to a deep activation neuron.</li><li>Stacking two $3 \times 3$ convolutions yields a $5 \times 5$ receptive field while using $28\%$ fewer parameters than a single $5 \times 5$ filter.</li><li>Strided convolutions and pooling layers accelerate receptive field expansion exponentially by multiplying cumulative network stride.</li><li>Max-pooling preserves the strongest activation within local windows, providing local translation tolerance.</li><li>The Effective Receptive Field (ERF) follows a 2D Gaussian distribution, meaning central pixels exert far greater influence than peripheral boundary pixels.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Simulate theoretical receptive field and feature map dimension tracking</span>
+layers = [
+    {<span class="s">&quot;name&quot;</span>: <span class="s">&quot;conv1&quot;</span>, <span class="s">&quot;k&quot;</span>: <span class="n">3</span>, <span class="s">&quot;s&quot;</span>: <span class="n">1</span>, <span class="s">&quot;p&quot;</span>: <span class="n">1</span>},
+    {<span class="s">&quot;name&quot;</span>: <span class="s">&quot;pool1&quot;</span>, <span class="s">&quot;k&quot;</span>: <span class="n">2</span>, <span class="s">&quot;s&quot;</span>: <span class="n">2</span>, <span class="s">&quot;p&quot;</span>: <span class="n">0</span>},
+    {<span class="s">&quot;name&quot;</span>: <span class="s">&quot;conv2&quot;</span>, <span class="s">&quot;k&quot;</span>: <span class="n">3</span>, <span class="s">&quot;s&quot;</span>: <span class="n">1</span>, <span class="s">&quot;p&quot;</span>: <span class="n">1</span>},
+    {<span class="s">&quot;name&quot;</span>: <span class="s">&quot;pool2&quot;</span>, <span class="s">&quot;k&quot;</span>: <span class="n">2</span>, <span class="s">&quot;s&quot;</span>: <span class="n">2</span>, <span class="s">&quot;p&quot;</span>: <span class="n">0</span>},
+    {<span class="s">&quot;name&quot;</span>: <span class="s">&quot;conv3&quot;</span>, <span class="s">&quot;k&quot;</span>: <span class="n">3</span>, <span class="s">&quot;s&quot;</span>: <span class="n">1</span>, <span class="s">&quot;p&quot;</span>: <span class="n">1</span>},
+    {<span class="s">&quot;name&quot;</span>: <span class="s">&quot;conv4&quot;</span>, <span class="s">&quot;k&quot;</span>: <span class="n">3</span>, <span class="s">&quot;s&quot;</span>: <span class="n">1</span>, <span class="s">&quot;p&quot;</span>: <span class="n">1</span>},
+]
+
+<span class="c"># Track input image size 64x64</span>
+current_dim = <span class="n">64</span>
+r_field = <span class="n">1.0</span>     <span class="c"># Theoretical receptive field (starts at 1 pixel)</span>
+cum_stride = <span class="n">1.0</span>  <span class="c"># Cumulative stride</span>
+
+<span class="k">print</span>(<span class="s">f&quot;{'Layer':&lt;8} | {'Kernel':&lt;6} | {'Stride':&lt;6} | {'Out Dim':&lt;8} | {'Cum Stride':&lt;10} | {'Receptive Field':&lt;15}&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;-&quot;</span> * <span class="n">65</span>)
+
+<span class="k">for</span> layer <span class="k">in</span> layers:
+    k = layer[<span class="s">&quot;k&quot;</span>]
+    s = layer[<span class="s">&quot;s&quot;</span>]
+    p = layer[<span class="s">&quot;p&quot;</span>]
+    
+    <span class="c"># 1. Update receptive field: r_l = r_{l-1} + (k - 1) * S_{l-1}</span>
+    r_field += (k - <span class="n">1</span>) * cum_stride
+    
+    <span class="c"># 2. Update output spatial dimension: O = floor((I - k + 2p) / s) + 1</span>
+    current_dim = <span class="f">int</span>(np.<span class="f">floor</span>((current_dim - k + <span class="n">2</span> * p) / s) + <span class="n">1</span>)
+    
+    <span class="c"># 3. Update cumulative stride: S_l = S_{l-1} * s</span>
+    cum_stride *= s
+    
+    <span class="k">print</span>(<span class="s">f&quot;{layer['name']:&lt;8} | {k:&lt;6} | {s:&lt;6} | {current_dim:&lt;8} | {cum_stride:&lt;10.0f} | {r_field:&lt;15.0f}&quot;</span>)
+
+<span class="c"># 4. Demonstrate Effective Receptive Field (ERF) Gaussian concentration</span>
+<span class="c"># Convolve a delta impulse through multiple 1D smoothing passes</span>
+impulse = np.<span class="f">zeros</span>(<span class="n">33</span>, dtype=np.float32)
+impulse[<span class="n">16</span>] = <span class="n">1.0</span>  <span class="c"># Center unit</span>
+filter_weights = np.<span class="f">array</span>([<span class="n">0.25</span>, <span class="n">0.5</span>, <span class="n">0.25</span>], dtype=np.float32)
+
+erf = impulse.<span class="f">copy</span>()
+<span class="k">for</span> _ <span class="k">in</span> <span class="k">range</span>(<span class="n">8</span>):  <span class="c"># 8 convolution layers</span>
+    erf = np.<span class="f">convolve</span>(erf, filter_weights, mode=<span class="s">'same'</span>)
+
+<span class="k">print</span>(<span class="s">f&quot;\nERF impulse response across 33 input pixels after 8 layers:&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Center pixel response:        {erf[16]:.4f} (Peak)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;+/- 2 pixels from center:     {erf[18]:.4f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;+/- 5 pixels from center:     {erf[21]:.4f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;+/- 10 pixels from center:    {erf[26]:.6f} (Decayed toward zero)&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;Verified: Effective Receptive Field concentrates as a central Gaussian bell curve!&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Confusing theoretical receptive field with effective receptive field: Assuming a network perceives a full $200 \times 200$ theoretical window uniformly leads to flawed architectural assumptions; because ERF decays as a Gaussian, the effective area carrying signal is often less than half the theoretical size.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Over-pooling early in the backbone: Applying multiple aggressive pooling steps in early layers rapidly shrinks feature maps, permanently destroying high-frequency edge and texture information required for fine segmentation or small-object detection.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Ignoring cumulative stride in receptive field calculations: Calculating receptive field by simply summing kernel sizes $\sum (k_i - 1)$ produces incorrect results; kernel reach must be scaled by the cumulative product of all prior layer strides ($S_{l-1}$).</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Excessive fully connected layers instead of Global Average Pooling: Using flattening followed by large linear layers creates millions of parameters prone to severe overfitting; Global Average Pooling reduces spatial dimensions to $1 \times 1$ without adding a single weight.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Gridding artifacts in dilated convolutions: Stacking convolutions with identical high dilation rates ($d=4, d=4, d=4$) samples input pixels on a sparse grid, causing "gridding" blind spots where intermediate pixels are never observed.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>Why does modern CNN design favour stacking multiple $3 \times 3$ convolutions rather than using a single large $7 \times 7$ convolution?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because $3 \times 3$ kernels eliminate the need for backpropagation</span></button><button class="opt" type="button"><b>B</b><span>Three stacked $3 \times 3$ convolutions achieve the same $7 \times 7$ receptive field while using $27$ parameters ($3 \times 3^2$) instead of $49$ ($7^2$), incorporating three non-linear activations instead of one</span></button><button class="opt" type="button"><b>C</b><span>Because larger kernels cannot be trained using gradient descent</span></button><button class="opt" type="button"><b>D</b><span>Because $7 \times 7$ convolutions cannot be executed on GPU hardware</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Stacking three $3 \times 3$ convolutions provides a $(1 + 2 + 2 + 2) = 7$ receptive field. It reduces parameter count from $49C^2$ to $27C^2$ (a $45\%$ savings) while adding three non-linear activation layers, increasing representational expressiveness.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>In a convolutional network, what is the role of cumulative stride $S_{l-1}$ in expanding the theoretical receptive field $r_l = r_{l-1} + (k_l - 1) \cdot S_{l-1}$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It scales the effective reach of kernel $k_l$ by the total downsampling factor accumulated by all preceding layers</span></button><button class="opt" type="button"><b>B</b><span>It normalises the weights of the convolutional filters to sum to 1</span></button><button class="opt" type="button"><b>C</b><span>It restricts the gradient flow during backward passes</span></button><button class="opt" type="button"><b>D</b><span>It counts the number of training epochs elapsed</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> When preceding layers have downsampled the image by a cumulative factor $S_{l-1}$, moving one step in the current feature map corresponds to a physical jump of $S_{l-1}$ pixels in the original input image.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>What critical difference distinguishes the Effective Receptive Field (ERF) from the theoretical receptive field?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The ERF is always rectangular, while the theoretical receptive field is triangular</span></button><button class="opt" type="button"><b>B</b><span>The theoretical receptive field shrinks during training, while the ERF grows infinitely</span></button><button class="opt" type="button"><b>C</b><span>The theoretical receptive field defines the maximal geometric bounding box, but the actual gradient impact decays as a 2D Gaussian, heavily concentrating influence at the central pixels</span></button><button class="opt" type="button"><b>D</b><span>The ERF applies only to colour images, while the theoretical receptive field applies to greyscale</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Due to the compounding of weighted convolutions, central pixels participate in vastly more forward and backward calculation paths than peripheral pixels. Consequently, the gradient sensitivity follows a Gaussian distribution centered on the neuron.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q4</span>Why did modern CNN architectures replace large fully connected classification layers with Global Average Pooling (GAP)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Global Average Pooling allows the network to output audio signals</span></button><button class="opt" type="button"><b>B</b><span>Global Average Pooling converts floating-point weights into 8-bit integers</span></button><button class="opt" type="button"><b>C</b><span>Global Average Pooling doubles the spatial resolution of the image</span></button><button class="opt" type="button"><b>D</b><span>Global Average Pooling reduces each $H \times W$ feature map to a single average scalar, eliminating millions of parameter weights and preventing overfitting</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Flattening deep feature maps into dense linear layers created tens of millions of parameters in early models like AlexNet and VGG. Global Average Pooling averages spatial dimensions completely, requiring zero parameters while acting as a spatial regulariser.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/cnn-architecture-tour-lenet-to-resnet-to-efficientnet/"><small class="kicker">Concept</small><b>CNN Architecture Tour</b></a><a href="../../models/convolutional_neural_networks/"><small class="kicker">Deep learning</small><b>CNNs</b></a><a href="../../concepts/residual-networks-and-skip-connections/"><small class="kicker">Concept</small><b>ResNets and skip connections</b></a><a href="../../concepts/one-stage-detectors-ssd-and-yolo/"><small class="kicker">Concept</small><b>SSD &amp; YOLO</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/optical-flow/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Computer vision</small><b>Optical flow &amp; motion</b></a>
+    <a class="pager-next" href="../../concepts/cnn-architecture-tour-lenet-to-resnet-to-efficientnet/"><small>Next · Computer vision <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>CNN Architecture Tour</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

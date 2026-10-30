@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Mixture of Experts (MoE): Conditional Computation and Sparse Gating · Learn · Yogesh Awate</title>
+<meta name="description" content="Decoupling model parameter capacity from FLOP compute cost using sparse top-k gating routers and load balancing auxiliary losses.">
+<meta property="og:title" content="Mixture of Experts (MoE): Conditional Computation and Sparse Gating · Learn · Yogesh Awate">
+<meta property="og:description" content="Decoupling model parameter capacity from FLOP compute cost using sparse top-k gating routers and load balancing auxiliary losses.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="mixture-of-experts">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-neural">Path 08 · Deep learning</a> / Architectures / Lesson 28 of 42</span>
+    <h1 class="case-title">Mixture of Experts (MoE): Conditional Computation and Sparse Gating</h1>
+    <p class="lede rise" style="--d:3">Decoupling model parameter capacity from FLOP compute cost using sparse top-$k$ gating routers and load balancing auxiliary losses.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="3"><i><b></b></i>Advanced</span></span>
+      <span class="tagline">18 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Deep learning · Architectures</dd>
+          <dt>Level</dt><dd>Advanced</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">In dense neural networks, every single parameter is activated for every single forward pass: doubling the parameter count doubles the FLOP compute cost and training latency. Mixture of Experts (MoE) introduces conditional computation: replacing dense Feed-Forward Network (FFN) layers with an ensemble of $E$ parallel expert sub-networks, directed by a learned router that routes each token to only top-$k$ experts (e.g. 2 out of 8). MoE scales models to trillions of parameters with constant inference FLOPs.</p>
+        <p>In standard Transformers, Feed-Forward Network (FFN) layers account for $\approx 2/3$ of total model parameters. MoE replaces each dense FFN with $E$ identical-structure independent FFN blocks called "experts".</p>
+        <p>A lightweight gating router network $G(x) = \operatorname{Softmax}(\operatorname{TopK}(x \cdot W_g + \epsilon, k))$ computes routing probabilities for each token, directing the token to the $k$ experts with the highest scores.</p>
+        <p>Because each token interacts with only $k$ experts (typically $k=1$ or $k=2$), the floating point operations (FLOPs) per token remain constant, even as the total parameter count scales by $8\times$ or $64\times$.</p>
+        <p>The primary failure mode of MoE is Expert Collapse: the router quickly learns to send every single token to the same 1–2 favourite experts, leaving the remaining experts starved of gradients. MoE prevents this using an auxiliary Load Balancing Loss that penalises unequal token allocation across experts.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine a high-volume medical clinic. In a dense system, every single patient is examined simultaneously by 16 different medical specialists (cardiologist, neurologist, orthopaedic surgeon, dermatologist), running up astronomical bills. In a Mixture of Experts clinic, a triage nurse (the router) examines the patient's symptoms and routes them strictly to the two most relevant specialists. The clinic maintains the collective knowledge of 16 experts while paying for only 2 specialists per patient.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Select layer replacement: Substitute dense FFN blocks in Transformer decoder layers with MoE layers containing $E$ parallel expert networks.</li><li>Configure routing top-$k$: Choose $k=1$ (Switch Transformer; maximum efficiency) or $k=2$ (Mixture of Experts; smoother routing gradients).</li><li>Compute router gating logits: Project token representations through router weight matrix $W_g$ and optionally add Gaussian noise during training for exploration.</li><li>Apply Top-$k$ gating and normalisation: Select top-$k$ expert indices and re-normalise their softmax gating weights to sum to 1.0.</li><li>Dispatch and gather tokens: Dispatch tokens to designated expert buffers, execute parallel forward passes, and combine outputs weighted by gating coefficients.</li><li>Calculate load balancing auxiliary loss: Compute the coefficient of variation or dot product between router assignment probabilities and actual batch routing frequencies, adding to main loss.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>MoE Conditional Computation Output</h3><div class="formula">y = \sum_{i=1}^E G(x)_i \cdot \operatorname{Expert}_i(x), \quad G(x) = \operatorname{Softmax}\left( \operatorname{TopK}\left( x W_g, \; k \right) \right)</div><p>Output is the weighted sum across active experts where $G(x)_i &gt; 0$ for strictly $k$ experts and $0$ for the remaining $(E - k)$ experts.</p></li>
+          <li><h3>Top-$k$ Gating Operator</h3><div class="formula">\operatorname{TopK}(v, k)_i = \begin{cases} v_i & \text{if } v_i \text{ is in top } k \text{ elements of } v \\ -\infty & \text{otherwise} \end{cases}</div><p>Sets non-selected expert logits to $-\infty$ prior to softmax, driving their routing probabilities and compute costs to exact zero.</p></li>
+          <li><h3>Auxiliary Load Balancing Loss (Switch Transformer)</h3><div class="formula">\mathcal{L}_{\mathrm{aux}} = \alpha \cdot E \sum_{i=1}^E f_i \cdot P_i, \quad f_i = \frac{1}{T} \sum_{t=1}^T \mathbb{I}(\operatorname{routed}(t) = i), \; P_i = \frac{1}{T} \sum_{t=1}^T G(x_t)_i</div><p>Minimises the correlation between fraction of tokens dispatched $f_i$ and router probability mass $P_i$, penalising expert concentration.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>MoE decouples model capacity from compute cost through sparse conditional routing.</li><li>Only top-$k$ experts are activated per token, keeping inference FLOPs constant as parameters grow.</li><li>A learned router network predicts softmax gating scores across parallel expert FFNs.</li><li>An auxiliary load balancing loss prevents expert collapse where all tokens route to one favourite expert.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> torch
+<span class="k">import</span> torch.nn <span class="k">as</span> nn
+<span class="k">import</span> torch.nn.functional <span class="k">as</span> F
+
+<span class="k">class</span> <span class="f">SimpleMoELayer</span>(nn.Module):
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, d_model: int, d_ff: int, num_experts: int = <span class="n">4</span>, top_k: int = <span class="n">2</span>):
+        <span class="k">super</span>().<span class="f">__init__</span>()
+        <span class="k">self</span>.num_experts = num_experts
+        <span class="k">self</span>.top_k = top_k
+        <span class="k">self</span>.router = nn.<span class="f">Linear</span>(d_model, num_experts, bias=<span class="k">False</span>)
+        <span class="c"># Create independent expert FFNs</span>
+        <span class="k">self</span>.experts = nn.<span class="f">ModuleList</span>([
+            nn.<span class="f">Sequential</span>(
+                nn.<span class="f">Linear</span>(d_model, d_ff),
+                nn.<span class="f">ReLU</span>(),
+                nn.<span class="f">Linear</span>(d_ff, d_model)
+            ) <span class="k">for</span> _ <span class="k">in</span> <span class="k">range</span>(num_experts)
+        ])
+
+    <span class="k">def</span> <span class="f">forward</span>(<span class="k">self</span>, x: torch.Tensor):
+        <span class="c"># x shape: [batch_size, seq_len, d_model]</span>
+        batch, seq, d_model = x.shape
+        x_flat = x.<span class="f">view</span>(-<span class="n">1</span>, d_model)  <span class="c"># [N, d_model]</span>
+        
+        <span class="c"># 1. Compute router logits</span>
+        logits = <span class="k">self</span>.<span class="f">router</span>(x_flat)  <span class="c"># [N, num_experts]</span>
+        
+        <span class="c"># 2. Select top-k experts per token</span>
+        top_k_logits, top_k_indices = torch.<span class="f">topk</span>(logits, <span class="k">self</span>.top_k, dim=-<span class="n">1</span>)
+        top_k_weights = F.<span class="f">softmax</span>(top_k_logits, dim=-<span class="n">1</span>)  <span class="c"># [N, top_k]</span>
+        
+        <span class="c"># 3. Compute weighted expert outputs</span>
+        out = torch.<span class="f">zeros_like</span>(x_flat)
+        <span class="k">for</span> k <span class="k">in</span> <span class="k">range</span>(<span class="k">self</span>.top_k):
+            expert_idx = top_k_indices[:, k]
+            weight = top_k_weights[:, k].<span class="f">unsqueeze</span>(-<span class="n">1</span>)
+            <span class="c"># Route tokens to corresponding expert</span>
+            <span class="k">for</span> i, expert <span class="k">in</span> <span class="f">enumerate</span>(<span class="k">self</span>.experts):
+                mask = (expert_idx == i)
+                <span class="k">if</span> mask.<span class="f">any</span>():
+                    out[mask] += weight[mask] * <span class="f">expert</span>(x_flat[mask])
+                    
+        <span class="k">return</span> out.<span class="f">view</span>(batch, seq, d_model)
+
+<span class="c"># Test MoE layer with 4 experts, routing top-2 per token</span>
+moe = <span class="f">SimpleMoELayer</span>(d_model=<span class="n">64</span>, d_ff=<span class="n">256</span>, num_experts=<span class="n">4</span>, top_k=<span class="n">2</span>)
+x = torch.<span class="f">randn</span>(<span class="n">2</span>, <span class="n">8</span>, <span class="n">64</span>)  <span class="c"># 16 tokens</span>
+out = <span class="f">moe</span>(x)
+<span class="k">print</span>(<span class="s">&quot;MoE Output shape:&quot;</span>, out.shape)
+<span class="k">print</span>(<span class="s">&quot;Each token evaluated by strictly 2 out of 4 experts!&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Expert collapse: Without auxiliary load balancing, the router quickly routes all tokens to a single expert, reducing the model to a tiny fraction of its capacity.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Inference memory overhead: While FLOPs are sparse, all expert weights must reside in GPU VRAM unless offloaded, requiring high aggregate memory.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Communication overhead in distributed MoE: Sharding experts across multiple GPUs requires expensive all-to-all token dispatch shuffles across network interconnects.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>What is the primary motivation for using Mixture of Experts (MoE) over dense neural network architectures?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It eliminates the need for attention layers</span></button><button class="opt" type="button"><b>B</b><span>It reduces training datasets to zero</span></button><button class="opt" type="button"><b>C</b><span>It allows scaling model parameter capacity by orders of magnitude without proportionally increasing computational FLOPs per token</span></button><button class="opt" type="button"><b>D</b><span>It forces models to output binary classification decisions</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In MoE, each token is processed by only top-$k$ experts (e.g. 2 out of 8), allowing parameter capacity to scale massively while computation cost per token stays constant.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>What is "expert collapse" in a Mixture of Experts model?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>When all expert weights decay to zero due to L2 regularisation</span></button><button class="opt" type="button"><b>B</b><span>When an expert network crashes with a segmentation fault</span></button><button class="opt" type="button"><b>C</b><span>When GPU VRAM runs out during backpropagation</span></button><button class="opt" type="button"><b>D</b><span>A pathology where the gating router learns to route virtually all tokens to the same 1 or 2 experts, leaving the remaining experts untrained and unutilized</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Expert collapse occurs when a router favours a few experts early, creating a positive feedback loop where only those experts receive gradient updates.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>How do modern MoE models like Switch Transformer prevent expert collapse during training?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By disabling backpropagation on the router weights</span></button><button class="opt" type="button"><b>B</b><span>By introducing an auxiliary load balancing loss that penalises unequal distribution of tokens across experts</span></button><button class="opt" type="button"><b>C</b><span>By training only one expert at a time</span></button><button class="opt" type="button"><b>D</b><span>By manually assigning words alphabetically to experts</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The auxiliary load balancing loss penalises correlation between router probability mass and token dispatch fractions, incentivizing balanced expert utilisation.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/the-attention-mechanism/"><small class="kicker">Concept</small><b>The attention mechanism</b></a><a href="../../concepts/residual-networks-and-skip-connections/"><small class="kicker">Concept</small><b>ResNets and skip connections</b></a><a href="../../concepts/scaling-laws/"><small class="kicker">Concept</small><b>Scaling laws for LLMs</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/graph-neural-networks-gcn-gat-graphsage/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>GNNs: GCN, GAT &amp; GraphSAGE</b></a>
+    <a class="pager-next" href="../../concepts/state-space-models-and-mamba/"><small>Next · Deep learning <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>State-space models &amp; Mamba</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

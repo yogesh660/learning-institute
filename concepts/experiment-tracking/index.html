@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Experiment Tracking: Systematic Machine Learning Lifecycle Logging · Learn · Yogesh Awate</title>
+<meta name="description" content="Logging hyperparameters, training metrics, code hashes, dataset versions, and model artifacts to ensure auditability and scientific reproducibility.">
+<meta property="og:title" content="Experiment Tracking: Systematic Machine Learning Lifecycle Logging · Learn · Yogesh Awate">
+<meta property="og:description" content="Logging hyperparameters, training metrics, code hashes, dataset versions, and model artifacts to ensure auditability and scientific reproducibility.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="experiment-tracking">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-data-science">Path 07 · Data science</a> / Pipelines and validation / Lesson 17 of 47</span>
+    <h1 class="case-title">Experiment Tracking: Systematic Machine Learning Lifecycle Logging</h1>
+    <p class="lede rise" style="--d:3">Logging hyperparameters, training metrics, code hashes, dataset versions, and model artifacts to ensure auditability and scientific reproducibility.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="1"><i><b></b></i>Beginner</span></span>
+      <span class="tagline">14 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Data science · Pipelines and validation</dd>
+          <dt>Level</dt><dd>Beginner</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Machine learning development is fundamentally iterative and empirical: data scientists test dozens of model architectures, feature subsets, and hyperparameter combinations. Without systematic experiment tracking, critical institutional knowledge is lost in terminal outputs, scripts become irreproducible, and identifying which exact run produced the production model becomes impossible.</p>
+        <p>An ad-hoc approach to ML relies on manual naming conventions (`model_v2_final_really.pkl`), local notes, and memory. This quickly breaks down when teams scale or when models must be audited months later.</p>
+        <p>Modern experiment tracking platforms (such as MLflow, Weights & Biases, Comet, and Neptune) formalise every training iteration as an immutable "run" that logs three core categories of information: inputs, outputs, and metadata.</p>
+        <p>Inputs include git commit SHA, uncommitted code diffs, data version hashes (e.g. DVC commit), and hyperparameter dictionaries. Outputs include epoch-by-epoch loss curves, evaluation metrics (AUC, F1, RMSE), confusion matrices, and serialized model artifacts.</p>
+        <p>Metadata tracks hardware environment (GPU type, CUDA version), Python package dependency locks (`requirements.txt`), execution timestamp, and execution author. This structured logging enables multi-run comparisons, leaderboard ranking, and automated lineage auditing.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine a pharmaceutical laboratory testing hundreds of chemical compounds for a new vaccine. If scientists write recipes on loose napkins and throw away temperature logs once an experiment fails, they will inadvertently repeat dead ends and cannot prove to regulatory inspectors which exact process yielded the successful cure. Experiment tracking is the immutable, timestamped laboratory notebook of machine learning.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Instrumentation: Initialize an experiment client and wrap training scripts with automated logging callbacks or context managers (`mlflow.start_run()`).</li><li>Parameter logging: Record complete configuration payloads (learning rate, tree depth, batch size, feature lists) at run initialization.</li><li>Metric streaming: Log training and validation loss curves at every epoch or step to detect overfitting and training divergence.</li><li>Artifact registration: Log serialized model checkpoints, diagnostic plots (ROC curves, calibration curves), and dependency manifests.</li><li>Lineage tagging: Tag the run with git commit hash, dataset commit ID, and author to ensure total end-to-end provenance.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Deterministic Run Provenance Tuple</h3><div class="formula">\mathcal{R} = \left( \mathcal{C}_{\mathrm{git}}, \mathcal{D}_{\mathrm{hash}}, \Theta_{\mathrm{params}}, \mathcal{E}_{\mathrm{env}}, \mathcal{M}_{\mathrm{metrics}}, \mathcal{A}_{\mathrm{artifact}} \right)</div><p>A fully specified experiment run $\mathcal{R}$ binds the code commit, data hash, hyperparameter configuration, environment lock, evaluated metrics, and saved binary artifacts.</p></li>
+          <li><h3>Metric Trajectory Series</h3><div class="formula">\mathcal{T}_m = \left\{ (s, t, v_s) \;\middle|\; s \in \{1, \dots, S\}, \; v_s = m(f_{\theta_s}(X_{\mathrm{val}}), y_{\mathrm{val}}) \right\}</div><p>Experiment tracking logs timestamped metric evaluations across training steps $s$ to reconstruct full learning trajectories.</p></li>
+          <li><h3>Model Checkpoint Lineage Verification</h3><div class="formula">\mathrm{SHA256}(\mathcal{A}) = \mathrm{RegistryMatch}(\mathcal{R}_{\mathrm{id}})</div><p>Cryptographic hashing verifies that a production-deployed binary artifact exactly matches the recorded experiment run.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Experiment tracking captures parameters, metrics, code revisions, and artifacts for every model run.</li><li>Prevents loss of empirical findings and eliminates ad-hoc filename versioning.</li><li>Provides auditable lineage connecting production model binaries back to their exact training data and code.</li><li>Enables multi-run metric comparisons, loss curve visualisations, and leaderboard ranking.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> json
+<span class="k">import</span> hashlib
+<span class="k">import</span> time
+
+<span class="k">class</span> MiniExperimentTracker:
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, experiment_name: str):
+        <span class="k">self</span>.experiment_name = experiment_name
+        <span class="k">self</span>.runs = []
+
+    <span class="k">def</span> <span class="f">log_run</span>(<span class="k">self</span>, params: dict, metrics: dict, code_commit: str, data_hash: str):
+        run_record = {
+            <span class="s">'run_id'</span>: hashlib.<span class="f">sha1</span>(<span class="s">f&quot;{time.time()}_{params}&quot;</span>.<span class="f">encode</span>()).<span class="f">hexdigest</span>()[:<span class="n">8</span>],
+            <span class="s">'timestamp'</span>: time.<span class="f">strftime</span>(<span class="s">&quot;%Y-%m-%dT%H:%M:%SZ&quot;</span>, time.<span class="f">gmtime</span>()),
+            <span class="s">'code_commit'</span>: code_commit,
+            <span class="s">'data_hash'</span>: data_hash,
+            <span class="s">'params'</span>: params,
+            <span class="s">'metrics'</span>: metrics
+        }
+        <span class="k">self</span>.runs.<span class="f">append</span>(run_record)
+        <span class="k">return</span> run_record
+
+<span class="c"># Simulate tracking two model experiments</span>
+tracker = <span class="f">MiniExperimentTracker</span>(experiment_name=<span class="s">&quot;churn-prediction&quot;</span>)
+
+<span class="c"># Run 1: Baseline Random Forest</span>
+run_1 = tracker.<span class="f">log_run</span>(
+    params={<span class="s">'model'</span>: <span class="s">'RandomForest'</span>, <span class="s">'n_estimators'</span>: <span class="n">100</span>, <span class="s">'max_depth'</span>: <span class="n">6</span>},
+    metrics={<span class="s">'val_auc'</span>: <span class="n">0.812</span>, <span class="s">'val_logloss'</span>: <span class="n">0.425</span>},
+    code_commit=<span class="s">'git_a4f10c'</span>,
+    data_hash=<span class="s">'dvc_98b1e2'</span>
+)
+
+<span class="c"># Run 2: Tuned Gradient Boosting</span>
+run_2 = tracker.<span class="f">log_run</span>(
+    params={<span class="s">'model'</span>: <span class="s">'LightGBM'</span>, <span class="s">'learning_rate'</span>: <span class="n">0.05</span>, <span class="s">'max_depth'</span>: <span class="n">5</span>},
+    metrics={<span class="s">'val_auc'</span>: <span class="n">0.849</span>, <span class="s">'val_logloss'</span>: <span class="n">0.381</span>},
+    code_commit=<span class="s">'git_c7b20e'</span>,
+    data_hash=<span class="s">'dvc_98b1e2'</span>
+)
+
+<span class="c"># Compare runs</span>
+<span class="k">print</span>(<span class="s">f&quot;Logged {len(tracker.runs)} runs in '{tracker.experiment_name}':&quot;</span>)
+<span class="k">for</span> r <span class="k">in</span> tracker.runs:
+    <span class="k">print</span>(<span class="s">f&quot;Run {r['run_id']} | Model: {r['params']['model']} | AUC: {r['metrics']['val_auc']}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Logging only summary metrics: Forgetting to log the git commit hash or dataset snapshot makes a run impossible to reproduce even if metrics look outstanding.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Metric logging bottleneck: Sending high-frequency metrics across a remote network on every single micro-batch degrades GPU training throughput.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Uncommitted code changes: Running experiments with dirty git working directories logs a commit hash that does not actually reflect the code that ran.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>Which set of elements is essential to guarantee complete reproducibility of a machine learning experiment run?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The CPU clock speed and monitor resolution</span></button><button class="opt" type="button"><b>B</b><span>Git commit hash, dataset version hash, hyperparameters, software environment lock, and random seed</span></button><button class="opt" type="button"><b>C</b><span>Only the final serialized `.pkl` binary file</span></button><button class="opt" type="button"><b>D</b><span>Model accuracy score and user password</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Reproducibility requires knowing the exact code commit, immutable training dataset version, configuration parameters, dependencies, and initial random seeds.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>What is a common performance pitfall when logging training metrics during deep neural network training?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Experiment tracking platforms cannot store more than 10 numbers</span></button><button class="opt" type="button"><b>B</b><span>Logging strings causes floating point rounding errors</span></button><button class="opt" type="button"><b>C</b><span>Logging validation loss causes gradient explosion</span></button><button class="opt" type="button"><b>D</b><span>Synchronous remote network logging on every micro-batch blocks GPU computation and slows down training</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Synchronous HTTP API calls inside tight GPU training loops cause GPUs to sit idle waiting for network round-trips. Metrics should be buffered or logged asynchronously.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>Why should dataset version hashes (e.g. via DVC or LakeFS) be logged alongside hyperparameter configurations?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To compress tabular files into smaller zip archives</span></button><button class="opt" type="button"><b>B</b><span>Because databases refuse to run queries without a hash key</span></button><button class="opt" type="button"><b>C</b><span>Because datasets naturally drift or get updated over time; without the data hash, identical code will produce different models</span></button><button class="opt" type="button"><b>D</b><span>To automatically impute missing null values</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> If the underlying data changes, re-running identical code with identical hyperparameters produces an entirely different model unless the exact dataset version was logged.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/reproducibility/"><small class="kicker">Concept</small><b>Reproducibility</b></a><a href="../../concepts/scikit-learn-pipelines-and-columntransformer/"><small class="kicker">Concept</small><b>Pipelines and ColumnTransformer</b></a><a href="../../concepts/docker-and-reproducible-environments/"><small class="kicker">Concept</small><b>Docker and reproducibility</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/scikit-learn-pipelines-and-columntransformer/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Data science</small><b>Pipelines and ColumnTransformer</b></a>
+    <a class="pager-next" href="../../concepts/reproducibility/"><small>Next · Data science <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Reproducibility</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Local Interpretable Model-Agnostic Explanations · Learn · Yogesh Awate</title>
+<meta name="description" content="Explain individual predictions of any black-box model using local surrogate linear models: master perturbation sampling, exponential kernels, and local fidelity.">
+<meta property="og:title" content="Local Interpretable Model-Agnostic Explanations · Learn · Yogesh Awate">
+<meta property="og:description" content="Explain individual predictions of any black-box model using local surrogate linear models: master perturbation sampling, exponential kernels, and local fidelity.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="lime">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ml-toolbox">Path 06 · Machine learning toolbox</a> / Interpretability and fairness / Lesson 32 of 50</span>
+    <h1 class="case-title">Local Interpretable Model-Agnostic Explanations</h1>
+    <p class="lede rise" style="--d:3">Explain individual predictions of any black-box model using local surrogate linear models: master perturbation sampling, exponential kernels, and local fidelity.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../models/ridge_regression/">Ridge regression</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Machine learning toolbox · Interpretability and fairness</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Complex models like deep neural networks or gradient-boosted trees are globally non-linear and uninterpretable. LIME explains why a model made a specific prediction on sample x by approximating the local decision boundary with an interpretable surrogate model.</p>
+        <p>Modern machine learning architectures—such as 100-tree gradient boosted ensembles or deep neural networks—excel at predictive accuracy by learning highly complex, convoluted non-linear decision boundaries. However, in credit risk underwriting, healthcare pathology, and judicial sentencing, stakeholders demand to know why a specific decision was reached: "Why was this customer denied a loan?"</p>
+        <p>While explaining the global behaviour of a black-box model across all of multi-dimensional feature space is practically impossible, explaining a single localised prediction is entirely feasible. Marco Tulio Ribeiro, Sameer Singh, and Carlos Guestrin (2016) introduced LIME: Local Interpretable Model-Agnostic Explanations.</p>
+        <p>LIME is grounded in the geometric observation that even the most tortuous non-linear manifold looks flat and linear if you zoom in closely enough onto a tiny local neighbourhood. To explain prediction $f(x)$, LIME draws random perturbations in the immediate vicinity of $x$, observes the black-box outputs for these perturbed samples, weights each sample by its exponential distance to $x$, and fits a simple, interpretable surrogate model (typically a sparse linear model).</p>
+        <p>The learned surrogate weights $w$ represent local feature importances: showing which features pushed the model toward the prediction, which features pushed against it, and by how much, providing human-understandable explanations for any black-box model.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine looking at a globe of the Earth. Globally, the Earth is an intricate curved sphere covered in mountains and ocean trenches (the complex global black-box model). But if you step out of your front door and look down at your local town square, the ground is so locally flat that you can map it with a simple 2D architectural blueprint (the local linear surrogate). LIME constructs that local flat blueprint for any specific decision.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>LIME General Optimisation Objective</h3><div class="formula">\operatorname{explanation}(x) = \arg\min_{g \in \mathcal{G}} \mathcal{L}(f, g, \pi_x) + \Omega(g)</div><p>Balances local fidelity loss L (how accurately surrogate g approximates black-box f weighted by proximity pi_x) with model complexity Omega(g) (e.g. limiting to K non-zero features).</p></li>
+          <li><h3>Exponential Proximity Kernel</h3><div class="formula">\pi_x(z) = \exp\left(-\frac{D(x, z)^2}{\sigma^2}\right)</div><p>Assigns decaying importance to perturbed samples based on their Euclidean distance D(x, z) to instance x, governed by kernel width parameter sigma.</p></li>
+          <li><h3>Weighted Least Squares Surrogate Fit</h3><div class="formula">w^* = \left( Z^T W Z \right)^{-1} Z^T W y_{\mathrm{blackbox}}, \quad W = \operatorname{diag}(\pi_x(z_1), \dots, \pi_x(z_M))</div><p>Closed-form weighted least squares solution for surrogate linear weights, where Z is the design matrix of perturbations and W contains proximity weights.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Model-agnostic interpretability framework: explains individual predictions of any black-box classifier or regressor.</li><li>Grounded in local surrogate models: approximates complex global decision boundaries with a local linear surrogate model.</li><li>Generates synthetic perturbations in the vicinity of instance $x$, querying the black-box to observe boundary behaviour.</li><li>Exponential proximity kernel $\pi_x(z) = \exp(-D(x, z)^2 / \sigma^2)$ ensures local fidelity by weighting near neighbours heavily.</li><li>Output weights provide localised feature attribution: showing how much each feature contributed to pushing the decision over the threshold.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">from</span> sklearn.ensemble <span class="k">import</span> RandomForestClassifier
+
+<span class="c"># Tabular LIME from scratch</span>
+<span class="k">class</span> SimpleTabularLIME:
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, predict_fn, n_samples=<span class="n">1000</span>, kernel_width=<span class="n">0.75</span>):
+        <span class="k">self</span>.predict_fn = predict_fn
+        <span class="k">self</span>.n_samples = n_samples
+        <span class="k">self</span>.kernel_width = kernel_width
+        
+    <span class="k">def</span> <span class="f">explain_instance</span>(<span class="k">self</span>, x, feature_names=<span class="k">None</span>):
+        p = <span class="k">len</span>(x)
+        <span class="k">if</span> feature_names is <span class="k">None</span>:
+            feature_names = [<span class="s">f&quot;Feature_{i}&quot;</span> <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(p)]
+            
+        <span class="c"># 1. Generate perturbations around x</span>
+        perturbations = np.random.<span class="f">normal</span>(loc=x, scale=<span class="n">0.5</span>, size=(<span class="k">self</span>.n_samples, p))
+        <span class="c"># Ensure exact instance is included</span>
+        perturbations[<span class="n">0</span>] = x
+        
+        <span class="c"># 2. Query black-box predictions (target class 1 probability)</span>
+        blackbox_probs = <span class="k">self</span>.<span class="f">predict_fn</span>(perturbations)
+        <span class="k">if</span> blackbox_probs.ndim &gt; <span class="n">1</span>:
+            blackbox_probs = blackbox_probs[:, <span class="n">1</span>]
+            
+        <span class="c"># 3. Compute Euclidean distance and exponential proximity weights</span>
+        dists = np.linalg.<span class="f">norm</span>(perturbations - x, axis=<span class="n">1</span>)
+        weights = np.<span class="f">exp</span>(-(dists**<span class="n">2</span>) / (<span class="k">self</span>.kernel_width**<span class="n">2</span>))
+        
+        <span class="c"># 4. Weighted Ridge/OLS Linear Regression</span>
+        <span class="c"># Centred design matrix</span>
+        Z = np.<span class="f">column_stack</span>([np.<span class="f">ones</span>(<span class="k">self</span>.n_samples), perturbations])
+        W = np.<span class="f">diag</span>(weights)
+        
+        <span class="c"># Solve (Z^T W Z + lambda I) w = Z^T W y</span>
+        ZTW = Z.T @ W
+        ridge_reg = <span class="n">1e-4</span> * np.<span class="f">eye</span>(p + <span class="n">1</span>)
+        w_surrogate = np.linalg.<span class="f">solve</span>(ZTW @ Z + ridge_reg, ZTW @ blackbox_probs)
+        
+        intercept = w_surrogate[<span class="n">0</span>]
+        coefs = w_surrogate[<span class="n">1</span>:]
+        
+        explanation = <span class="f">sorted</span>(<span class="f">zip</span>(feature_names, coefs), key=<span class="k">lambda</span> item: <span class="f">abs</span>(item[<span class="n">1</span>]), reverse=<span class="k">True</span>)
+        <span class="k">return</span> explanation, intercept
+
+<span class="c"># Train a complex non-linear Random Forest on synthetic loan data</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+n_train = <span class="n">500</span>
+features = [<span class="s">'Income'</span>, <span class="s">'DebtRatio'</span>, <span class="s">'CreditScore'</span>, <span class="s">'EmploymentYears'</span>]
+
+<span class="c"># Non-linear approval rule with interactions</span>
+X_train = np.random.<span class="f">uniform</span>(<span class="n">1</span>, <span class="n">10</span>, (n_train, <span class="n">4</span>))
+latent_score = <span class="n">0.5</span> * X_train[:, <span class="n">0</span>] - <span class="n">1.2</span> * X_train[:, <span class="n">1</span>] + <span class="n">1.5</span> * np.<span class="f">log</span>(X_train[:, <span class="n">2</span>]) + <span class="n">0.3</span> * X_train[:, <span class="n">3</span>]
+y_train = (latent_score &gt; np.<span class="f">median</span>(latent_score)).<span class="f">astype</span>(int)
+
+rf_model = <span class="f">RandomForestClassifier</span>(n_estimators=<span class="n">100</span>, max_depth=<span class="n">10</span>, random_state=<span class="n">42</span>)
+rf_model.<span class="f">fit</span>(X_train, y_train)
+
+<span class="c"># Instance to explain: High income, but high debt ratio!</span>
+x_applicant = np.<span class="f">array</span>([<span class="n">8.5</span>, <span class="n">8.0</span>, <span class="n">4.0</span>, <span class="n">5.0</span>])
+prob_approval = rf_model.<span class="f">predict_proba</span>(x_applicant.<span class="f">reshape</span>(<span class="n">1</span>, -<span class="n">1</span>))[<span class="n">0</span>, <span class="n">1</span>]
+
+lime_explainer = <span class="f">SimpleTabularLIME</span>(rf_model.predict_proba, n_samples=<span class="n">1500</span>, kernel_width=<span class="n">1.0</span>)
+exp, base = lime_explainer.<span class="f">explain_instance</span>(x_applicant, feature_names=features)
+
+<span class="k">print</span>(<span class="s">f&quot;Applicant Black-Box Approval Probability: {prob_approval * 100:.1f}%&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Local Linear Surrogate Base Intercept:   {base:.3f}&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;\nLocal Feature Importances (LIME Weights):&quot;</span>)
+<span class="k">for</span> feat, weight <span class="k">in</span> exp:
+    direction = <span class="s">&quot;Supports (+)&quot;</span> <span class="k">if</span> weight &gt; <span class="n">0</span> <span class="k">else</span> <span class="s">&quot;Opposes (-)&quot;</span>
+    <span class="k">print</span>(<span class="s">f&quot;  {feat:18s}: {weight:+.4f} -&gt; {direction}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Sampling instability: Because perturbations are drawn randomly, running LIME multiple times on the same instance can produce slightly varying explanations.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Sensitivity to kernel width sigma: If $\sigma$ is too small, the surrogate overfits a tiny neighbourhood; if too large, the surrogate tries to linearise a globally curved boundary, failing local fidelity.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Out-of-distribution perturbations: Drawing uniform or Gaussian perturbations around correlated tabular features can create impossible synthetic points (e.g. pregnant males or age 15 with 20 years work experience).</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>Why does LIME fit a linear model on local perturbations rather than fitting a global linear model on the entire dataset?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Perturbations can only be generated in 2 dimensions</span></button><button class="opt" type="button"><b>B</b><span>A complex black-box model is globally non-linear, but zooming into the microscopic vicinity of a single prediction reveals a locally flat linear boundary</span></button><button class="opt" type="button"><b>C</b><span>Global linear models require infinite training data</span></button><button class="opt" type="button"><b>D</b><span>LIME cannot compute matrix multiplications globally</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Globally, black-box boundaries are non-linear and cannot be captured by a single hyperplane. Locally around an individual point, linear approximations achieve high fidelity.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>What is the role of the exponential proximity kernel pi_x(z) in LIME?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It assigns high regression weights to perturbations closest to instance x, ensuring the surrogate model prioritises local accuracy over distant points</span></button><button class="opt" type="button"><b>B</b><span>It speeds up the black-box prediction speed</span></button><button class="opt" type="button"><b>C</b><span>It normalises all feature values to [0, 1]</span></button><button class="opt" type="button"><b>D</b><span>It converts continuous features into categorical features</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The proximity kernel ensures local fidelity: distant perturbations carry near-zero weight, forcing the linear surrogate to fit the boundary immediately surrounding x.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/counterfactual-explanations/"><small class="kicker">Concept</small><b>Counterfactuals</b></a><a href="../../concepts/fairness-metrics-and-mitigation/"><small class="kicker">Concept</small><b>Fairness metrics</b></a><a href="../../models/random_forest_classifier/"><small class="kicker">Classification</small><b>Random forest classifier</b></a><a href="../../models/gradient_boosting_regressor/"><small class="kicker">Regression</small><b>Gradient boosting regressor</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/pdp-ice-and-ale-plots/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Machine learning toolbox</small><b>PDP, ICE and ALE plots</b></a>
+    <a class="pager-next" href="../../concepts/counterfactual-explanations/"><small>Next · Machine learning toolbox <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Counterfactuals</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

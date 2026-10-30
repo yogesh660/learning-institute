@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>MAP and Bayesian estimation · Learn · Yogesh Awate</title>
+<meta name="description" content="Maximum A Posteriori (MAP) and full Bayesian estimation extend classical point estimation by incorporating prior probability distributions over model parameters. While Maximum Likelihood Estimation (MLE) seeks parameters that maximise data likelihood alone, MAP identifies the single mode of the posterior distribution, functioning as a Bayesian bridge to penalised regularisation (such as L2 ridge and L1 lasso). Full Bayesian estimation rejects single point estimates entirely, retaining the complete posterior probability distribution p(\theta | D) to compute posterior predictive distributions with principled parameter uncertainty.">
+<meta property="og:title" content="MAP and Bayesian estimation · Learn · Yogesh Awate">
+<meta property="og:description" content="Maximum A Posteriori (MAP) and full Bayesian estimation extend classical point estimation by incorporating prior probability distributions over model parameters. While Maximum Likelihood Estimation (MLE) seeks parameters that maximise data likelihood alone, MAP identifies the single mode of the posterior distribution, functioning as a Bayesian bridge to penalised regularisation (such as L2 ridge and L1 lasso). Full Bayesian estimation rejects single point estimates entirely, retaining the complete posterior probability distribution p(\theta | D) to compute posterior predictive distributions with principled parameter uncertainty.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="map-and-bayesian-estimation">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-statistics">Path 02 · Statistics</a> / Estimation / Lesson 10 of 51</span>
+    <h1 class="case-title">MAP and Bayesian estimation</h1>
+    <p class="lede rise" style="--d:3">Maximum A Posteriori (MAP) and full Bayesian estimation extend classical point estimation by incorporating prior probability distributions over model parameters. While Maximum Likelihood Estimation (MLE) seeks parameters that maximise data likelihood alone, MAP identifies the single mode of the posterior distribution, functioning as a Bayesian bridge to penalised regularisation (such as L2 ridge and L1 lasso). Full Bayesian estimation rejects single point estimates entirely, retaining the complete posterior probability distribution p(\theta | D) to compute posterior predictive distributions with principled parameter uncertainty.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">20 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/maximum-likelihood-estimation/">Maximum likelihood</a> <a href="../../concepts/conjugate-priors-beta-binomial/">Beta–Binomial Conjugacy</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Statistics · Estimation</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">What happens when you flip a coin 3 times and get 3 heads? Maximum Likelihood Estimation insists the coin has a 100% chance of landing heads on every flip. Intuitively, we know coins are usually fair; our prior belief anchors our judgment against extreme conclusions from small samples. How do we formalise prior domain knowledge into statistical estimators, and what is the crucial distinction between choosing a single "best" parameter (MAP) versus maintaining a full distribution over all possible parameters (Bayesian estimation)?</p>
+        <p>MLE vs MAP vs Full Bayes:
+- Maximum Likelihood Estimation (MLE): Seeks argmax_theta p(D | theta). It considers only the observed dataset. On small or sparse samples, it severely overfits, placing zero probability on unobserved events.
+- Maximum A Posteriori (MAP): Seeks argmax_theta p(theta | D) = argmax_theta [p(D | theta) p(theta)]. It combines data evidence with a prior belief distribution, yielding a single optimal point estimate (the posterior mode).
+- Full Bayesian Estimation: Rejects single point estimates entirely. It maintains the entire posterior distribution p(theta | D). When predicting a new outcome y*, it integrates over all possible values of theta, weighted by their posterior credibility.</p>
+        <p>The Secret Identity of Regularisation: In machine learning, L2 weight decay (Ridge regression) and L1 penalty (Lasso regression) are often presented as heuristic loss penalties. In reality, MAP estimation reveals their true origin: an L2 penalty is mathematically identical to assuming an independent zero-mean Gaussian prior on weights, while an L1 penalty is identical to assuming a Laplacian prior. Regularisation is literally MAP estimation in disguise!</p>
+        <p>Epistemic vs Aleatoric Uncertainty: Point estimators (both MLE and MAP) cannot express epistemic uncertainty (uncertainty stemming from lack of training data). Full Bayesian estimation explicitly tracks epistemic uncertainty: when data is scarce, the posterior distribution is wide, yielding broad prediction intervals that widen safely in uncharted feature space.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine a jury deliberating on a criminal trial. An MLE juror considers only the physical evidence presented in the courtroom, ignoring whether the defendant has a pristine record or a history of identical crimes. A MAP juror combines the evidence with their background knowledge of human behaviour to pick the single verdict they feel is most probable. A full Bayesian deliberation does not pick a single juror's hunch; it polls all possible interpretations, weighting every plausible scenario by how well it fits both the evidence and prior reality to arrive at a calibrated distribution of reasonable doubt.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>MAP Objective and Log-Posterior Formulation</h3><div class="formula">\hat{\theta}_{\text{MAP}} = \arg\max_\theta \left\{ \sum_{i=1}^N \log p(x_i \mid \theta) + \log p(\theta) \right\} = \arg\min_\theta \Big\{ \text{NLL}(\theta) - \log p(\theta) \Big\}</div><p>MAP estimation maximises the joint probability of data and parameters. Minimising negative log-likelihood with a negative log-prior penalty demonstrates the direct equivalence between MAP estimation and regularised loss minimisation.</p></li>
+          <li><h3>MAP Equivalence to L2 Regularisation (Gaussian Prior)</h3><div class="formula">\theta_j \sim \mathcal{N}(0, \sigma_0^2) \implies \log p(\theta) = -\frac{\|\theta\|_2^2}{2\sigma_0^2} - C \implies \mathcal{L}_{\text{MAP}}(\theta) = \text{NLL}(\theta) + \frac{\lambda}{2} \|\theta\|_2^2, \quad \lambda = \frac{1}{\sigma_0^2}</div><p>Assuming an independent zero-mean normal prior over model parameters produces a quadratic penalty identical to Ridge regression (L2 weight decay). Smaller prior variance \sigma_0^2 corresponds to stronger regularisation hyperparameter \lambda.</p></li>
+          <li><h3>Posterior Predictive Distribution (Full Bayesian)</h3><div class="formula">p(y^* \mid \mathcal{D}) = \int_\Theta p(y^* \mid \theta) \, p(\theta \mid \mathcal{D}) \, d\theta, \qquad \text{where } p(\theta \mid \mathcal{D}) = \frac{p(\mathcal{D} \mid \theta) p(\theta)}{\int_\Theta p(\mathcal{D} \mid \theta') p(\theta') \, d\theta'}</div><p>Instead of committing to a single point estimate \hat{\theta}, full Bayesian inference integrates across all parameter possibilities. The marginalisation accounts for parameter uncertainty, avoiding overconfident predictions in regions with sparse data.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>MLE finds the parameter value that maximises data likelihood alone, which overfits severely on small samples.</li><li>MAP incorporates a prior distribution, finding the posterior mode; it is mathematically equivalent to penalised regularisation (L2 = Gaussian prior, L1 = Laplace prior).</li><li>Full Bayesian estimation avoids single point estimates, maintaining the full posterior distribution and integrating over parameter uncertainty for predictions.</li><li>As sample size N approaches infinity, the data likelihood dominates the prior, causing MLE, MAP, and Bayesian posterior mean to converge to the same value.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="s">&quot;&quot;&quot;
+Comparison of Maximum Likelihood (MLE), Maximum A Posteriori (MAP),
+and Full Bayesian Estimation on a Small Bernoulli Sample.
+&quot;&quot;&quot;</span>
+
+<span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Scenario: We flip a coin N=5 times and observe k=4 heads.</span>
+<span class="c"># We want to estimate theta (probability of heads).</span>
+N = <span class="n">5</span>
+k = <span class="n">4</span>  <span class="c"># 4 heads out of 5 flips</span>
+
+<span class="c"># 1. Maximum Likelihood Estimation (MLE)</span>
+<span class="c"># theta_MLE = k / N</span>
+theta_mle = k / N
+
+<span class="c"># 2. Maximum A Posteriori (MAP) Estimation with Beta(alpha, beta) Prior</span>
+<span class="c"># Suppose our prior belief is centered at a fair coin: Beta(alpha=3, beta=3)</span>
+<span class="c"># (equivalent to having seen 2 virtual heads and 2 virtual tails prior to the experiment)</span>
+alpha_prior = <span class="n">3.0</span>
+beta_prior = <span class="n">3.0</span>
+
+<span class="c"># Posterior is Beta(alpha + k, beta + N - k)</span>
+alpha_post = alpha_prior + k
+beta_post = beta_prior + (N - k)
+
+<span class="c"># Mode of Beta(a, b) for a, b &gt; 1 is (a - 1) / (a + b - 2)</span>
+theta_map = (alpha_post - <span class="n">1</span>) / (alpha_post + beta_post - <span class="n">2</span>)
+
+<span class="c"># 3. Full Bayesian Estimation (Posterior Mean and Credible Interval)</span>
+<span class="c"># Posterior Mean E[theta | D] = a / (a + b)</span>
+theta_bayes_mean = alpha_post / (alpha_post + beta_post)
+
+<span class="c"># 4. Posterior Predictive Distribution for next flip being Heads</span>
+<span class="c"># P(Y* = 1 | D) = int theta * p(theta | D) d theta = E[theta | D]</span>
+p_next_heads_mle = theta_mle
+p_next_heads_map = theta_map
+p_next_heads_bayes = theta_bayes_mean
+
+<span class="k">print</span>(<span class="s">f&quot;=== Experiment: {k} Heads in {N} Flips ===&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;MLE Estimate:            theta = {theta_mle:.3f} (80% heads)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Prior:                   Beta(alpha={alpha_prior}, beta={beta_prior}) -&gt; Prior Mode = 0.500&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Posterior Distribution:  Beta(alpha={alpha_post:.1f}, beta={beta_post:.1f})&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;MAP Estimate (Mode):     theta = {theta_map:.3f} (shrunk toward prior)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Bayes Posterior Mean:    theta = {theta_bayes_mean:.3f}&quot;</span>)
+
+<span class="c"># Numerical evaluation of 95% Equal-Tailed Credible Interval</span>
+<span class="c"># Discretise theta in [0, 1] to calculate exact CDF</span>
+thetas = np.<span class="f">linspace</span>(<span class="n">0.001</span>, <span class="n">0.999</span>, <span class="n">10000</span>)
+<span class="c"># Unnormalised Beta PDF: theta^(a-1) * (1-theta)^(b-1)</span>
+log_pdf = (alpha_post - <span class="n">1</span>) * np.<span class="f">log</span>(thetas) + (beta_post - <span class="n">1</span>) * np.<span class="f">log</span>(<span class="n">1</span> - thetas)
+pdf = np.<span class="f">exp</span>(log_pdf - np.<span class="f">max</span>(log_pdf))
+pdf /= np.<span class="f">trapz</span>(pdf, thetas)
+cdf = np.<span class="f">cumsum</span>(pdf) * (thetas[<span class="n">1</span>] - thetas[<span class="n">0</span>])
+
+ci_lower = thetas[np.<span class="f">searchsorted</span>(cdf, <span class="n">0.025</span>)]
+ci_upper = thetas[np.<span class="f">searchsorted</span>(cdf, <span class="n">0.975</span>)]
+
+<span class="k">print</span>(<span class="s">f&quot;\n95% Bayesian Credible Interval: [{ci_lower:.3f}, {ci_upper:.3f}]&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Predictive Probability for Next Flip Heads:&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;  Under MLE:        {p_next_heads_mle:.3f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;  Under Full Bayes: {p_next_heads_bayes:.3f} (accounts for small sample size)&quot;</span>)
+</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Treating the MAP estimate as a full Bayesian solution: MAP is still a point estimate that discards parameter uncertainty and variance.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using improper priors with MAP without verifying posterior propriety: Maximising an unnormalised objective with ill-defined priors can yield divergent solutions.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming priors are purely subjective: Priors can represent empirical historical data, physical constraints (e.g. non-negative mass), or regularisation inductors.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>What machine learning regularisation technique is mathematically equivalent to MAP estimation with a zero-mean Gaussian prior?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Early stopping</span></button><button class="opt" type="button"><b>B</b><span>Dropout regularisation</span></button><button class="opt" type="button"><b>C</b><span>L2 regularisation (Ridge regression / weight decay)</span></button><button class="opt" type="button"><b>D</b><span>L1 regularisation (Lasso regression)</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The negative log-probability of a Gaussian prior is proportional to the squared Euclidean norm ||theta||_2^2, which corresponds directly to an L2 Ridge penalty.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>Why does full Bayesian estimation produce superior predictive uncertainty compared to MAP estimation?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because full Bayesian prediction integrates over the entire posterior parameter distribution p(theta | D), whereas MAP reduces the posterior to a single point estimate (the mode)</span></button><button class="opt" type="button"><b>B</b><span>Because MAP requires GPU matrix multiplication whereas Bayes runs on CPU</span></button><button class="opt" type="button"><b>C</b><span>Because full Bayesian models have zero parameters</span></button><button class="opt" type="button"><b>D</b><span>Because Bayesian estimation never uses Bayes' theorem</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> MAP commits to a single parameter vector, ignoring how wide or flat the posterior surface is. Full Bayesian inference marginalises over all plausible parameters, preserving epistemic uncertainty in predictions.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>As sample size N grows toward infinity, what happens to the relationship between MLE and MAP estimates?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The prior overpowers the likelihood and forces the estimate to the prior mean</span></button><button class="opt" type="button"><b>B</b><span>The likelihood grows proportionally with N while the prior remains constant, causing the MAP estimate to converge asymptotically to the MLE estimate</span></button><button class="opt" type="button"><b>C</b><span>The MAP estimate diverges to infinity</span></button><button class="opt" type="button"><b>D</b><span>The difference between them becomes permanently fixed at 1.0</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Data evidence scales with N. For large datasets, the likelihood dominates the prior term in log-space, making MAP and MLE numerically identical in the large-sample limit.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/maximum-likelihood-estimation/"><small class="kicker">Concept</small><b>Maximum likelihood</b></a><a href="../../concepts/conjugate-priors-beta-binomial/"><small class="kicker">Concept</small><b>Beta–Binomial Conjugacy</b></a><a href="../../models/ridge_regression/"><small class="kicker">Regression</small><b>Ridge regression</b></a><a href="../../models/bayesian_linear_regression/"><small class="kicker">Regression</small><b>Bayesian linear regression</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/bootstrap-and-jackknife/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Statistics</small><b>Bootstrap &amp; jackknife</b></a>
+    <a class="pager-next" href="../../concepts/estimator-properties-bias-consistency-cramer-rao-bound/"><small>Next · Statistics <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Estimator Properties</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Communicating Uncertainty: Error Bars, Fan Charts, and Decision Risks · Learn · Yogesh Awate</title>
+<meta name="description" content="Presenting probabilistic estimates, prediction intervals, and risk bounds to non-technical stakeholders without creating decision paralysis.">
+<meta property="og:title" content="Communicating Uncertainty: Error Bars, Fan Charts, and Decision Risks · Learn · Yogesh Awate">
+<meta property="og:description" content="Presenting probabilistic estimates, prediction intervals, and risk bounds to non-technical stakeholders without creating decision paralysis.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="communicating-uncertainty">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-data-science">Path 07 · Data science</a> / Communication / Lesson 38 of 47</span>
+    <h1 class="case-title">Communicating Uncertainty: Error Bars, Fan Charts, and Decision Risks</h1>
+    <p class="lede rise" style="--d:3">Presenting probabilistic estimates, prediction intervals, and risk bounds to non-technical stakeholders without creating decision paralysis.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">15 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Data science · Communication</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Machine learning engineers naturally think in terms of distributions, confidence intervals, and standard deviations. Non-technical decision makers, however, crave binary certainty: "Will our revenue meet target or not?" When technical teams conceal uncertainty by delivering single point estimates, businesses fail to build risk buffers and are blindsided when reality fluctuates. Communicating uncertainty effectively requires intuitive visual representations that convey risk without causing decision paralysis.</p>
+        <p>Concealing uncertainty produces the "Flaw of Averages": plans based on average assumptions fail on average because real-world costs and capacities are non-linear (e.g. a warehouse designed for average shipments overflows during peak days).</p>
+        <p>Presenting uncertainty through raw technical jargon ($p$-values, standard errors, confidence vs prediction intervals) confuses stakeholders. Business leaders interpret a "95% confidence interval" as "there is a 95% chance the true future value falls here", conflating parameter estimation with future outcome spread.</p>
+        <p>Visual metaphors matter: Standard error bars are frequently misread as "the full range of possible values". Gradient fan charts (shaded opacity ribbons), probability density strips, and hypothetical outcome plots (HOPs) visually reinforce that values near the centre are substantially more probable than extreme edges.</p>
+        <p>Frame uncertainty in terms of operational decisions and risk thresholds rather than abstract probabilities. Instead of saying "there is a 12% probability of stockout", state: "under this ordering policy, we expect a stockout once every 8 quarters, risking £45,000 in lost revenue."</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine a weather app forecasting tomorrow's commute. If it says "it will rain 3.2 mm", you might leave your umbrella at home thinking 3.2 mm is negligible, only to get soaked by a torrential storm. If it shows "80% chance of rain with potential downpours between 4 PM and 6 PM", you immediately know to pack a raincoat and plan travel around the high-risk window.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Distinguish confidence vs prediction intervals: Ensure communication explicitly differentiates uncertainty about an average model parameter from uncertainty about a single future customer outcome.</li><li>Select visual metaphor: Use gradient fan charts for time series forecasts and violin / density strips for cross-sectional predictions, avoiding thin error bars.</li><li>Present discrete scenarios alongside continuous bands: Pair probability intervals with concrete "Bear / Base / Bull" narrative scenario descriptions.</li><li>Translate probabilities to frequencies and expected losses: Convert abstract percentiles into natural frequencies (e.g. "1 in 10 chance") and financial impact bounds.</li><li>Highlight decision thresholds: Overlay the operational break-even or capacity limit line directly onto the probability distribution.</li><li>Provide interactive sensitivity controls: Allow decision makers to adjust risk tolerance sliders (e.g. toggling from p50 median to p90 conservative risk posture).</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Prediction Interval vs Confidence Interval Width</h3><div class="formula">\mathrm{Var}(\hat{y}_{\mathrm{pred}}) = \underbrace{\sigma^2}_{\text{Irreducible Noise}} + \underbrace{\mathbf{x}_0^T (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{x}_0 \sigma^2}_{\text{Parameter Estimation Uncertainty}}</div><p>Prediction intervals for individual future instances are substantially wider than confidence intervals for the mean response because they incorporate irreducible observation variance $\sigma^2$.</p></li>
+          <li><h3>Expected Value Under Uncertainty (Decision Rule)</h3><div class="formula">\mathbb{E}[U(a)] = \int_{-\infty}^\infty U(a, y) \cdot p(y \mid x) \, dy</div><p>Optimal decision $a^*$ maximises expected utility by integrating payoff function $U(a, y)$ across the full predicted probability density $p(y \mid x)$.</p></li>
+          <li><h3>Value at Risk (VaR) and Tail Risk</h3><div class="formula">P(L > \mathrm{VaR}_\alpha) = 1 - \alpha, \quad \mathrm{CVaR}_\alpha = \mathbb{E}[L \mid L > \mathrm{VaR}_\alpha]</div><p>Communicates financial downside risk by quantifying the threshold loss $\mathrm{VaR}_\alpha$ and the expected loss in the worst $(1 - \alpha)$ tail.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Point forecasts conceal risk, leading to the "Flaw of Averages" in operations and budgeting.</li><li>Prediction intervals model single future outcomes and are always wider than confidence intervals for the mean.</li><li>Shaded fan charts and density strips communicate probability density far more intuitively than thin error bars.</li><li>Translate probabilities into natural frequencies ("1 in 5 years") and clear financial loss boundaries.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">def</span> <span class="f">explain_forecast_risk</span>(p10: float, p50: float, p90: float, budget_target: float):
+    <span class="s">&quot;&quot;&quot;Translate quantile forecasts into actionable executive risk narrative.&quot;&quot;&quot;</span>
+    iqr_spread = p90 - p10
+    skewness = <span class="s">&quot;symmetric&quot;</span>
+    <span class="k">if</span> (p90 - p50) &gt; <span class="n">1.3</span> * (p50 - p10):
+        skewness = <span class="s">&quot;skewed upside (high breakout potential)&quot;</span>
+    <span class="k">elif</span> (p50 - p10) &gt; <span class="n">1.3</span> * (p90 - p50):
+        skewness = <span class="s">&quot;skewed downside (vulnerable to severe drops)&quot;</span>
+        
+    <span class="k">print</span>(<span class="s">f&quot;=== Executive Uncertainty Briefing ===&quot;</span>)
+    <span class="k">print</span>(<span class="s">f&quot;Base Case (Median):     £{p50:,.0f}&quot;</span>)
+    <span class="k">print</span>(<span class="s">f&quot;80% Plausible Range:    £{p10:,.0f} to £{p90:,.0f} (Spread: £{iqr_spread:,.0f})&quot;</span>)
+    <span class="k">print</span>(<span class="s">f&quot;Distribution Shape:     {skewness}&quot;</span>)
+    
+    <span class="k">if</span> budget_target &lt; p10:
+        <span class="k">print</span>(<span class="s">f&quot;Target £{budget_target:,.0f} Assessment: Very Low Risk (&gt;90% probability of meeting target).&quot;</span>)
+    <span class="k">elif</span> budget_target &lt;= p50:
+        <span class="k">print</span>(<span class="s">f&quot;Target £{budget_target:,.0f} Assessment: Moderate Risk (~50-80% probability of meeting target).&quot;</span>)
+    <span class="k">elif</span> budget_target &lt;= p90:
+        <span class="k">print</span>(<span class="s">f&quot;Target £{budget_target:,.0f} Assessment: High Risk (~10-50% probability; requires contingency).&quot;</span>)
+    <span class="k">else</span>:
+        <span class="k">print</span>(<span class="s">f&quot;Target £{budget_target:,.0f} Assessment: Critical Risk (&lt;10% probability; budget unrealistic).&quot;</span>)
+
+<span class="c"># Scenario: Forecasting next quarter sales with downside volatility</span>
+<span class="f">explain_forecast_risk</span>(p10=<span class="n">82000</span>, p50=<span class="n">105000</span>, p90=<span class="n">112000</span>, budget_target=<span class="n">100000</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Conflating confidence intervals with prediction intervals: Reporting a narrow 95% confidence interval for the average as if it represented individual customer outcomes severely understates real-world variance.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Paralysing the audience with technical jargon: Spending meeting time debating heteroscedasticity rather than discussing operational risk buffers causes decision makers to ignore the model entirely.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Presenting false symmetry: Applying $\pm 10\%$ symmetrically when real risk is heavily skewed towards catastrophic downside.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>What is the "Flaw of Averages" in business decision making?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Plans based on average assumptions fail on average because real-world costs and operational capacities respond non-linearly to fluctuations</span></button><button class="opt" type="button"><b>B</b><span>Calculators fail when dividing by large integers</span></button><button class="opt" type="button"><b>C</b><span>Every customer has an average lifetime value of zero</span></button><button class="opt" type="button"><b>D</b><span>Averages are mathematically harder to compute than medians</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because revenue, capacity limits, and stockout costs are non-linear, planning around a single average number fails whenever real-world demand swings above or below average.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>Why are prediction intervals substantially wider than confidence intervals for the regression mean?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Prediction intervals include irreducible random noise $\sigma^2$ inherent to an individual observation, whereas confidence intervals only reflect parameter estimation variance</span></button><button class="opt" type="button"><b>B</b><span>Prediction intervals are always calculated at the 99.9% level</span></button><button class="opt" type="button"><b>C</b><span>Confidence intervals ignore sample size</span></button><button class="opt" type="button"><b>D</b><span>Prediction intervals can only be computed with deep neural networks</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A confidence interval bounds the mean of the population $\mathbb{E}[y|x]$, which shrinks towards zero with large $N$. A prediction interval predicts a single individual outcome $y = \hat{y} + \epsilon$, which retains irreducible error $\sigma^2$.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>What is the most effective way to communicate a 10% risk of system failure to non-technical operational managers?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Refuse to share the number because 10% is statistically insignificant</span></button><button class="opt" type="button"><b>B</b><span>State that $p = 0.1000$ with 3 degrees of freedom</span></button><button class="opt" type="button"><b>C</b><span>Tell them the failure is impossible because 90% is high</span></button><button class="opt" type="button"><b>D</b><span>Translate the probability into natural frequency: "This system is expected to fail once every 10 quarters, with an estimated downtime cost of £50,000"</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Cognitive research shows that natural frequencies ("1 in 10") paired with concrete operational impacts are understood far more accurately than raw decimal probabilities.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/probabilistic-forecasts-and-quantile-loss/"><small class="kicker">Concept</small><b>Probabilistic forecasts &amp; quantile</b></a><a href="../../concepts/dashboards-and-storytelling/"><small class="kicker">Concept</small><b>Dashboards &amp; storytelling</b></a><a href="../../concepts/confidence-intervals/"><small class="kicker">Concept</small><b>Confidence intervals</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/dashboards-and-storytelling/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Data science</small><b>Dashboards &amp; storytelling</b></a>
+    <a class="pager-next" href="../../concepts/docker-and-reproducible-environments/"><small>Next · Data science <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Docker and reproducibility</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

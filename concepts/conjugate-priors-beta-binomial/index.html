@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Conjugate Priors (Beta–Binomial) · Learn · Yogesh Awate</title>
+<meta name="description" content="Update probability beliefs in closed form by combining Beta prior distributions with Binomial observations.">
+<meta property="og:title" content="Conjugate Priors (Beta–Binomial) · Learn · Yogesh Awate">
+<meta property="og:description" content="Update probability beliefs in closed form by combining Beta prior distributions with Binomial observations.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="conjugate-priors-beta-binomial">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-statistics">Path 02 · Statistics</a> / Bayesian and stochastic / Lesson 42 of 51</span>
+    <h1 class="case-title">Conjugate Priors (Beta–Binomial)</h1>
+    <p class="lede rise" style="--d:3">Update probability beliefs in closed form by combining Beta prior distributions with Binomial observations.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">17 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/probability-rules-and-bayes-theorem/">Probability and Bayes</a> <a href="../../concepts/random-variables-and-distributions/">Random variables</a> <a href="../../concepts/sampling-and-standard-error/">Sampling &amp; standard error</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Statistics · Bayesian and stochastic</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>2 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">In Bayesian statistics, updating beliefs via Bayes' theorem often involves intractable integrals that require complex Markov chain Monte Carlo (MCMC) simulations. Conjugate priors provide an elegant algebraic shortcut: when the prior and likelihood belong to a conjugate family, the posterior distribution belongs to the exact same family as the prior. The Beta–Binomial model serves as the canonical example of conjugacy, updating binary conversion beliefs by simply adding observed successes and failures to prior hyperparameters.</p>
+        <p>Imagine launching a brand-new website feature where you want to estimate the conversion rate $\theta$. Before collecting data, you have prior experience from dozens of similar features: conversions typically hover around 20%, but rarely drop below 5% or exceed 45%.</p>
+        <p>In Bayesian terms, we represent this initial uncertainty with a Beta distribution: $\text{Beta}(\alpha, \beta)$. The hyperparameters $\alpha$ and $\beta$ can be intuitively interpreted as "pseudo-observations": $\alpha$ prior successes and $\beta$ prior failures. Setting $\alpha = 4$ and $\beta = 16$ encodes a prior belief centred at $\frac{4}{4 + 16} = 20\%$, backed by the equivalent strength of 20 prior visitors.</p>
+        <p>Now, run a live experiment: 100 new visitors arrive, and 35 convert (35 successes, 65 failures). Because the Beta distribution is conjugate to the Binomial likelihood, computing the posterior does not require calculus or numerical integration. You simply add live counts directly to your prior counts: $\alpha_{\text{post}} = 4 + 35 = 39$ and $\beta_{\text{post}} = 16 + 65 = 81$. The updated posterior is $\text{Beta}(39, 81)$, with posterior mean $\frac{39}{39 + 81} = 32.5\%$ and 95% credible interval $[24.4\%, 41.1\%]$. The prior gently regularises the noisy raw sample rate of 35% toward baseline beliefs.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Updating a Beta prior with Binomial data is like adding tallies to a score sheet: you start with a few pencil marks representing previous games, and each new game simply adds tally marks in the win and loss columns without having to redesign the sheet.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Specify the parameter of interest: a success probability $\theta \in [0, 1]$ governing binary Bernoulli or Binomial trials.</li><li>Select prior hyperparameters $\alpha_0$ and $\beta_0$ to encode baseline domain knowledge (or set $\alpha_0 = \beta_0 = 1$ for a flat uniform prior).</li><li>Observe experimental data: record the number of successes $k$ out of $n$ independent trials (with $n - k$ failures).</li><li>Compute posterior hyperparameters in closed form: $\alpha_1 = \alpha_0 + k$ and $\beta_1 = \beta_0 + n - k$.</li><li>Calculate summary properties of the posterior $\text{Beta}(\alpha_1, \beta_1)$: posterior mean $\frac{\alpha_1}{\alpha_1 + \beta_1}$ and credible intervals via Beta quantiles.</li><li>Use the posterior distribution as the prior for subsequent incoming batches of data in a streaming, sequential learning pipeline.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Beta Prior and Binomial Likelihood</h3><div class="formula">$$P(\theta) = \frac{\theta^{\alpha - 1}(1 - \theta)^{\beta - 1}}{\text{B}(\alpha, \beta)}, \qquad P(k \mid \theta) = \binom{n}{k} \theta^k (1 - \theta)^{n - k}$$</div><p>Here $\theta$ is the success probability, $\text{B}(\alpha, \beta) = \frac{\Gamma(\alpha)\Gamma(\beta)}{\Gamma(\alpha + \beta)}$ is the Beta normalisation constant, and $\alpha, \beta &gt; 0$ are shape hyperparameters. The Binomial likelihood gives the probability of observing $k$ successes in $n$ independent trials given rate $\theta$.</p></li>
+          <li><h3>Posterior Derivation via Conjugacy</h3><div class="formula">$$P(\theta \mid k) \propto P(k \mid \theta) P(\theta) \propto \theta^k (1 - \theta)^{n - k} \cdot \theta^{\alpha - 1}(1 - \theta)^{\beta - 1} = \theta^{(\alpha + k) - 1} (1 - \theta)^{(\beta + n - k) - 1}$$</div><p>Multiplying likelihood and prior preserves the exact algebraic functional form: the exponents sum directly. The posterior distribution is identically $\text{Beta}(\alpha + k, \, \beta + n - k)$, proving that the Beta family is conjugate to the Binomial likelihood.</p></li>
+          <li><h3>Posterior Mean as a Weighted Average</h3><div class="formula">$$E[\theta \mid k] = \frac{\alpha + k}{\alpha + \beta + n} = \left(\frac{\alpha + \beta}{\alpha + \beta + n}\right) \frac{\alpha}{\alpha + \beta} + \left(\frac{n}{\alpha + \beta + n}\right) \frac{k}{n}$$</div><p>The Bayesian posterior mean is a transparent convex combination of the prior mean $\frac{\alpha}{\alpha + \beta}$ and the empirical sample mean $\frac{k}{n}$. The relative weight assigned to each component is proportional to effective sample size: $(\alpha + \beta)$ for the prior versus $n$ for the data.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Conjugacy occurs when the posterior distribution belongs to the exact same functional probability family as the prior distribution.</li><li>The Beta distribution is conjugate to the Binomial and Bernoulli likelihoods, reducing Bayesian updating to basic integer addition.</li><li>The posterior mean is an exact weighted average between prior belief and sample evidence, providing natural shrinkage regularisation.</li><li>Sequential updating is seamless: today's posterior becomes tomorrow's prior as streaming batches of data arrive.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> scipy.stats <span class="k">as</span> stats
+
+<span class="c"># Prior: Beta(4, 16) -&gt; centered at 20% conversion</span>
+alpha_0, beta_0 = <span class="n">4</span>, <span class="n">16</span>
+prior_mean = alpha_0 / (alpha_0 + beta_0)
+
+<span class="c"># Observed data: 35 conversions out of 100 visitors</span>
+n_visitors = <span class="n">100</span>
+k_conversions = <span class="n">35</span>
+
+<span class="c"># Conjugate update: add successes and failures directly</span>
+alpha_1 = alpha_0 + k_conversions
+beta_1 = beta_0 + (n_visitors - k_conversions)
+
+post_mean = alpha_1 / (alpha_1 + beta_1)
+post_mode = (alpha_1 - <span class="n">1.0</span>) / (alpha_1 + beta_1 - <span class="n">2.0</span>)
+ci_lower = stats.beta.<span class="f">ppf</span>(<span class="n">0.025</span>, alpha_1, beta_1)
+ci_upper = stats.beta.<span class="f">ppf</span>(<span class="n">0.975</span>, alpha_1, beta_1)
+
+<span class="k">print</span>(<span class="s">f&quot;Prior:     Beta({alpha_0}, {beta_0}), Mean: {prior_mean:.1%}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Observed:  {k_conversions}/{n_visitors} ({k_conversions/n_visitors:.1%})&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Posterior: Beta({alpha_1}, {beta_1}), Mean: {post_mean:.1%}, Mode: {post_mode:.1%}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;95% Credible Interval: [{ci_lower:.3f}, {ci_upper:.3f}]&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Setting hyperparameter counts $\alpha, \beta$ too large, which rigidly anchors the model and prevents it from learning from moderate sample sizes.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Confusing the posterior mode (MAP estimate, $\frac{\alpha - 1}{\alpha + \beta - 2}$) with the posterior mean ($\frac{\alpha}{\alpha + \beta}$).</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using Beta–Binomial conjugacy on time-varying conversion rates where underlying probabilities drift over time.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming all likelihoods possess conjugate priors; complex neural networks and non-linear models lack conjugate priors and require MCMC or variational approximations.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>Why are conjugate priors computationally advantageous in Bayesian statistics?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>They allow posterior distributions to be calculated in closed form using simple algebra, avoiding costly numerical integration or MCMC sampling</span></button><button class="opt" type="button"><b>B</b><span>They can only be used when sample sizes exceed 10,000</span></button><button class="opt" type="button"><b>C</b><span>They guarantee that the prior distribution is always uniform</span></button><button class="opt" type="button"><b>D</b><span>They eliminate all uncertainty from parameter estimates</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Conjugacy ensures the posterior belongs to the same functional family as the prior, reducing Bayesian updates to simple parameter addition without numerical integration.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>If you begin with a uniform prior $\text{Beta}(1, 1)$ and observe 7 heads and 3 tails in coin flips, what is the posterior distribution?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$\mathcal{N}(7, 3)$</span></button><button class="opt" type="button"><b>B</b><span>$\text{Beta}(10, 10)$</span></button><button class="opt" type="button"><b>C</b><span>$\text{Beta}(8, 4)$</span></button><button class="opt" type="button"><b>D</b><span>$\text{Beta}(7, 3)$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Adding observed counts to prior hyperparameters gives $\alpha' = 1 + 7 = 8$ and $\beta' = 1 + 3 = 4$, resulting in $\text{Beta}(8, 4)$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>In the Beta–Binomial model, what happens to the posterior distribution as the sample size $n \to \infty$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The posterior variance shrinks toward zero, and the posterior mean converges to the maximum likelihood sample proportion</span></button><button class="opt" type="button"><b>B</b><span>The prior completely dominates the data</span></button><button class="opt" type="button"><b>C</b><span>The posterior mean becomes undefined</span></button><button class="opt" type="button"><b>D</b><span>The posterior distribution becomes uniform</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> As $n$ grows large, the weight $\frac{n}{\alpha + \beta + n}$ approaches 1.0, causing the posterior to concentrate around the sample mean with vanishing variance.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q4</span>What intuitive interpretation do the hyperparameters $\alpha$ and $\beta$ carry in a Beta prior?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The degrees of freedom of a Student's t-test</span></button><button class="opt" type="button"><b>B</b><span>The effective number of pseudo-observations (prior successes and prior failures) before collecting live data</span></button><button class="opt" type="button"><b>C</b><span>The number of iterations required for gradient descent</span></button><button class="opt" type="button"><b>D</b><span>The regularisation penalty $\lambda$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The parameters $\alpha$ and $\beta$ act as virtual or pseudo-observations: $\alpha$ reflects prior successes and $\beta$ prior failures, with sum $\alpha + \beta$ representing prior sample strength.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../models/bayesian_linear_regression/"><small class="kicker">Regression</small><b>Bayesian linear regression</b></a><a href="../../concepts/confidence-intervals/"><small class="kicker">Concept</small><b>Confidence intervals</b></a><a href="../../concepts/maximum-likelihood-estimation/"><small class="kicker">Concept</small><b>Maximum likelihood</b></a><a href="../../models/gaussian_naive_bayes/"><small class="kicker">Classification</small><b>Gaussian Naive Bayes</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/difference-in-differences/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Statistics</small><b>Difference-in-Differences</b></a>
+    <a class="pager-next" href="../../concepts/mcmc-metropolis-hastings-and-gibbs/"><small>Next · Statistics <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>MCMC: Metropolis &amp; Gibbs</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

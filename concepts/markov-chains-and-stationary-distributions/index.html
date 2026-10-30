@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Markov Chains and Stationary Distributions · Learn · Yogesh Awate</title>
+<meta name="description" content="Model stochastic state transitions where the future depends only on the present: understand transition matrices, Chapman–Kolmogorov equations, ergodicity, and the stationary distribution \pi = \pi P.">
+<meta property="og:title" content="Markov Chains and Stationary Distributions · Learn · Yogesh Awate">
+<meta property="og:description" content="Model stochastic state transitions where the future depends only on the present: understand transition matrices, Chapman–Kolmogorov equations, ergodicity, and the stationary distribution \pi = \pi P.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="markov-chains-and-stationary-distributions">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-statistics">Path 02 · Statistics</a> / Bayesian and stochastic / Lesson 46 of 51</span>
+    <h1 class="case-title">Markov Chains and Stationary Distributions</h1>
+    <p class="lede rise" style="--d:3">Model stochastic state transitions where the future depends only on the present: understand transition matrices, Chapman–Kolmogorov equations, ergodicity, and the stationary distribution \pi = \pi P.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/probability-rules-and-bayes-theorem/">Probability and Bayes</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Statistics · Bayesian and stochastic</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">From Google PageRank and queueing systems to MCMC sampling and reinforcement learning, stochastic processes with memoryless state transitions provide the foundational framework for long-run equilibrium analysis.</p>
+        <p>A Markov chain is a discrete-time stochastic process {X_0, X_1, X_2, ...} taking values in a discrete state space S. Its defining property—the Markov property—states that conditional on current state X_t, the probability of transitioning to any future state X_{t+1} is independent of the sequence of past states: P(X_{t+1} = j | X_t = i, X_{t-1}, ..., X_0) = P(X_{t+1} = j | X_t = i) = P_{ij}.</p>
+        <p>These one-step transition probabilities form a row-stochastic matrix P where every entry P_{ij} >= 0 and each row sums to 1. To predict the distribution over states n steps into the future, we apply the Chapman–Kolmogorov equations: P(X_{t+n} = j | X_t = i) = (P^n)_{ij}. If the initial state distribution across all states is a row vector \pi_0, the state distribution at step n is simply \pi_n = \pi_0 P^n.</p>
+        <p>A fundamental question is: what happens as n -> \infty? Does the distribution settle into a steady state, independent of the initial starting condition \pi_0? A probability distribution \pi is called a stationary (or invariant) distribution if \pi = \pi P. Once the process attains this distribution, running it further forward in time never alters the probability of finding the system in any given state.</p>
+        <p>The Fundamental Convergence Theorem of Markov Chains guarantees that a unique stationary distribution \pi exists and \lim_{n \to \infty} \pi_0 P^n = \pi$ for any initial distribution \pi_0, provided the chain is ergodic—meaning it is irreducible (any state can be reached from any other state in finite steps) and aperiodic (transitions do not cycle deterministically on fixed periods). Furthermore, if a distribution satisfies detailed balance (reversibility), \pi_i P_{ij} = \pi_j P_{ji}, it is guaranteed to be a stationary distribution—a property exploited by MCMC algorithms.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine a group of commuters moving between three subway stations every morning according to fixed transition odds: 70% stay at their workplace station, 20% move to the downtown station, and 10% move to the outer ring. Regardless of where commuters began on Monday morning, within two or three weeks the percentage of commuters found at each station stabilises into an invariant daily distribution—the stationary distribution of the transit chain.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>The Markov Property and Chapman–Kolmogorov</h3><div class="formula">P(X_{t+n} = j \mid X_t = i) = (P^n)_{ij}, \quad \pi_n = \pi_0 P^n</div><p>The memoryless property implies multi-step transition probabilities are obtained directly by matrix powering. Given initial row probability vector pi_0, the marginal state distribution at step n is pi_0 P^n.</p></li>
+          <li><h3>Stationary Distribution Equation</h3><div class="formula">\pi P = \pi \quad \iff \quad \pi (I - P) = 0 \quad \text{subject to} \quad \sum_{i=1}^K \pi_i = 1, \; \pi_i \ge 0</div><p>The stationary distribution pi is the normalised left eigenvector of transition matrix P corresponding to eigenvalue lambda = 1.</p></li>
+          <li><h3>Detailed Balance (Reversibility)</h3><div class="formula">\pi_i P_{ij} = \pi_j P_{ji} \quad \forall i, j \in \mathcal{S}</div><p>Detailed balance states the probability flux from state i to state j equals the reverse flux from j to i. Summing both sides over i shows detailed balance is a sufficient condition for stationarity.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>The Markov property dictates that the future state depends only on current state, not on the sequence of preceding states.</li><li>A stochastic matrix P has non-negative entries with row sums equal to 1, guaranteeing that 1 is its largest eigenvalue.</li><li>Ergodic chains (irreducible and aperiodic) possess a unique stationary distribution \pi such that \lim_{n \to \infty} \pi_0 P^n = \pi regardless of initial distribution \pi_0.</li><li>Detailed balance \pi_i P_{ij} = \pi_j P_{ji} provides a sufficient condition for stationarity, forming the foundation of MCMC sampling algorithms.</li><li>The spectral gap 1 - |\lambda_2| controls the mixing time: larger spectral gaps yield rapid convergence to the stationary distribution.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># 4-state ergodic Markov chain</span>
+states = [<span class="s">'Sunny'</span>, <span class="s">'Cloudy'</span>, <span class="s">'Rainy'</span>, <span class="s">'Stormy'</span>]
+K = <span class="k">len</span>(states)
+
+<span class="c"># Row-stochastic transition matrix P: P[i, j] = P(X_{t+1} = j | X_t = i)</span>
+P = np.<span class="f">array</span>([
+    [<span class="n">0.70</span>, <span class="n">0.20</span>, <span class="n">0.08</span>, <span class="n">0.02</span>],  <span class="c"># Sunny</span>
+    [<span class="n">0.30</span>, <span class="n">0.40</span>, <span class="n">0.25</span>, <span class="n">0.05</span>],  <span class="c"># Cloudy</span>
+    [<span class="n">0.15</span>, <span class="n">0.35</span>, <span class="n">0.40</span>, <span class="n">0.10</span>],  <span class="c"># Rainy</span>
+    [<span class="n">0.10</span>, <span class="n">0.20</span>, <span class="n">0.50</span>, <span class="n">0.20</span>],  <span class="c"># Stormy</span>
+])
+
+<span class="c"># Method 1: Solve via Left Eigenvector of P</span>
+eigenvalues, left_eigenvectors = np.linalg.<span class="f">eig</span>(P.T)
+<span class="c"># Find eigenvalue closest to 1.0</span>
+idx = np.<span class="f">argmin</span>(np.<span class="f">abs</span>(eigenvalues - <span class="n">1.0</span>))
+stationary_eigen = np.<span class="f">real</span>(left_eigenvectors[:, idx])
+stationary_eigen /= np.<span class="f">sum</span>(stationary_eigen)
+
+<span class="c"># Method 2: Solve linear system (P.T - I) pi = 0 with constraint sum(pi) = 1</span>
+A = np.<span class="f">vstack</span>([P.T - np.<span class="f">eye</span>(K), np.<span class="f">ones</span>((<span class="n">1</span>, K))])
+b = np.<span class="f">append</span>(np.<span class="f">zeros</span>(K), <span class="n">1.0</span>)
+stationary_lstsq, _, _, _ = np.linalg.<span class="f">lstsq</span>(A, b, rcond=<span class="k">None</span>)
+
+<span class="c"># Method 3: Simulate long-run discrete Markov trajectory</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+n_steps = 100_000
+current_state = <span class="n">0</span>  <span class="c"># Start at Sunny</span>
+visits = np.<span class="f">zeros</span>(K)
+
+<span class="k">for</span> _ <span class="k">in</span> <span class="k">range</span>(n_steps):
+    visits[current_state] += <span class="n">1</span>
+    current_state = np.random.<span class="f">choice</span>(K, p=P[current_state])
+
+empirical_dist = visits / n_steps
+
+<span class="k">print</span>(<span class="s">&quot;Stationary distribution (Analytic left-eigen):&quot;</span>)
+<span class="k">for</span> s, p <span class="k">in</span> <span class="f">zip</span>(states, stationary_eigen):
+    <span class="k">print</span>(<span class="s">f&quot;  {s:8s}: {p:.4f}&quot;</span>)
+
+<span class="k">print</span>(<span class="s">&quot;\nEmpirical long-run frequency (100k steps):&quot;</span>)
+<span class="k">for</span> s, p <span class="k">in</span> <span class="f">zip</span>(states, empirical_dist):
+    <span class="k">print</span>(<span class="s">f&quot;  {s:8s}: {p:.4f}&quot;</span>)
+
+<span class="c"># Spectral gap and mixing rate</span>
+sorted_eigenvals = np.<span class="f">sort</span>(np.<span class="f">abs</span>(eigenvalues))[::-<span class="n">1</span>]
+spectral_gap = <span class="n">1.0</span> - sorted_eigenvals[<span class="n">1</span>]
+<span class="k">print</span>(<span class="s">f&quot;\nSecond eigenvalue magnitude: {sorted_eigenvals[1]:.4f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Spectral gap: {spectral_gap:.4f} (governs mixing rate)&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Periodic chains failing to converge: An alternating two-state chain oscillating between state A and B has stationary distribution (0.5, 0.5), but \pi_0 P^n alternates (1, 0) and (0, 1) without converging.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Reducible chains with multiple equilibria: If the chain has disconnected absorbing sets, the stationary distribution is non-unique and depends directly on where the chain began.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Confusing row vectors and column vectors: Because P is row-stochastic (\sum_j P_{ij} = 1), the stationary distribution satisfies the left-multiplication \pi P = \pi, not P \pi = \pi.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>Which condition is strictly required for a finite Markov chain to possess a unique stationary distribution independent of initial conditions?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The chain must be ergodic (irreducible and aperiodic)</span></button><button class="opt" type="button"><b>B</b><span>All diagonal transition probabilities must be zero</span></button><button class="opt" type="button"><b>C</b><span>The state space must contain at least one absorbing state</span></button><button class="opt" type="button"><b>D</b><span>The transition matrix must be symmetric</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Ergodicity guarantees irreducibility (every state is reachable from every other state) and aperiodicity (no deterministic cyclical loops), ensuring unique convergence regardless of initial distribution.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>What is the relationship between detailed balance \pi_i P_{ij} = \pi_j P_{ji} and the stationary distribution?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Detailed balance is necessary for stationarity; non-reversible chains never have stationary distributions</span></button><button class="opt" type="button"><b>B</b><span>Detailed balance implies that the transition matrix P must be identity</span></button><button class="opt" type="button"><b>C</b><span>Detailed balance guarantees that the chain will terminate within a finite number of steps</span></button><button class="opt" type="button"><b>D</b><span>Detailed balance is a sufficient condition for stationarity, meaning any distribution satisfying it is guaranteed to be stationary</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Summing both sides of detailed balance over i yields \sum_i \pi_i P_{ij} = \pi_j \sum_i P_{ji} = \pi_j(1) = \pi_j, which is exactly the stationarity condition \pi P = \pi.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/mcmc-metropolis-hastings-and-gibbs/"><small class="kicker">Concept</small><b>MCMC: Metropolis &amp; Gibbs</b></a><a href="../../concepts/hamiltonian-monte-carlo/"><small class="kicker">Concept</small><b>Hamiltonian Monte Carlo</b></a><a href="../../concepts/variational-inference/"><small class="kicker">Concept</small><b>Variational inference</b></a><a href="../../concepts/state-space-models-and-the-kalman-filter/"><small class="kicker">Concept</small><b>Kalman filter</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/variational-inference/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Statistics</small><b>Variational inference</b></a>
+    <a class="pager-next" href="../../concepts/stationarity-acf-and-pacf/"><small>Next · Statistics <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Stationarity, ACF and PACF</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

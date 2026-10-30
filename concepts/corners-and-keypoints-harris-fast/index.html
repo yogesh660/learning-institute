@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Corners and keypoints: Harris, FAST · Learn · Yogesh Awate</title>
+<meta name="description" content="Corners and keypoints are salient two-dimensional image interest points where intensity changes abruptly across multiple directions, providing stable spatial landmarks for tracking, visual odometry, and image alignment. The Harris corner detector evaluates the local structure tensor (second-moment matrix), classifying local patches via eigenvalues: two large eigenvalues indicate a corner, one large eigenvalue denotes an edge, and two small eigenvalues reflect a flat uniform region. The FAST (Features from Accelerated Segment Test) algorithm delivers ultra-fast keypoint detection for real-time mobile robotics by evaluating a 16-pixel Bresenham circle around candidate pixels using high-speed decision trees.">
+<meta property="og:title" content="Corners and keypoints: Harris, FAST · Learn · Yogesh Awate">
+<meta property="og:description" content="Corners and keypoints are salient two-dimensional image interest points where intensity changes abruptly across multiple directions, providing stable spatial landmarks for tracking, visual odometry, and image alignment. The Harris corner detector evaluates the local structure tensor (second-moment matrix), classifying local patches via eigenvalues: two large eigenvalues indicate a corner, one large eigenvalue denotes an edge, and two small eigenvalues reflect a flat uniform region. The FAST (Features from Accelerated Segment Test) algorithm delivers ultra-fast keypoint detection for real-time mobile robotics by evaluating a 16-pixel Bresenham circle around candidate pixels using high-speed decision trees.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="corners-and-keypoints-harris-fast">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-vision">Path 09 · Computer vision</a> / Classical features / Lesson 6 of 37</span>
+    <h1 class="case-title">Corners and keypoints: Harris, FAST</h1>
+    <p class="lede rise" style="--d:3">Corners and keypoints are salient two-dimensional image interest points where intensity changes abruptly across multiple directions, providing stable spatial landmarks for tracking, visual odometry, and image alignment. The Harris corner detector evaluates the local structure tensor (second-moment matrix), classifying local patches via eigenvalues: two large eigenvalues indicate a corner, one large eigenvalue denotes an edge, and two small eigenvalues reflect a flat uniform region. The FAST (Features from Accelerated Segment Test) algorithm delivers ultra-fast keypoint detection for real-time mobile robotics by evaluating a 16-pixel Bresenham circle around candidate pixels using high-speed decision trees.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/edge-detection-sobel-and-canny/">Sobel &amp; Canny</a> <a href="../../concepts/pixels-channels-and-colour-spaces/">Pixels &amp; Colours</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Computer vision · Classical features</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>2 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">If you attempt to track a featureless white wall across video frames, every pixel appears identical, creating total motion ambiguity. If you track a straight horizontal edge, you can measure vertical movement accurately, but horizontal motion remains undetectable—the classical "aperture problem." Only at corners, junctions, and textured keypoints does image intensity vary in all spatial directions, fixing a unique, unambiguous point in two-dimensional space. From Chris Harris and Mike Stephens's second-moment matrix in 1988 to Edward Rosten and Tom Drummond's microsecond FAST detector, corner detection forms the foundation of classical geometric vision and visual SLAM.</p>
+        <p>The aperture problem and corner uniqueness: Consider shifting a small inspection window by a displacement $(\Delta x, \Delta y)$. Over a flat surface, the window contents do not change regardless of direction. Over a straight edge, shifting the window parallel to the edge produces zero change, whereas shifting perpendicular produces large changes. Only over a corner does shifting the window in any spatial direction cause a steep increase in squared intensity difference. Corners therefore resolve the aperture problem completely.</p>
+        <p>The structure tensor and eigenvalue geometry: The Harris detector formalises this directional variation by taking a first-order Taylor expansion of the windowed squared difference. This yields a quadratic form governed by the $2 \times 2$ second-moment matrix (structure tensor) $M = \sum w(x, y) \begin{bmatrix} I_x^2 &amp; I_x I_y \\ I_x I_y &amp; I_y^2 \end{bmatrix}$, where $I_x, I_y$ are spatial image gradients and $w(x, y)$ is a Gaussian weighting window. The two eigenvalues $\lambda_1, \lambda_2$ of $M$ characterize the principal curvatures of the local auto-correlation surface: if both eigenvalues are large and of similar magnitude, the patch is an unambiguous corner.</p>
+        <p>The Harris response shortcut: Computing explicit eigenvalues for every single pixel in an image requires expensive matrix square roots. Harris and Stephens proposed an algebraic shortcut: $R = \det(M) - k\,(\operatorname{tr}(M))^2 = (\lambda_1 \lambda_2) - k\,(\lambda_1 + \lambda_2)^2$, where $k$ is an empirical tuning parameter (typically $k \in [0.04, 0.06]$). A large positive response $R$ signifies a corner, a negative response indicates an edge, and an absolute value near zero denotes a flat region.</p>
+        <p>The need for speed: FAST and circular segment tests: While Harris detection is rotationally invariant and mathematically elegant, computing Gaussian-weighted tensor products across millions of pixels consumes valuable frame time in real-time robotic systems. In 2006, FAST revolutionised real-time tracking by abandoning gradients altogether. FAST inspects a Bresenham circle of 16 pixels surrounding candidate pixel $p$. If a contiguous arc of $N$ pixels (typically $N=9$ or $12$) are all significantly brighter or all significantly darker than $p$ by a threshold $\tau$, $p$ is flagged as a corner candidate. By testing pixels 1, 9, 5, and 13 first, non-corner candidates are rejected in three to four machine instructions.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine looking at a blueprint through a tiny circular magnifying peephole. If you look at the middle of a blank plaster wall, sliding your peephole in any direction reveals only uniform white paper: you have no idea where you are. If you look at a straight black boundary line, sliding the peephole along the line looks identical: you cannot tell whether the blueprint is sliding left or right. But if you position the peephole directly over an intersecting corner where two walls meet, any nudge in any direction immediately alters the pattern of lines within the glass. You are anchored to a singular, trackable coordinate. Harris acts like a mathematical sensor measuring the resistance to sliding in all directions; FAST acts like a guard checking whether the boundary cuts a wide continuous arc around the perimeter of the circle.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Autocorrelation error surface and structure tensor</h3><div class="formula">E(\Delta x, \Delta y) \approx [\Delta x, \Delta y]\, M \begin{bmatrix} \Delta x \\ \Delta y \end{bmatrix}, \quad M = \sum_{(x, y) \in W} w(x, y) \begin{bmatrix} I_x^2 & I_x I_y \\ I_x I_y & I_y^2 \end{bmatrix}</div><p>A second-order Taylor series approximates the change in squared intensity difference $E(\Delta x, \Delta y)$ for a small shift. The second-moment matrix $M$ encapsulates the local gradient distribution inside window $W$.</p></li>
+          <li><h3>Harris corner response function</h3><div class="formula">R = \det(M) - k\,(\operatorname{tr}(M))^2 = (\lambda_1 \lambda_2) - k\,(\lambda_1 + \lambda_2)^2</div><p>Here $\det(M) = \lambda_1 \lambda_2$ and $\operatorname{tr}(M) = \lambda_1 + \lambda_2$. If both eigenvalues are large ($\lambda_1 \approx \lambda_2 \gg 0$), $\det(M)$ dominates and $R &gt; 0$ (corner). If one eigenvalue dominates ($\lambda_1 \gg \lambda_2$), $(\operatorname{tr}(M))^2$ dominates and $R &lt; 0$ (edge). If both are small, $R \approx 0$ (flat region). Parameter $k$ is usually set to $0.04$ to $0.06$.</p></li>
+          <li><h3>FAST contiguous arc criterion</h3><div class="formula">\exists \text{ contiguous arc of } N \text{ pixels on circle } C_{16} \text{ such that } \forall i, \; I_i > I_p + \tau \quad \text{or} \quad \forall i, \; I_i < I_p - \tau</div><p>Here $C_{16}$ is the 16-pixel perimeter of radius 3 centred on pixel $p$, $\tau$ is an intensity threshold, and $N$ is typically chosen as $9$ or $12$. Decision trees trained via ID3 can classify candidate pixels in very few CPU instructions per location.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Corners resolve the aperture problem by exhibiting intense gradient variation in all spatial directions.</li><li>The Harris structure tensor $M$ summarises local directional gradient energy via its eigenvalues $\lambda_1, \lambda_2$.</li><li>The Harris response $R = \det(M) - k\,(\operatorname{tr}(M))^2$ classifies corners ($R &gt; 0$), edges ($R &lt; 0$), and flat regions ($R \approx 0$) without computing matrix square roots.</li><li>Harris corners are invariant to 2D image rotation and affine intensity shifts, but are NOT invariant to significant changes in image scale.</li><li>FAST accelerates corner detection for real-time mobile robotics and SLAM by inspecting a 16-pixel Bresenham circle and using early-rejection tests.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Create a synthetic 16x16 image containing an L-shaped corner</span>
+img = np.<span class="f">zeros</span>((<span class="n">16</span>, <span class="n">16</span>), dtype=np.float32)
+img[<span class="n">4</span>:<span class="n">12</span>, <span class="n">4</span>:<span class="n">12</span>] = <span class="n">200.0</span>  <span class="c"># Bright square on dark background</span>
+img[<span class="n">8</span>:<span class="n">12</span>, <span class="n">8</span>:<span class="n">12</span>] = <span class="n">0.0</span>    <span class="c"># Carve out bottom-right to create inner &amp; outer corners</span>
+
+<span class="c"># 1. Compute spatial derivatives using Sobel filters</span>
+Kx = np.<span class="f">array</span>([[-<span class="n">1</span>, <span class="n">0</span>, <span class="n">1</span>], [-<span class="n">2</span>, <span class="n">0</span>, <span class="n">2</span>], [-<span class="n">1</span>, <span class="n">0</span>, <span class="n">1</span>]], dtype=np.float32)
+Ky = np.<span class="f">array</span>([[-<span class="n">1</span>, -<span class="n">2</span>, -<span class="n">1</span>], [<span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>], [<span class="n">1</span>, <span class="n">2</span>, <span class="n">1</span>]], dtype=np.float32)
+
+H, W = img.shape
+Ix = np.<span class="f">zeros</span>((H-<span class="n">2</span>, W-<span class="n">2</span>), dtype=np.float32)
+Iy = np.<span class="f">zeros</span>((H-<span class="n">2</span>, W-<span class="n">2</span>), dtype=np.float32)
+
+<span class="k">for</span> r <span class="k">in</span> <span class="k">range</span>(H-<span class="n">2</span>):
+    <span class="k">for</span> c <span class="k">in</span> <span class="k">range</span>(W-<span class="n">2</span>):
+        patch = img[r:r+<span class="n">3</span>, c:c+<span class="n">3</span>]
+        Ix[r, c] = np.<span class="f">sum</span>(patch * Kx)
+        Iy[r, c] = np.<span class="f">sum</span>(patch * Ky)
+
+<span class="c"># 2. Structure tensor components: Ix^2, Iy^2, Ix*Iy with local 3x3 window smoothing</span>
+Ix2 = Ix * Ix
+Iy2 = Iy * Iy
+Ixy = Ix * Iy
+
+<span class="c"># Box smoothing kernel (approximating local window w)</span>
+kernel = np.<span class="f">ones</span>((<span class="n">3</span>, <span class="n">3</span>), dtype=np.float32) / <span class="n">9.0</span>
+sH, sW = Ix.shape
+A = np.<span class="f">zeros</span>((sH-<span class="n">2</span>, sW-<span class="n">2</span>), dtype=np.float32)
+B = np.<span class="f">zeros</span>((sH-<span class="n">2</span>, sW-<span class="n">2</span>), dtype=np.float32)
+C = np.<span class="f">zeros</span>((sH-<span class="n">2</span>, sW-<span class="n">2</span>), dtype=np.float32)
+
+<span class="k">for</span> r <span class="k">in</span> <span class="k">range</span>(sH-<span class="n">2</span>):
+    <span class="k">for</span> c <span class="k">in</span> <span class="k">range</span>(sW-<span class="n">2</span>):
+        A[r, c] = np.<span class="f">sum</span>(Ix2[r:r+<span class="n">3</span>, c:c+<span class="n">3</span>] * kernel)
+        B[r, c] = np.<span class="f">sum</span>(Iy2[r:r+<span class="n">3</span>, c:c+<span class="n">3</span>] * kernel)
+        C[r, c] = np.<span class="f">sum</span>(Ixy[r:r+<span class="n">3</span>, c:c+<span class="n">3</span>] * kernel)
+
+<span class="c"># 3. Compute Harris response: R = det(M) - k * (trace(M))^2</span>
+k = <span class="n">0.04</span>
+det_M = (A * B) - (C * C)
+trace_M = A + B
+harris_R = det_M - k * (trace_M ** <span class="n">2</span>)
+
+<span class="c"># 4. Thresholding and peak extraction</span>
+threshold = <span class="n">0.05</span> * np.<span class="f">max</span>(harris_R)
+corners = harris_R &gt; threshold
+
+<span class="k">print</span>(<span class="s">f&quot;Max Harris response: {np.max(harris_R):.1f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Number of corner response peaks found: {np.sum(corners)}&quot;</span>)
+
+<span class="c"># 5. FAST candidate logic check on a single 16-pixel circular perimeter</span>
+<span class="c"># Circle radius 3 offsets (16 pixels)</span>
+p_center = <span class="n">200.0</span>  <span class="c"># Candidate corner pixel intensity</span>
+<span class="c"># Synthetic perimeter: 9 contiguous pixels are dark (intensity ~ 0)</span>
+circle_16 = np.<span class="f">array</span>([<span class="n">200</span>, <span class="n">200</span>, <span class="n">200</span>, <span class="n">200</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">200</span>, <span class="n">200</span>, <span class="n">200</span>], dtype=np.float32)
+tau = <span class="n">50.0</span>
+
+is_darker = circle_16 &lt; (p_center - tau)
+<span class="c"># Check circular contiguous run of 9</span>
+extended = np.<span class="f">concatenate</span>([is_darker, is_darker[:<span class="n">8</span>]])
+max_run = <span class="f">max</span>(<span class="k">len</span>(s) <span class="k">for</span> s <span class="k">in</span> <span class="s">&quot;&quot;</span>.<span class="f">join</span>(extended.<span class="f">astype</span>(int).<span class="f">astype</span>(str)).<span class="f">split</span>(<span class="s">&quot;0&quot;</span>))
+
+<span class="k">print</span>(<span class="s">f&quot;FAST longest contiguous dark arc: {max_run} pixels (threshold N=9)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;FAST corner confirmed: {max_run &gt;= 9}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Scale sensitivity: Harris corners are not scale-invariant; zooming into an image causes a sharp corner to become a smooth, rounded edge at a larger scale, causing Harris detection to fail unless paired with scale-space pyramids.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Choosing an un-tuned parameter $k$: Setting $k$ too small ($&lt;0.02$) causes false positive edge detections to be misclassified as corners; setting $k$ too large ($&gt;0.10$) rejects genuine dull corners.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using rectangular box windows instead of Gaussian weights: Box filter windows introduce artificial directional bias along the horizontal and vertical axes; isotropic Gaussian smoothing ensures true rotational invariance.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Omitting non-maximum suppression: Without non-maximum suppression, strong corners generate clusters of 10 to 20 adjacent redundant detections around a single physical junction.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>FAST sensitivity to high-frequency image noise: Because FAST tests individual raw pixel intensities on a circular perimeter without pre-smoothing, electronic sensor noise can trigger spurious corner detections; applying mild Gaussian blur beforehand is recommended in low-light conditions.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>What does a large positive value ($R &gt; 0$) of the Harris corner response function signify about the underlying image patch?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The patch has suffered from severe sensor saturation and lens flare</span></button><button class="opt" type="button"><b>B</b><span>Both eigenvalues of the structure tensor are large and positive ($\lambda_1 \approx \lambda_2 \gg 0$), indicating a distinctive two-dimensional corner</span></button><button class="opt" type="button"><b>C</b><span>The patch contains a straight edge with gradient variation in only one direction</span></button><button class="opt" type="button"><b>D</b><span>The patch is completely flat and contains uniform pixel intensities</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> When both eigenvalues of the structure tensor $M$ are large, $\det(M) = \lambda_1 \lambda_2$ dominates the trace penalty $k(\lambda_1 + \lambda_2)^2$, yielding a large positive response $R &gt; 0$ that signals an unambiguous corner.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>Why is the Harris corner detector invariant to 2D image rotation but sensitive to significant changes in image scale?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because rotation preserves colour saturation, whereas scaling alters bit depth</span></button><button class="opt" type="button"><b>B</b><span>Because Gaussian blur cannot be evaluated on rotated coordinate grids</span></button><button class="opt" type="button"><b>C</b><span>Eigenvalues of symmetric matrices are invariant under orthogonal rotation transformations, but zooming alters the apparent spatial radius of a corner relative to the fixed filter window</span></button><button class="opt" type="button"><b>D</b><span>Because the Sobel operator can only be evaluated at 45-degree angles</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The eigenvalues of the structure tensor describe the ellipse of the autocorrelation surface, which rotates with the image without changing size. However, the smoothing window has a fixed spatial size: zooming into a sharp corner widens it into a gradual edge, causing detection failure.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>How does the FAST corner detector achieve ultra-fast execution speeds suitable for real-time robotic SLAM?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By downsampling all video frames to $16 \times 16$ pixels</span></button><button class="opt" type="button"><b>B</b><span>By calculating 3D camera depth maps using stereo triangulation</span></button><button class="opt" type="button"><b>C</b><span>By computing Fast Fourier Transforms across the entire image on specialised DSP hardware</span></button><button class="opt" type="button"><b>D</b><span>By inspecting pixel intensities on a 16-pixel Bresenham circle and using a 4-pixel cardinal test to discard non-corners in a few machine instructions</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> FAST avoids computing floating-point image derivatives. Instead, it tests the 4 cardinal pixels (1, 5, 9, 13) on a 16-pixel circular perimeter, rejecting up to 90% of non-corner pixels with minimal CPU instructions.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q4</span>What occurs in optical flow and feature tracking if one attempts to track points located along straight edges rather than at corners (the aperture problem)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Motion parallel to the edge is unobservable, leading to a mathematically ill-conditioned tracking system with an underdetermined degree of freedom</span></button><button class="opt" type="button"><b>B</b><span>The frame rate of the tracking algorithm drops to zero</span></button><button class="opt" type="button"><b>C</b><span>The camera sensor immediately clips all pixel values to 255</span></button><button class="opt" type="button"><b>D</b><span>Gradients across the edge cancel out, producing an imaginary number response</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Along a straight edge, spatial gradients exist only perpendicular to the boundary. Any motion parallel to the edge leaves the local window unchanged, preventing the recovery of full 2D velocity (the classical aperture problem).</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/sift-orb-and-feature-matching/"><small class="kicker">Concept</small><b>SIFT &amp; ORB</b></a><a href="../../concepts/geometric-transforms-and-homography/"><small class="kicker">Concept</small><b>Homography &amp; Transforms</b></a><a href="../../concepts/ransac/"><small class="kicker">Concept</small><b>RANSAC</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/classical-segmentation-k-means-watershed-grabcut/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Computer vision</small><b>Classical segmentation</b></a>
+    <a class="pager-next" href="../../concepts/sift-orb-and-feature-matching/"><small>Next · Computer vision <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>SIFT &amp; ORB</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

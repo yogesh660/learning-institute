@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Gated Recurrent Units (GRUs) · Learn · Yogesh Awate</title>
+<meta name="description" content="An RNN with two gates that decide, at every step, how much of the memory to keep and how much to overwrite.">
+<meta property="og:title" content="Gated Recurrent Units (GRUs) · Learn · Yogesh Awate">
+<meta property="og:description" content="An RNN with two gates that decide, at every step, how much of the memory to keep and how much to overwrite.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="gru_networks">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-neural">Path 08 · Deep learning</a> / Sequences / Lesson 19 of 42</span>
+    <h1 class="case-title">Gated Recurrent Units (GRUs)</h1>
+    <p class="lede rise" style="--d:3">An RNN with two gates that decide, at every step, how much of the memory to keep and how much to overwrite.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="3"><i><b></b></i>Advanced</span></span>
+      <span class="tagline">18 min</span>
+      <span class="tagline lab">Live lab</span>
+      <span class="prereq">Before this: <a href="../../models/recurrent_neural_networks/">RNNs</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Task</dt><dd>Classification</dd>
+          <dt>Family</dt><dd>Gated recurrent network</dd>
+          <dt>What it learns</dt><dd>Gate, candidate and output weights</dd>
+          <dt>Training cost</dt><dd>$O(T\,d^2)$, about 3× an RNN</dd>
+          <dt>Prediction cost</dt><dd>$O(d^2)$ per step</dd>
+          <dt>In code</dt><dd><code class="no-math">torch.<wbr>nn.<wbr>GRU</code></dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>How it works</a></li><li><a href="#watch"><span>03</span>Watch it work</a></li><li><a href="#lab"><span>04</span>Try it</a></li><li><a href="#maths"><span>05</span>The maths</a></li><li><a href="#tuning"><span>06</span>Hyperparameters</a></li><li><a href="#when"><span>07</span>When to use it</a></li><li><a href="#code"><span>08</span>In code</a></li><li><a href="#quiz"><span>09</span>Check yourself</a></li><li><a href="#related"><span>10</span>Related lessons</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">A GRU adds a learned switch to the RNN. The <strong>update gate</strong> $z_t$ decides how much of the old state to keep and how much to replace with new content. When $z_t \approx 0$, the state passes through untouched, so memory and gradients survive for many steps.</p>
+        <p>A vanilla RNN rewrites its memory at every step whether it wants to or not. A GRU instead blends: $h_t = (1 - z_t)\odot h_{t-1} + z_t \odot \tilde h_t$. With $z_t$ near 0 it copies the old state forward; near 1 it replaces it with the candidate $\tilde h_t$. Because the gate is computed from the current input and state, the network learns <em>when</em> to write.</p>
+        <p>The <strong>reset gate</strong> $r_t$ controls how much of the old state is used when proposing the candidate. With $r_t \approx 0$ the candidate ignores history, which helps the network start a fresh thought, for example at the start of a new sentence. GRUs have fewer parameters than LSTMs and often perform about as well.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>A notebook with a pencil and an eraser: most pages you just carry forward, and you only erase and rewrite a line when something important happens.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> How it works</h2>
+        <ol class="steps"><li>Compute the update gate $z_t = \sigma(W_z x_t + U_z h_{t-1})$ and reset gate $r_t = \sigma(W_r x_t + U_r h_{t-1})$, each between 0 and 1.</li><li>Propose new content using the reset-scaled history: $\tilde h_t = \tanh(W x_t + U(r_t \odot h_{t-1}))$.</li><li>Blend: $h_t = (1 - z_t)\odot h_{t-1} + z_t\odot\tilde h_t$.</li><li>Read out from $h_T$ (or every $h_t$) as with an RNN.</li></ol>
+      </section>
+      <section class="reveal" id="watch">
+        <h2 class="h3"><span>03</span> Watch it work</h2>
+        <p>Press play, or step through at your own pace. Each step adds one idea.</p>
+        <div class="explainer" data-explainer="gru" style="margin-top:18px"><noscript><p class="lab-noscript">The animation needs JavaScript.</p></noscript></div>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>04</span> Try it</h2>
+        <p>The same 24-step timeline as the RNN lesson, now with an update gate. The gate opens (bright bar) when an input arrives and closes otherwise. Compare how long the GRU (cyan) and a plain RNN (grey) remember the first pulse.</p>
+        <div class="lab" data-lab="gru_networks" data-kind="models" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>Lower "gate when idle" toward 0: the GRU keeps the first pulse almost perfectly while the RNN forgets it.</li><li>Raise it to 0.5: the GRU now forgets about as fast as the RNN.</li><li>Turn on the second pulse and see the gate open again to overwrite the memory.</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>05</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Gates</h3><div class="formula">$$z_t = \sigma(W_z x_t + U_z h_{t-1} + b_z), \qquad r_t = \sigma(W_r x_t + U_r h_{t-1} + b_r)$$</div><p>The <a class="inline" href="../../concepts/sigmoid-and-link-functions/">sigmoid</a> keeps each gate between 0 (closed) and 1 (open), elementwise per memory unit.</p></li>
+          <li><h3>Candidate and update</h3><div class="formula">$$\tilde h_t = \tanh\!\big(W x_t + U(r_t \odot h_{t-1}) + b\big), \qquad h_t = (1 - z_t)\odot h_{t-1} + z_t\odot\tilde h_t$$</div><p>An interpolation between keeping and replacing.</p></li>
+          <li><h3>Why gradients survive</h3><div class="formula">$$\frac{\partial h_t}{\partial h_{t-1}} \approx \operatorname{diag}(1 - z_t) \quad\text{when } z_t \text{ is small}$$</div><p>If the gate stays near 0, the Jacobian is close to the identity, so the product over many steps does not vanish. Compare with the RNN, where every step multiplies by $W_h$ and a tanh derivative.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="tuning">
+        <h2 class="h3"><span>06</span> Hyperparameters</h2>
+        <div class="table-wrap"><table class="kv">
+          <thead><tr><th>Setting</th><th>What it does</th><th>Typical choice</th></tr></thead>
+          <tbody><tr><td><span class="hp">hidden_size</span></td><td>Memory size.</td><td>64–512.</td></tr><tr><td><span class="hp">num_layers</span></td><td>Stacked GRUs.</td><td>1–3.</td></tr><tr><td><span class="hp">dropout</span></td><td>Between stacked layers.</td><td>0.1–0.3.</td></tr><tr><td><span class="hp">bidirectional</span></td><td>Also read the sequence backwards.</td><td>On for whole-sequence classification.</td></tr></tbody>
+        </table></div>
+      </section>
+      <section class="reveal" id="when">
+        <h2 class="h3"><span>07</span> When to use it</h2>
+        <div class="split2">
+          <div class="box good"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Strengths</h3><ul><li>Remembers much longer than a vanilla RNN.</li><li>Fewer parameters and faster than an LSTM (two gates, no separate cell).</li><li>Strong default for small and medium sequence tasks.</li></ul></div>
+          <div class="box bad"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg> Limitations</h3><ul><li>Still sequential: slow to train on long sequences.</li><li>Memory still degrades over very long ranges.</li><li>Usually outperformed by Transformers when data is plentiful.</li></ul></div>
+          <div class="box use"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> Reach for it when</h3><p>Time series, sensor streams and text classification with modest data or compute.</p></div>
+          <div class="box avoid"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Think twice when</h3><p>Long documents and large datasets, where Transformers parallelise better and capture longer context.</p></div>
+        </div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>08</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> torch, torch.nn <span class="k">as</span> nn
+<span class="k">from</span> sklearn.datasets <span class="k">import</span> load_digits
+
+<span class="c"># read each 8x8 digit image as a sequence: 8 time steps, 8 pixels per step</span>
+digits = <span class="f">load_digits</span>()
+X = torch.<span class="f">tensor</span>(digits.images / <span class="n">16.0</span>, dtype=torch.float32)    <span class="c"># (n, 8, 8)</span>
+y = torch.<span class="f">tensor</span>(digits.target)
+
+<span class="k">class</span> <span class="f">GRUClassifier</span>(nn.Module):
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, hidden=<span class="n">64</span>):
+        <span class="k">super</span>().<span class="f">__init__</span>()
+        <span class="k">self</span>.gru = nn.<span class="f">GRU</span>(input_size=<span class="n">8</span>, hidden_size=hidden, batch_first=<span class="k">True</span>)
+        <span class="k">self</span>.out = nn.<span class="f">Linear</span>(hidden, <span class="n">10</span>)
+
+    <span class="k">def</span> <span class="f">forward</span>(<span class="k">self</span>, x):
+        _, h_last = <span class="k">self</span>.<span class="f">gru</span>(x)
+        <span class="k">return</span> <span class="k">self</span>.<span class="f">out</span>(h_last[-<span class="n">1</span>])
+
+model = <span class="f">GRUClassifier</span>()
+<span class="k">print</span>(<span class="f">sum</span>(p.<span class="f">numel</span>() <span class="k">for</span> p <span class="k">in</span> model.<span class="f">parameters</span>()), <span class="s">&quot;parameters&quot;</span>)   <span class="c"># ~3x an RNN of the same width</span></code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Confusing conventions: some papers (and PyTorch) swap the roles of $z_t$ and $1 - z_t$. The idea is the same.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using a GRU where a simple moving average or gradient boosting on lag features would do.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>09</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>What does the update gate $z_t \approx 0$ mean (in the convention used here)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Erase the memory</span></button><button class="opt" type="button"><b>B</b><span>Copy the previous state forward almost unchanged</span></button><button class="opt" type="button"><b>C</b><span>Ignore the input entirely and output zero</span></button><button class="opt" type="button"><b>D</b><span>Reset the network</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> $h_t = (1 - z_t)h_{t-1} + z_t\tilde h_t \approx h_{t-1}$.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>What is the reset gate for?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Resetting the weights</span></button><button class="opt" type="button"><b>B</b><span>Choosing the learning rate</span></button><button class="opt" type="button"><b>C</b><span>Clearing the output</span></button><button class="opt" type="button"><b>D</b><span>Deciding how much history to use when proposing new content</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> It scales $h_{t-1}$ inside the candidate computation.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>Compared with an LSTM, a GRU:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Has no separate cell state and fewer parameters</span></button><button class="opt" type="button"><b>B</b><span>Cannot be trained with backpropagation</span></button><button class="opt" type="button"><b>C</b><span>Is a Transformer</span></button><button class="opt" type="button"><b>D</b><span>Has more gates</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Two gates and one state vector instead of three gates plus a cell.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q4</span>Why do the update gate $z_t$ and reset gate $r_t$ in a GRU use the sigmoid activation function $\sigma(\cdot)$ instead of $\tanh(\cdot)$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Sigmoid is computationally faster to evaluate on GPUs than $\tanh$</span></button><button class="opt" type="button"><b>B</b><span>Sigmoid has a non-zero derivative everywhere from $-\infty$ to $+\infty$</span></button><button class="opt" type="button"><b>C</b><span>Sigmoid maps outputs strictly to the range $(0, 1)$, acting naturally as a continuous soft switch or interpolation percentage</span></button><button class="opt" type="button"><b>D</b><span>Sigmoid prevents the candidate state from becoming negative</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Gates represent proportions or probabilities of keeping/filtering information. The sigmoid function maps real-valued linear projections onto $(0, 1)$, where 0 corresponds to fully closed and 1 corresponds to fully open.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q5</span>In the interpolation equation $h_t = (1 - z_t) \odot h_{t-1} + z_t \odot \tilde h_t$, what happens when the update gate vector is close to 1 ($z_t \approx 1$)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The network halts sequence processing immediately</span></button><button class="opt" type="button"><b>B</b><span>The previous hidden state $h_{t-1}$ is preserved perfectly and the new candidate $\tilde h_t$ is ignored</span></button><button class="opt" type="button"><b>C</b><span>The cell completely overwrites the old hidden state with the newly proposed candidate state $\tilde h_t$</span></button><button class="opt" type="button"><b>D</b><span>The hidden state is reset to a vector of exact zeros</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> When $z_t \approx 1$, the retention term $(1 - z_t) \odot h_{t-1} \approx 0$, while the update term $z_t \odot \tilde h_t \approx \tilde h_t$, so the hidden state is almost entirely replaced by the new candidate.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q6</span>A GRU cell has a previous hidden state $h_{t-1} = 0.80$. For the current time step, the network computes an update gate value of $z_t = 0.25$ and a candidate state of $\tilde h_t = -0.40$. Using the formula $h_t = (1 - z_t)h_{t-1} + z_t \tilde h_t$, what is the new hidden state $h_t$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$0.35$</span></button><button class="opt" type="button"><b>B</b><span>$0.50$</span></button><button class="opt" type="button"><b>C</b><span>$0.60$</span></button><button class="opt" type="button"><b>D</b><span>$0.70$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Retention of previous state is $(1 - 0.25) \times 0.80 = 0.75 \times 0.80 = 0.60$. Contribution of candidate is $0.25 \times (-0.40) = -0.10$. Blending them yields $h_t = 0.60 + (-0.10) = 0.50$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q7</span>When the reset gate $r_t$ in a GRU evaluates to 0 for all units, what does the candidate state $\tilde h_t = \tanh(W x_t + U(r_t \odot h_{t-1}) + b)$ represent?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>A pure representation of the current input $x_t$ alone ($\tanh(W x_t + b)$), completely ignoring historical context</span></button><button class="opt" type="button"><b>B</b><span>A copy of the previous hidden state $h_{t-1}$</span></button><button class="opt" type="button"><b>C</b><span>A vector of zeros</span></button><button class="opt" type="button"><b>D</b><span>The linear derivative of the update gate</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> When $r_t = 0$, the historical context $r_t \odot h_{t-1} = 0$, so $\tilde h_t = \tanh(W x_t + b)$. This allows the GRU to discard irrelevant past history when starting a new sequence segment (such as the beginning of a sentence).</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q8</span>For the same input dimension $d_{\text{in}}$ and hidden size $d_{\text{hid}}$, roughly what is the ratio of trainable parameters in a GRU compared with a standard LSTM?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$1 : 2$ (GRU has half the parameters of an LSTM)</span></button><button class="opt" type="button"><b>B</b><span>$3 : 4$ (GRU has 3 sets of matrix operations per step, while LSTM has 4)</span></button><button class="opt" type="button"><b>C</b><span>$2 : 3$</span></button><button class="opt" type="button"><b>D</b><span>$1 : 1$ (they have identical parameter counts)</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A GRU computes 3 sets of projections (update gate $z_t$, reset gate $r_t$, and candidate $\tilde h_t$). A standard LSTM computes 4 sets of projections (forget gate $f_t$, input gate $i_t$, output gate $o_t$, and candidate $\tilde c_t$). Therefore, a GRU has approximately $\frac{3}{4} = 75\%$ of the parameters of an LSTM of identical width.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q9</span>According to the GRU gradient relation $\frac{\partial h_t}{\partial h_{t-1}} \approx \operatorname{diag}(1 - z_t)$ (when $z_t$ is small), how does the GRU prevent the vanishing gradient problem across many time steps?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By setting the learning rate to a value greater than 1.0</span></button><button class="opt" type="button"><b>B</b><span>By replacing the chain rule with forward-mode automatic differentiation</span></button><button class="opt" type="button"><b>C</b><span>By forcing all weight matrices to be orthogonal</span></button><button class="opt" type="button"><b>D</b><span>When $z_t$ remains close to 0, $(1 - z_t) \approx 1$, meaning the recurrent Jacobian acts close to the identity matrix so gradients flow back through time without decaying</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> If the network chooses not to update its memory ($z_t \approx 0$), the Jacobian $\frac{\partial h_t}{\partial h_{t-1}} \approx I$. Gradients backpropagated through time are multiplied by values close to 1, creating an effective shortcut across dozens or hundreds of steps.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q10</span>A 1-unit GRU computes its candidate state as $\tilde h_t = \tanh(W x_t + U(r_t \cdot h_{t-1}) + b)$. Given $W = 0.5$, $U = -0.5$, bias $b = -0.3$, input $x_t = 1.0$, previous state $h_{t-1} = 0.80$, and reset gate $r_t = 0.50$, what is the candidate state $\tilde h_t$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$0.00$</span></button><button class="opt" type="button"><b>B</b><span>$-0.20$</span></button><button class="opt" type="button"><b>C</b><span>$0.25$</span></button><button class="opt" type="button"><b>D</b><span>$0.50$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> First scale the historical state by the reset gate: $r_t \cdot h_{t-1} = 0.50 \times 0.80 = 0.40$. Next, compute the linear pre-activation: $W x_t + U(0.40) + b = (0.5 \times 1.0) + (-0.5 \times 0.40) - 0.3 = 0.50 - 0.20 - 0.30 = 0.00$. Finally, $\tanh(0.00) = 0.00$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q11</span>The lesson defines the GRU update as $h_t = (1 - z_t)\odot h_{t-1} + z_t\odot\tilde h_t$. However, PyTorch's official nn.GRU documentation defines it as $h_t = (1 - z_t)\odot n_t + z_t\odot h_{t-1}$ (where $n_t$ is the candidate). Under PyTorch's convention, what does a gate value of $z_t \approx 1$ indicate?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The network completely replaces the state with the candidate $n_t$</span></button><button class="opt" type="button"><b>B</b><span>The network acts as a pass-through, carrying forward the previous hidden state $h_{t-1}$ almost unchanged</span></button><button class="opt" type="button"><b>C</b><span>The network forces all outputs to be non-negative</span></button><button class="opt" type="button"><b>D</b><span>The gradient is set to zero for all previous time steps</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In PyTorch's notation, $z_t$ multiplies $h_{t-1}$ directly while $(1 - z_t)$ multiplies candidate $n_t$. Thus when $z_t \approx 1$, $(1 - z_t) \approx 0$, so $h_t \approx h_{t-1}$, retaining the old memory. The lesson highlights this notation swap as a common pitfall when reading papers versus codebase implementations.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q12</span>A GRU unit receives zero inputs ($x_t = 0, \tilde h_t = 0$) while its update gate stays fixed at $z_t = 0.10$. Starting from $h_0 = 1.0$, what is the value of the hidden state $h_3$ after 3 time steps?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$0.729$</span></button><button class="opt" type="button"><b>B</b><span>$0.700$</span></button><button class="opt" type="button"><b>C</b><span>$0.900$</span></button><button class="opt" type="button"><b>D</b><span>$0.810$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> With $\tilde h_t = 0$, $h_t = (1 - z_t) h_{t-1} = 0.90 \times h_{t-1}$. Over 3 steps, $h_3 = 0.90^3 \times h_0 = 0.729 \times 1.0 = 0.729$. Assuming a linear reduction of $0.10 \times 3 = 0.30 \implies 0.70$ is a common pitfall that overlooks geometric decay.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>10</span> Related lessons</h2>
+        <div class="related"><a href="../../models/recurrent_neural_networks/"><small class="kicker">Deep learning</small><b>RNNs</b></a><a href="../../models/lstm_networks/"><small class="kicker">Deep learning</small><b>LSTMs</b></a><a href="../../models/transformer_networks/"><small class="kicker">Natural language processing</small><b>Transformers</b></a><a href="../../concepts/sigmoid-and-link-functions/"><small class="kicker">Concept</small><b>Sigmoid &amp; link functions</b></a><a href="../../concepts/gradient-descent/"><small class="kicker">Concept</small><b>Gradient descent</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../models/recurrent_neural_networks/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>RNNs</b></a>
+    <a class="pager-next" href="../../models/lstm_networks/"><small>Next · Deep learning <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>LSTMs</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/sequences.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/explainers.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>z-Test and t-Tests · Learn · Yogesh Awate</title>
+<meta name="description" content="Compare population means against benchmarks or between independent and paired groups using normal z-tests and Student's and Welch's t-tests.">
+<meta property="og:title" content="z-Test and t-Tests · Learn · Yogesh Awate">
+<meta property="og:description" content="Compare population means against benchmarks or between independent and paired groups using normal z-tests and Student's and Welch's t-tests.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="z-test-and-t-tests">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-statistics">Path 02 · Statistics</a> / Hypothesis testing / Lesson 14 of 51</span>
+    <h1 class="case-title">z-Test and t-Tests</h1>
+    <p class="lede rise" style="--d:3">Compare population means against benchmarks or between independent and paired groups using normal z-tests and Student's and Welch's t-tests.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="1"><i><b></b></i>Beginner</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/hypothesis-testing-and-p-values/">Hypothesis Tests &amp; p-Values</a> <a href="../../concepts/type-i-ii-errors-power-and-sample-size/">Errors, Power and Sample Size</a> <a href="../../concepts/central-limit-theorem-and-law-of-large-numbers/">CLT and LLN</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Statistics · Hypothesis testing</dd>
+          <dt>Level</dt><dd>Beginner</dd>
+          <dt>Used by</dt><dd>2 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">When testing hypotheses about population means, the choice of test statistic hinges on whether population variance is known and whether sample sizes justify asymptotic normal approximations. The z-test applies when variance is known or sample sizes are large, whereas Student's and Welch's t-tests account for the extra uncertainty of estimating variance from small samples.</p>
+        <p>Imagine an engineering team modifies a database query engine to reduce latency below the historic benchmark of 120 ms. They benchmark 25 query runs and record a sample mean latency of 112 ms with a sample standard deviation $s = 15$ ms. Is this 8 ms reduction convincing evidence of improvement, or could it be routine variance in server load?</p>
+        <p>If we knew with absolute certainty from millions of historic runs that the true population standard deviation was $\sigma = 15$ ms, the standard error would be exactly $\sigma / \sqrt{25} = 3.0$ ms. The standard score would be $z = (112 - 120) / 3.0 = -2.67$, giving a two-sided p-value of approximately 0.0076 under the standard normal distribution.</p>
+        <p>However, in realistic settings we do not know the true $\sigma$; we must estimate it using $s$ from the very same 25 queries. When William Gosset analysed this problem at the Guinness Brewery in 1908 (publishing under the pen name "Student"), he proved that dividing by an estimated $s$ inflates sampling variability. The resulting $t$-distribution has heavier tails than the normal curve. For 24 degrees of freedom, $t = -2.67$ yields a p-value of approximately 0.0134—nearly double the normal p-value! Relying naively on a $z$-test when $s$ is estimated causes overconfidence and elevated false alarms.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Using a normal z-test when you only have sample variance s is like driving at top speed on a foggy morning: it assumes clarity where there is hidden uncertainty, which the t-distribution's heavier tails properly account for.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Determine the test design: one-sample (mean vs standard), two-sample independent (group A vs group B), or paired (repeated measures on the same subjects).</li><li>Verify assumptions: continuous data, random independent sampling, and approximate normality of sample means (guaranteed by CLT for $n \ge 30$).</li><li>If population standard deviation $\sigma$ is known, compute the $z$-statistic; if estimated via $s$, compute the $t$-statistic.</li><li>For two independent groups, adopt Welch's $t$-test by default to guard against unequal variances ($\sigma_1^2 \ne \sigma_2^2$).</li><li>For paired observations, compute unit-level differences $D_i = X_{1,i} - X_{2,i}$ and perform a one-sample $t$-test on the differences.</li><li>Evaluate the p-value against degrees of freedom $\nu$ and decide whether to reject the null hypothesis at threshold $\alpha$.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>One-Sample z-Statistic and Student's t-Statistic</h3><div class="formula">$$z = \frac{\bar{X} - \mu_0}{\sigma / \sqrt{n}} \sim \mathcal{N}(0, 1), \qquad t = \frac{\bar{X} - \mu_0}{s / \sqrt{n}} \sim t(n - 1)$$</div><p>Here $\bar{X}$ is the sample mean, $\mu_0$ is the hypothesised benchmark, $\sigma$ is the known population standard deviation, and $s = \sqrt{\frac{1}{n-1}\sum (X_i - \bar{X})^2}$ is the sample standard deviation. Gosset's $t$-statistic follows Student's $t$-distribution with $\nu = n - 1$ degrees of freedom, converging to $\mathcal{N}(0, 1)$ as $n \to \infty$.</p></li>
+          <li><h3>Welch's Two-Sample t-Test (Unequal Variances)</h3><div class="formula">$$t = \frac{\bar{X}_1 - \bar{X}_2}{\sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}}, \qquad \nu \approx \frac{\left(\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}\right)^2}{\frac{(s_1^2 / n_1)^2}{n_1 - 1} + \frac{(s_2^2 / n_2)^2}{n_2 - 1}}$$</div><p>Welch's $t$-test compares two independent group means without assuming equal population variances ($\sigma_1^2 = \sigma_2^2$). The Welch–Satterthwaite equation approximates the effective degrees of freedom $\nu$. Welch's test maintains robust Type I error control under heteroscedasticity where Student's pooled $t$-test breaks down.</p></li>
+          <li><h3>Paired t-Test for Dependent Samples</h3><div class="formula">$$D_i = X_{1,i} - X_{2,i}, \qquad t = \frac{\bar{D} - 0}{s_D / \sqrt{n}} \sim t(n - 1)$$</div><p>For matched pairs or repeated measures (such as pre- and post-treatment values for the same users), between-subject variability is removed by taking differences $D_i$. Here $\bar{D}$ is the average difference and $s_D$ is the sample standard deviation of differences. Subtracting out subject baseline variation dramatically increases statistical power.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Gosset's $t$-distribution accounts for the joint uncertainty of estimating both the population mean $\mu$ and population standard deviation $\sigma$.</li><li>Always prefer Welch's $t$-test over Student's pooled $t$-test for two independent samples; testing for equality of variances first creates pre-test bias.</li><li>Paired $t$-tests eliminate subject-to-subject variability by analysing intra-subject differences, providing far greater statistical power for matched cohorts.</li><li>Thanks to the central limit theorem, $t$-tests are remarkably robust to non-normal data once sample sizes exceed roughly 30 observations per group.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">import</span> scipy.stats <span class="k">as</span> stats
+
+rng = np.random.<span class="f">default_rng</span>(<span class="n">42</span>)
+n_users = <span class="n">30</span>
+
+<span class="c"># Paired experiment: latency before and after database indexing</span>
+pre_latency = rng.<span class="f">normal</span>(loc=<span class="n">72.0</span>, scale=<span class="n">8.0</span>, size=n_users)
+<span class="c"># Each user improves by ~3.5 ms, plus individual variation</span>
+post_latency = pre_latency - rng.<span class="f">normal</span>(loc=<span class="n">3.5</span>, scale=<span class="n">4.0</span>, size=n_users)
+
+<span class="c"># 1. Paired t-test (correct: accounts for within-subject correlation)</span>
+t_pair, p_pair = stats.<span class="f">ttest_rel</span>(pre_latency, post_latency)
+
+<span class="c"># 2. Independent Welch t-test (incorrect: ignores pairing)</span>
+t_welch, p_welch = stats.<span class="f">ttest_ind</span>(pre_latency, post_latency, equal_var=<span class="k">False</span>)
+
+mean_improvement = <span class="f">float</span>(np.<span class="f">mean</span>(pre_latency - post_latency))
+<span class="k">print</span>(<span class="s">f&quot;Mean improvement: {mean_improvement:.2f} ms&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Paired t-test:    t={t_pair:.3f}, p-value={p_pair:.4e}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Welch t-test:     t={t_welch:.3f}, p-value={p_welch:.4f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Applying an independent two-sample $t$-test to paired or before-and-after data, throwing away subject pairing and crippling statistical power.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using Student's pooled $t$-test when group sample sizes and variances are unequal, which severely inflates the false positive rate.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Running a $t$-test on small samples ($n &lt; 20$) with extreme skewness or severe outliers where the sample mean is not approximately normal.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using a $z$-test when sample size is small and $\sigma$ is estimated from the sample, producing falsely narrow confidence bounds and deflated p-values.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>Why does Student's $t$-distribution have heavier tails than the standard normal distribution?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because data points in small samples are inherently non-normal</span></button><button class="opt" type="button"><b>B</b><span>Because the degrees of freedom increase the variance of the numerator</span></button><button class="opt" type="button"><b>C</b><span>Because Student's test assumes an exponential distribution</span></button><button class="opt" type="button"><b>D</b><span>Because estimating the unknown population variance with the sample variance introduces additional random variability into the denominator</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The sample standard deviation $s$ fluctuates from sample to sample. Dividing the sample mean by a random denominator fattens the tails of the test statistic distribution.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>When comparing means between two independent groups of different sizes, why is Welch's $t$-test preferred over Student's pooled $t$-test?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Welch's test works on categorical data</span></button><button class="opt" type="button"><b>B</b><span>Welch's test eliminates the need for random sampling</span></button><button class="opt" type="button"><b>C</b><span>Welch's test always produces a smaller p-value</span></button><button class="opt" type="button"><b>D</b><span>Welch's test does not require the assumption of equal population variances ($\sigma_1^2 = \sigma_2^2$)</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Student's pooled test assumes homoscedasticity ($\sigma_1^2 = \sigma_2^2$). When variances differ and group sizes are unequal, the pooled test has severely distorted Type I error rates. Welch's test does not require equal variances.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>In an experiment where 40 users complete tasks using Interface A and then Interface B, which test is appropriate to compare task completion times?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Paired t-test on the difference scores for each user</span></button><button class="opt" type="button"><b>B</b><span>Independent two-sample Welch t-test</span></button><button class="opt" type="button"><b>C</b><span>One-sample z-test</span></button><button class="opt" type="button"><b>D</b><span>Chi-square goodness-of-fit test</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because the same 40 users were tested under both conditions, observations are paired. Taking within-user differences removes user-to-user variability and isolates the interface effect.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q4</span>As the degrees of freedom $\nu$ in Student's $t$-distribution approach infinity ($\nu \to \infty$), what does the distribution become?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>A chi-square distribution $\chi^2(1)$</span></button><button class="opt" type="button"><b>B</b><span>A uniform distribution $\text{Uniform}(-1, 1)$</span></button><button class="opt" type="button"><b>C</b><span>A Cauchy distribution</span></button><button class="opt" type="button"><b>D</b><span>The standard normal distribution $\mathcal{N}(0, 1)$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> As $n \to \infty$, the sample standard deviation $s$ converges in probability to the true population standard deviation $\sigma$ by the law of large numbers, so $t(\nu)$ converges to $\mathcal{N}(0, 1)$.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q5</span>A network engineer benchmarks a new caching layer across $n = 25$ requests, finding a sample mean response time of $\bar{x} = 88.0\text{ ms}$ with sample standard deviation $s = 10.0\text{ ms}$. If the baseline target latency is $\mu_0 = 92.0\text{ ms}$, what is the value of the one-sample $t$-statistic?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>+2.00</span></button><button class="opt" type="button"><b>B</b><span>-0.40</span></button><button class="opt" type="button"><b>C</b><span>-2.00</span></button><button class="opt" type="button"><b>D</b><span>-4.00</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The standard error is $\operatorname{SE} = s / \sqrt{n} = 10.0 / \sqrt{25} = 2.0\text{ ms}$. The $t$-statistic is $(\bar{x} - \mu_0) / \operatorname{SE} = (88.0 - 92.0) / 2.0 = -4.0 / 2.0 = -2.00$.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q6</span>In a study evaluating model compression, 30 deep neural networks are each evaluated before and after pruning, yielding 30 pair-wise differences in inference latency. How many degrees of freedom does the paired $t$-test have?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>58</span></button><button class="opt" type="button"><b>B</b><span>30</span></button><button class="opt" type="button"><b>C</b><span>60</span></button><button class="opt" type="button"><b>D</b><span>29</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A paired $t$-test computes differences for each of the $n$ pairs and runs a one-sample test on those differences. With $n = 30$ pairs, the degrees of freedom are $\nu = n - 1 = 30 - 1 = 29$.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q7</span>Under what condition is Student's $t$-test robust to moderate departures from normality in the underlying population?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>When the data follows a Cauchy distribution</span></button><button class="opt" type="button"><b>B</b><span>Only when all data values are strictly non-negative integers</span></button><button class="opt" type="button"><b>C</b><span>Only when the population variance is known with zero error</span></button><button class="opt" type="button"><b>D</b><span>When sample sizes are reasonably large (e.g. $n \ge 30$) so that the central limit theorem ensures the sample mean is approximately normally distributed</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The $t$-statistic relies on the distribution of the sample mean $\bar{X}$. By the central limit theorem, sample means of independent observations converge to normality as $n$ increases (typically $n \ge 30$), rendering the $t$-test robust to non-normal data without severe outliers.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q8</span>Consider this Python function call to compare two independent groups:
+<code>stat, p_val = stats.ttest_ind(group_a, group_b, equal_var=False)</code>
+What test does setting <code>equal_var=False</code> execute?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Welch's t-test, which does not assume equal variances between groups</span></button><button class="opt" type="button"><b>B</b><span>Mann-Whitney U non-parametric test</span></button><button class="opt" type="button"><b>C</b><span>Student's pooled two-sample t-test</span></button><button class="opt" type="button"><b>D</b><span>Paired two-sample t-test</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In SciPy, <code>stats.ttest_ind</code> defaults to Student's pooled $t$-test (<code>equal_var=True</code>). Setting <code>equal_var=False</code> instructs SciPy to perform Welch's $t$-test using the Welch–Satterthwaite approximation for degrees of freedom.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q9</span>In which of the following scenarios is a normal $z$-test formally valid instead of a Student's $t$-test?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>When the sample is drawn without replacement from a finite population</span></button><button class="opt" type="button"><b>B</b><span>When sample size is $n = 12$ and population variance $\sigma^2$ is estimated using $s^2$</span></button><button class="opt" type="button"><b>C</b><span>When the population variance $\sigma^2$ is known exactly from extensive historical census data</span></button><button class="opt" type="button"><b>D</b><span>Whenever the sample mean is greater than zero</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A $z$-test requires known population standard deviation $\sigma$. When $\sigma$ is unknown and estimated by the sample standard deviation $s$, Gosset proved the ratio follows a $t$-distribution, not a standard normal distribution.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q10</span>Two independent groups have sample statistics:
+Group 1: $n_1 = 10$, $s_1^2 = 9$ (so $s_1^2/n_1 = 0.90$)
+Group 2: $n_2 = 10$, $s_2^2 = 81$ (so $s_2^2/n_2 = 8.10$)
+Using the Welch–Satterthwaite formula $\nu \approx \frac{(v_1 + v_2)^2}{\frac{v_1^2}{n_1 - 1} + \frac{v_2^2}{n_2 - 1}}$ where $v_1 = s_1^2/n_1$ and $v_2 = s_2^2/n_2$, what is the approximate effective degrees of freedom $\nu$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>11.0</span></button><button class="opt" type="button"><b>B</b><span>9.0</span></button><button class="opt" type="button"><b>C</b><span>18.0</span></button><button class="opt" type="button"><b>D</b><span>14.5</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> $v_1 = 9/10 = 0.9$, $v_2 = 81/10 = 8.1$. The numerator is $(0.9 + 8.1)^2 = 9^2 = 81.0$. The denominator is $(0.9^2 / 9) + (8.1^2 / 9) = 0.09 + 7.29 = 7.38$. Thus $\nu \approx 81.0 / 7.38 \approx 10.98$ (or approximately 11.0), substantially lower than the pooled df of 18.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q11</span>In repeated-measures data, the variance of the difference between paired measurements is $\operatorname{Var}(X_1 - X_2) = \sigma_1^2 + \sigma_2^2 - 2\operatorname{Cov}(X_1, X_2)$. If two measurements have variances $\sigma_1^2 = 25$ and $\sigma_2^2 = 25$ with positive correlation $\rho = 0.80$, how does the variance of the difference $\operatorname{Var}(X_1 - X_2)$ compare to the variance under an independent two-sample design?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It is increased from $50$ to $90$ due to double counting</span></button><button class="opt" type="button"><b>B</b><span>It is identical: $\operatorname{Var} = 50$ in both designs</span></button><button class="opt" type="button"><b>C</b><span>It is reduced fivefold from $50$ to $10$, dramatically shrinking the standard error and boosting power</span></button><button class="opt" type="button"><b>D</b><span>It reduces the degrees of freedom to zero</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> With covariance $\operatorname{Cov}(X_1, X_2) = 0.80 \times 5 \times 5 = 20$, the paired variance is $25 + 25 - 2(20) = 10$, compared to $25 + 25 = 50$ for independent samples. By subtracting out the strong shared variance between matched pairs, the standard error shrinks by $\sqrt{5} \approx 2.24\times$.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q12</span>A researcher tests whether there is a difference in mean latency among 4 different model variants. Instead of running a one-way ANOVA, the researcher conducts all possible pair-wise two-sample $t$-tests at $\alpha = 0.05$. How many pair-wise tests are performed, and what is the approximate upper bound on the family-wise error rate if the tests were independent?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>6 tests, family-wise error rate $\approx 5.0\%$</span></button><button class="opt" type="button"><b>B</b><span>12 tests, family-wise error rate $\approx 60.0\%$</span></button><button class="opt" type="button"><b>C</b><span>4 tests, family-wise error rate $\approx 5.0\%$</span></button><button class="opt" type="button"><b>D</b><span>6 tests, family-wise error rate $\approx 26.5\%$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> For $k = 4$ groups, there are $\binom{4}{2} = 6$ distinct pairwise comparisons. Performing 6 independent tests at $\alpha = 0.05$ yields a family-wise false positive risk of $1 - (0.95)^6 \approx 26.5\%$. This severe inflation is why ANOVA omnibus tests and post-hoc corrections (like Tukey HSD) are required.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/sampling-and-standard-error/"><small class="kicker">Concept</small><b>Sampling &amp; standard error</b></a><a href="../../concepts/confidence-intervals/"><small class="kicker">Concept</small><b>Confidence intervals</b></a><a href="../../concepts/chi-square-tests/"><small class="kicker">Concept</small><b>Chi-Square Tests</b></a><a href="../../models/ols_linear_regression/"><small class="kicker">Regression</small><b>Linear regression (OLS)</b></a><a href="../../models/logistic_regression/"><small class="kicker">Classification</small><b>Logistic regression</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/type-i-ii-errors-power-and-sample-size/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Statistics</small><b>Errors, Power and Sample Size</b></a>
+    <a class="pager-next" href="../../concepts/chi-square-tests/"><small>Next · Statistics <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Chi-Square Tests</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

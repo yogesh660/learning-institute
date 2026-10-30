@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>OCR and document AI · Learn · Yogesh Awate</title>
+<meta name="description" content="Optical Character Recognition (OCR) and Document AI transform unstructured raster document images into structured machine-readable text, tabular hierarchies, and semantic key-value records. Modern industrial Document AI pipelines operate across two tightly coupled stages: text detection (localising curved and multi-oriented text lines via segmentation-driven differentiable binarisation, such as DBNet and CRAFT) and text recognition (transcribing cropped image text strips into character sequences via Convolutional Recurrent Neural Networks with Connectionist Temporal Classification (CRNN-CTC) or autoregressive Vision-Language decoders like TrOCR and Donut).">
+<meta property="og:title" content="OCR and document AI · Learn · Yogesh Awate">
+<meta property="og:description" content="Optical Character Recognition (OCR) and Document AI transform unstructured raster document images into structured machine-readable text, tabular hierarchies, and semantic key-value records. Modern industrial Document AI pipelines operate across two tightly coupled stages: text detection (localising curved and multi-oriented text lines via segmentation-driven differentiable binarisation, such as DBNet and CRAFT) and text recognition (transcribing cropped image text strips into character sequences via Convolutional Recurrent Neural Networks with Connectionist Temporal Classification (CRNN-CTC) or autoregressive Vision-Language decoders like TrOCR and Donut).">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="ocr-and-document-ai">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-vision">Path 09 · Computer vision</a> / Applications / Lesson 30 of 37</span>
+    <h1 class="case-title">OCR and document AI</h1>
+    <p class="lede rise" style="--d:3">Optical Character Recognition (OCR) and Document AI transform unstructured raster document images into structured machine-readable text, tabular hierarchies, and semantic key-value records. Modern industrial Document AI pipelines operate across two tightly coupled stages: text detection (localising curved and multi-oriented text lines via segmentation-driven differentiable binarisation, such as DBNet and CRAFT) and text recognition (transcribing cropped image text strips into character sequences via Convolutional Recurrent Neural Networks with Connectionist Temporal Classification (CRNN-CTC) or autoregressive Vision-Language decoders like TrOCR and Donut).</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/receptive-field-stride-and-pooling/">Receptive Field &amp; Pooling</a> <a href="../../concepts/cnn-architecture-tour-lenet-to-resnet-to-efficientnet/">CNN Architecture Tour</a> <a href="../../concepts/iou-nms-and-map/">IoU, NMS &amp; mAP</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Computer vision · Applications</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Every business, legal firm, hospital, and government agency operates on paper: invoices, tax forms, receipts, clinical prescriptions, and identity cards. Yet to a standard database or machine learning pipeline, a scanned PDF or photograph is merely a dead grid of pixels. Bridging the physical-to-digital divide requires more than simple character recognition: an intelligent document system must detect oriented text in cluttered backgrounds, transcribe multilingual typography and cursive handwriting, parse tabular layouts, and extract semantic relationships ("Total Due: £142.50").</p>
+        <p>The two-stage Document AI paradigm: Reading a document comprises two distinct sub-problems: (1) Text Detection—where is the text located on the page? and (2) Text Recognition—what characters do those text regions represent? While early systems attempted end-to-end character classification via sliding windows, contemporary pipelines decouple the tasks: a robust detection network locates arbitrarily oriented word or text-line polygons, crops and rectifies the text strips into horizontal patches, and passes them to a specialised sequence recognition engine.</p>
+        <p>Differentiable Binarisation for text detection (DBNet): Traditional segmentation-based text detectors generate probability heatmaps and apply a fixed threshold to extract bounding polygons. However, standard step-function thresholding is non-differentiable, preventing the binarisation step from being optimised end-to-end. DBNet (Differentiable Binarisation Network) solves this by reformulating thresholding as an adaptive, differentiable sigmoid approximation: $\hat{B}_{i, j} = \frac{1}{1 + \exp(-k(P_{i, j} - T_{i, j}))}$, where $P$ is the predicted probability map and $T$ is an adaptively learned spatial threshold map. This allows the network to jointly optimise text probability boundaries and edge thresholds directly with gradient descent.</p>
+        <p>Sequence transcription without alignment: CRNN and CTC: Text lines have variable lengths, and character boundaries in cursive handwriting or compressed fonts cannot be easily segmented into discrete letters. Baoguang Shi et al.'s Convolutional Recurrent Neural Network (CRNN) processes an entire horizontal text strip through a CNN backbone, producing a sequence of feature vectors along the horizontal axis. A bidirectional LSTM models sequential linguistic context. To train the network without requiring tedious character-level bounding box annotations, Alex Graves's Connectionist Temporal Classification (CTC) loss introduces a special blank token ($\epsilon$). The CTC objective marginalises over all possible alignments that collapse to the ground-truth text string, allowing the model to learn character alignment and language spelling simultaneously.</p>
+        <p>The modern frontier: Vision-Language Document Transformers: While CRNN-CTC pipelines excel at isolated text-line transcription, complex documents (such as financial balance sheets or insurance claims) encode crucial meaning in 2D layout geometry and spatial typography. Modern Document AI models (such as LayoutLM, Donut, and TrOCR) integrate image pixel embeddings, 2D spatial bounding box coordinates, and pre-trained Transformer language models. By treating Document AI as a multi-modal sequence generation task, these architectures directly output structured JSON schemas ("vendor": "Acme Corp", "total": "£500") directly from raw document scans.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Think of an administrative assistant processing incoming physical mail. Text detection is like the assistant picking up a yellow highlighter and drawing clean rectangular boxes around every printed paragraph, handwritten note, and invoice total on the invoice. Text recognition is like typing those highlighted snippets into a word processor letter-by-letter. CRNN with CTC loss acts like a court stenographer listening to continuous spoken speech: the stenographer does not need a pause between every individual phoneme; they transcribe a continuous rhythmic stream of sound, automatically collapsing repeated sounds and omitting silent pauses to form clean words. Vision-Language Document AI is like an experienced accountant reading the whole page: they do not just read words in isolation, but immediately recognise that a number positioned in the bottom-right corner beneath a bold double-line represents the grand total amount payable.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Differentiable Binarisation (DBNet) formulation</h3><div class="formula">\hat{B}_{i, j} = \frac{1}{1 + \exp\left(-k(P_{i, j} - T_{i, j})\right)}</div><p>Here $P_{i, j}$ is the predicted text probability at coordinate $(i, j)$, $T_{i, j}$ is the adaptively learned threshold map, and $k$ is an amplification factor (typically $k=50$). This smooth, differentiable approximation of the standard Heavyside step function allows end-to-end backpropagation through the binarisation operation.</p></li>
+          <li><h3>Connectionist Temporal Classification (CTC) conditional probability</h3><div class="formula">p(\mathbf{l} \mid \mathbf{x}) = \sum_{\pi \in \mathcal{B}^{-1}(\mathbf{l})} p(\pi \mid \mathbf{x}) = \sum_{\pi \in \mathcal{B}^{-1}(\mathbf{l})} \prod_{t=1}^T y_{\pi_t}^t</div><p>Here $\mathbf{l}$ is the target text label, $\pi$ is an alignment path across $T$ time steps, $y_{\pi_t}^t$ is the emission probability of label $\pi_t$ at time step $t$, and $\mathcal{B}$ is the collapse mapping that removes sequential duplicate characters and strips out blank tokens $\epsilon$ (e.g. $\mathcal{B}(\text{c-a-a-t}) = \text{cat}$).</p></li>
+          <li><h3>Character Error Rate (CER) and Word Error Rate (WER)</h3><div class="formula">\text{CER} = \frac{S + D + I}{N_{\text{ref}}} = \frac{\operatorname{Lev}(\mathbf{l}_{\text{pred}}, \mathbf{l}_{\text{ref}})}{|\mathbf{l}_{\text{ref}}|}, \quad \text{WER} = \frac{S_w + D_w + I_w}{N_{\text{words}}}</div><p>Here $S$ is substitutions, $D$ is deletions, $I$ is insertions, and $N_{\text{ref}}$ is the total number of characters in the ground-truth reference string. CER evaluates character-level Levenshtein edit distance, providing a granular benchmark of OCR transcription accuracy.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Document AI pipelines operate as a two-stage process: text detection (where is text?) followed by text recognition (what is written?).</li><li>DBNet enables end-to-end backpropagation for text detection by approximating hard step-function binarisation with a differentiable sigmoid.</li><li>CRNN combines convolutional spatial feature extraction with bidirectional LSTMs to transcribe variable-length horizontal text strips.</li><li>CTC loss enables training text recognition networks on full words without requiring costly character-level bounding box annotations.</li><li>Modern multi-modal Document Transformers (LayoutLM, Donut) combine 2D spatial layouts, text semantics, and visual cues to extract structured key-value entities.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Simulate Connectionist Temporal Classification (CTC) Greedy Best-Path Decoding</span>
+<span class="c"># Character vocabulary: index 0 is blank token ('-'), indices 1-4 are letters ['c', 'a', 't', 'o']</span>
+vocab = [<span class="s">'-'</span>, <span class="s">'c'</span>, <span class="s">'a'</span>, <span class="s">'t'</span>, <span class="s">'o'</span>]
+blank_idx = <span class="n">0</span>
+
+<span class="c"># Simulated emission logits from a CRNN over T=8 time steps for vocabulary size 5</span>
+<span class="c"># Target ground-truth word: &quot;cat&quot;</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+T = <span class="n">8</span>
+num_classes = <span class="k">len</span>(vocab)
+logits = np.random.<span class="f">randn</span>(T, num_classes).<span class="f">astype</span>(np.float32)
+
+<span class="c"># Bias logits to strongly emit sequence: 'c', 'c', '-', 'a', 'a', 'a', '-', 't'</span>
+<span class="c"># Which should collapse to: &quot;cat&quot;</span>
+logits[<span class="n">0</span>, <span class="n">1</span>] += <span class="n">5.0</span>  <span class="c"># 'c'</span>
+logits[<span class="n">1</span>, <span class="n">1</span>] += <span class="n">4.5</span>  <span class="c"># 'c'</span>
+logits[<span class="n">2</span>, <span class="n">0</span>] += <span class="n">5.0</span>  <span class="c"># '-' (blank)</span>
+logits[<span class="n">3</span>, <span class="n">2</span>] += <span class="n">4.0</span>  <span class="c"># 'a'</span>
+logits[<span class="n">4</span>, <span class="n">2</span>] += <span class="n">5.5</span>  <span class="c"># 'a'</span>
+logits[<span class="n">5</span>, <span class="n">2</span>] += <span class="n">4.2</span>  <span class="c"># 'a'</span>
+logits[<span class="n">6</span>, <span class="n">0</span>] += <span class="n">4.8</span>  <span class="c"># '-' (blank)</span>
+logits[<span class="n">7</span>, <span class="n">3</span>] += <span class="n">5.2</span>  <span class="c"># 't'</span>
+
+<span class="c"># 1. Softmax probability computation over time steps</span>
+exp_logits = np.<span class="f">exp</span>(logits - np.<span class="f">max</span>(logits, axis=-<span class="n">1</span>, keepdims=<span class="k">True</span>))
+probs = exp_logits / np.<span class="f">sum</span>(exp_logits, axis=-<span class="n">1</span>, keepdims=<span class="k">True</span>)
+
+<span class="c"># 2. Greedy best-path decoding: argmax at each time step</span>
+raw_path_indices = np.<span class="f">argmax</span>(probs, axis=-<span class="n">1</span>)
+raw_path_chars = [vocab[idx] <span class="k">for</span> idx <span class="k">in</span> raw_path_indices]
+
+<span class="k">print</span>(<span class="s">f&quot;Raw frame-level emission path (T={T}):&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Indices: {raw_path_indices.tolist()}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Tokens:  {' '.join(raw_path_chars)}&quot;</span>)
+
+<span class="c"># 3. CTC Collapse Function B(pi):</span>
+<span class="c"># Step A: Collapse consecutive identical characters</span>
+collapsed_consecutive = []
+<span class="k">for</span> i, token <span class="k">in</span> <span class="f">enumerate</span>(raw_path_indices):
+    <span class="k">if</span> i == <span class="n">0</span> <span class="k">or</span> token != raw_path_indices[i - <span class="n">1</span>]:
+        collapsed_consecutive.<span class="f">append</span>(token)
+
+<span class="c"># Step B: Remove blank tokens (index 0)</span>
+final_indices = [idx <span class="k">for</span> idx <span class="k">in</span> collapsed_consecutive <span class="k">if</span> idx != blank_idx]
+final_transcription = <span class="s">&quot;&quot;</span>.<span class="f">join</span>([vocab[idx] <span class="k">for</span> idx <span class="k">in</span> final_indices])
+
+<span class="k">print</span>(<span class="s">f&quot;\nAfter collapsing consecutive duplicates: {[vocab[i] for i in collapsed_consecutive]}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Final CTC decoded transcription:        '{final_transcription}'&quot;</span>)
+
+<span class="c"># 4. Character Error Rate (CER) calculation</span>
+<span class="k">def</span> <span class="f">levenshtein_distance</span>(s1, s2):
+    m, n = <span class="k">len</span>(s1), <span class="k">len</span>(s2)
+    dp = np.<span class="f">zeros</span>((m + <span class="n">1</span>, n + <span class="n">1</span>), dtype=int)
+    <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(m + <span class="n">1</span>): dp[i, <span class="n">0</span>] = i
+    <span class="k">for</span> j <span class="k">in</span> <span class="k">range</span>(n + <span class="n">1</span>): dp[<span class="n">0</span>, j] = j
+    <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(<span class="n">1</span>, m + <span class="n">1</span>):
+        <span class="k">for</span> j <span class="k">in</span> <span class="k">range</span>(<span class="n">1</span>, n + <span class="n">1</span>):
+            cost = <span class="n">0</span> <span class="k">if</span> s1[i-<span class="n">1</span>] == s2[j-<span class="n">1</span>] <span class="k">else</span> <span class="n">1</span>
+            dp[i, j] = <span class="f">min</span>(dp[i-<span class="n">1</span>, j] + <span class="n">1</span>, dp[i, j-<span class="n">1</span>] + <span class="n">1</span>, dp[i-<span class="n">1</span>, j-<span class="n">1</span>] + cost)
+    <span class="k">return</span> dp[m, n]
+
+ground_truth = <span class="s">&quot;cat&quot;</span>
+edit_dist = <span class="f">levenshtein_distance</span>(final_transcription, ground_truth)
+cer = edit_dist / <span class="k">len</span>(ground_truth)
+<span class="k">print</span>(<span class="s">f&quot;Ground-truth text:                     '{ground_truth}'&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Levenshtein edit distance:             {edit_dist}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Character Error Rate (CER):            {cer:.1%}&quot;</span>)
+assert final_transcription == ground_truth, <span class="s">&quot;CTC decoding mismatch!&quot;</span>
+<span class="k">print</span>(<span class="s">&quot;Verified: CTC greedy best-path decoding executed successfully!&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Running OCR on unrectified skewed documents: Passing text rotated by even $5^\circ$ to $10^\circ$ causes horizontal CRNN feature sequences to slice across multiple text lines simultaneously, producing garbled transcription outputs; always deskew pages beforehand.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Ignoring the CTC blank token: Omitting the blank token ($\epsilon$) prevents CTC from transcribing words with legitimate consecutive duplicate letters (e.g. distinguishing 'book' from 'bok').</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Evaluating OCR solely with Word Error Rate (WER): In specialized technical domains (such as serial numbers or chemistry formulas), a single character typo in a 20-character identifier marks the entire word as an error; Character Error Rate (CER) provides a much fairer metric.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming linear reading order in multi-column layouts: Reading multi-column documents strictly top-to-bottom across the full page width merges text across columns; layout analysis must partition the page into columns before extracting reading order.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Relying on classical rule-based regex parsing for key-value extraction: Using static regex to parse invoices fails when document templates change; multi-modal Document Transformers generalise across unseen vendor invoice layouts.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>Why does Connectionist Temporal Classification (CTC) incorporate a dedicated "blank" token ($\epsilon$) in its character vocabulary?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To reset the hidden state of the LSTM memory cell to zero</span></button><button class="opt" type="button"><b>B</b><span>To allow the decoding collapse operator $\mathcal{B}$ to differentiate between consecutive repeated characters (e.g. 'b-o-o-k') and a single elongated character sound (e.g. 'b-o-k')</span></button><button class="opt" type="button"><b>C</b><span>To represent spaces between paragraphs in multi-page documents</span></button><button class="opt" type="button"><b>D</b><span>To indicate punctuation marks like commas and periods</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Without a blank token, consecutive identical characters would always collapse into a single character ('o-o' would become 'o'). Inserting an intermediate blank token ('o-\epsilon-o') signals that the two letters are distinct instances.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>How does DBNet (Differentiable Binarisation Network) make the text detection binarisation step trainable end-to-end with gradient descent?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It replaces standard non-differentiable step-function thresholding with an adaptive, differentiable sigmoid function comparing predicted probability maps against a learned threshold map</span></button><button class="opt" type="button"><b>B</b><span>It trains exclusively on binary black-and-white bitmap files</span></button><button class="opt" type="button"><b>C</b><span>It converts text images into 3D point clouds before clustering</span></button><button class="opt" type="button"><b>D</b><span>It skips the backward pass during backpropagation</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Standard hard thresholding ($P \ge T$) has zero gradient everywhere. DBNet approximates thresholding using a steep sigmoid function $\hat{B} = 1 / (1 + e^{-k(P-T)})$, enabling gradients to flow backward through the threshold map and probability map simultaneously.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>Why is Character Error Rate (CER) often preferred over Word Error Rate (WER) when evaluating OCR on technical documents (such as serial numbers or clinical dosages)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because CER does not require a ground-truth reference string</span></button><button class="opt" type="button"><b>B</b><span>Because WER cannot be evaluated using Levenshtein distance</span></button><button class="opt" type="button"><b>C</b><span>Because CER can only be calculated on English text</span></button><button class="opt" type="button"><b>D</b><span>Because a single typo in a long alphanumeric code marks the entire word as incorrect under WER, obscuring that the detector was $95\%$ accurate at the character level</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> WER is an all-or-nothing metric: a 15-character serial number with one misplaced letter receives a $100\%$ word error. CER measures character-level Levenshtein edit distance, providing a granular and fair assessment of recognition fidelity.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q4</span>What advantage do modern multi-modal Document Transformers (such as LayoutLM) have over traditional OCR pipelines when extracting key-value pairs from receipts?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>They require zero training data</span></button><button class="opt" type="button"><b>B</b><span>They convert scanned images directly into audio speech</span></button><button class="opt" type="button"><b>C</b><span>They incorporate 2D spatial coordinate layout embeddings alongside text semantics and visual features, recognizing semantic hierarchies across varying document templates</span></button><button class="opt" type="button"><b>D</b><span>They eliminate the need for GPU hardware during training</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In structured documents, visual layout conveys meaning (e.g. an address is always located in the header). Multi-modal transformers encode 2D bounding box positions along with token embeddings, generalising across diverse layouts where static rules fail.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/vision-transformer/"><small class="kicker">Concept</small><b>Vision Transformer</b></a><a href="../../concepts/semantic-segmentation-fcn-and-u-net/"><small class="kicker">Concept</small><b>FCN &amp; U-Net</b></a><a href="../../concepts/the-attention-mechanism/"><small class="kicker">Concept</small><b>The attention mechanism</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/latent-diffusion-and-controlnet/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Computer vision</small><b>Latent diffusion &amp; ControlNet</b></a>
+    <a class="pager-next" href="../../concepts/face-detection-and-recognition/"><small>Next · Computer vision <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Face detection &amp; recognition</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

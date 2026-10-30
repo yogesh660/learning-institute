@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>t-Distributed Stochastic Neighbour Embedding · Learn · Yogesh Awate</title>
+<meta name="description" content="Non-linear dimensionality reduction that maps pairwise Euclidean distances to conditional probabilities, matching high-dimensional Gaussians to low-dimensional Student-t distributions via KL divergence.">
+<meta property="og:title" content="t-Distributed Stochastic Neighbour Embedding · Learn · Yogesh Awate">
+<meta property="og:description" content="Non-linear dimensionality reduction that maps pairwise Euclidean distances to conditional probabilities, matching high-dimensional Gaussians to low-dimensional Student-t distributions via KL divergence.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="t-sne">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ml-toolbox">Path 06 · Machine learning toolbox</a> / Dimensionality reduction / Lesson 2 of 50</span>
+    <h1 class="case-title">t-Distributed Stochastic Neighbour Embedding</h1>
+    <p class="lede rise" style="--d:3">Non-linear dimensionality reduction that maps pairwise Euclidean distances to conditional probabilities, matching high-dimensional Gaussians to low-dimensional Student-t distributions via KL divergence.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/pca/">PCA</a> <a href="../../concepts/kl-divergence/">Kullback–Leibler Divergence</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Machine learning toolbox · Dimensionality reduction</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Linear projections like PCA inevitably collapse curved or clustered non-linear manifolds because they prioritise preserving large pairwise distances over local neighbourhood relationships. t-Distributed Stochastic Neighbour Embedding (t-SNE) converts pairwise distances into probabilities of neighbourhood co-occurrence, matching high-dimensional Gaussian affinities with heavy-tailed low-dimensional Student-t distributions to resolve the crowding problem and reveal clustered structures.</p>
+        <p>In high-dimensional spaces, geometry behaves counter-intuitively: the volume of a sphere grows exponentially with dimension $d$. Points distributed uniformly across a high-dimensional manifold have ample room to stay mutually equidistant from their neighbours. When attempting to project such data onto a two-dimensional sheet, geometry encounters the crowding problem: there simply is not enough area in 2D to accommodate all the moderate-distance neighbours without crushing distinct clusters on top of each other.</p>
+        <p>t-SNE solves this crowding problem through an elegant distribution mismatch. In the original high-dimensional space, pairwise proximity is modelled using a Gaussian distribution, which decays exponentially fast ($e^{-d^2}$). In the low-dimensional embedding space, t-SNE models proximity using a heavy-tailed Student-t distribution with 1 degree of freedom (the Cauchy distribution, decaying as $(1 + d^2)^{-1}$). Because the Student-t distribution has much heavier tails than the Gaussian, moderate-distance points must be pushed much further apart in 2D to yield the same probability match. This creates repulsive breathing room, allowing distinct clusters to separate cleanly.</p>
+        <p>Instead of preserving rigid metric distances, t-SNE preserves neighbourhood topology. The perplexity parameter specifies the effective number of nearest neighbours each point considers when establishing its local bandwidth $\sigma_i$. Dense regions automatically adopt a narrow $\sigma_i$ while sparse regions broaden $\sigma_i$. The algorithm then minimises the Kullback-Leibler (KL) divergence between high-dimensional affinities $P$ and low-dimensional affinities $Q$ using gradient descent. Points that are close neighbours in high dimensions exert strong attractive forces, while low-dimensional normalisation creates global repulsion.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Unravelling a tangled ball of wool onto a flat tabletop: short threads between neighbouring fibres act as elastic bands pulling nearby loops together, while an overall outward pressure forces separate skeins of yarn to unfurl into isolated clusters.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Calculate pairwise Euclidean distances $\|x_i - x_j\|$ between all sample pairs in the original high-dimensional feature space.</li><li>For each data point $x_i$, perform binary search to determine a unique Gaussian bandwidth $\sigma_i$ such that the Shannon entropy of its conditional probability distribution matches the user-defined perplexity: $\operatorname{Perp}(P_i) = 2^{H(P_i)}$.</li><li>Compute asymmetric conditional probabilities $p_{j|i}$ and symmetrise them into joint probabilities $p_{ij} = \frac{p_{j|i} + p_{i|j}}{2n}$, setting diagonal self-affinities $p_{ii} = 0$.</li><li>Initialise low-dimensional coordinates $y_i \in \mathbb{R}^2$ randomly from a Gaussian distribution with small variance (or using the first two PCA components for stable global layout).</li><li>Compute low-dimensional affinities $q_{ij}$ using the Cauchy / Student-t kernel $(1 + \|y_i - y_j\|^2)^{-1}$, normalised over all pairs.</li><li>Compute the analytical gradient of the KL divergence $\frac{\partial \mathcal{L}}{\partial y_i} = 4 \sum_j (p_{ij} - q_{ij})(y_i - y_j)(1 + \|y_i - y_j\|^2)^{-1}$.</li><li>Update coordinates $y_i$ via gradient descent with momentum and early exaggeration (multiplying high-dimensional probabilities $p_{ij}$ by a factor of 4 to 12 during initial iterations to encourage compact cluster formation).</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>High-dimensional conditional probabilities and perplexity</h3><div class="formula">$$p_{j \mid i} = \frac{\exp\left(-\frac{\|x_i - x_j\|^2}{2\sigma_i^2}\right)}{\sum_{k \ne i} \exp\left(-\frac{\|x_i - x_k\|^2}{2\sigma_i^2}\right)}, \qquad \operatorname{Perp}(P_i) = 2^{-\sum_{j} p_{j \mid i} \log_2 p_{j \mid i}}$$</div><p>The variance $\sigma_i^2$ is determined independently for each sample via binary search so that the perplexity matches the user specification (typically between 5 and 50). This adapts to varying local data density.</p></li>
+          <li><h3>Symmetrisation and low-dimensional Student-t kernel</h3><div class="formula">$$p_{ij} = \frac{p_{j \mid i} + p_{i \mid j}}{2n}, \qquad q_{ij} = \frac{\left(1 + \|y_i - y_j\|^2\right)^{-1}}{\sum_{k} \sum_{l \ne k} \left(1 + \|y_k - y_l\|^2\right)^{-1}}$$</div><p>Symmetrisation ensures that outliers (which have tiny $p_{j|i}$ for all $j$) still exert meaningful gradients. The low-dimensional Cauchy distribution decays as the inverse square of distance, preventing crowding.</p></li>
+          <li><h3>Cost function and analytical gradient</h3><div class="formula">$$\mathcal{L}_{KL} = \sum_{i} \sum_{j \ne i} p_{ij} \log \frac{p_{ij}}{q_{ij}}, \qquad \frac{\partial \mathcal{L}}{\partial y_i} = 4 \sum_{j} (p_{ij} - q_{ij})(y_i - y_j)\left(1 + \|y_i - y_j\|^2\right)^{-1}$$</div><p>The asymmetry of KL divergence heavily penalises false negatives (large $p_{ij}$ modelled by small $q_{ij}$), which pulls high-dimensional neighbours together. False positives (small $p_{ij}$ with moderate $q_{ij}$) receive very mild penalties, allowing distant clusters to position themselves freely.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Replaces metric distance preservation with probability distribution matching via Kullback-Leibler divergence.</li><li>Heavy-tailed Student-t kernel in low-dimensional space resolves the high-dimensional crowding problem.</li><li>Adaptive Gaussian bandwidth $\sigma_i$ dynamically scales to match local density via the perplexity hyperparameter.</li><li>Designed primarily as an exploratory visualisation technique rather than a feature extraction pipeline for downstream models.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Synthetic dataset: two well-separated clusters in 4D space</span>
+rng = np.random.<span class="f">default_rng</span>(<span class="n">42</span>)
+X = np.<span class="f">vstack</span>([rng.<span class="f">normal</span>(-<span class="n">3</span>, <span class="n">0.5</span>, (<span class="n">20</span>, <span class="n">4</span>)), rng.<span class="f">normal</span>(<span class="n">3</span>, <span class="n">0.5</span>, (<span class="n">20</span>, <span class="n">4</span>))])
+n = <span class="k">len</span>(X)
+
+<span class="c"># 1. High-dimensional pairwise Gaussian affinities and symmetrisation</span>
+D2 = np.<span class="f">sum</span>((X[:, <span class="k">None</span>, :] - X[<span class="k">None</span>, :, :]) ** <span class="n">2</span>, axis=-<span class="n">1</span>)
+np.<span class="f">fill_diagonal</span>(D2, np.inf)
+P_cond = np.<span class="f">exp</span>(-D2 / <span class="n">2.0</span>)
+P_cond = P_cond / P_cond.<span class="f">sum</span>(axis=<span class="n">1</span>, keepdims=<span class="k">True</span>)
+P = np.<span class="f">maximum</span>((P_cond + P_cond.T) / (<span class="n">2</span> * n), <span class="n">1e-12</span>)
+
+<span class="c"># 2. Initialise low-dimensional embedding coordinates</span>
+Y = rng.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">1e-4</span>, (n, <span class="n">2</span>))
+lr, n_iter = <span class="n">50.0</span>, <span class="n">120</span>
+
+<span class="c"># 3. Minimise KL divergence via gradient descent</span>
+<span class="k">for</span> _ <span class="k">in</span> <span class="k">range</span>(n_iter):
+    dist_y = np.<span class="f">sum</span>((Y[:, <span class="k">None</span>, :] - Y[<span class="k">None</span>, :, :]) ** <span class="n">2</span>, axis=-<span class="n">1</span>)
+    inv = <span class="n">1.0</span> / (<span class="n">1.0</span> + dist_y)
+    np.<span class="f">fill_diagonal</span>(inv, <span class="n">0.0</span>)
+    Q = np.<span class="f">maximum</span>(inv / np.<span class="f">sum</span>(inv), <span class="n">1e-12</span>)
+    grad = <span class="n">4</span> * np.<span class="f">sum</span>((P - Q)[:, :, <span class="k">None</span>] * inv[:, :, <span class="k">None</span>] * (Y[:, <span class="k">None</span>, :] - Y[<span class="k">None</span>, :, :]), axis=<span class="n">1</span>)
+    Y -= lr * grad
+
+kl_div = np.<span class="f">sum</span>(P * np.<span class="f">log</span>(P / Q))
+<span class="k">print</span>(<span class="s">f&quot;Final KL divergence: {kl_div:.4f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Cluster 1 centre in 2D: {Y[:20].mean(axis=0).round(2)}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Cluster 2 centre in 2D: {Y[20:].mean(axis=0).round(2)}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Inter-cluster distances are meaningless: t-SNE prioritises local neighbourhood preservation; the distance between two distant cluster centres in the 2D plot does not reflect true metric separation in high dimensions.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Cluster sizes and densities reflect perplexity: t-SNE expands dense clusters and contracts sparse clusters so they appear to have similar spread in 2D. Apparent cluster radius cannot be interpreted as geometric variance.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Non-parametric and non-inductive: Standard t-SNE does not learn a functional mapping $f(x) \to y$. New test samples cannot be projected without rerunning the entire optimisation from scratch.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Stochastic non-convex optimisation: The KL divergence objective has many local minima. Different random initialisations and perplexity values can yield visually distinct layouts.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>Why does t-SNE use a Student-t distribution in the low-dimensional space instead of a Gaussian distribution?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because high-dimensional data always follows a Student-t distribution</span></button><button class="opt" type="button"><b>B</b><span>Because the heavy tails of the Student-t distribution alleviate the crowding problem by pushing moderate-distance points apart</span></button><button class="opt" type="button"><b>C</b><span>Because Student-t distributions ensure global linear orthogonality</span></button><button class="opt" type="button"><b>D</b><span>Because Student-t distributions are faster to evaluate computationally</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In low dimensions, area is constrained. The heavy inverse-square tails of the Student-t distribution ($1/(1+d^2)$) require points with small to moderate affinities to be mapped further apart than a Gaussian would, preventing separate clusters from collapsing into a dense central clump.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>What is the primary role of the perplexity hyperparameter in t-SNE?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It sets the effective number of nearest neighbours used to adapt the local Gaussian bandwidth $\sigma_i$ for each point</span></button><button class="opt" type="button"><b>B</b><span>It controls the number of principal components retained during initialisation</span></button><button class="opt" type="button"><b>C</b><span>It specifies the learning rate of the gradient descent optimiser</span></button><button class="opt" type="button"><b>D</b><span>It determines the final number of clusters displayed in the 2D plot</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Perplexity represents the effective continuous degrees of freedom or target neighbourhood size $2^{H(P_i)}$. Binary search tunes $\sigma_i$ per point so its conditional entropy matches $\log_2(\text{perplexity})$.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>Why can the distance between two widely separated clusters in a t-SNE plot NOT be interpreted as true high-dimensional geometric distance?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because t-SNE normalises all cluster centroids to lie on the unit circle</span></button><button class="opt" type="button"><b>B</b><span>Because t-SNE introduces artificial random Gaussian jitter to cluster centroids at every iteration</span></button><button class="opt" type="button"><b>C</b><span>Because t-SNE strictly preserves metric distances using geodesic shortest paths</span></button><button class="opt" type="button"><b>D</b><span>Because the KL divergence penalty focuses almost entirely on preserving local neighbours, leaving distant clusters free to settle anywhere</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The asymmetric term $p_{ij} \log(p_{ij}/q_{ij})$ approaches zero whenever $p_{ij} \approx 0$. When points belong to different clusters, their $p_{ij}$ is virtually zero, meaning the loss exerts negligible attractive or metric constraints on their relative positions.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q4</span>Why can standard t-SNE not directly transform a single new, unseen test sample into 2D coordinates?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because t-SNE coordinates are only valid when sample count is an exact power of two</span></button><button class="opt" type="button"><b>B</b><span>Because t-SNE is a non-parametric embedding that optimises sample coordinates directly rather than learning a parametric mapping function</span></button><button class="opt" type="button"><b>C</b><span>Because t-SNE is a supervised algorithm requiring ground truth labels for transformation</span></button><button class="opt" type="button"><b>D</b><span>Because the Student-t distribution cannot be evaluated on individual points</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> t-SNE does not learn an encoder or projection matrix $W$; it directly optimises the array of 2D coordinates $Y \in \mathbb{R}^{n \times 2}$ via gradient descent over all pairs. Projecting a new point requires rerunning optimisation or using parametric extensions.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/pca/"><small class="kicker">Concept</small><b>PCA</b></a><a href="../../concepts/umap/"><small class="kicker">Concept</small><b>UMAP</b></a><a href="../../models/spectral_clustering/"><small class="kicker">Clustering</small><b>Spectral clustering</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/pca/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Machine learning toolbox</small><b>PCA</b></a>
+    <a class="pager-next" href="../../concepts/umap/"><small>Next · Machine learning toolbox <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>UMAP</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

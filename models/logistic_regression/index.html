@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Logistic Regression · Learn · Yogesh Awate</title>
+<meta name="description" content="The workhorse classifier: a linear score turned into a probability by the sigmoid, fitted by maximum likelihood.">
+<meta property="og:title" content="Logistic Regression · Learn · Yogesh Awate">
+<meta property="og:description" content="The workhorse classifier: a linear score turned into a probability by the sigmoid, fitted by maximum likelihood.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="logistic_regression">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-classification">Path 04 · Classification</a> / Linear and probabilistic / Lesson 1 of 19</span>
+    <h1 class="case-title">Logistic Regression</h1>
+    <p class="lede rise" style="--d:3">The workhorse classifier: a linear score turned into a probability by the sigmoid, fitted by maximum likelihood.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="1"><i><b></b></i>Beginner</span></span>
+      <span class="tagline">20 min</span>
+      <span class="tagline lab">Live lab</span>
+      <span class="prereq">Before this: <a href="../../concepts/log-odds/">Log-odds (logit)</a> <a href="../../concepts/sigmoid-and-link-functions/">Sigmoid &amp; link functions</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Task</dt><dd>Classification</dd>
+          <dt>Family</dt><dd>Linear, probabilistic</dd>
+          <dt>What it learns</dt><dd>One weight per feature + bias</dd>
+          <dt>Training cost</dt><dd>$O(n\,p)$ per iteration</dd>
+          <dt>Prediction cost</dt><dd>$O(p)$</dd>
+          <dt>In code</dt><dd><code class="no-math">sklearn.<wbr>linear_model.<wbr>LogisticRegression</code></dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>How it works</a></li><li><a href="#lab"><span>03</span>Try it</a></li><li><a href="#maths"><span>04</span>The maths</a></li><li><a href="#tuning"><span>05</span>Hyperparameters</a></li><li><a href="#when"><span>06</span>When to use it</a></li><li><a href="#code"><span>07</span>In code</a></li><li><a href="#results"><span>08</span>On real data</a></li><li><a href="#quiz"><span>09</span>Check yourself</a></li><li><a href="#related"><span>10</span>Related lessons</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Compute a linear score $z = w^\top x + b$, squash it into a probability with the sigmoid $\sigma(z) = 1/(1 + e^{-z})$, and choose the weights that make the observed labels most likely.</p>
+        <p>Linear regression can output any number, but a probability has to live between 0 and 1. Logistic regression models the <a class="inline" href="../../concepts/log-odds/">Log-odds (logit)</a> as linear: $\log\frac{p}{1-p} = w^\top x + b$. Every unit increase in a feature multiplies the odds by $e^{w_j}$, which is why doctors and risk teams love it.</p>
+        <p>The decision boundary $w^\top x + b = 0$ is a straight line (a hyperplane). Points far from it on either side get confident probabilities; points near it get probabilities near 0.5. The model is trained by minimising log-loss (cross-entropy), which is the same as <a class="inline" href="../../concepts/maximum-likelihood-estimation/">maximum likelihood</a> under a Bernoulli model.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>A weighted checklist that adds up evidence for "yes", then converts the total into a calibrated chance.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> How it works</h2>
+        <ol class="steps"><li>Compute $z_i = w^\top x_i + b$ for every row.</li><li>Turn scores into probabilities $p_i = \sigma(z_i)$.</li><li>Measure log-loss: heavily penalise confident wrong answers.</li><li>Minimise it with L-BFGS or gradient descent (the loss is convex, so there is one optimum).</li><li>Predict class 1 when $p \ge \tau$; pick the threshold $\tau$ for your costs, not by default.</li></ol>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>03</span> Try it</h2>
+        <p>Logistic regression trained live by gradient descent. Background colour is the predicted probability; the dashed line is where it equals your threshold.</p>
+        <div class="lab" data-lab="logistic_regression" data-kind="models" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>Lower C (more regularisation) and watch the probability gradient spread out: less confident predictions.</li><li>On the "circles" dataset a line cannot work. Turn on squared features and see the boundary close into a ring.</li><li>Move the threshold and watch precision and recall trade places.</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>04</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Model</h3><div class="formula">$$P(y = 1 \mid x) = \sigma(w^\top x + b) = \frac{1}{1 + e^{-(w^\top x + b)}}$$</div><p>Equivalently $\log\frac{p}{1-p} = w^\top x + b$: linear in the log-odds.</p></li>
+          <li><h3>Loss: negative log-likelihood</h3><div class="formula">$$\mathcal L(w) = -\frac1n\sum_i \big[y_i\log p_i + (1 - y_i)\log(1 - p_i)\big] + \frac{1}{2C}\lVert w\rVert^2$$</div><p>The second term is scikit-learn’s default L2 penalty; $C$ is the inverse regularisation strength.</p></li>
+          <li><h3>Gradient</h3><div class="formula">$$\nabla_w \mathcal L = \frac1n X^\top(p - y) + \frac{w}{C}$$</div><p>The same "prediction minus truth" form as linear regression. No closed form exists, but the loss is convex, so <a class="inline" href="../../concepts/quasi-newton-and-lbfgs/">L-BFGS</a> converges reliably.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="tuning">
+        <h2 class="h3"><span>05</span> Hyperparameters</h2>
+        <div class="table-wrap"><table class="kv">
+          <thead><tr><th>Setting</th><th>What it does</th><th>Typical choice</th></tr></thead>
+          <tbody><tr><td><span class="hp">C</span></td><td>Inverse regularisation strength.</td><td>Log grid 0.001–100.</td></tr><tr><td><span class="hp">penalty</span></td><td>l2, l1, elasticnet or none.</td><td>l1 (with saga or liblinear) for sparse models.</td></tr><tr><td><span class="hp">class_weight</span></td><td>Re-weights classes in the loss.</td><td>"balanced" for imbalanced data.</td></tr><tr><td><span class="hp">threshold</span></td><td>Not a parameter: you choose it after training.</td><td>Pick from the precision–recall curve.</td></tr></tbody>
+        </table></div>
+      </section>
+      <section class="reveal" id="when">
+        <h2 class="h3"><span>06</span> When to use it</h2>
+        <div class="split2">
+          <div class="box good"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Strengths</h3><ul><li>Outputs well-calibrated probabilities (usually).</li><li>Coefficients are interpretable as log-odds ratios.</li><li>Fast, convex, and a strong baseline.</li></ul></div>
+          <div class="box bad"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg> Limitations</h3><ul><li>Linear boundary unless you engineer features.</li><li>Struggles with perfect separation (weights diverge) without regularisation.</li><li>Sensitive to correlated features, like linear regression.</li></ul></div>
+          <div class="box use"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> Reach for it when</h3><p>You need probabilities, interpretability, or a solid baseline, especially in regulated settings.</p></div>
+          <div class="box avoid"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Think twice when</h3><p>Strongly non-linear class boundaries with no clear features to engineer.</p></div>
+        </div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>07</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> pandas <span class="k">as</span> pd
+<span class="k">from</span> sklearn.model_selection <span class="k">import</span> train_test_split
+<span class="k">from</span> sklearn.pipeline <span class="k">import</span> make_pipeline
+<span class="k">from</span> sklearn.compose <span class="k">import</span> make_column_transformer
+<span class="k">from</span> sklearn.preprocessing <span class="k">import</span> OneHotEncoder, StandardScaler
+<span class="k">from</span> sklearn.linear_model <span class="k">import</span> LogisticRegression
+<span class="k">from</span> sklearn.metrics <span class="k">import</span> classification_report, roc_auc_score
+
+df = pd.<span class="f">read_csv</span>(<span class="s">&quot;datasets/raw/titanic.csv&quot;</span>)
+X, y = df.<span class="f">drop</span>(columns=<span class="s">&quot;Survived&quot;</span>), df[<span class="s">&quot;Survived&quot;</span>]
+X_tr, X_te, y_tr, y_te = <span class="f">train_test_split</span>(X, y, test_size=<span class="n">0.2</span>, stratify=y, random_state=<span class="n">42</span>)
+
+prep = <span class="f">make_column_transformer</span>((<span class="f">OneHotEncoder</span>(), [<span class="s">&quot;Sex&quot;</span>, <span class="s">&quot;Pclass&quot;</span>]), remainder=<span class="f">StandardScaler</span>())
+model = <span class="f">make_pipeline</span>(prep, <span class="f">LogisticRegression</span>(C=<span class="n">1.0</span>, max_iter=<span class="n">1000</span>)).<span class="f">fit</span>(X_tr, y_tr)
+proba = model.<span class="f">predict_proba</span>(X_te)[:, <span class="n">1</span>]
+<span class="k">print</span>(<span class="f">classification_report</span>(y_te, proba &gt;= <span class="n">0.5</span>), <span class="s">&quot;AUC&quot;</span>, <span class="f">roc_auc_score</span>(y_te, proba))</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using 0.5 as the threshold by default. The right threshold depends on the cost of each kind of mistake.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Reading coefficients without scaling, or without remembering they are on the log-odds scale.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Judging an imbalanced problem by accuracy. Look at <a class="inline" href="../../concepts/precision-recall-f1/">precision, recall</a> and <a class="inline" href="../../concepts/roc-auc/">AUC</a>.</span></li></ul>
+      </section>
+      <section class="reveal" id="results">
+        <h2 class="h3"><span>08</span> On real data</h2>
+        <p>Logistic regression trained on 80% of the Titanic sample and scored on a stratified 20% hold-out. The baseline always predicts the most common class.</p>
+        <div class="table-wrap" style="margin-top:18px"><table class="kv results-table">
+          <thead><tr><th>Metric</th><th>Logistic regression</th><th>Majority class</th></tr></thead>
+          <tbody><tr><td>Accuracy</td><td>0.960</td><td>0.630</td></tr><tr><td>F1 (survived)</td><td>0.946</td><td>0.000</td></tr><tr><td>ROC-AUC</td><td>0.983</td><td>0.500</td></tr></tbody>
+        </table></div>
+        <p class="note">Produced by <a href="https://github.com/yogesh660/ml-model-zoo/blob/main/models/logistic_regression/train.py" target="_blank" rel="noopener">models/logistic_regression/train.py</a> · generated 2026-10-28. Run it yourself: <code class="no-math">python models/logistic_regression/train.py</code></p>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>09</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>A coefficient of $w_j = 0.7$ means that one unit more of $x_j$ (others fixed):</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Has no direct interpretation</span></button><button class="opt" type="button"><b>B</b><span>Raises the log-odds by 7%</span></button><button class="opt" type="button"><b>C</b><span>Raises the probability by 0.7</span></button><button class="opt" type="button"><b>D</b><span>Multiplies the odds by $e^{0.7} \approx 2$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The model is linear in log-odds, so a change of 0.7 in log-odds multiplies the odds by $e^{0.7}$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>Why is log-loss used instead of squared error?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It needs no regularisation</span></button><button class="opt" type="button"><b>B</b><span>It is the Bernoulli negative log-likelihood and keeps the problem convex</span></button><button class="opt" type="button"><b>C</b><span>It ignores confident mistakes</span></button><button class="opt" type="button"><b>D</b><span>It is faster</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Squared error on a sigmoid output is non-convex and penalises confident mistakes too weakly.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>On perfectly separable data with no regularisation, the weights:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Equal the LDA solution</span></button><button class="opt" type="button"><b>B</b><span>Converge to a unique value</span></button><button class="opt" type="button"><b>C</b><span>Grow without bound</span></button><button class="opt" type="button"><b>D</b><span>Become zero</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Scaling the weights up always makes the sigmoid sharper and the likelihood higher, so there is no finite optimum.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q4</span>What is the range of the standard logistic sigmoid function $\sigma(z) = \frac{1}{1 + e^{-z}}$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The set of positive real numbers $(0, \infty)$</span></button><button class="opt" type="button"><b>B</b><span>The interval $[0, \infty)$</span></button><button class="opt" type="button"><b>C</b><span>The open interval $(0, 1)$</span></button><button class="opt" type="button"><b>D</b><span>The closed interval $[-1, 1]$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> For any real input $z \in (-\infty, \infty)$, $e^{-z} &gt; 0$, so $\sigma(z) = \frac{1}{1 + e^{-z}}$ is strictly bounded between 0 and 1, never reaching exactly 0 or 1.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q5</span>What does regularisation parameter $C$ represent in scikit-learn's LogisticRegression?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The degree of the polynomial kernel</span></button><button class="opt" type="button"><b>B</b><span>The classification decision threshold</span></button><button class="opt" type="button"><b>C</b><span>The inverse of regularisation strength ($C = 1/\lambda$): smaller $C$ imposes stronger regularisation</span></button><button class="opt" type="button"><b>D</b><span>The learning rate for stochastic gradient descent</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In scikit-learn, $C$ multiplies the loss term (or divides the penalty): $\mathcal{L} = \text{Loss} + \frac{1}{2C}\lVert w\rVert^2$. Thus smaller $C$ strengthens regularisation, while large $C$ allows weights to grow to fit the training data.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q6</span>What is the logit (log-odds) function, which inverts the logistic sigmoid?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$\operatorname{logit}(p) = e^p - e^{-p}$</span></button><button class="opt" type="button"><b>B</b><span>$\operatorname{logit}(p) = \log(p) \cdot \log(1 - p)$</span></button><button class="opt" type="button"><b>C</b><span>$\operatorname{logit}(p) = \frac{1}{\log(p)}$</span></button><button class="opt" type="button"><b>D</b><span>$\operatorname{logit}(p) = \log\left(\frac{p}{1 - p}\right)$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The odds ratio is $\frac{p}{1 - p}$. Taking the natural logarithm gives the logit function $\log\frac{p}{1-p} = w^\top x + b$, mapping probability $p \in (0, 1)$ to real scores in $(-\infty, \infty)$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q7</span>How does Multinomial Logistic Regression (softmax regression) model $K &gt; 2$ classes compared to One-vs-Rest (OvR)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Multinomial models all $K$ classes jointly using the softmax function $\frac{e^{w_k^\top x}}{\sum_j e^{w_j^\top x}}$, whereas OvR trains $K$ independent binary classifiers</span></button><button class="opt" type="button"><b>B</b><span>OvR requires all features to be independent, while Multinomial does not</span></button><button class="opt" type="button"><b>C</b><span>OvR always achieves higher accuracy than Multinomial</span></button><button class="opt" type="button"><b>D</b><span>Multinomial regression can only be solved with L1 regularisation</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In Multinomial logistic regression (multi_class='multinomial'), the model directly estimates the joint categorical distribution using the softmax normaliser. OvR trains $K$ separate binary models whose independent probabilities may not sum to 1.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q8</span>Why is feature standardisation important before fitting regularised Logistic Regression?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because regularisation penalises all weights equally ($\lVert w\rVert^2$); unscaled features with small numeric values will require large weights that get penalised unfairly</span></button><button class="opt" type="button"><b>B</b><span>Because gradient descent fails to terminate on unscaled features</span></button><button class="opt" type="button"><b>C</b><span>Because unscaled features make the log-loss non-convex</span></button><button class="opt" type="button"><b>D</b><span>Because the logistic function cannot accept negative numbers</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The penalty $\frac{1}{2C}\sum w_j^2$ treats every coefficient identically. If feature 1 is measured in metres and feature 2 in kilometres, $w_2$ must be 1,000 times larger to exert the same effect, causing it to be heavily penalised simply due to unit choice.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q9</span>Which solver in scikit-learn's LogisticRegression supports both L1 and L2 regularisation as well as Elastic Net?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>lbfgs</span></button><button class="opt" type="button"><b>B</b><span>saga</span></button><button class="opt" type="button"><b>C</b><span>newton-cg</span></button><button class="opt" type="button"><b>D</b><span>liblinear</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The saga (Stochastic Average Gradient Descent) solver handles non-smooth L1 penalties, L2 penalties, and Elastic Net combinations, while scaling well to large datasets. lbfgs only supports L2 (and no penalty).</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q10</span>A logistic regression model has intercept $b = -0.5$ and weights $w_1 = 0.5, w_2 = -1.0$. For a test sample with features $x_1 = 4.0, x_2 = 1.0$, what is the predicted probability $P(y = 1 \mid x)$? (Given $e^{-0.5} \approx 0.6065$).</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$P(y = 1 \mid x) = 0.500$</span></button><button class="opt" type="button"><b>B</b><span>$P(y = 1 \mid x) = 0.731$</span></button><button class="opt" type="button"><b>C</b><span>$P(y = 1 \mid x) = 0.378$</span></button><button class="opt" type="button"><b>D</b><span>$P(y = 1 \mid x) = 0.622$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The linear score is $z = 0.5(4.0) - 1.0(1.0) - 0.5 = 2.0 - 1.0 - 0.5 = +0.5$. The probability is $\sigma(0.5) = \frac{1}{1 + e^{-0.5}} \approx \frac{1}{1 + 0.6065} \approx 0.622$.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q11</span>In a medical logistic regression model, feature $x_1$ is blood pressure in tens of mmHg, with fitted coefficient $w_1 = 0.4055$ (so $e^{0.4055} \approx 1.50$). If a patient's blood pressure increases by 20 mmHg (2 units of $x_1$) with other factors held constant, by what factor are their odds of disease multiplied?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Multiplied by $3.00$</span></button><button class="opt" type="button"><b>B</b><span>Increased by $40.55\%$</span></button><button class="opt" type="button"><b>C</b><span>Multiplied by $2.25$</span></button><button class="opt" type="button"><b>D</b><span>Multiplied by $1.50$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> For a change of $\Delta x = 2$ units, the change in log-odds is $2 w_1$. The odds are multiplied by $e^{2 w_1} = (e^{w_1})^2 = (1.50)^2 = 2.25$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q12</span>For two test samples with true labels $y = [1, 0]$ and predicted probabilities $p = [0.80, 0.40]$, what is the exact average binary cross-entropy loss $\mathcal{L} = -\frac{1}{2}\sum [y_i \log p_i + (1 - y_i)\log(1 - p_i)]$? (Using $\log(0.80) \approx -0.223$ and $\log(0.60) \approx -0.511$).</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$0.367$</span></button><button class="opt" type="button"><b>B</b><span>$0.511$</span></button><button class="opt" type="button"><b>C</b><span>$0.734$</span></button><button class="opt" type="button"><b>D</b><span>$0.200$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Sample 1 ($y=1$): $-\log(0.80) \approx 0.223$. Sample 2 ($y=0$): $-\log(1 - 0.40) = -\log(0.60) \approx 0.511$. Average loss is $\frac{0.223 + 0.511}{2} = \frac{0.734}{2} = 0.367$.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>10</span> Related lessons</h2>
+        <div class="related"><a href="../../models/linear_discriminant_analysis/"><small class="kicker">Classification</small><b>LDA</b></a><a href="../../models/support_vector_classifier/"><small class="kicker">Classification</small><b>Support vector classifier</b></a><a href="../../models/perceptron/"><small class="kicker">Deep learning</small><b>Perceptron</b></a><a href="../../concepts/maximum-likelihood-estimation/"><small class="kicker">Concept</small><b>Maximum likelihood</b></a><a href="../../concepts/confusion-matrix/"><small class="kicker">Concept</small><b>Confusion matrix</b></a><a href="../../concepts/roc-auc/"><small class="kicker">Concept</small><b>ROC and AUC</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/mars/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Regression</small><b>MARS</b></a>
+    <a class="pager-next" href="../../models/linear_discriminant_analysis/"><small>Next · Classification <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>LDA</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/sequences.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

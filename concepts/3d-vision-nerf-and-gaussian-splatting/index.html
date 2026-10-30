@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Neural Rendering and 3D Reconstruction: Neural Radiance Fields (NeRF) and 3D Gaussian Splatting · Learn · Yogesh Awate</title>
+<meta name="description" content="Synthesizing novel photorealistic 3D viewpoints using implicit coordinate MLPs (NeRF) and real-time explicit rasterisation with 3D Gaussian Splatting.">
+<meta property="og:title" content="Neural Rendering and 3D Reconstruction: Neural Radiance Fields (NeRF) and 3D Gaussian Splatting · Learn · Yogesh Awate">
+<meta property="og:description" content="Synthesizing novel photorealistic 3D viewpoints using implicit coordinate MLPs (NeRF) and real-time explicit rasterisation with 3D Gaussian Splatting.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="3d-vision-nerf-and-gaussian-splatting">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-vision">Path 09 · Computer vision</a> / Applications / Lesson 35 of 37</span>
+    <h1 class="case-title">Neural Rendering and 3D Reconstruction: Neural Radiance Fields (NeRF) and 3D Gaussian Splatting</h1>
+    <p class="lede rise" style="--d:3">Synthesizing novel photorealistic 3D viewpoints using implicit coordinate MLPs (NeRF) and real-time explicit rasterisation with 3D Gaussian Splatting.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="3"><i><b></b></i>Advanced</span></span>
+      <span class="tagline">18 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Computer vision · Applications</dd>
+          <dt>Level</dt><dd>Advanced</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Reconstructing continuous, photorealistic 3D worlds from a collection of 2D photographs has been the holy grail of computer vision. Neural Radiance Fields (NeRF; Mildenhall et al., 2020) revolutionized the field by representing 3D scenes as continuous volumetric functions encoded inside neural network weights. 3D Gaussian Splatting (Kerbl et al., 2023) then solved NeRF's agonizingly slow rendering speeds, achieving real-time 100+ FPS novel view synthesis via explicit differentiable 3D ellipsoids.</p>
+        <p>Given a set of 2D photos with known camera poses (from COLMAP Structure-from-Motion), Novel View Synthesis seeks to render the scene from an unseen camera perspective.</p>
+        <p>NeRF parameterises a 3D scene as a continuous volumetric function using a Multi-Layer Perceptron (MLP): $F_\theta: (x, y, z, \theta, \phi) \to (r, g, b, \sigma)$, mapping 3D position and 2D viewing direction to RGB colour and volume density $\sigma$. High-frequency details are captured using Fourier Positional Encodings $\gamma(p) = [\sin(2^k \pi p), \cos(2^k \pi p)]$.</p>
+        <p>To render a pixel, NeRF casts a camera ray $\mathbf{r}(t) = \mathbf{o} + t \mathbf{d}$, samples hundreds of points along the ray, and integrates colours using numerical volume rendering. While photorealistic, rendering a single $1080p$ frame requires querying the MLP billions of times, taking 10–30 seconds per frame.</p>
+        <p>3D Gaussian Splatting replaces the implicit neural MLP with explicit 3D Gaussians. Each Gaussian possesses 3D position $\mu$, a 3D covariance matrix $\Sigma$ (parameterised by scale and rotation quaternion), opacity $\alpha$, and spherical harmonics (SH) for view-dependent colour. Using tile-based GPU rasterisation, Gaussian Splatting renders photorealistic scenes at 100+ FPS with fast training.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine sculpting a glowing glass sculpture. NeRF is like having a mathematical equation that calculates the exact colour and smoke density for any $(x, y, z)$ coordinate in mid-air: to photograph the sculpture, a virtual camera shoots rays through every pixel, performing millions of mathematical volume calculations along each laser ray. 3D Gaussian Splatting is like sculpting the scene out of 500,000 tiny semi-transparent glowing fuzzy beads (Gaussians): rendering a photo simply flattens (splats) the beads directly onto the camera lens using high-speed GPU graphics rasterisation.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Estimate camera poses via SfM: Run COLMAP on multi-view photos to compute intrinsic parameters $\mathbf{K}$, extrinsic poses $[\mathbf{R} \mid \mathbf{t}]$, and sparse 3D point cloud.</li><li>Initialize scene representation: For NeRF, initialize continuous coordinate MLP with positional encodings; for 3DGS, initialize 3D Gaussian ellipsoids from the sparse SfM point cloud.</li><li>Cast camera rays (NeRF): For target viewpoint, shoot rays $\mathbf{r}(t) = \mathbf{o} + t \mathbf{d}$ through each pixel; sample stratified points along each ray.</li><li>Project Gaussians to 2D image plane (3DGS): Project 3D covariance matrices into 2D camera coordinates $\Sigma' = \mathbf{J} \mathbf{W} \Sigma \mathbf{W}^T \mathbf{J}^T$.</li><li>Tile-based rasterisation (3DGS): Sort 2D Gaussians by depth; accumulate colour and opacity along pixels using alpha blending in high-speed GPU shared memory.</li><li>Optimise parameters: Compute photometric loss $\mathcal{L} = \|I_{\mathrm{rendered}} - I_{\mathrm{ground\_truth}}\|^2$ and backpropagate gradients into Gaussian parameters or MLP weights.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Volumetric Optical Ray Rendering (NeRF)</h3><div class="formula">C(\mathbf{r}) = \int_{t_n}^{t_f} T(t) \cdot \sigma(\mathbf{r}(t)) \cdot \mathbf{c}(\mathbf{r}(t), \mathbf{d}) \, dt, \quad T(t) = \exp\left( -\int_{t_n}^t \sigma(\mathbf{r}(s)) \, ds \right)</div><p>Accumulates emitted colour $\mathbf{c}$ along camera ray $\mathbf{r}(t)$ weighted by volume density $\sigma$ and cumulative transmittance $T(t)$ (probability that ray traverses without hitting an obstacle).</p></li>
+          <li><h3>Fourier Positional Encoding Mapping</h3><div class="formula">\gamma(p) = \left( \sin(2^0 \pi p), \; \cos(2^0 \pi p), \; \dots, \; \sin(2^{L-1} \pi p), \; \cos(2^{L-1} \pi p) \right)</div><p>Overcomes the spectral bias of deep MLPs, enabling coordinates to represent sharp high-frequency textures and geometric edges.</p></li>
+          <li><h3>3D Gaussian Ellipsoid Covariance Parameterisation</h3><div class="formula">G(x) = \exp\left( -\frac{1}{2} (x - \mu)^T \Sigma^{-1} (x - \mu) \right), \quad \Sigma = \mathbf{R} \mathbf{S} \mathbf{S}^T \mathbf{R}^T</div><p>Parameterises 3D covariance $\Sigma$ via scaling matrix $\mathbf{S}$ and rotation quaternion $\mathbf{R}$ to enforce positive semi-definiteness.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Novel view synthesis reconstructs continuous 3D scenes from a collection of calibrated 2D photos.</li><li>NeRF models scenes as continuous volumetric functions $(x, y, z, \theta, \phi) \to (\text{RGB}, \sigma)$ in an MLP.</li><li>Fourier positional encodings overcome spectral bias, enabling MLPs to capture high-frequency detail.</li><li>3D Gaussian Splatting uses explicit 3D ellipsoids and tile-based rasterisation for real-time 100+ FPS rendering.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">def</span> <span class="f">positional_encoding_1d</span>(coords: np.ndarray, num_frequencies: int = <span class="n">4</span>) -&gt; np.ndarray:
+    <span class="s">&quot;&quot;&quot;Fourier positional encoding mapping scalar coordinates to high-frequency vectors.&quot;&quot;&quot;</span>
+    <span class="c"># Overcomes MLP spectral bias in NeRF (Mildenhall et al., 2020)</span>
+    freq_bands = <span class="n">2.0</span> ** np.<span class="f">arange</span>(num_frequencies) * np.pi
+    <span class="c"># coords shape: [N, 1]</span>
+    sin_components = np.<span class="f">sin</span>(coords * freq_bands)
+    cos_components = np.<span class="f">cos</span>(coords * freq_bands)
+    <span class="k">return</span> np.<span class="f">column_stack</span>([sin_components, cos_components])
+
+<span class="c"># Simulate encoding a 1D spatial coordinate x = 0.35</span>
+x_coord = np.<span class="f">array</span>([[<span class="n">0.35</span>]])
+encoded_feature = <span class="f">positional_encoding_1d</span>(x_coord, num_frequencies=<span class="n">4</span>)
+
+<span class="k">print</span>(<span class="s">f&quot;Original 1D Coordinate: {x_coord[0, 0]:.2f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Fourier Encoded Shape: {encoded_feature.shape} (8-D sinusoidal vector)&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;Encoded Vector:&quot;</span>, np.<span class="f">round</span>(encoded_feature[<span class="n">0</span>], <span class="n">3</span>))
+<span class="k">print</span>(<span class="s">&quot;High-frequency Fourier features allow deep MLPs to represent sharp edges!&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Camera pose inaccuracy: NeRF and Gaussian Splatting require sub-pixel accurate camera poses from COLMAP; noisy camera poses cause blurry or fractured ghosting artifacts.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Agonizingly slow NeRF rendering: Standard vanilla NeRF takes up to 30 seconds to render a single 1080p frame due to ray-marching volume integrals; use Instant-NGP or 3D Gaussian Splatting for real-time speeds.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Floaters and artifacts in unconstrained regions: In areas with sparse photographic coverage (e.g. background skies or behind furniture), 3DGS produces floating needle-like artifacts; prune low-opacity Gaussians.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>Why does NeRF use Fourier Positional Encodings $\gamma(p)$ on spatial coordinates before passing them to the MLP?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Deep MLPs suffer from spectral bias (inherent bias toward low frequencies); positional encodings project low-dimensional coordinates into high frequencies, allowing the network to represent sharp textures and crisp edges</span></button><button class="opt" type="button"><b>B</b><span>To convert colour images to grayscale</span></button><button class="opt" type="button"><b>C</b><span>To compress the model weights into an archive</span></button><button class="opt" type="button"><b>D</b><span>Because neural networks cannot accept floating point numbers directly</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Neural Tangent Kernel theory proves standard MLPs easily learn smooth low-frequency functions but struggle with high-frequency details. Fourier encoding bridges this spectral bias.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>What is the primary breakthrough of 3D Gaussian Splatting (Kerbl et al., 2023) over original NeRF?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It eliminates the need for camera poses</span></button><button class="opt" type="button"><b>B</b><span>It generates audio from photographs</span></button><button class="opt" type="button"><b>C</b><span>3D Gaussian Splatting only works on cartoons</span></button><button class="opt" type="button"><b>D</b><span>It replaces slow volumetric ray-marching with explicit 3D Gaussian ellipsoids and GPU tile-based rasterisation, achieving real-time rendering at 100+ FPS with competitive visual fidelity</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> NeRF evaluates an MLP hundreds of times per pixel along each ray. Gaussian Splatting projects explicit 3D Gaussians directly onto the screen, rasterizing in real time.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>What does "Volume Density" $\sigma(x, y, z)$ represent in NeRF's volumetric rendering equation?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The differential probability of a camera ray terminating by hitting an opaque physical particle at that infinitesimal 3D location</span></button><button class="opt" type="button"><b>B</b><span>The sound volume of the video</span></button><button class="opt" type="button"><b>C</b><span>The weight of the camera in kilograms</span></button><button class="opt" type="button"><b>D</b><span>The brightness of ambient sunlight</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Density $\sigma$ represents opacity at coordinate $(x, y, z)$. High density means solid matter (ray terminates and emits colour); zero density means empty air (ray passes through).</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/camera-model-and-calibration/"><small class="kicker">Concept</small><b>Camera model &amp; calibration</b></a><a href="../../concepts/stereo-vision-and-depth/"><small class="kicker">Concept</small><b>Stereo vision &amp; depth</b></a><a href="../../concepts/geometric-transforms-and-homography/"><small class="kicker">Concept</small><b>Homography &amp; Transforms</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/video-models-3d-cnn-and-slowfast/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Computer vision</small><b>Video models: 3D CNN &amp; SlowFast</b></a>
+    <a class="pager-next" href="../../concepts/medical-imaging/"><small>Next · Computer vision <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Medical Imaging &amp; 3D Seg</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Dialogue Systems: Task-Oriented Dialogue, Slot Filling, and Conversational State Tracking · Learn · Yogesh Awate</title>
+<meta name="description" content="Dialogue systems bifurcate into open-domain chit-chat (conversational engagement) and task-oriented dialogue (goal completion). Traditional TOD pipelines operate as modular pipelines: NLU (intent classification and slot filling), DST (dialogue state tracking), DP (dialogue policy), and NLG (natural language generation). Dialogue State Tracking (DST) maintains an accumulated belief state across multi-turn exchanges, tracking active domain constraints (slots and values). End-to-end neural dialogue models combine pipeline stages into single autoregressive models conditioned on dialogue history and database query results.">
+<meta property="og:title" content="Dialogue Systems: Task-Oriented Dialogue, Slot Filling, and Conversational State Tracking · Learn · Yogesh Awate">
+<meta property="og:description" content="Dialogue systems bifurcate into open-domain chit-chat (conversational engagement) and task-oriented dialogue (goal completion). Traditional TOD pipelines operate as modular pipelines: NLU (intent classification and slot filling), DST (dialogue state tracking), DP (dialogue policy), and NLG (natural language generation). Dialogue State Tracking (DST) maintains an accumulated belief state across multi-turn exchanges, tracking active domain constraints (slots and values). End-to-end neural dialogue models combine pipeline stages into single autoregressive models conditioned on dialogue history and database query results.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="dialogue-systems">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-nlp">Path 10 · Natural language processing</a> / Tasks and evaluation / Lesson 47 of 52</span>
+    <h1 class="case-title">Dialogue Systems: Task-Oriented Dialogue, Slot Filling, and Conversational State Tracking</h1>
+    <p class="lede rise" style="--d:3">Dialogue systems bifurcate into open-domain chit-chat (conversational engagement) and task-oriented dialogue (goal completion). Traditional TOD pipelines operate as modular pipelines: NLU (intent classification and slot filling), DST (dialogue state tracking), DP (dialogue policy), and NLG (natural language generation). Dialogue State Tracking (DST) maintains an accumulated belief state across multi-turn exchanges, tracking active domain constraints (slots and values). End-to-end neural dialogue models combine pipeline stages into single autoregressive models conditioned on dialogue history and database query results.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Natural language processing · Tasks and evaluation</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Dialogue systems enable multi-turn natural interactions between humans and computers. Task-Oriented Dialogue (TOD) architectures coordinate Natural Language Understanding (intent detection and slot filling), Dialogue State Tracking (DST), and policy optimisation to help users accomplish concrete goals such as flight reservations and technical support.</p>
+        <p>When you chat with a flight booking assistant, the conversation happens across multiple turns: "I need a flight to Paris" (Turn 1), "Sure, when do you want to depart?" (Turn 2), "Next Friday morning" (Turn 3). To book the flight, the assistant cannot treat Turn 3 in isolation—saying "Next Friday morning" without context means nothing. The assistant must remember the destination ("Paris") from Turn 1, combine it with the departure time ("next Friday morning") from Turn 3, check the airline database, and offer flight choices. This memory tracking mechanism is called Dialogue State Tracking (DST). It maps free-form conversational utterances into a structured "belief state" (e.g. `destination: Paris`, `departure_date: 2026-11-06`) that a computer database can execute.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine ordering food at a busy diner counter. You say "Give me a burger", then "Make it medium rare", and finally "Add cheddar on that". The server does not throw away their order pad after each sentence. They hold a clipboard (the Dialogue State) where they check off burger, write "medium rare", and add "cheddar". Once all necessary fields are filled, they hand the slip to the kitchen.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Parse incoming user utterance: run intent classification (e.g. `inform_booking`) and slot filling (BIO tagging for parameters).</li><li>Update dialogue belief state: combine new extracted slots with prior history, resolving anaphoric references (e.g. "there" -> Paris).</li><li>Query backend database: execute API calls or database lookups using the constraints stored in the updated dialogue state.</li><li>Select dialogue action: evaluate the dialogue policy to decide system response strategy (e.g. request missing slot, present options, confirm booking).</li><li>Generate response: synthesize natural language response reflecting the chosen action and database query results.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Dialogue Systems: Task-Oriented Dialogue, Slot Filling, and Conversational State Tracking formulation (Part 1)</h3><div class="formula">P(S_t \mid H_t) = \prod_{k=1}^K P(w_k \mid w_{<k}, H_t)</div><p>In discriminative slot filling, slot labels are predicted using sequence tagging:</p></li>
+          <li><h3>Dialogue Systems: Task-Oriented Dialogue, Slot Filling, and Conversational State Tracking formulation (Part 2)</h3><div class="formula">y_i = \arg\max_{c \in \mathcal{C}} P(y_i = c \mid x_1, \dots, x_N)</div><p>Dialogue policy selection maps state $S_t$ and database return $D_t$ to system action $a_t \in \mathcal{A}$:</p></li>
+          <li><h3>Dialogue Systems: Task-Oriented Dialogue, Slot Filling, and Conversational State Tracking formulation (Part 3)</h3><div class="formula">a_t = \pi(S_t, D_t)</div><p>Turn-level Joint Goal Accuracy (JGA) evaluates whether all slot-value pairs match the ground-truth state exactly:</p></li>
+          <li><h3>Dialogue Systems: Task-Oriented Dialogue, Slot Filling, and Conversational State Tracking formulation (Part 4)</h3><div class="formula">\text{JGA} = \frac{1}{T} \sum_{t=1}^T \mathbb{I}(\hat{S}_t = S_t^*)</div><p>Turn-level Joint Goal Accuracy (JGA) evaluates whether all slot-value pairs match the ground-truth state exactly:</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Task-oriented dialogue systems guide users to goal completion by coordinating NLU, state tracking, and backend API actions.</li><li>Dialogue State Tracking maintains structured belief states across multi-turn exchanges, overcoming context fragmentation.</li><li>Joint Goal Accuracy provides a rigorous benchmark for evaluating multi-turn conversational understanding.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">class</span> DialogueStateTracker:
+    <span class="s">&quot;&quot;&quot;Maintains belief state across multi-turn task-oriented dialogue.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>):
+        <span class="k">self</span>.state = {}
+        
+    <span class="k">def</span> <span class="f">update</span>(<span class="k">self</span>, user_slots):
+        <span class="s">&quot;&quot;&quot;Updates internal slot-value memory with newly detected slots.&quot;&quot;&quot;</span>
+        <span class="k">for</span> slot, value <span class="k">in</span> user_slots.<span class="f">items</span>():
+            <span class="k">if</span> value is <span class="k">not</span> <span class="k">None</span>:
+                <span class="k">self</span>.state[slot] = value
+        <span class="k">return</span> <span class="k">self</span>.state
+        
+    <span class="k">def</span> <span class="f">get_missing_slots</span>(<span class="k">self</span>, required_slots):
+        <span class="s">&quot;&quot;&quot;Identifies which essential slots have not yet been provided.&quot;&quot;&quot;</span>
+        <span class="k">return</span> [s <span class="k">for</span> s <span class="k">in</span> required_slots <span class="k">if</span> s <span class="k">not</span> <span class="k">in</span> <span class="k">self</span>.state]
+
+<span class="c"># Simulate a 3-turn hotel booking exchange</span>
+tracker = <span class="f">DialogueStateTracker</span>()
+required_slots = [<span class="s">&quot;destination&quot;</span>, <span class="s">&quot;check_in_date&quot;</span>, <span class="s">&quot;room_type&quot;</span>]
+
+<span class="c"># Turn 1: &quot;I'd like to book a luxury room in Berlin&quot;</span>
+turn1_extracted = {<span class="s">&quot;destination&quot;</span>: <span class="s">&quot;Berlin&quot;</span>, <span class="s">&quot;room_type&quot;</span>: <span class="s">&quot;luxury&quot;</span>}
+state1 = tracker.<span class="f">update</span>(turn1_extracted)
+missing1 = tracker.<span class="f">get_missing_slots</span>(required_slots)
+
+<span class="k">print</span>(<span class="s">&quot;Turn 1 Dialogue State:&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;  State: {state1}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;  System Action: Request missing slot -&gt; '{missing1[0]}'&quot;</span>)
+
+<span class="c"># Turn 2: User responds: &quot;Arriving on 12th December&quot;</span>
+turn2_extracted = {<span class="s">&quot;check_in_date&quot;</span>: <span class="s">&quot;2026-12-12&quot;</span>}
+state2 = tracker.<span class="f">update</span>(turn2_extracted)
+missing2 = tracker.<span class="f">get_missing_slots</span>(required_slots)
+
+<span class="k">print</span>(<span class="s">&quot;\nTurn 2 Dialogue State:&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;  State: {state2}&quot;</span>)
+<span class="k">if</span> <span class="k">not</span> missing2:
+    <span class="k">print</span>(<span class="s">&quot;  System Action: All slots satisfied! Executing database search API call...&quot;</span>)
+    <span class="k">print</span>(<span class="s">f&quot;  API Query: SEARCH_HOTELS(city='{state2['destination']}', date='{state2['check_in_date']}', type='{state2['room_type']}')&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Failing to handle user slot correction; if a user says "Actually, make that London instead", the system must overwrite the destination slot rather than appending to it.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Evaluating dialogue systems solely on turn-level accuracy rather than end-to-end task success rate.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Exposing database schemas directly to free-form generation models without validation filters, enabling prompt injections through dialogue parameters.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>What is the primary function of Dialogue State Tracking (DST) in a task-oriented conversational agent?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To maintain an accurate, structured record of user goals, slot values, and constraints across multi-turn interactions</span></button><button class="opt" type="button"><b>B</b><span>To generate audio waveforms for speech synthesizers</span></button><button class="opt" type="button"><b>C</b><span>To assign parts of speech to individual words</span></button><button class="opt" type="button"><b>D</b><span>To compress conversation history into single-character tokens</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> DST tracks user intent and constraints across turns into an updated belief state, which acts as the parameter set for backend API queries.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>What is Joint Goal Accuracy (JGA) in dialogue system evaluation?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The BLEU score between system response and user prompt</span></button><button class="opt" type="button"><b>B</b><span>The average speed of user typing in the chat interface</span></button><button class="opt" type="button"><b>C</b><span>The percentage of turns where every single predicted slot-value pair in the dialogue state matches ground truth exactly</span></button><button class="opt" type="button"><b>D</b><span>The total number of conversation turns before termination</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> JGA is a strict metric: a turn is scored as 1 only if all slot values in the dialogue state are completely correct; if even one slot is wrong or missing, the turn score is 0.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>What distinguishes Task-Oriented Dialogue (TOD) from Open-Domain Chit-Chat?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>TOD only supports English</span></button><button class="opt" type="button"><b>B</b><span>Chit-chat systems cannot process multi-turn input</span></button><button class="opt" type="button"><b>C</b><span>TOD focuses on helping users accomplish specific transactional tasks via APIs, while chit-chat focuses on engaging conversation without explicit task goals</span></button><button class="opt" type="button"><b>D</b><span>TOD runs on neural networks while chit-chat uses rule-based templates</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Task-oriented dialogue systems are designed to complete specific goals (booking travel, customer support) through structured APIs, whereas chit-chat systems focus on conversational engagement.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/the-agent-loop-react/"><small class="kicker">Concept</small><b>ReAct Agent Loop</b></a><a href="../../concepts/prompting-and-in-context-learning/"><small class="kicker">Concept</small><b>Prompting &amp; In-Context Learning</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/information-and-relation-extraction/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Natural language processing</small><b>Relation Extraction &amp; OpenIE</b></a>
+    <a class="pager-next" href="../../concepts/coreference-resolution/"><small>Next · Natural language processing <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Coreference Resolution</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

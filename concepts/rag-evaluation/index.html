@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>RAG evaluation · Learn · Yogesh Awate</title>
+<meta name="description" content="Evaluating Retrieval-Augmented Generation (RAG) pipelines requires decomposing the system into distinct retrieval and generation components rather than relying solely on end-to-end black-box assessment. The standard industry methodology—formalised in frameworks like RAGAS and TruLens—evaluates the &quot;RAG Triad&quot;: Context Relevance (did the retriever return pertinent chunks without extraneous noise?), Groundedness / Faithfulness (is the generated answer strictly supported by the retrieved context, devoid of hallucination?), and Answer Relevance (does the response directly address the user's initial question?).">
+<meta property="og:title" content="RAG evaluation · Learn · Yogesh Awate">
+<meta property="og:description" content="Evaluating Retrieval-Augmented Generation (RAG) pipelines requires decomposing the system into distinct retrieval and generation components rather than relying solely on end-to-end black-box assessment. The standard industry methodology—formalised in frameworks like RAGAS and TruLens—evaluates the &quot;RAG Triad&quot;: Context Relevance (did the retriever return pertinent chunks without extraneous noise?), Groundedness / Faithfulness (is the generated answer strictly supported by the retrieved context, devoid of hallucination?), and Answer Relevance (does the response directly address the user's initial question?).">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="rag-evaluation">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ai">Path 11 · AI</a> / Retrieval and RAG / Lesson 25 of 42</span>
+    <h1 class="case-title">RAG evaluation</h1>
+    <p class="lede rise" style="--d:3">Evaluating Retrieval-Augmented Generation (RAG) pipelines requires decomposing the system into distinct retrieval and generation components rather than relying solely on end-to-end black-box assessment. The standard industry methodology—formalised in frameworks like RAGAS and TruLens—evaluates the "RAG Triad": Context Relevance (did the retriever return pertinent chunks without extraneous noise?), Groundedness / Faithfulness (is the generated answer strictly supported by the retrieved context, devoid of hallucination?), and Answer Relevance (does the response directly address the user's initial question?).</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/rag-architecture-end-to-end/">RAG Architecture</a> <a href="../../concepts/evaluating-llms-benchmarks-and-judges/">Evaluating LLMs</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>AI · Retrieval and RAG</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">When an enterprise RAG application gives an unsatisfactory response, where did the failure occur? Did the retriever fail to find the necessary technical documents? Did the retriever bring back the right document alongside nine distracting paragraphs that led the model astray? Or did the LLM hallucinate an incorrect statistic despite having the correct facts in front of it? Evaluating RAG systems requires isolating each stage of the pipeline with dedicated metrics, synthetic evaluation datasets, and calibrated LLM-as-a-judge evaluators.</p>
+        <p>The RAG Triad: Three fundamental vectors govern RAG quality:
+- Context Relevance: High signal-to-noise ratio in retrieved passages. Evaluates precision of retriever: are the retrieved chunks actually relevant to answering the query, or is context space cluttered with irrelevant filler?
+- Faithfulness / Groundedness: Faithfulness measures whether every factual claim in the generated answer can be directly inferred from the retrieved context. A hallucinated statement receives a strict penalty.
+- Answer Relevance: Measures whether the generated text actually answers the user's inquiry, irrespective of whether the facts are true. A model that repeats the retrieved facts verbatim but ignores the user's specific question scores zero.</p>
+        <p>Component-Level vs End-to-End Metrics:
+- Retrieval metrics: Mean Reciprocal Rank (MRR), Hit Rate @ K, NDCG @ K, Context Recall (fraction of ground-truth reference points retrieved), and Context Precision (ranking relevant chunks higher than irrelevant ones).
+- Generation metrics: Faithfulness, Answer Semantic Similarity against golden references, and Semantic Answer Relevance (using directional query generation).</p>
+        <p>Synthetic Evaluation Data Generation: Building manual test datasets of hundreds of question-context-answer triples is prohibitively expensive. Modern RAG evaluation synthesises test sets by taking raw document chunks, using an LLM to generate candidate questions of varying complexity (factoid, reasoning, multi-hop), and identifying corresponding ground truth.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine a court trial involving a detective (the retriever), the evidence log (the context), and the prosecuting attorney (the generator). To evaluate the trial:
+1. Context Relevance: Did the detective bring relevant physical evidence to the courtroom, or did they dump boxes of irrelevant grocery receipts on the table?
+2. Faithfulness / Groundedness: Did the prosecutor base their closing speech strictly on the admitted evidence, or did they make up unsubstantiated accusations not found in the documents?
+3. Answer Relevance: Did the prosecutor actually answer the judge's specific legal question, or did they deliver a passionate monologue about a completely different topic?</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Context Precision and Context Recall</h3><div class="formula">\text{Context Precision@K} = \frac{\sum_{k=1}^K \text{Precision@}k \times v_k}{\sum_{k=1}^K v_k}, \quad \text{Context Recall} = \frac{|\mathcal{S}_{\text{ground\_truth}} \cap \mathcal{S}_{\text{retrieved}}|}{|\mathcal{S}_{\text{ground\_truth}}|</div><p>Context Precision evaluates whether relevant chunks are placed at the top of the retrieved ranking list. Here v_k \in \{0, 1\} indicates relevance of the chunk at rank k. Context Recall measures the proportion of key ground-truth factual statements \mathcal{S}_{\text{ground\_truth}} captured within the retrieved contexts.</p></li>
+          <li><h3>Faithfulness / Groundedness Formulation</h3><div class="formula">\text{Faithfulness} = \frac{\sum_{i=1}^{|C(y)|} \mathbb{I}\Big(c_i \in \text{Entailment}(\mathcal{K})\Big)}{|C(y)|}</div><p>Let C(y) = \{c_1, c_2, \dots, c_m\} be the decomposed set of atomic factual claims extracted from generated answer y, and let \mathcal{K} denote the retrieved context. The indicator function equals 1 if claim c_i is logically entailed by \mathcal{K}, and 0 otherwise. A score of 1.0 indicates perfect groundedness devoid of hallucination.</p></li>
+          <li><h3>Answer Relevance via Directional Embedding Similarity</h3><div class="formula">\text{Answer Relevance} = \frac{1}{M} \sum_{j=1}^M \frac{\mathbf{e}(q)^\top \mathbf{e}(\hat{q}_j)}{\|\mathbf{e}(q)\| \, \|\mathbf{e}(\hat{q}_j)\|}, \quad \hat{q}_j \sim p_{\text{judge}}(\cdot \mid y)</div><p>To prevent reward-hacking where a model repeats the context verbatim without addressing the user question, the judge model generates M candidate questions \hat{q}_j that the answer y would naturally address. Cosine similarity between generated question embeddings and the original user query q measures answer relevance.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>RAG evaluation must isolate retrieval quality from generation quality; relying purely on black-box end-to-end metrics obscures the root cause of failures.</li><li>The RAG Triad evaluates Context Relevance (retriever noise ratio), Faithfulness (freedom from hallucination), and Answer Relevance (direct query alignment).</li><li>Faithfulness is quantified by decomposing responses into atomic claims and checking logical entailment against retrieved context passages.</li><li>Synthetic test sets generated by LLMs from raw document chunks provide scalable, reproducible ground-truth benchmarks for continuous integration.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="s">&quot;&quot;&quot;
+Comprehensive RAG Evaluation Framework (The RAG Triad)
+Calculates Context Relevance, Faithfulness (Groundedness),
+and Answer Relevance using structured claim verification.
+&quot;&quot;&quot;</span>
+
+<span class="k">from</span> typing <span class="k">import</span> List, Dict, Tuple
+<span class="k">import</span> re
+
+<span class="k">class</span> RAGEvaluationSample:
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, query: str, contexts: List[str], response: str, ground_truth: str = <span class="s">&quot;&quot;</span>):
+        <span class="k">self</span>.query = query
+        <span class="k">self</span>.contexts = contexts
+        <span class="k">self</span>.response = response
+        <span class="k">self</span>.ground_truth = ground_truth
+
+<span class="k">class</span> RAGEvaluator:
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>):
+        pass
+
+    <span class="k">def</span> <span class="f">_tokenize</span>(<span class="k">self</span>, text: str) -&gt; List[str]:
+        <span class="k">return</span> re.<span class="f">findall</span>(r<span class="s">'\b[a-z0-9]+\b'</span>, text.<span class="f">lower</span>())
+
+    <span class="k">def</span> <span class="f">extract_atomic_claims</span>(<span class="k">self</span>, text: str) -&gt; List[str]:
+        <span class="s">&quot;&quot;&quot;Decompose response into atomic factual claims.&quot;&quot;&quot;</span>
+        sentences = [s.<span class="f">strip</span>() <span class="k">for</span> s <span class="k">in</span> re.<span class="f">split</span>(r<span class="s">'[.!?]'</span>, text) <span class="k">if</span> s.<span class="f">strip</span>()]
+        claims = []
+        <span class="k">for</span> s <span class="k">in</span> sentences:
+            <span class="c"># Further split compound clauses joined by 'and' or 'while'</span>
+            clauses = re.<span class="f">split</span>(r<span class="s">'\b(?:and|while|furthermore)\b'</span>, s, flags=re.IGNORECASE)
+            <span class="k">for</span> c <span class="k">in</span> clauses:
+                clean = c.<span class="f">strip</span>()
+                <span class="k">if</span> <span class="k">len</span>(clean.<span class="f">split</span>()) &gt;= <span class="n">3</span>:
+                    claims.<span class="f">append</span>(clean)
+        <span class="k">return</span> claims
+
+    <span class="k">def</span> <span class="f">evaluate_context_relevance</span>(<span class="k">self</span>, query: str, contexts: List[str]) -&gt; float:
+        <span class="s">&quot;&quot;&quot;Measure fraction of context sentences relevant to the user query.&quot;&quot;&quot;</span>
+        query_words = <span class="f">set</span>(<span class="k">self</span>.<span class="f">_tokenize</span>(query))
+        all_sentences = []
+        <span class="k">for</span> ctx <span class="k">in</span> contexts:
+            sentences = [s.<span class="f">strip</span>() <span class="k">for</span> s <span class="k">in</span> re.<span class="f">split</span>(r<span class="s">'[.!?]'</span>, ctx) <span class="k">if</span> s.<span class="f">strip</span>()]
+            all_sentences.<span class="f">extend</span>(sentences)
+
+        <span class="k">if</span> <span class="k">not</span> all_sentences:
+            <span class="k">return</span> <span class="n">0.0</span>
+
+        relevant_count = <span class="n">0</span>
+        <span class="k">for</span> s <span class="k">in</span> all_sentences:
+            s_words = <span class="f">set</span>(<span class="k">self</span>.<span class="f">_tokenize</span>(s))
+            overlap = <span class="k">len</span>(query_words &amp; s_words)
+            <span class="c"># Sentence is relevant if it shares at least two content words with query</span>
+            <span class="k">if</span> overlap &gt;= <span class="n">2</span>:
+                relevant_count += <span class="n">1</span>
+
+        <span class="k">return</span> <span class="f">round</span>(relevant_count / <span class="k">len</span>(all_sentences), <span class="n">3</span>)
+
+    <span class="k">def</span> <span class="f">evaluate_faithfulness</span>(<span class="k">self</span>, response: str, contexts: List[str]) -&gt; Tuple[float, List[Tuple[str, bool]]]:
+        <span class="s">&quot;&quot;&quot;Verify if each atomic claim in response is entailed by retrieved contexts.&quot;&quot;&quot;</span>
+        claims = <span class="k">self</span>.<span class="f">extract_atomic_claims</span>(response)
+        <span class="k">if</span> <span class="k">not</span> claims:
+            <span class="k">return</span> <span class="n">1.0</span>, []
+
+        full_context_text = <span class="s">&quot; &quot;</span>.<span class="f">join</span>(contexts).<span class="f">lower</span>()
+        context_words = <span class="f">set</span>(<span class="k">self</span>.<span class="f">_tokenize</span>(full_context_text))
+
+        entailment_results = []
+        entailed_count = <span class="n">0</span>
+
+        <span class="k">for</span> claim <span class="k">in</span> claims:
+            claim_words = <span class="k">self</span>.<span class="f">_tokenize</span>(claim)
+            <span class="c"># Verify if key claim words exist within context</span>
+            matched = <span class="f">sum</span>(<span class="n">1</span> <span class="k">for</span> w <span class="k">in</span> claim_words <span class="k">if</span> w <span class="k">in</span> context_words)
+            support_ratio = matched / <span class="k">len</span>(claim_words) <span class="k">if</span> claim_words <span class="k">else</span> <span class="n">0.0</span>
+            
+            <span class="c"># Deem entailed if &gt;= 75% of content terms are substantiated by context</span>
+            is_entailed = support_ratio &gt;= <span class="n">0.75</span>
+            <span class="k">if</span> is_entailed:
+                entailed_count += <span class="n">1</span>
+            entailment_results.<span class="f">append</span>((claim, is_entailed))
+
+        score = <span class="f">round</span>(entailed_count / <span class="k">len</span>(claims), <span class="n">3</span>)
+        <span class="k">return</span> score, entailment_results
+
+    <span class="k">def</span> <span class="f">evaluate_answer_relevance</span>(<span class="k">self</span>, query: str, response: str) -&gt; float:
+        <span class="s">&quot;&quot;&quot;Measure semantic alignment between user query and generated response.&quot;&quot;&quot;</span>
+        query_words = <span class="f">set</span>(<span class="k">self</span>.<span class="f">_tokenize</span>(query))
+        resp_words = <span class="f">set</span>(<span class="k">self</span>.<span class="f">_tokenize</span>(response))
+        <span class="k">if</span> <span class="k">not</span> resp_words <span class="k">or</span> <span class="k">not</span> query_words:
+            <span class="k">return</span> <span class="n">0.0</span>
+
+        overlap = <span class="k">len</span>(query_words &amp; resp_words)
+        <span class="c"># Jaccard semantic overlap proxy</span>
+        sim = overlap / <span class="k">len</span>(query_words | resp_words)
+        <span class="c"># Scale to 0.0 - 1.0 range based on expected keyword retention</span>
+        scaled_relevance = <span class="f">min</span>(<span class="n">1.0</span>, sim * <span class="n">4.0</span>)
+        <span class="k">return</span> <span class="f">round</span>(scaled_relevance, <span class="n">3</span>)
+
+    <span class="k">def</span> <span class="f">compute_triad_scorecard</span>(<span class="k">self</span>, sample: RAGEvaluationSample) -&gt; Dict[str, float]:
+        <span class="s">&quot;&quot;&quot;Compute full RAG Triad report with harmonic mean.&quot;&quot;&quot;</span>
+        ctx_rel = <span class="k">self</span>.<span class="f">evaluate_context_relevance</span>(sample.query, sample.contexts)
+        faith, claims_audit = <span class="k">self</span>.<span class="f">evaluate_faithfulness</span>(sample.response, sample.contexts)
+        ans_rel = <span class="k">self</span>.<span class="f">evaluate_answer_relevance</span>(sample.query, sample.response)
+
+        <span class="c"># Harmonic mean (penalises severely if any single pillar collapses)</span>
+        denom = (<span class="n">1.0</span> / <span class="f">max</span>(ctx_rel, <span class="n">0.01</span>)) + (<span class="n">1.0</span> / <span class="f">max</span>(faith, <span class="n">0.01</span>)) + (<span class="n">1.0</span> / <span class="f">max</span>(ans_rel, <span class="n">0.01</span>))
+        harmonic_mean = <span class="f">round</span>(<span class="n">3.0</span> / denom, <span class="n">3</span>)
+
+        <span class="k">return</span> {
+            <span class="s">&quot;context_relevance&quot;</span>: ctx_rel,
+            <span class="s">&quot;faithfulness&quot;</span>: faith,
+            <span class="s">&quot;answer_relevance&quot;</span>: ans_rel,
+            <span class="s">&quot;rag_triad_composite&quot;</span>: harmonic_mean,
+            <span class="s">&quot;claims_audit&quot;</span>: claims_audit,
+        }
+
+<span class="c"># --- Demonstration Run ---</span>
+evaluator = <span class="f">RAGEvaluator</span>()
+
+sample_good = <span class="f">RAGEvaluationSample</span>(
+    query=<span class="s">&quot;What is the operating temperature of the sensor and its battery life?&quot;</span>,
+    contexts=[
+        <span class="s">&quot;The Model-X sensor operates reliably between -20C and 60C. It features a sealed enclosure.&quot;</span>,
+        <span class="s">&quot;The integrated lithium battery provides up to 5 years of continuous operational life in standby mode.&quot;</span>
+    ],
+    response=<span class="s">&quot;The Model-X sensor operates between -20C and 60C and provides up to 5 years of battery life.&quot;</span>
+)
+
+sample_hallucinated = <span class="f">RAGEvaluationSample</span>(
+    query=<span class="s">&quot;What is the operating temperature of the sensor and its battery life?&quot;</span>,
+    contexts=[
+        <span class="s">&quot;The Model-X sensor operates reliably between -20C and 60C. It features a sealed enclosure.&quot;</span>
+    ],
+    response=<span class="s">&quot;The Model-X sensor operates between -20C and 60C and includes a 10-year solar rechargeable battery.&quot;</span>
+)
+
+<span class="k">print</span>(<span class="s">&quot;=== Evaluating Grounded RAG Response ===&quot;</span>)
+report_good = evaluator.<span class="f">compute_triad_scorecard</span>(sample_good)
+<span class="k">for</span> k, v <span class="k">in</span> report_good.<span class="f">items</span>():
+    <span class="k">if</span> k != <span class="s">&quot;claims_audit&quot;</span>:
+        <span class="k">print</span>(<span class="s">f&quot;  {k}: {v}&quot;</span>)
+
+<span class="k">print</span>(<span class="s">&quot;\n=== Evaluating Hallucinated RAG Response ===&quot;</span>)
+report_hallucinated = evaluator.<span class="f">compute_triad_scorecard</span>(sample_hallucinated)
+<span class="k">for</span> k, v <span class="k">in</span> report_hallucinated.<span class="f">items</span>():
+    <span class="k">if</span> k != <span class="s">&quot;claims_audit&quot;</span>:
+        <span class="k">print</span>(<span class="s">f&quot;  {k}: {v}&quot;</span>)
+
+<span class="k">print</span>(<span class="s">&quot;\nClaim Entailment Breakdown (Hallucinated Sample):&quot;</span>)
+<span class="k">for</span> claim, supported <span class="k">in</span> report_hallucinated[<span class="s">&quot;claims_audit&quot;</span>]:
+    status = <span class="s">&quot;ENTAILED [OK]&quot;</span> <span class="k">if</span> supported <span class="k">else</span> <span class="s">&quot;HALLUCINATED [FAIL]&quot;</span>
+    <span class="k">print</span>(<span class="s">f&quot;  - '{claim}' -&gt; {status}&quot;</span>)
+</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using standard BLEU or ROUGE against arbitrary references: Surface n-gram overlap metrics fail to detect semantic equivalence and penalise correct paraphrased answers.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Evaluating only the final answer: A pipeline with terrible retrieval can get lucky if the LLM answers from its parametric memory, masking broken retrieval components.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Ignoring context pollution: Including excessive irrelevant text may not immediately hurt faithfulness, but degrades latency, token cost, and long-context reasoning.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>In the RAG Triad framework, what does 'Faithfulness' measure?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Whether the user trusts the application interface</span></button><button class="opt" type="button"><b>B</b><span>The grammatical correctness and spelling accuracy of the query</span></button><button class="opt" type="button"><b>C</b><span>Whether all factual claims made in the generated answer are strictly supported and entailed by the retrieved context documents, without ungrounded hallucinations</span></button><button class="opt" type="button"><b>D</b><span>Whether the embedding model uses 16-bit floating point weights</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Faithfulness (also called Groundedness) verifies that every proposition in the response can be directly inferred from the retrieved passages, penalising any parametric or fabricated claims.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>Why is decomposing generated answers into atomic claims essential for evaluating faithfulness?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because vector databases reject full sentences</span></button><button class="opt" type="button"><b>B</b><span>Because transformer models can only process five words at a time</span></button><button class="opt" type="button"><b>C</b><span>Because complex answers often blend supported facts with unsupported hallucinations in the same sentence; isolating atomic claims enables precise quantification of verified vs hallucinated propositions</span></button><button class="opt" type="button"><b>D</b><span>Because atomic claims reduce token fees on the retrieval server</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A single sentence such as 'The device operates up to 60C and lasts 10 years' may have its temperature substantiated by context while the battery lifespan is a total fabrication. Breaking text into atomic claims isolates exactly which assertions are true to evidence.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>What failure mode occurs when Context Relevance is low but Faithfulness is high?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The LLM hallucinated entirely new mathematical formulas</span></button><button class="opt" type="button"><b>B</b><span>The system refused to run because the prompt was too short</span></button><button class="opt" type="button"><b>C</b><span>The vector database crashed due to memory leaks</span></button><button class="opt" type="button"><b>D</b><span>The retriever returned noisy or irrelevant passages, but the generator faithfully summarised whatever irrelevant text it was given, failing to address the user's real question</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> When context relevance is low, the context contains irrelevant documents. If the model is strictly faithful, it will faithfully discuss those irrelevant documents, completely missing the user's actual question.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/rag-architecture-end-to-end/"><small class="kicker">Concept</small><b>RAG Architecture</b></a><a href="../../concepts/evaluating-llms-benchmarks-and-judges/"><small class="kicker">Concept</small><b>Evaluating LLMs</b></a><a href="../../concepts/hallucination-and-grounding/"><small class="kicker">Concept</small><b>Hallucination &amp; Grounding</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/rag-architecture-end-to-end/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · AI</small><b>RAG Architecture</b></a>
+    <a class="pager-next" href="../../concepts/graphrag-and-multi-hop-retrieval/"><small>Next · AI <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>GraphRAG &amp; Multi-Hop Retrieval</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

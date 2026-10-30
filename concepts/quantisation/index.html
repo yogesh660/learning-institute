@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Model Quantisation: FP16, INT8, and INT4 · Learn · Yogesh Awate</title>
+<meta name="description" content="Slashing model memory and accelerating inference by converting 32-bit floating-point weights and activations into compact 8-bit or 4-bit integers with minimal loss in accuracy.">
+<meta property="og:title" content="Model Quantisation: FP16, INT8, and INT4 · Learn · Yogesh Awate">
+<meta property="og:description" content="Slashing model memory and accelerating inference by converting 32-bit floating-point weights and activations into compact 8-bit or 4-bit integers with minimal loss in accuracy.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="quantisation">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-neural">Path 08 · Deep learning</a> / Efficiency and scale / Lesson 35 of 42</span>
+    <h1 class="case-title">Model Quantisation: FP16, INT8, and INT4</h1>
+    <p class="lede rise" style="--d:3">Slashing model memory and accelerating inference by converting 32-bit floating-point weights and activations into compact 8-bit or 4-bit integers with minimal loss in accuracy.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/the-pytorch-training-loop/">PyTorch training loop</a> <a href="../../concepts/weight-initialisation-xavier-and-he/">Weight initialisation: Xavier, He</a> <a href="../../concepts/backpropagation-and-autodiff/">Backprop and autodiff</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Deep learning · Efficiency and scale</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Modern deep neural networks and large language models contain billions of parameters, demanding tens of gigabytes of expensive high-bandwidth GPU memory (VRAM). Model quantisation compresses 32-bit floating-point numbers (`FP32`) into compact lower-precision representations—such as 16-bit floats (`FP16`/`BF16`), 8-bit integers (`INT8`), or 4-bit formats (`INT4`)—reducing memory footprints by up to 75% and multiplying inference throughput on commodity hardware.</p>
+        <p>In standard deep learning, every single weight and activation is stored as a 32-bit IEEE 754 float: 1 sign bit, 8 exponent bits, and 23 mantissa bits. A 7-billion parameter language model in FP32 consumes $7 \times 10^9 \times 4 \text{ bytes} \approx 28 \text{ GB}$ of VRAM just to store parameter weights! Loading this enormous volume of weights from memory into GPU compute cores during autoregressive generation becomes an acute memory-bandwidth bottleneck.</p>
+        <p>Fortunately, neural networks are remarkably robust to minor numerical perturbations. The exact value of a weight being $0.18374921$ rather than $0.18$ almost never alters the model's final prediction. **Uniform Quantisation** maps a continuous floating-point range $[x_{\text{min}}, x_{\text{max}}]$ into discrete integer buckets:
+1. **Scale factor** ($S$): the real-valued step size represented by each integer increment ($S = \frac{\max(x) - \min(x)}{2^b - 1}$).
+2. **Zero-point** ($Z$): the integer corresponding to real-valued zero ($0.0$).
+3. **Quantise**: $q = \operatorname{clip}(\operatorname{round}(x / S) + Z, q_{\text{min}}, q_{\text{max}})$.
+4. **Dequantise**: $\hat{x} = S \cdot (q - Z)$.
+In symmetric quantisation, the range is centred around zero ($x_{\text{max}} = -x_{\text{min}}$), setting $Z = 0$ and drastically simplifying integer matrix multiplication kernels.</p>
+        <p>Two primary methodologies govern deployment: **Post-Training Quantisation (PTQ)** quantises an already trained FP32 model directly using a small calibration dataset without retraining. For aggressive compressions (like 4-bit weights in GPTQ and AWQ), **Quantisation-Aware Training (QAT)** simulates low-precision integer rounding in the forward pass during training. Because rounding has a derivative of zero almost everywhere, QAT employs the **Straight-Through Estimator (STE)** to pass gradients directly through the rounding operator during backpropagation, allowing weights to adapt naturally to low-precision boundaries.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Like converting a high-resolution 24-bit colour photograph to an 8-bit 256-colour indexed palette: while colour gradients become discrete steps, the visual composition remains indistinguishable to the human eye while cutting file size to a fraction.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Select precision and target format: choose FP16/BF16 (2 bytes/param) for general GPU acceleration; INT8 (1 byte/param) for edge or CPU deployment; or INT4 (0.5 bytes/param) for hosting large language models in consumer VRAM.</li><li>Gather calibration data: run 100 to 512 representative domain inputs through the network to record the dynamic activation ranges ($x_{\text{min}}, x_{\text{max}}$) across layers.</li><li>Compute scale and zero-point parameters: calculate scale $S = \frac{\max(x) - \min(x)}{2^b - 1}$ and zero-point $Z$ per tensor, per channel, or per group.</li><li>Quantise parameters and activations: map continuous values to discrete integers using $q = \operatorname{clip}(\operatorname{round}(x / S) + Z, q_{\text{min}}, q_{\text{max}})$.</li><li>Deploy accelerated integer matrix kernels: execute matrix operations using native INT8/INT4 Tensor Core instructions, accumulating sums in 32-bit integer registers before dequantising outputs back to float.</li><li>Validate accuracy against baseline: measure validation perplexity or task accuracy to ensure the quantised model remains within acceptable tolerances (typically $&lt; 0.5\%$ accuracy loss for INT8).</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Uniform affine quantisation and dequantisation</h3><div class="formula">$$q = \operatorname{clip}\left(\left\lfloor \frac{x}{S} \right\rceil + Z, \, q_{\text{min}}, \, q_{\text{max}}\right), \qquad \hat{x} = S \cdot (q - Z)$$</div><p>$x \in \mathbb{R}$ is the original continuous floating-point value, $S \in \mathbb{R}^+$ is the scale factor, $Z \in \mathbb{Z}$ is the zero-point offset, $\lfloor \cdot \rceil$ denotes round-to-nearest-integer, and $[q_{\text{min}}, q_{\text{max}}]$ are integer bounds (e.g. $[-128, 127]$ for signed INT8).</p></li>
+          <li><h3>Scale calculation from dynamic tensor range</h3><div class="formula">$$S = \frac{\alpha - \beta}{q_{\text{max}} - q_{\text{min}}}, \qquad Z = \left\lfloor \frac{-\beta}{S} \right\rceil + q_{\text{min}}$$</div><p>$[\beta, \alpha]$ is the dynamic range of the tensor (often calibrated using percentiles to mitigate outlier distortion). In symmetric quantisation, $\beta = -\alpha$, which enforces $Z = 0$, simplifying integer dot-product computations.</p></li>
+          <li><h3>Straight-Through Estimator (STE) for Quantisation-Aware Training</h3><div class="formula">$$\frac{\partial \hat{x}}{\partial x} = \begin{cases} 1 &amp; \text{if } x \in [\beta, \alpha] \\ 0 &amp; \text{otherwise} \end{cases}$$</div><p>Because the derivative of the rounding function $\lfloor \cdot \rceil$ is zero almost everywhere, standard gradient descent cannot update parameters. The STE replaces the zero derivative with the identity pass-through ($1.0$) within the valid dynamic range.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Quantisation reduces memory footprint by $2\times$ (FP16), $4\times$ (INT8), or $8\times$ (INT4), enabling large models to fit into consumer GPU VRAM.</li><li>Symmetric quantisation sets zero-point $Z = 0$, eliminating zero-point offset arithmetic during high-throughput matrix multiplications.</li><li>Quantisation-Aware Training (QAT) uses the Straight-Through Estimator to adapt neural weights to low-precision discrete grids, preserving accuracy where post-training quantisation degrades.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Demonstrate symmetric 8-bit quantisation on synthetic weight tensor</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+N = <span class="n">100</span>
+<span class="c"># Generate FP32 weights (mean 0, std 0.5)</span>
+W_fp32 = (np.random.<span class="f">randn</span>(N) * <span class="n">0.5</span>).<span class="f">astype</span>(np.float32)
+
+<span class="c"># 1. Symmetric INT8 scale: map [-max_val, max_val] to [-127, 127]</span>
+max_abs = <span class="f">float</span>(np.<span class="f">max</span>(np.<span class="f">abs</span>(W_fp32)))
+scale = max_abs / <span class="n">127.0</span>
+
+<span class="c"># 2. Quantise to signed 8-bit integers</span>
+W_int8 = np.<span class="f">clip</span>(np.<span class="f">round</span>(W_fp32 / scale), -<span class="n">127</span>, <span class="n">127</span>).<span class="f">astype</span>(np.int8)
+
+<span class="c"># 3. Dequantise back to floating-point representation</span>
+W_reconstructed = W_int8.<span class="f">astype</span>(np.float32) * scale
+
+mse_noise = <span class="f">float</span>(np.<span class="f">mean</span>((W_fp32 - W_reconstructed)**<span class="n">2</span>))
+bytes_fp32 = W_fp32.nbytes
+bytes_int8 = W_int8.nbytes
+
+<span class="k">print</span>(<span class="s">f&quot;FP32 memory footprint: {bytes_fp32} bytes&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;INT8 memory footprint: {bytes_int8} bytes ({bytes_fp32 / bytes_int8:.1f}x compression)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Quantisation Mean Squared Error: {mse_noise:.6f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Sample weight 0: original = {W_fp32[0]:.4f} -&gt; dequantised = {W_reconstructed[0]:.4f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Activation outlier collapse: large language models exhibit extreme outlier features in specific channels ($100\times$ larger than average); naive per-tensor quantisation destroys accuracy unless per-channel or group-wise scaling is applied.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Benchmarking latency on unsupported hardware: executing INT8 models on hardware without native integer compute instructions requires dequantising to float before every multiplication, resulting in slower execution.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Quantising sensitive layers: aggressively quantising initial convolutional embeddings, attention softmax denominators, or final classification logits to 4-bit often causes severe divergence; keep sensitive operations in FP16.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>Why does symmetric quantisation ($Z = 0$) provide computational advantages over asymmetric affine quantisation?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It guarantees zero loss of numerical accuracy</span></button><button class="opt" type="button"><b>B</b><span>It eliminates zero-point offset subtraction during matrix multiplication, enabling direct integer dot products on hardware Tensor Cores</span></button><button class="opt" type="button"><b>C</b><span>It doubles the dynamic range from 8 bits to 16 bits</span></button><button class="opt" type="button"><b>D</b><span>It eliminates the need for a scale factor $S$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> When $Z=0$, dequantisation simplifies to $\hat{x} = S \cdot q$. The product of two matrices becomes $S_1 S_2 (Q_1 Q_2)$, allowing hardware to perform pure integer GEMM without accumulating zero-point cross-terms.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>What is the function of the Straight-Through Estimator (STE) in Quantisation-Aware Training?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It converts integer weights into complex numbers</span></button><button class="opt" type="button"><b>B</b><span>It automatically selects the optimal batch size</span></button><button class="opt" type="button"><b>C</b><span>It replaces the zero derivative of the non-differentiable rounding operator with the identity function (1.0), allowing gradients to update weights during backpropagation</span></button><button class="opt" type="button"><b>D</b><span>It prunes zero weights from the model</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Rounding $\lfloor x \rceil$ has derivative zero everywhere (and undefined at half-integers). Without STE, backpropagation would produce zero gradients, preventing the optimiser from adjusting weights.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>Why do Large Language Models (LLMs) suffer severe accuracy degradation under naive per-tensor INT8 quantisation?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because Transformers do not have activation functions</span></button><button class="opt" type="button"><b>B</b><span>Because cross-entropy loss cannot be computed on integers</span></button><button class="opt" type="button"><b>C</b><span>Because LLMs cannot run on GPUs</span></button><button class="opt" type="button"><b>D</b><span>Because LLMs develop extreme outlier feature activations in specific channels that compress normal-magnitude weights into a single integer bucket if scaled globally</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Research (such as LLM.int8()) showed that Transformers develop emergent outlier activation dimensions with values $100\times$ larger than average. A global scale factor stretches the bucket width, collapsing normal features to zero unless per-channel or group-wise scaling is used.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q4</span>How does 4-bit weight quantisation (INT4) reduce inference latency in large language model text generation?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By running 4 times as many training epochs per second</span></button><button class="opt" type="button"><b>B</b><span>By increasing the context window size by $4\times$</span></button><button class="opt" type="button"><b>C</b><span>By eliminating the need for tokenisation</span></button><button class="opt" type="button"><b>D</b><span>By reducing the volume of weight data transferred from GPU VRAM across memory buses into compute registers, alleviating memory bandwidth bottlenecks</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Autoregressive text generation is memory-bandwidth bound: the GPU spends most of its time fetching weights from VRAM to compute a single token. Shrinking weights to 4 bits cuts bytes read by $4\times$ compared to FP16, speeding up generation.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/normalisation-batch-layer-rms/"><small class="kicker">Concept</small><b>Normalisation: Batch, Layer, RMS</b></a><a href="../../concepts/residual-networks-and-skip-connections/"><small class="kicker">Concept</small><b>ResNets and skip connections</b></a><a href="../../concepts/the-attention-mechanism/"><small class="kicker">Concept</small><b>The attention mechanism</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/metric-learning-and-triplet-loss/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>Metric learning &amp; triplet loss</b></a>
+    <a class="pager-next" href="../../concepts/lora-and-parameter-efficient-fine-tuning/"><small>Next · Deep learning <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>LoRA &amp; PEFT</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

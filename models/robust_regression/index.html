@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Robust Regression (Huber, RANSAC, Theil–Sen) · Learn · Yogesh Awate</title>
+<meta name="description" content="Linear fits that refuse to be bullied by outliers, using a gentler loss or by ignoring points that do not fit.">
+<meta property="og:title" content="Robust Regression (Huber, RANSAC, Theil–Sen) · Learn · Yogesh Awate">
+<meta property="og:description" content="Linear fits that refuse to be bullied by outliers, using a gentler loss or by ignoring points that do not fit.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="robust_regression">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-regression">Path 03 · Regression</a> / Linear models / Lesson 6 of 23</span>
+    <h1 class="case-title">Robust Regression (Huber, RANSAC, Theil–Sen)</h1>
+    <p class="lede rise" style="--d:3">Linear fits that refuse to be bullied by outliers, using a gentler loss or by ignoring points that do not fit.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">15 min</span>
+      <span class="tagline lab">Live lab</span>
+      <span class="prereq">Before this: <a href="../../models/ols_linear_regression/">Linear regression (OLS)</a> <a href="../../concepts/loss-functions/">Loss functions</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Task</dt><dd>Regression</dd>
+          <dt>Family</dt><dd>Linear, robust loss</dd>
+          <dt>What it learns</dt><dd>Linear weights fitted to the inliers</dd>
+          <dt>Training cost</dt><dd>Huber: IRLS, a few OLS solves</dd>
+          <dt>Prediction cost</dt><dd>$O(p)$</dd>
+          <dt>In code</dt><dd><code class="no-math">sklearn.<wbr>linear_model.<wbr>HuberRegressor</code></dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>How it works</a></li><li><a href="#lab"><span>03</span>Try it</a></li><li><a href="#maths"><span>04</span>The maths</a></li><li><a href="#tuning"><span>05</span>Hyperparameters</a></li><li><a href="#when"><span>06</span>When to use it</a></li><li><a href="#code"><span>07</span>In code</a></li><li><a href="#results"><span>08</span>On real data</a></li><li><a href="#quiz"><span>09</span>Check yourself</a></li><li><a href="#related"><span>10</span>Related lessons</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">OLS squares residuals, so a single bad point can take over. Robust regression changes the rules: Huber caps how hard outliers can pull, RANSAC fits only to points that agree, and Theil–Sen takes a median of slopes.</p>
+        <p><strong>Huber</strong> uses squared loss for small residuals and absolute loss beyond a threshold $\delta$. Near the line it behaves like OLS; far away, an outlier’s pull stops growing.</p>
+        <p><strong>RANSAC</strong> (random sample consensus) repeatedly fits a line to a tiny random subset, counts how many points lie close to it, and keeps the line with the largest consensus. Outliers are simply never in the winning subset.</p>
+        <p><strong>Theil–Sen</strong> computes the slope between every pair of points and takes the median. Up to about 29% of the data can be garbage before the estimate breaks.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Asking a room for a consensus: Huber lets loud people speak but caps their volume; RANSAC listens only to the largest group that agrees; Theil–Sen takes the median opinion.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> How it works</h2>
+        <ol class="steps"><li>Choose the strategy: down-weight (Huber), exclude (RANSAC), or median-based (Theil–Sen).</li><li>Huber: solve iteratively, re-weighting points by how large their residual is (IRLS).</li><li>RANSAC: sample minimal subsets, fit, count inliers within a residual threshold, keep the best, refit on its inliers.</li><li>Inspect which points were flagged; they are often the most interesting part of the data.</li></ol>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>03</span> Try it</h2>
+        <p>A clean linear trend with a cluster of corrupted points. Compare the OLS line (grey) with the robust method you pick.</p>
+        <div class="lab" data-lab="robust_regression" data-kind="models" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>Drag the outlier slider up and watch OLS swing while Huber barely moves.</li><li>Switch to RANSAC and look at which points are marked as outliers.</li><li>Shrink Huber’s $\delta$ toward 0: it starts behaving like least absolute deviations.</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>04</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Huber loss</h3><div class="formula">$$L_\delta(r) = \begin{cases} \tfrac12 r^2 &amp; |r| \le \delta \\ \delta\big(|r| - \tfrac12\delta\big) &amp; |r| &gt; \delta \end{cases}$$</div><p>Its derivative (the "pull" a point exerts) is $r$ inside the threshold and capped at $\pm\delta$ outside it.</p></li>
+          <li><h3>RANSAC iterations needed</h3><div class="formula">$$N = \frac{\log(1 - p)}{\log\big(1 - w^s\big)}$$</div><p>To find an all-inlier sample with probability $p$ when a fraction $w$ of points are inliers and each sample has $s$ points. For a line ($s = 2$), $w = 0.6$, $p = 0.99$: $N \approx 11$.</p></li>
+          <li><h3>Theil–Sen slope</h3><div class="formula">$$\hat\beta_1 = \operatorname{median}_{i&lt;j} \frac{y_j - y_i}{x_j - x_i}$$</div><p>The median of all pairwise slopes, then the intercept is the median of $y_i - \hat\beta_1 x_i$.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="tuning">
+        <h2 class="h3"><span>05</span> Hyperparameters</h2>
+        <div class="table-wrap"><table class="kv">
+          <thead><tr><th>Setting</th><th>What it does</th><th>Typical choice</th></tr></thead>
+          <tbody><tr><td><span class="hp">epsilon (Huber)</span></td><td>Where squared loss turns linear, in units of scale.</td><td>1.35 gives 95% efficiency on clean Gaussian data.</td></tr><tr><td><span class="hp">residual_threshold (RANSAC)</span></td><td>Max residual to count as an inlier.</td><td>Default is the MAD of $y$; set it from domain knowledge if you can.</td></tr><tr><td><span class="hp">max_trials (RANSAC)</span></td><td>Number of random subsets.</td><td>Increase when outliers are common.</td></tr></tbody>
+        </table></div>
+      </section>
+      <section class="reveal" id="when">
+        <h2 class="h3"><span>06</span> When to use it</h2>
+        <div class="split2">
+          <div class="box good"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Strengths</h3><ul><li>Resistant to outliers and gross errors.</li><li>RANSAC also tells you which points are outliers.</li><li>Theil–Sen needs no tuning.</li></ul></div>
+          <div class="box bad"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg> Limitations</h3><ul><li>Less efficient than OLS on perfectly clean data.</li><li>RANSAC is random; results vary between runs without a seed.</li><li>Theil–Sen gets slow with many rows or features.</li></ul></div>
+          <div class="box use"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> Reach for it when</h3><p>Sensor data, manual entry errors, or any data where a few points are plainly wrong.</p></div>
+          <div class="box avoid"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Think twice when</h3><p>The "outliers" are real and important (fraud, failures). Then you need to model them, not ignore them.</p></div>
+        </div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>07</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">from</span> sklearn.linear_model <span class="k">import</span> HuberRegressor, RANSACRegressor, TheilSenRegressor, LinearRegression
+
+models = {
+    <span class="s">&quot;OLS&quot;</span>: <span class="f">LinearRegression</span>(),
+    <span class="s">&quot;Huber&quot;</span>: <span class="f">HuberRegressor</span>(epsilon=<span class="n">1.35</span>),
+    <span class="s">&quot;RANSAC&quot;</span>: <span class="f">RANSACRegressor</span>(random_state=<span class="n">0</span>),
+    <span class="s">&quot;Theil-Sen&quot;</span>: <span class="f">TheilSenRegressor</span>(random_state=<span class="n">0</span>),
+}
+<span class="k">for</span> name, m <span class="k">in</span> models.<span class="f">items</span>():
+    m.<span class="f">fit</span>(X_tr, y_tr)
+    <span class="k">print</span>(name, <span class="f">round</span>(m.<span class="f">score</span>(X_te, y_te), <span class="n">3</span>))
+
+inliers = models[<span class="s">&quot;RANSAC&quot;</span>].inlier_mask_   <span class="c"># which training rows RANSAC trusted</span></code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using robust regression to hide data-quality problems instead of investigating them.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Forgetting to scale before Huber; epsilon is defined relative to the residual scale.</span></li></ul>
+      </section>
+      <section class="reveal" id="results">
+        <h2 class="h3"><span>08</span> On real data</h2>
+        <p>Huber regression trained on 80% of the California housing sample (MedHouseVal as target), scored on a held-out 20%. The baseline always predicts the training mean.</p>
+        <div class="table-wrap" style="margin-top:18px"><table class="kv results-table">
+          <thead><tr><th>Metric</th><th>Huber regression</th><th>Predict the mean</th></tr></thead>
+          <tbody><tr><td>RMSE</td><td>0.433</td><td>0.957</td></tr><tr><td>MAE</td><td>0.332</td><td>0.815</td></tr><tr><td>R²</td><td>0.796</td><td>-0.000</td></tr></tbody>
+        </table></div>
+        <p class="note">Produced by <a href="https://github.com/yogesh660/ml-model-zoo/blob/main/models/robust_regression/train.py" target="_blank" rel="noopener">models/robust_regression/train.py</a> · generated 2026-10-28. Run it yourself: <code class="no-math">python models/robust_regression/train.py</code></p>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>09</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>How does the Huber loss limit an outlier’s influence?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It squares residuals twice</span></button><button class="opt" type="button"><b>B</b><span>It uses the median target</span></button><button class="opt" type="button"><b>C</b><span>Its gradient is capped at $\pm\delta$ for large residuals</span></button><button class="opt" type="button"><b>D</b><span>It deletes points beyond $\delta$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Beyond $\delta$ the loss grows linearly, so its derivative stays constant: an outlier pulls with fixed force no matter how far away it is.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>RANSAC’s final model is fitted on:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>All points</span></button><button class="opt" type="button"><b>B</b><span>Only the outliers</span></button><button class="opt" type="button"><b>C</b><span>A random subset</span></button><button class="opt" type="button"><b>D</b><span>The largest consensus set of inliers</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> After finding the best minimal sample, RANSAC refits on all points within the residual threshold of it.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>How does the Theil–Sen estimator compute the slope for a simple univariate regression?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By minimising the sum of squared distances to the median target value</span></button><button class="opt" type="button"><b>B</b><span>By running coordinate descent with an L1 regularisation penalty</span></button><button class="opt" type="button"><b>C</b><span>By averaging the gradients of the first and last observations</span></button><button class="opt" type="button"><b>D</b><span>By computing the median of the slopes between all pairs of distinct data points</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Theil–Sen calculates pairwise slopes $s_{ij} = (y_j - y_i) / (x_j - x_i)$ for all $i &lt; j$ and takes their median, making it highly robust against outliers in the dependent variable.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q4</span>What is the breakdown point of an estimator in robust statistics?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The number of iterations required before gradient descent diverges</span></button><button class="opt" type="button"><b>B</b><span>The threshold where a linear model transitions to a piecewise polynomial spline</span></button><button class="opt" type="button"><b>C</b><span>The proportion of variance unexplained ($1 - R^2$) on held-out test data</span></button><button class="opt" type="button"><b>D</b><span>The fraction of arbitrary bad data (outliers) an estimator can tolerate before its estimate can be forced to infinity</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The breakdown point measures resistance to data corruption; OLS has a breakdown point of $0\%$ (a single outlier can corrupt the slope arbitrarily), whereas Theil–Sen reaches $\approx 29.3\%$ for simple regression and RANSAC can tolerate over $50\%$ contamination.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q5</span>Why does Ordinary Least Squares (OLS) have a breakdown point of 0%, whereas Huber regression is more robust?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>OLS loss grows quadratically ($\frac{1}{2}r^2$), so a single extreme residual creates an arbitrarily large derivative that dominates the fit, whereas Huber's derivative is bounded by $\pm\delta$</span></button><button class="opt" type="button"><b>B</b><span>Huber regression completely ignores all residuals less than $\delta$</span></button><button class="opt" type="button"><b>C</b><span>OLS requires the data to follow a Cauchy distribution, which has infinite variance</span></button><button class="opt" type="button"><b>D</b><span>OLS is an unsupervised learning algorithm that does not use target labels</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In OLS, the gradient is proportional to the residual $r$; as $|r| \to \infty$, the gradient pulls with unbounded force. Huber's loss transitions to linear growth for $|r| &gt; \delta$, capping its influence at $\pm\delta$.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q6</span>What is a key vulnerability of Huber regression when dealing with leverage points (outliers in the feature space $X$)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Huber regression automatically deletes all leverage points regardless of residual size</span></button><button class="opt" type="button"><b>B</b><span>Huber regression requires the sample size $n$ to be smaller than the number of features $p$</span></button><button class="opt" type="button"><b>C</b><span>While Huber is robust to target outliers, leverage points with extreme $x_i$ can still exert unbounded influence because the weight gradient is $x_i \cdot \operatorname{clip}(r_i, -\delta, \delta)$</span></button><button class="opt" type="button"><b>D</b><span>Huber loss cannot compute gradients when features are negative</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The loss gradient with respect to weight $\beta$ is $\sum x_i L_\delta'(r_i)$. Even though $L_\delta'(r_i)$ is bounded by $\delta$, extreme $x_i$ can make the product arbitrarily large. High-breakdown estimators like RANSAC handle high-leverage points much more effectively.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q7</span>Why must residuals be scaled properly before setting the parameter $\epsilon$ (or $\delta$) in Huber regression?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Unscaled features convert Huber loss into an L1 lasso penalty</span></button><button class="opt" type="button"><b>B</b><span>Scikit-learn's HuberRegressor crashes if features are not strictly between 0 and 1</span></button><button class="opt" type="button"><b>C</b><span>$\delta$ represents a physical residual threshold; if targets are unscaled or measured in thousands, a fixed threshold like 1.35 will treat almost every normal residual as an outlier</span></button><button class="opt" type="button"><b>D</b><span>Feature scaling guarantees that the residuals follow a uniform distribution</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The threshold $\delta$ defines where the loss switches from quadratic to linear. In HuberRegressor(epsilon=1.35), $\delta = 1.35 \times \hat{\sigma}$; if residual scale $\hat{\sigma}$ is misestimated, the threshold cannot distinguish normal noise from genuine outliers.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q8</span>In RANSAC, what is the role of the residual threshold parameter?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It specifies the minimum number of features required to train the model</span></button><button class="opt" type="button"><b>B</b><span>It determines the maximum residual distance a data point can have from the candidate model to be classified as an inlier</span></button><button class="opt" type="button"><b>C</b><span>It decides the maximum number of iterations the algorithm will execute</span></button><button class="opt" type="button"><b>D</b><span>It sets the learning rate for the iterative refitting step</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> RANSAC classifies any point with residual $|y_i - \hat{y}_i| \le \text{threshold}$ as an inlier supporting the candidate model. A threshold set too tight rejects true inliers; set too loose, it admits outliers into the consensus set.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q9</span>How does Iteratively Reweighted Least Squares (IRLS) solve the Huber regression problem?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By sorting pairwise slopes and updating coefficients using the median</span></button><button class="opt" type="button"><b>B</b><span>By randomly sampling subsets until the consensus set size exceeds 90%</span></button><button class="opt" type="button"><b>C</b><span>By repeatedly solving a weighted least squares problem where points with residual $|r_i| &gt; \delta$ receive weights $w_i = \delta / |r_i|$, down-weighting outliers at each step</span></button><button class="opt" type="button"><b>D</b><span>By adding an L1 penalty to all weights and applying coordinate descent</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The Huber loss can be viewed as weighted least squares where the effective weight is $w_i = 1$ when $|r_i| \le \delta$ and $w_i = \delta / |r_i|$ when $|r_i| &gt; \delta$. Iteratively updating weights and refitting weighted least squares converges to the Huber minimum.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q10</span>A Huber loss function uses threshold $\delta = 2.0$. For an observation with true target $y = 15.0$ and prediction $\hat{y} = 9.0$, what is the exact Huber loss $L_\delta(r)$ and the magnitude of its derivative $|L'_\delta(r)|$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Loss $= 8.0$, derivative magnitude $= 2.0$</span></button><button class="opt" type="button"><b>B</b><span>Loss $= 18.0$, derivative magnitude $= 6.0$</span></button><button class="opt" type="button"><b>C</b><span>Loss $= 10.0$, derivative magnitude $= 2.0$</span></button><button class="opt" type="button"><b>D</b><span>Loss $= 16.0$, derivative magnitude $= 4.0$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The residual is $r = 15.0 - 9.0 = 6.0$. Since $|r| = 6.0 &gt; \delta = 2.0$, we use the linear branch: $L_\delta(r) = \delta(|r| - \frac{1}{2}\delta) = 2.0 \times (6.0 - 1.0) = 10.0$. The derivative magnitude is capped at $\delta = 2.0$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q11</span>You are fitting a line (minimal sample size $s = 2$ points) using RANSAC. Outliers make up 40% of the dataset (inlier ratio $w = 0.60$). What is the minimum number of iterations $N = \frac{\log(1 - p)}{\log(1 - w^s)}$ needed to guarantee finding at least one outlier-free sample with probability $p = 0.99$? (Use $\log(0.01) \approx -4.605$ and $\log(1 - 0.60^2) = \log(0.64) \approx -0.446$).</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$N = 25$</span></button><button class="opt" type="button"><b>B</b><span>$N = 11$</span></button><button class="opt" type="button"><b>C</b><span>$N = 8$</span></button><button class="opt" type="button"><b>D</b><span>$N = 5$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The probability of picking two inliers is $w^2 = 0.60^2 = 0.36$. The probability of picking at least one contaminated point is $1 - 0.36 = 0.64$. To ensure $(0.64)^N \le 0.01$, $N \ge \frac{-4.605}{-0.446} \approx 10.32$. Rounding up gives $N = 11$ iterations.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q12</span>Consider 5 data points: $(1, 2), (2, 4), (3, 6), (4, 8)$ and an outlier $(5, 50)$. What is the Theil–Sen slope estimate $\hat{\beta}_1$, and what is the OLS slope?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Theil–Sen slope $= 10.0$, OLS slope $= 2.0$</span></button><button class="opt" type="button"><b>B</b><span>Theil–Sen slope $= 2.0$, OLS slope $= 10.0$</span></button><button class="opt" type="button"><b>C</b><span>Both estimators produce slope $= 6.0$</span></button><button class="opt" type="button"><b>D</b><span>Theil–Sen slope $= 4.0$, OLS slope $= 8.0$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> There are $\binom{5}{2} = 10$ pairs. The 4 inliers form $\binom{4}{2} = 6$ pairs that all have slope $(y_j - y_i)/(x_j - x_i) = 2.0$. In the sorted list of 10 slopes, positions 1 through 6 are all $2.0$, giving a median of $2.0$. In contrast, OLS minimises squared error and yields slope $\frac{\sum(x - \bar{x})(y - \bar{y})}{\sum(x - \bar{x})^2} = \frac{100}{10} = 10.0$, heavily corrupted by the single outlier.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>10</span> Related lessons</h2>
+        <div class="related"><a href="../../models/ols_linear_regression/"><small class="kicker">Regression</small><b>Linear regression (OLS)</b></a><a href="../../models/support_vector_regression/"><small class="kicker">Regression</small><b>Support vector regression</b></a><a href="../../concepts/loss-functions/"><small class="kicker">Concept</small><b>Loss functions</b></a><a href="../../concepts/exploratory-data-analysis/"><small class="kicker">Concept</small><b>Exploratory data analysis</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../models/elastic_net/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Regression</small><b>Elastic net</b></a>
+    <a class="pager-next" href="../../models/bayesian_linear_regression/"><small>Next · Regression <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Bayesian linear regression</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/sequences.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

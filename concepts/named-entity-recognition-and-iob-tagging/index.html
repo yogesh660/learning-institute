@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Named entity recognition and IOB tagging · Learn · Yogesh Awate</title>
+<meta name="description" content="Named Entity Recognition (NER) is the information extraction task of identifying spans of text that denote real-world entities (such as people, organisations, and locations) and classifying them into structured categories. Because named entities often span multiple consecutive tokens, NER reframes text chunking as sequence labelling using boundary schemes such as IOB2 (BIO) and BIOES, modelled through linear-chain CRFs or Transformer token classifiers.">
+<meta property="og:title" content="Named entity recognition and IOB tagging · Learn · Yogesh Awate">
+<meta property="og:description" content="Named Entity Recognition (NER) is the information extraction task of identifying spans of text that denote real-world entities (such as people, organisations, and locations) and classifying them into structured categories. Because named entities often span multiple consecutive tokens, NER reframes text chunking as sequence labelling using boundary schemes such as IOB2 (BIO) and BIOES, modelled through linear-chain CRFs or Transformer token classifiers.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="named-entity-recognition-and-iob-tagging">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-nlp">Path 10 · Natural language processing</a> / Syntax / Lesson 16 of 52</span>
+    <h1 class="case-title">Named entity recognition and IOB tagging</h1>
+    <p class="lede rise" style="--d:3">Named Entity Recognition (NER) is the information extraction task of identifying spans of text that denote real-world entities (such as people, organisations, and locations) and classifying them into structured categories. Because named entities often span multiple consecutive tokens, NER reframes text chunking as sequence labelling using boundary schemes such as IOB2 (BIO) and BIOES, modelled through linear-chain CRFs or Transformer token classifiers.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/part-of-speech-tagging/">POS Tagging</a> <a href="../../concepts/word-and-sentence-tokenization/">Word &amp; Sentence Tokenization</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Natural language processing · Syntax</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">If you ask an AI assistant to summarise a news article, it must quickly identify the key actors: Did "Apple" refer to the multinational tech titan or a piece of fruit? Was "Washington" referring to George Washington the historical figure, Washington State, or the United States federal government? Named Entity Recognition extracts these multi-word semantic entities from unstructured prose and classifies them into structured knowledge representations.</p>
+        <p>Why entity chunking requires boundary schemes: Unlike part-of-speech tagging where each word receives one isolated tag, named entities frequently span multiple words: "New York University", "Bank of England", "Marie Curie". If we only tagged words as ORG or PER, the system would not know whether two adjacent ORG tokens represent two separate organisations or one combined entity. Boundary schemes like IOB2 (Beginning, Inside, Outside) solve this by assigning B-ORG to the first token and I-ORG to continuation tokens.</p>
+        <p>The BIOES advantage for boundary precision: The standard IOB2 scheme uses B-c for both singleton entities and the beginning of multi-word entities. BIOES (Beginning, Inside, Outside, End, Singleton) extends this by providing separate tags for single-token entities (S-c) and terminal tokens (E-c). This explicit distinction provides strong inductive bias to sequence models, preventing them from prematurely truncating long company or geographical names.</p>
+        <p>Guardrails against illegal transitions via CRFs: When training a deep neural network (like a BiLSTM or BERT) for token classification with independent softmax outputs, the model has no built-in awareness of sequence grammar. It might predict O followed immediately by I-PER (an illegal transition). A Conditional Random Field (CRF) layer adds a global transition constraint matrix, penalising illegal boundary sequences with negative infinity and ensuring that every predicted entity path is structurally valid.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Think of highlighting text in a study guide with coloured markers. If you highlight words individually without notes, someone reading your guide later cannot tell if "United" and "Airlines" were meant to be read together as one company or two separate terms. IOB tagging is like drawing brackets around your highlights: a green opening bracket marked B-ORG at "United", an internal green mark I-ORG at "Airlines", and a closing bracket before returning to unhighlighted text (O). Anyone reading your annotations knows the exact boundaries and identity of every entity you marked.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Linear-chain CRF sequence scoring function</h3><div class="formula">s(X, Y) = \sum_{t=1}^T P_{t, y_t} + \sum_{t=0}^T A_{y_t, y_{t+1}}</div><p>Here $P_{t, j}$ is the emission score of token $t$ for label $j$ from the neural encoder, and $A \in \mathbb{R}^{(K+2) \times (K+2)}$ is the learnable transition matrix modelling grammatical tag transitions between consecutive steps.</p></li>
+          <li><h3>Conditional sequence probability (Softmax over paths)</h3><div class="formula">P(Y \mid X) = \frac{\exp(s(X, Y))}{\sum_{Y' \in \mathcal{Y}^T} \exp(s(X, Y'))}</div><p>The CRF defines a normalised probability distribution over all $|\mathcal{Y}|^T$ possible label sequences. The normalisation constant (partition function $Z(X)$) is computed efficiently using the forward dynamic programming algorithm.</p></li>
+          <li><h3>Strict span-level precision, recall, and F1</h3><div class="formula">\operatorname{Precision} = \frac{|\mathcal{E}_{\text{gold}} \cap \mathcal{E}_{\text{pred}}|}{|\mathcal{E}_{\text{pred}}|}, \quad \operatorname{Recall} = \frac{|\mathcal{E}_{\text{gold}} \cap \mathcal{E}_{\text{pred}}|}{|\mathcal{E}_{\text{gold}}|}, \quad F_1 = \frac{2 \cdot P \cdot R}{P + R}</div><p>Here an entity span is an exact triple $(c, \text{start}, \text{end})$. Any boundary offset mismatch yields zero credit, preventing token-level outside class imbalance from distorting evaluation metrics.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Named Entity Recognition extracts structured entities (person, organisation, location) from unstructured text and classifies them into predefined types.</li><li>IOB2 (BIO) and BIOES schemes convert chunk boundary identification into standard discrete sequence labelling tasks.</li><li>BIOES provides distinct tags for singleton entities (S-) and multi-token endings (E-), reducing boundary ambiguity.</li><li>Linear-chain CRFs model label transition dynamics A_{i, j}, enforcing sequence validity and preventing illegal transitions like O -> I-PER.</li><li>NER must be evaluated using strict span-level Precision, Recall, and F1; token-level accuracy is heavily skewed by the overwhelming prevalence of the outside (O) class.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">class</span> IOBSpanEvaluator:
+    <span class="s">&quot;&quot;&quot;
+    Parser and strict span-level evaluator for IOB2 (BIO) sequence labelling.
+    Converts token tags to entity spans and computes CoNLL precision, recall, and F1.
+    &quot;&quot;&quot;</span>
+    @staticmethod
+    <span class="k">def</span> <span class="f">extract_entities</span>(tokens, tags):
+        entities = []
+        current_cat = <span class="k">None</span>
+        start_idx = <span class="k">None</span>
+        
+        <span class="k">for</span> idx, (tok, tag) <span class="k">in</span> <span class="f">enumerate</span>(<span class="f">zip</span>(tokens, tags)):
+            <span class="k">if</span> tag == <span class="s">'O'</span>:
+                <span class="k">if</span> current_cat is <span class="k">not</span> <span class="k">None</span>:
+                    span_text = <span class="s">&quot; &quot;</span>.<span class="f">join</span>(tokens[start_idx:idx])
+                    entities.<span class="f">append</span>((current_cat, start_idx, idx - <span class="n">1</span>, span_text))
+                    current_cat = <span class="k">None</span>
+                    start_idx = <span class="k">None</span>
+            <span class="k">elif</span> tag.<span class="f">startswith</span>(<span class="s">'B-'</span>):
+                <span class="k">if</span> current_cat is <span class="k">not</span> <span class="k">None</span>:
+                    span_text = <span class="s">&quot; &quot;</span>.<span class="f">join</span>(tokens[start_idx:idx])
+                    entities.<span class="f">append</span>((current_cat, start_idx, idx - <span class="n">1</span>, span_text))
+                current_cat = tag[<span class="n">2</span>:]
+                start_idx = idx
+            <span class="k">elif</span> tag.<span class="f">startswith</span>(<span class="s">'I-'</span>):
+                tag_cat = tag[<span class="n">2</span>:]
+                <span class="k">if</span> current_cat == tag_cat:
+                    continue
+                <span class="k">else</span>:
+                    <span class="k">if</span> current_cat is <span class="k">not</span> <span class="k">None</span>:
+                        span_text = <span class="s">&quot; &quot;</span>.<span class="f">join</span>(tokens[start_idx:idx])
+                        entities.<span class="f">append</span>((current_cat, start_idx, idx - <span class="n">1</span>, span_text))
+                    current_cat = tag_cat
+                    start_idx = idx
+                    
+        <span class="k">if</span> current_cat is <span class="k">not</span> <span class="k">None</span>:
+            span_text = <span class="s">&quot; &quot;</span>.<span class="f">join</span>(tokens[start_idx:<span class="k">len</span>(tokens)])
+            entities.<span class="f">append</span>((current_cat, start_idx, <span class="k">len</span>(tokens) - <span class="n">1</span>, span_text))
+            
+        <span class="k">return</span> entities
+
+    @classmethod
+    <span class="k">def</span> <span class="f">evaluate</span>(cls, tokens, gold_tags, pred_tags):
+        gold_spans = cls.<span class="f">extract_entities</span>(tokens, gold_tags)
+        pred_spans = cls.<span class="f">extract_entities</span>(tokens, pred_tags)
+        
+        gold_set = {(cat, s, e) <span class="k">for</span> cat, s, e, _ <span class="k">in</span> gold_spans}
+        pred_set = {(cat, s, e) <span class="k">for</span> cat, s, e, _ <span class="k">in</span> pred_spans}
+        
+        true_positives = <span class="k">len</span>(gold_set &amp; pred_set)
+        false_positives = <span class="k">len</span>(pred_set - gold_set)
+        false_negatives = <span class="k">len</span>(gold_set - pred_set)
+        
+        prec = true_positives / <span class="k">len</span>(pred_set) <span class="k">if</span> <span class="k">len</span>(pred_set) &gt; <span class="n">0</span> <span class="k">else</span> <span class="n">0.0</span>
+        rec = true_positives / <span class="k">len</span>(gold_set) <span class="k">if</span> <span class="k">len</span>(gold_set) &gt; <span class="n">0</span> <span class="k">else</span> <span class="n">0.0</span>
+        f1 = (<span class="n">2.0</span> * prec * rec) / (prec + rec) <span class="k">if</span> (prec + rec) &gt; <span class="n">0</span> <span class="k">else</span> <span class="n">0.0</span>
+        
+        <span class="k">return</span> {
+            <span class="s">&quot;precision&quot;</span>: prec,
+            <span class="s">&quot;recall&quot;</span>: rec,
+            <span class="s">&quot;f1&quot;</span>: f1,
+            <span class="s">&quot;gold_entities&quot;</span>: gold_spans,
+            <span class="s">&quot;pred_entities&quot;</span>: pred_spans,
+            <span class="s">&quot;tp&quot;</span>: true_positives,
+            <span class="s">&quot;fp&quot;</span>: false_positives,
+            <span class="s">&quot;fn&quot;</span>: false_negatives
+        }
+
+tokens = [<span class="s">&quot;Alan&quot;</span>, <span class="s">&quot;Turing&quot;</span>, <span class="s">&quot;joined&quot;</span>, <span class="s">&quot;Bletchley&quot;</span>, <span class="s">&quot;Park&quot;</span>, <span class="s">&quot;in&quot;</span>, <span class="s">&quot;the&quot;</span>, <span class="s">&quot;United&quot;</span>, <span class="s">&quot;Kingdom&quot;</span>, <span class="s">&quot;.&quot;</span>]
+
+gold_tags = [
+    <span class="s">&quot;B-PER&quot;</span>, <span class="s">&quot;I-PER&quot;</span>,
+    <span class="s">&quot;O&quot;</span>,
+    <span class="s">&quot;B-ORG&quot;</span>, <span class="s">&quot;I-ORG&quot;</span>,
+    <span class="s">&quot;O&quot;</span>,
+    <span class="s">&quot;O&quot;</span>,
+    <span class="s">&quot;B-LOC&quot;</span>, <span class="s">&quot;I-LOC&quot;</span>,
+    <span class="s">&quot;O&quot;</span>
+]
+
+pred_tags = [
+    <span class="s">&quot;B-PER&quot;</span>, <span class="s">&quot;I-PER&quot;</span>,
+    <span class="s">&quot;O&quot;</span>,
+    <span class="s">&quot;B-ORG&quot;</span>, <span class="s">&quot;O&quot;</span>,
+    <span class="s">&quot;O&quot;</span>,
+    <span class="s">&quot;O&quot;</span>,
+    <span class="s">&quot;B-LOC&quot;</span>, <span class="s">&quot;I-LOC&quot;</span>,
+    <span class="s">&quot;O&quot;</span>
+]
+
+metrics = IOBSpanEvaluator.<span class="f">evaluate</span>(tokens, gold_tags, pred_tags)
+
+<span class="k">print</span>(<span class="s">&quot;Named Entity Recognition Span Evaluation:&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Tokens: {' '.join(tokens)}&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;\nGold Entities:&quot;</span>)
+<span class="k">for</span> cat, s, e, text <span class="k">in</span> metrics[<span class="s">&quot;gold_entities&quot;</span>]:
+    <span class="k">print</span>(<span class="s">f&quot;  [{cat}] tokens {s}..{e}: '{text}'&quot;</span>)
+
+<span class="k">print</span>(<span class="s">&quot;\nPredicted Entities:&quot;</span>)
+<span class="k">for</span> cat, s, e, text <span class="k">in</span> metrics[<span class="s">&quot;pred_entities&quot;</span>]:
+    <span class="k">print</span>(<span class="s">f&quot;  [{cat}] tokens {s}..{e}: '{text}'&quot;</span>)
+
+<span class="k">print</span>(<span class="s">&quot;\nStrict Evaluation Metrics (CoNLL 2003 protocol):&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;  True Positives:  {metrics['tp']}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;  False Positives: {metrics['fp']} (boundary/type mismatches)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;  False Negatives: {metrics['fn']}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;  Precision:       {metrics['precision'] * 100:.1f}%&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;  Recall:          {metrics['recall'] * 100:.1f}%&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;  F1 Score:        {metrics['f1'] * 100:.1f}%&quot;</span>)
+</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Evaluating NER using token-level accuracy: Because 90% of tokens in typical prose are O, a trivial baseline predicting O everywhere achieves 90% accuracy while extracting zero entities. Always report span-level CoNLL F1.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Allowing illegal label transitions: Independent token classifiers often produce invalid sequences like O directly followed by I-ORG. Use a CRF layer or an explicit Viterbi transition mask during inference.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Subword tokenisation misalignment: Modern subword tokenisers split rare names into multiple fragments. Training loss must either mask non-initial subwords using an ignore index (-100) or maintain consistent subword alignment to avoid corrupting span boundaries.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Treating nested entities as flat sequences: IOB sequence labelling fundamentally cannot represent nested structures (such as Bank of America where America is a nested location). Nested extraction requires span-based classification or generative decoders.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>Why is token-level accuracy an unsuitable metric for evaluating Named Entity Recognition models?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because scikit-learn does not support token-level accuracy</span></button><button class="opt" type="button"><b>B</b><span>Because token-level accuracy can only be computed on binary classification tasks</span></button><button class="opt" type="button"><b>C</b><span>Because non-entity outside tokens (O) dominate the corpus (often 85-95% of all tokens), allowing a trivial model that never predicts any entities to achieve deceptively high accuracy</span></button><button class="opt" type="button"><b>D</b><span>Because named entity tags cannot be represented as numbers</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Extreme class imbalance makes token accuracy misleading. Since most words in natural text are not named entities (O), a model that classifies every single word as O gets ~90% accuracy while having a true entity detection F1 score of 0%.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>In the IOB2 (BIO) tagging scheme, which of the following label transitions is grammatically invalid and should be penalised by a CRF?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Transitioning from O to B-LOC</span></button><button class="opt" type="button"><b>B</b><span>Transitioning directly from O to I-ORG without an intervening B-ORG</span></button><button class="opt" type="button"><b>C</b><span>Transitioning from I-LOC to O</span></button><button class="opt" type="button"><b>D</b><span>Transitioning from B-PER to I-PER</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In IOB2, an inside tag (I-c) can only occur immediately after a beginning tag of the same entity category (B-c) or another inside tag of that category. Transitioning directly from O to I-ORG is an illegal orphan boundary.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>What advantage does the BIOES (BILOU) tagging scheme provide over the standard IOB2 (BIO) scheme?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It allows the model to process unnormalised Unicode emojis</span></button><button class="opt" type="button"><b>B</b><span>It eliminates the need for bidirectional context</span></button><button class="opt" type="button"><b>C</b><span>It reduces the total number of classes by half</span></button><button class="opt" type="button"><b>D</b><span>It assigns distinct tags to single-token entities (S-) and the final tokens of multi-token entities (E-), providing explicit structural cues that improve entity boundary precision</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In standard IOB2, the tag B-c is ambiguous: it represents both single-word entities and the start of multi-word entities. BIOES uses S-c for singletons and E-c for entity endings, making entity length and boundary conditions explicit to the classifier.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/part-of-speech-tagging/"><small class="kicker">Concept</small><b>POS Tagging</b></a><a href="../../concepts/dependency-parsing/"><small class="kicker">Concept</small><b>Dependency Parsing</b></a><a href="../../concepts/word-and-sentence-tokenization/"><small class="kicker">Concept</small><b>Word &amp; Sentence Tokenization</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/dependency-parsing/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Natural language processing</small><b>Dependency Parsing</b></a>
+    <a class="pager-next" href="../../concepts/conditional-random-fields/"><small>Next · Natural language processing <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Conditional Random Fields (CRF)</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

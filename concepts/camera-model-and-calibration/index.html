@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>The Pinhole Camera Model and Geometric Calibration: Intrinsic, Extrinsic, and Radial Distortion · Learn · Yogesh Awate</title>
+<meta name="description" content="Mapping 3D world coordinates to 2D image pixels using the pinhole projection matrix, lens distortion modelling, and Zhang's checkerboard calibration.">
+<meta property="og:title" content="The Pinhole Camera Model and Geometric Calibration: Intrinsic, Extrinsic, and Radial Distortion · Learn · Yogesh Awate">
+<meta property="og:description" content="Mapping 3D world coordinates to 2D image pixels using the pinhole projection matrix, lens distortion modelling, and Zhang's checkerboard calibration.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="camera-model-and-calibration">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-vision">Path 09 · Computer vision</a> / Geometry / Lesson 13 of 37</span>
+    <h1 class="case-title">The Pinhole Camera Model and Geometric Calibration: Intrinsic, Extrinsic, and Radial Distortion</h1>
+    <p class="lede rise" style="--d:3">Mapping 3D world coordinates to 2D image pixels using the pinhole projection matrix, lens distortion modelling, and Zhang's checkerboard calibration.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">17 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Computer vision · Geometry</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Every photograph captured by a digital sensor is a central perspective projection of a 3D world onto a 2D plane. To enable robotic navigation, autonomous driving, or augmented reality, a vision system must invert this projection: converting 2D pixel coordinates back into calibrated 3D geometric rays. Camera calibration mathematically estimates the camera's optical centre, focal length, physical sensor orientation, and lens distortion parameters.</p>
+        <p>The ideal Pinhole Camera Model projects a 3D point $\mathbf{P}_w = (X_w, Y_w, Z_w)$ onto a 2D image plane via central perspective: $x = f \frac{X}{Z}, y = f \frac{Y}{Z}$, where $f$ is the focal length.</p>
+        <p>In homogeneous projective geometry, this mapping is expressed as a compact $3 \times 4$ projection matrix $\mathbf{P} = \mathbf{K} [\mathbf{R} \mid \mathbf{t}]$.</p>
+        <p>The Intrinsic Matrix $\mathbf{K}$ represents internal optical properties: focal lengths in pixel units $(f_x, f_y)$ and the principal point (optical centre) $(c_x, c_y)$. The Extrinsic Matrix $[\mathbf{R} \mid \mathbf{t}]$ represents the camera's rigid 3D pose in the world: a $3 \times 3$ rotation matrix $\mathbf{R}$ and a $3 \times 1$ translation vector $\mathbf{t}$.</p>
+        <p>Real physical lenses introduce optical distortion: Radial distortion (barrel or pincushion distortion caused by lens curvature, modelled with coefficients $k_1, k_2, k_3$) and Tangential distortion (caused by the lens sensor not being perfectly parallel, modelled with $p_1, p_2$). Zhang's calibration method observes a flat checkerboard from multiple angles to solve for all intrinsic, extrinsic, and distortion parameters closed-form via planar homographies.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine a painter sitting behind a clear glass window, painting the landscape outside by tracing exactly where light rays passing through a tiny peephole (the pinhole) hit the glass sheet. If the glass is tilted (extrinsic rotation), shifted (extrinsic translation), or if the glass pane is curved like a funhouse mirror (radial lens distortion), the tracing will warp unless the painter uses a calibration matrix to mathematically un-distort the perspective.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Capture planar calibration pattern: Photograph a rigid checkerboard or circle grid from 10–20 diverse angles, distances, and orientations.</li><li>Detect sub-pixel corner coordinates: Locate interior checkerboard corner vertices to sub-pixel accuracy using gradient saddle point refinement.</li><li>Compute planar homographies: For each view, estimate the $3 \times 3$ homography matrix $\mathbf{H}$ mapping known planar checkerboard coordinates to detected image pixels.</li><li>Extract intrinsic camera matrix: Use orthogonality constraints across multiple homographies to solve the linear closed-form system for intrinsic parameters $\mathbf{K}$.</li><li>Estimate lens distortion coefficients: Fit radial distortion polynomial ($k_1, k_2$) and tangential parameters ($p_1, p_2$) via non-linear Levenberg-Marquardt optimisation.</li><li>Rectify and undistort: Remap incoming raw camera frames to undistorted rectilinear images prior to downstream 3D triangulation.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Full Perspective Camera Projection Matrix</h3><div class="formula">s \begin{bmatrix} u \\ v \\ 1 \end{bmatrix} = \underbrace{\begin{bmatrix} f_x & 0 & c_x \\ 0 & f_y & c_y \\ 0 & 0 & 1 \end{bmatrix}}_{\mathbf{K} \text{ (Intrinsics)}} \underbrace{\begin{bmatrix} r_{11} & r_{12} & r_{13} & t_x \\ r_{21} & r_{22} & r_{23} & t_y \\ r_{31} & r_{32} & r_{33} & t_z \end{bmatrix}}_{[\mathbf{R} \mid \mathbf{t}] \text{ (Extrinsics)}} \begin{bmatrix} X_w \\ Y_w \\ Z_w \\ 1 \end{bmatrix}</div><p>Projects homogeneous 3D world coordinates $(X_w, Y_w, Z_w, 1)^T$ to homogeneous 2D pixel coordinates $(u, v, 1)^T$ up to arbitrary scale $s$.</p></li>
+          <li><h3>Radial Lens Distortion Polynomial Model</h3><div class="formula">\begin{aligned} x_{\mathrm{distorted}} &= x (1 + k_1 r^2 + k_2 r^4 + k_3 r^6) \\ y_{\mathrm{distorted}} &= y (1 + k_1 r^2 + k_2 r^4 + k_3 r^6) \end{aligned}, \quad r^2 = x^2 + y^2</div><p>Models barrel distortion ($k_1 &lt; 0$) and pincushion distortion ($k_1 &gt; 0$) as an even-power radial polynomial expansion away from the optical centre.</p></li>
+          <li><h3>Planar Homography Constraint (Zhang Formulation)</h3><div class="formula">\mathbf{h}_1^T \mathbf{B} \mathbf{h}_2 = 0, \quad \mathbf{h}_1^T \mathbf{B} \mathbf{h}_1 = \mathbf{h}_2^T \mathbf{B} \mathbf{h}_2, \quad \mathbf{B} = \mathbf{K}^{-T} \mathbf{K}^{-1}</div><p>Exploits the orthonormality of rotation column vectors $\mathbf{r}_1$ and $\mathbf{r}_2$ to solve for absolute conic image $\mathbf{B}$ and extract matrix $\mathbf{K}$.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Camera calibration maps 3D physical world space to 2D discrete digital pixel arrays.</li><li>Intrinsic matrix $\mathbf{K}$ models internal optics: focal lengths $(f_x, f_y)$ and principal point $(c_x, c_y)$.</li><li>Extrinsic matrix $[\mathbf{R} \mid \mathbf{t}]$ models the 6-DOF camera pose in the world coordinate frame.</li><li>Radial and tangential distortion parameters rectify lens curvature before geometric triangulation.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">def</span> <span class="f">project_3d_to_pixel</span>(point_3d_world: np.ndarray, K: np.ndarray, R: np.ndarray, t: np.ndarray) -&gt; np.ndarray:
+    <span class="s">&quot;&quot;&quot;Project a 3D world coordinate to 2D image pixel coordinates.&quot;&quot;&quot;</span>
+    <span class="c"># 1. Transform to camera frame: P_cam = R * P_world + t</span>
+    point_cam = R @ point_3d_world + t
+    
+    <span class="c"># 2. Perspective division by depth Z</span>
+    z = point_cam[<span class="n">2</span>]
+    <span class="k">if</span> z &lt;= <span class="n">0</span>:
+        raise <span class="f">ValueError</span>(<span class="s">&quot;Point lies behind the camera!&quot;</span>)
+    normalised_coord = np.<span class="f">array</span>([point_cam[<span class="n">0</span>] / z, point_cam[<span class="n">1</span>] / z, <span class="n">1.0</span>])
+    
+    <span class="c"># 3. Apply intrinsic matrix K</span>
+    pixel_homo = K @ normalised_coord
+    <span class="k">return</span> pixel_homo[:<span class="n">2</span>]
+
+<span class="c"># Define camera intrinsics: focal length 800px, optical centre at (320, 240)</span>
+K = np.<span class="f">array</span>([
+    [<span class="n">800.0</span>,   <span class="n">0.0</span>, <span class="n">320.0</span>],
+    [  <span class="n">0.0</span>, <span class="n">800.0</span>, <span class="n">240.0</span>],
+    [  <span class="n">0.0</span>,   <span class="n">0.0</span>,   <span class="n">1.0</span>]
+])
+
+<span class="c"># Camera located at (0, 0, 0) looking straight down +Z axis</span>
+R = np.<span class="f">eye</span>(<span class="n">3</span>)
+t = np.<span class="f">array</span>([<span class="n">0.0</span>, <span class="n">0.0</span>, <span class="n">0.0</span>])
+
+<span class="c"># 3D object located at (X=1.0m, Y=0.5m, Z=4.0m)</span>
+P_world = np.<span class="f">array</span>([<span class="n">1.0</span>, <span class="n">0.5</span>, <span class="n">4.0</span>])
+
+pixel = <span class="f">project_3d_to_pixel</span>(P_world, K, R, t)
+<span class="k">print</span>(<span class="s">f&quot;3D World Point {P_world} -&gt; 2D Image Pixel: (u={pixel[0]:.1f}, v={pixel[1]:.1f})&quot;</span>)
+<span class="c"># u = 800 * (1/4) + 320 = 520.0, v = 800 * (0.5/4) + 240 = 340.0</span></code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming square pixels ($f_x = f_y$): Some digital sensors have non-square pixel aspect ratios; assuming $f_x = f_y$ introduces subtle aspect ratio errors in 3D reconstruction.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Neglecting lens distortion on wide-angle cameras: Using linear projection equations on fisheye or wide-angle lenses causes massive errors near image margins (up to 50 pixels).</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Calibrating with coplanar camera views: Capturing checkerboard images from only parallel frontal perspectives fails to constrain focal length; tilt the board by at least $30^\circ$–$45^\circ$.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>What is the role of the camera Intrinsic Matrix $\mathbf{K}$ in geometric computer vision?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It specifies the latitude and longitude of the camera</span></button><button class="opt" type="button"><b>B</b><span>It records the camera's battery percentage</span></button><button class="opt" type="button"><b>C</b><span>It encrypts image files to prevent cyber attacks</span></button><button class="opt" type="button"><b>D</b><span>It encapsulates internal optical parameters: pixel focal lengths $(f_x, f_y)$, principal point $(c_x, c_y)$, and sensor skew</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The intrinsic matrix $\mathbf{K}$ models the internal geometric optical properties that transform rays in camera space into pixel coordinates.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>What causes "radial distortion" in optical camera lenses?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The sensor overheating during long video recordings</span></button><button class="opt" type="button"><b>B</b><span>Low shutter speed</span></button><button class="opt" type="button"><b>C</b><span>Light rays bending more near the curved edges of a physical spherical lens than at the optical centre, producing barrel or pincushion distortion</span></button><button class="opt" type="button"><b>D</b><span>Radio interference from mobile phone towers</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Physical glass lenses are spherical approximations. Rays entering near lens perimeters bend unevenly, warping straight lines into curved arcs.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>Why does Zhang's checkerboard calibration method require photographing the pattern from multiple tilted angles?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To clean dust off the camera lens</span></button><button class="opt" type="button"><b>B</b><span>Images taken strictly parallel to the sensor leave the focal length mathematically unconstrained; tilting introduces perspective foreshortening that isolates $f$</span></button><button class="opt" type="button"><b>C</b><span>Because checkerboards are invisible from straight ahead</span></button><button class="opt" type="button"><b>D</b><span>To test the photographer's motor skills</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Frontal parallel views create degenerate homography systems where focal length cannot be disentangled from distance. Tilting provides non-coplanar optical constraints.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/geometric-transforms-and-homography/"><small class="kicker">Concept</small><b>Homography &amp; Transforms</b></a><a href="../../concepts/ransac/"><small class="kicker">Concept</small><b>RANSAC</b></a><a href="../../concepts/stereo-vision-and-depth/"><small class="kicker">Concept</small><b>Stereo vision &amp; depth</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/ransac/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Computer vision</small><b>RANSAC</b></a>
+    <a class="pager-next" href="../../concepts/stereo-vision-and-depth/"><small>Next · Computer vision <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Stereo vision &amp; depth</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

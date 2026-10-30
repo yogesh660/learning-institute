@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Expectation, Variance and Covariance · Learn · Yogesh Awate</title>
+<meta name="description" content="The three pillars of summary statistics: expected value as centre of mass, variance as spread, and covariance as joint linear co-movement.">
+<meta property="og:title" content="Expectation, Variance and Covariance · Learn · Yogesh Awate">
+<meta property="og:description" content="The three pillars of summary statistics: expected value as centre of mass, variance as spread, and covariance as joint linear co-movement.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="expectation-variance-and-covariance">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-statistics">Path 02 · Statistics</a> / Probability / Lesson 3 of 51</span>
+    <h1 class="case-title">Expectation, Variance and Covariance</h1>
+    <p class="lede rise" style="--d:3">The three pillars of summary statistics: expected value as centre of mass, variance as spread, and covariance as joint linear co-movement.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="1"><i><b></b></i>Beginner</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/random-variables-and-distributions/">Random variables</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Statistics · Probability</dd>
+          <dt>Level</dt><dd>Beginner</dd>
+          <dt>Used by</dt><dd>3 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Expectation measures the long-run average outcome of a random process, variance quantifies the dispersion around that average, and covariance tracks how two variables move together. Together, they form the algebraic backbone of loss functions, risk analysis, and matrix methods in machine learning.</p>
+        <p>Imagine a roulette game where you bet £10 on red. Eighteen out of 37 slots are red, 18 are black, and 1 is green (zero). If red hits, you win £10; otherwise, you lose your £10. On any single spin, you either gain £10 or lose £10—you never see a fractional amount. But if you play 1,000 times, your average outcome per spin converges toward $(18/37)(+10) + (19/37)(-10) \approx -£0.27$. That long-run average is the expected value $\mathbb{E}[X]$.</p>
+        <p>Now compare two investments. Asset A returns 5% every single year without fail. Asset B returns 45% in good years and loses 35% in bad years, averaging 5%. Both assets have the exact same expected return of 5%, yet Asset B is dramatically riskier. Variance $\operatorname{Var}(X)$ captures this risk by measuring the average squared deviation from the mean, while its square root—standard deviation $\sigma$—puts the spread back into original units like pounds or percentage points.</p>
+        <p>When we track multiple variables, we need to know whether they move in sympathy. If temperature rises and ice cream sales climb while hot tea sales drop, temperature shares positive covariance with ice cream and negative covariance with tea. In linear regression and PCA, covariance matrices summarise all pairwise relationships to find optimal projections and regression slopes.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Expectation is the fulcrum where a seesaw balances; variance is how widely the weights are distributed along the plank; covariance is whether two passengers lean in unison.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Calculate expected value $\mathbb{E}[X]$ by weighting every possible outcome by its probability (or integrating $x f(x) dx$).</li><li>Exploit linearity of expectation: $\mathbb{E}[aX + bY] = a\mathbb{E}[X] + b\mathbb{E}[Y]$ holds whether variables are independent or not.</li><li>Compute variance via the computational shortcut: $\operatorname{Var}(X) = \mathbb{E}[X^2] - (\mathbb{E}[X])^2$.</li><li>Evaluate covariance $\operatorname{Cov}(X, Y) = \mathbb{E}[(X - \mathbb{E}[X])(Y - \mathbb{E}[Y])] = \mathbb{E}[XY] - \mathbb{E}[X]\mathbb{E}[Y]$.</li><li>Assemble pairwise covariances into a symmetric, positive semi-definite covariance matrix $\boldsymbol{\Sigma}$ for multivariate modelling.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Expected Value and Linearity</h3><div class="formula">$$\mathbb{E}[X] = \begin{cases} \sum_x x\,p(x) &amp; \text{discrete} \\[6pt] \int_{-\infty}^\infty x\,f(x)\,dx &amp; \text{continuous} \end{cases}, \qquad \mathbb{E}[aX + bY + c] = a\mathbb{E}[X] + b\mathbb{E}[Y] + c$$</div><p>The expected value is the probability-weighted average (first moment). Linearity of expectation is an unconditional property that holds regardless of correlation or non-linear dependence between $X$ and $Y$.</p></li>
+          <li><h3>Variance and Standard Deviation</h3><div class="formula">$$\operatorname{Var}(X) = \mathbb{E}\big[(X - \mathbb{E}[X])^2\big] = \mathbb{E}[X^2] - (\mathbb{E}[X])^2, \qquad \operatorname{Var}(aX + b) = a^2\operatorname{Var}(X)$$</div><p>Variance is the second central moment, quantifying dispersion around the mean in squared units. Adding a constant shift $b$ leaves spread unchanged, while multiplying by a scale factor $a$ magnifies variance by $a^2$. Standard deviation is $\sigma = \sqrt{\operatorname{Var}(X)}$.</p></li>
+          <li><h3>Covariance and Sum of Correlated Variables</h3><div class="formula">$$\operatorname{Cov}(X, Y) = \mathbb{E}[(X - \mu_X)(Y - \mu_Y)] = \mathbb{E}[XY] - \mu_X\mu_Y, \quad \operatorname{Var}(X \pm Y) = \operatorname{Var}(X) + \operatorname{Var}(Y) \pm 2\operatorname{Cov}(X, Y)$$</div><p>Covariance measures joint linear tendency. If high values of $X$ coincide with high values of $Y$, covariance is positive; if they coincide with low values, it is negative. If $X$ and $Y$ are independent, $\operatorname{Cov}(X, Y) = 0$, though zero covariance does not necessarily imply independence.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Linearity of expectation requires zero assumptions about independence; it holds universally across all random variables.</li><li>Variance scales quadratically ($\operatorname{Var}(aX) = a^2\operatorname{Var}(X)$), which is why standard deviation is preferred for intuitive scale comparisons.</li><li>Zero covariance indicates absence of linear association, but strong non-linear relationships (such as $Y = X^2$ for symmetric $X$) can still exist.</li><li>Sample variance divides by $n - 1$ (Bessel's correction) rather than $n$ to guarantee an unbiased estimator of population variance.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Seeded inline data generation</span>
+rng = np.random.<span class="f">default_rng</span>(<span class="n">42</span>)
+x = rng.<span class="f">normal</span>(loc=<span class="n">10.0</span>, scale=<span class="n">2.0</span>, size=<span class="n">1000</span>)
+<span class="c"># y shares linear co-movement with x plus noise</span>
+y = <span class="n">1.5</span> * x + rng.<span class="f">normal</span>(loc=<span class="n">0.0</span>, scale=<span class="n">1.0</span>, size=<span class="n">1000</span>)
+
+mean_x, mean_y = np.<span class="f">mean</span>(x), np.<span class="f">mean</span>(y)
+var_x = np.<span class="f">var</span>(x, ddof=<span class="n">1</span>)
+cov_xy = np.<span class="f">cov</span>(x, y)[<span class="n">0</span>, <span class="n">1</span>]
+var_sum = np.<span class="f">var</span>(x + y, ddof=<span class="n">1</span>)
+theoretical_sum = var_x + np.<span class="f">var</span>(y, ddof=<span class="n">1</span>) + <span class="n">2</span> * cov_xy
+
+<span class="k">print</span>(<span class="s">f&quot;E[X] = {mean_x:.2f}, E[Y] = {mean_y:.2f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Var(X) = {var_x:.3f}, Cov(X, Y) = {cov_xy:.3f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Var(X + Y) empirical = {var_sum:.3f}, identity = {theoretical_sum:.3f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Writing $\operatorname{Var}(aX + b) = a\operatorname{Var}(X) + b$; constants vanish under variance and scalar multipliers are squared ($a^2\operatorname{Var}(X)$).</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming that $\operatorname{Cov}(X, Y) = 0$ implies $X$ and $Y$ are independent; covariance only checks for linear co-movement.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Confusing sample variance (divided by $n-1$) with population variance (divided by $n$) when computing degrees of freedom.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Comparing raw covariances across different features without standardising; features with larger numerical units naturally produce artificially massive covariances.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>If $X$ is a random variable with $\mathbb{E}[X] = 4$ and $\operatorname{Var}(X) = 9$, what is $\mathbb{E}[X^2]$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>16</span></button><button class="opt" type="button"><b>B</b><span>25</span></button><button class="opt" type="button"><b>C</b><span>13</span></button><button class="opt" type="button"><b>D</b><span>81</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Using the identity $\operatorname{Var}(X) = \mathbb{E}[X^2] - (\mathbb{E}[X])^2$, we have $\mathbb{E}[X^2] = \operatorname{Var}(X) + (\mathbb{E}[X])^2 = 9 + 4^2 = 9 + 16 = 25$.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>If $\operatorname{Var}(X) = 4$, what is $\operatorname{Var}(-3X + 5)$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>9</span></button><button class="opt" type="button"><b>B</b><span>-12</span></button><button class="opt" type="button"><b>C</b><span>41</span></button><button class="opt" type="button"><b>D</b><span>36</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Constants shift the distribution without changing spread, and scalar multipliers are squared: $\operatorname{Var}(aX + b) = a^2\operatorname{Var}(X) = (-3)^2 \times 4 = 9 \times 4 = 36$.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>If two random variables $X$ and $Y$ have $\operatorname{Cov}(X, Y) = 0$, which statement is strictly true?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$X$ and $Y$ are independent</span></button><button class="opt" type="button"><b>B</b><span>$Y$ cannot be predicted from $X$</span></button><button class="opt" type="button"><b>C</b><span>There is no linear association between $X$ and $Y$</span></button><button class="opt" type="button"><b>D</b><span>$X$ and $Y$ must be Gaussian</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Zero covariance guarantees zero linear correlation. However, they can still share a deterministic non-linear relationship (e.g. $Y = X^2$ for symmetric $X$).</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q4</span>Why does sample variance use $n - 1$ in the denominator instead of $n$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To match the formula for standard deviation</span></button><button class="opt" type="button"><b>B</b><span>Because of the central limit theorem</span></button><button class="opt" type="button"><b>C</b><span>To correct for the degrees of freedom consumed when estimating the sample mean</span></button><button class="opt" type="button"><b>D</b><span>To make the variance larger on large datasets</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Using the sample mean $\bar{x}$ instead of the true population mean $\mu$ slightly underestimates squared deviations; dividing by $n - 1$ (Bessel's correction) yields an unbiased estimator.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q5</span>Under what conditions does linearity of expectation, $\mathbb{E}[X + Y] = \mathbb{E}[X] + \mathbb{E}[Y]$, hold?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Only when $\operatorname{Cov}(X, Y) = 0$</span></button><button class="opt" type="button"><b>B</b><span>Only when $X$ and $Y$ both follow a normal distribution</span></button><button class="opt" type="button"><b>C</b><span>For any random variables $X$ and $Y$, regardless of their dependence or joint distribution</span></button><button class="opt" type="button"><b>D</b><span>Only when $X$ and $Y$ are statistically independent</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Linearity of expectation is an algebraic property of integrals and summations. It holds universally for all random variables with finite expectations, with zero assumptions about independence.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q6</span>What is the covariance of any random variable $X$ with itself, $\operatorname{Cov}(X, X)$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>1</span></button><button class="opt" type="button"><b>B</b><span>$\operatorname{Var}(X)$</span></button><button class="opt" type="button"><b>C</b><span>0</span></button><button class="opt" type="button"><b>D</b><span>$\mathbb{E}[X]$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> By definition, $\operatorname{Cov}(X, X) = \mathbb{E}[(X - \mu_X)(X - \mu_X)] = \mathbb{E}[(X - \mu_X)^2] = \operatorname{Var}(X)$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q7</span>A game pays £20 with probability 0.2, £10 with probability 0.3, and £0 with probability 0.5. If it costs £8 to play, what is the net expected profit or loss per game?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Expected gain of £1.00</span></button><button class="opt" type="button"><b>B</b><span>Expected loss of £1.00</span></button><button class="opt" type="button"><b>C</b><span>Break-even (£0.00)</span></button><button class="opt" type="button"><b>D</b><span>Expected loss of £2.50</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Expected payout is $\mathbb{E}[\text{payout}] = (20 \times 0.2) + (10 \times 0.3) + (0 \times 0.5) = 4 + 3 + 0 = £7.00$. Subtracting the £8.00 entry fee leaves a net expected loss of $£7 - £8 = -£1.00$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q8</span>If two independent random variables $X$ and $Y$ have variances $\operatorname{Var}(X) = 25$ and $\operatorname{Var}(Y) = 16$, what is the variance of their difference, $\operatorname{Var}(X - Y)$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>41</span></button><button class="opt" type="button"><b>B</b><span>9</span></button><button class="opt" type="button"><b>C</b><span>20</span></button><button class="opt" type="button"><b>D</b><span>1</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Variances of independent variables always add, even when subtracting the variables: $\operatorname{Var}(X - Y) = \operatorname{Var}(X) + (-1)^2 \operatorname{Var}(Y) = 25 + 16 = 41$. Subtracting variances to get 9 is a classic pitfall.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q9</span>Evaluating <code>np.var(data)</code> and <code>np.var(data, ddof=1)</code> on <code>data = np.array([2, 4, 4, 4, 6])</code> yields:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>1.6 and 1.6</span></button><button class="opt" type="button"><b>B</b><span>1.6 and 2.0</span></button><button class="opt" type="button"><b>C</b><span>2.0 and 1.6</span></button><button class="opt" type="button"><b>D</b><span>8.0 and 2.0</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The mean is 4. Sum of squared differences is $(-2)^2 + 0 + 0 + 0 + 2^2 = 8$. Default <code>np.var</code> divides by $n = 5$ (giving 1.6), whereas <code>ddof=1</code> applies Bessel's correction, dividing by $n - 1 = 4$ (giving 2.0).</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q10</span>Suppose $\operatorname{Var}(X) = 9$, $\operatorname{Var}(Y) = 16$, and $\operatorname{Cov}(X, Y) = -6$. What is the variance of the linear combination $Z = 2X - Y$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>76</span></button><button class="opt" type="button"><b>B</b><span>28</span></button><button class="opt" type="button"><b>C</b><span>100</span></button><button class="opt" type="button"><b>D</b><span>52</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> $\operatorname{Var}(2X - Y) = 2^2\operatorname{Var}(X) + (-1)^2\operatorname{Var}(Y) + 2(2)(-1)\operatorname{Cov}(X, Y) = 4(9) + 16 - 4(-6) = 36 + 16 + 24 = 76$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q11</span>Two binary random variables $X, Y \in \{0, 1\}$ have joint distribution $P(0,0)=0.4, P(0,1)=0.1, P(1,0)=0.1, P(1,1)=0.4$. What is their covariance $\operatorname{Cov}(X, Y)$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>0.15</span></button><button class="opt" type="button"><b>B</b><span>0.05</span></button><button class="opt" type="button"><b>C</b><span>0.40</span></button><button class="opt" type="button"><b>D</b><span>0.25</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Marginal expectations are $\mathbb{E}[X] = 0.5$ and $\mathbb{E}[Y] = 0.5$. The product expectation is $\mathbb{E}[XY] = 1 \times P(1, 1) = 0.40$. Thus $\operatorname{Cov}(X, Y) = 0.40 - (0.50 \times 0.50) = 0.40 - 0.25 = 0.15$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q12</span>Let $X$ take values $\{-2, -1, 0, 1, 2\}$ each with probability $0.2$, and let $Y = X^2$. What is $\operatorname{Cov}(X, Y)$ and what does it reveal about independence?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$\operatorname{Cov}(X, Y) = 0$, yet $X$ and $Y$ are strongly dependent</span></button><button class="opt" type="button"><b>B</b><span>$\operatorname{Cov}(X, Y) &gt; 0$, confirming statistical dependence</span></button><button class="opt" type="button"><b>C</b><span>$\operatorname{Cov}(X, Y) = 0$, confirming statistical independence</span></button><button class="opt" type="button"><b>D</b><span>$\operatorname{Cov}(X, Y) = 4$, confirming linear correlation</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> By symmetry, $\mathbb{E}[X] = 0$ and $\mathbb{E}[X^3] = 0$, so $\operatorname{Cov}(X, Y) = \mathbb{E}[X^3] - \mathbb{E}[X]\mathbb{E}[X^2] = 0$. However, $Y$ is completely determined by $X$, demonstrating that zero covariance does not imply statistical independence.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/correlation-pearson-spearman-kendall/"><small class="kicker">Concept</small><b>Correlation coefficients</b></a><a href="../../concepts/bias-variance-tradeoff/"><small class="kicker">Concept</small><b>Bias–variance trade-off</b></a><a href="../../models/ols_linear_regression/"><small class="kicker">Regression</small><b>Linear regression (OLS)</b></a><a href="../../models/linear_discriminant_analysis/"><small class="kicker">Classification</small><b>LDA</b></a><a href="../../models/gaussian_process_regressor/"><small class="kicker">Regression</small><b>Gaussian process regression</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/random-variables-and-distributions/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Statistics</small><b>Random variables</b></a>
+    <a class="pager-next" href="../../concepts/correlation-pearson-spearman-kendall/"><small>Next · Statistics <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Correlation coefficients</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

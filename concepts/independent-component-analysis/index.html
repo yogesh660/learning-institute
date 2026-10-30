@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Independent Component Analysis · Learn · Yogesh Awate</title>
+<meta name="description" content="Separate linear mixtures into statistically independent non-Gaussian sources: master the cocktail party problem, FastICA, negentropy, and kurtosis.">
+<meta property="og:title" content="Independent Component Analysis · Learn · Yogesh Awate">
+<meta property="og:description" content="Separate linear mixtures into statistically independent non-Gaussian sources: master the cocktail party problem, FastICA, negentropy, and kurtosis.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="independent-component-analysis">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ml-toolbox">Path 06 · Machine learning toolbox</a> / Dimensionality reduction / Lesson 6 of 50</span>
+    <h1 class="case-title">Independent Component Analysis</h1>
+    <p class="lede rise" style="--d:3">Separate linear mixtures into statistically independent non-Gaussian sources: master the cocktail party problem, FastICA, negentropy, and kurtosis.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/expectation-variance-and-covariance/">Expectation and variance</a> <a href="../../concepts/svd-and-truncated-svd/">SVD &amp; truncated SVD</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Machine learning toolbox · Dimensionality reduction</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">While PCA seeks orthogonal axes of maximal variance, Independent Component Analysis (ICA) searches for directions that are statistically independent by maximising non-Gaussianity.</p>
+        <p>The quintessential motivation for Independent Component Analysis (ICA) is the "cocktail party problem": several people speak simultaneously in a room, and multiple microphones record mixed acoustic signals. Each microphone captures a distinct linear superposition of the speakers voices. Given only the recorded mixtures without knowledge of the speakers locations or room acoustics, can we recover the original isolated vocal tracks? This challenge is known as Blind Source Separation (BSS).</p>
+        <p>Principal Component Analysis (PCA) fails on this problem. PCA enforces orthogonality and seeks directions of maximum variance. However, uncorrelatedness is purely a second-order linear relationship: two variables can be completely uncorrelated yet strongly dependent. ICA demands statistical independence: the joint probability distribution must factorise into the product of marginals, $p(s_1, \dots, s_m) = \prod_{i=1}^m p_i(s_i)$.</p>
+        <p>The algorithmic key to ICA is the Central Limit Theorem (CLT). According to the CLT, the sum of independent random variables tends toward a Gaussian distribution: any linear mixture of non-Gaussian source signals will be more Gaussian than the original individual sources. Therefore, to untangle the mixture and isolate the pure sources, we must search for unmixing vectors that maximise the non-Gaussianity of the recovered signals.</p>
+        <p>Aapo Hyvärinen developed the FastICA algorithm, an efficient fixed-point iteration scheme that measures non-Gaussianity via negentropy (the entropy difference between a distribution and a Gaussian with identical covariance). FastICA whitens data via PCA, then uses fixed-point updates to extract statistically independent components.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine blending a banana smoothie containing strawberries, blueberries, and bananas. A standard kitchen blender homogenises everything into a uniform purplish paste (the Gaussian mixture). PCA merely tells you the total volume and density of the paste. ICA is like a magical reverse centrifuge that examines the subtle non-uniform textures (non-Gaussianity), unmixing the smoothie back into discrete piles of whole strawberries, blueberries, and bananas.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Linear Mixture and Unmixing Model</h3><div class="formula">x = A s = \sum_{i=1}^m a_i s_i, \quad \hat{s} = W x = W A s</div><p>Observed signals x are formed by unknown mixing matrix A multiplying independent sources s. The objective is finding unmixing matrix W such that WA approximates a permutation and scaling matrix.</p></li>
+          <li><h3>Negentropy Measure of Non-Gaussianity</h3><div class="formula">J(y) = H(y_{\mathrm{gauss}}) - H(y) \approx k_1 [\mathbb{E}\{G_1(y)\}]^2 + k_2 [\mathbb{E}\{G_2(y)\} - \mathbb{E}\{G_2(\nu)\}]^2</div><p>Gaussian distributions have maximal entropy among all distributions with identical variance. Negentropy J(y) is strictly non-negative and zero if and only if y is Gaussian; maximising negentropy isolates independent components.</p></li>
+          <li><h3>FastICA Fixed-Point Update Rule</h3><div class="formula">w^+ = \mathbb{E}[x g(w^T x)] - \mathbb{E}[g'(w^T x)] w, \quad w \leftarrow \frac{w^+}{\|w^+\|}</div><p>Fixed-point iteration derived from Newton-Raphson optimisation on Kuhn-Tucker conditions under constraint ||w|| = 1. Converges with cubic speed.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Decomposes linear mixtures of signals into statistically independent, non-Gaussian components.</li><li>Exploits the Central Limit Theorem: mixtures are always more Gaussian than independent sources; maximising non-Gaussianity unmixes them.</li><li>Requires that at most one source distribution is Gaussian (multiple Gaussian sources cannot be separated due to rotational symmetry).</li><li>FastICA uses a fixed-point iteration derived from negentropy approximations, converging with cubic speed.</li><li>Possesses intrinsic ambiguities: source variance (scaling) and component ordering cannot be uniquely determined from observed mixtures alone.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># FastICA from scratch for Blind Source Separation</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+n_samples = <span class="n">2000</span>
+time = np.<span class="f">linspace</span>(<span class="n">0</span>, <span class="n">8</span>, n_samples)
+
+<span class="c"># 1. Generate two non-Gaussian independent sources</span>
+<span class="c"># Source 1: Sinusoidal signal</span>
+s1 = np.<span class="f">sin</span>(<span class="n">2</span> * time)
+<span class="c"># Source 2: Square wave signal</span>
+s2 = np.<span class="f">sign</span>(np.<span class="f">sin</span>(<span class="n">3</span> * time))
+S = np.<span class="f">column_stack</span>([s1, s2])
+
+<span class="c"># 2. Mix sources with an arbitrary mixing matrix A</span>
+A = np.<span class="f">array</span>([[<span class="n">1.0</span>, <span class="n">1.5</span>],
+              [<span class="n">0.8</span>, -<span class="n">0.6</span>]])
+X = S @ A.T  <span class="c"># Mixed observed signals</span>
+
+<span class="c"># 3. FastICA Implementation</span>
+<span class="k">def</span> <span class="f">fast_ica</span>(X, n_components=<span class="n">2</span>, max_iters=<span class="n">200</span>, tol=<span class="n">1e-6</span>):
+    n, p = X.shape
+    <span class="c"># Step A: Mean-centreing</span>
+    X_mean = np.<span class="f">mean</span>(X, axis=<span class="n">0</span>)
+    X_centreed = X - X_mean
+    
+    <span class="c"># Step B: Whitening via SVD</span>
+    cov = (X_centreed.T @ X_centreed) / n
+    U, D, _ = np.linalg.<span class="f">svd</span>(cov)
+    whitening_matrix = U @ np.<span class="f">diag</span>(<span class="n">1.0</span> / np.<span class="f">sqrt</span>(D)) @ U.T
+    X_white = X_centreed @ whitening_matrix.T
+    
+    <span class="c"># Contrast function g(u) = tanh(u), g'(u) = 1 - tanh^2(u)</span>
+    <span class="k">def</span> <span class="f">g</span>(u): <span class="k">return</span> np.<span class="f">tanh</span>(u)
+    <span class="k">def</span> <span class="f">g_prime</span>(u): <span class="k">return</span> <span class="n">1.0</span> - np.<span class="f">tanh</span>(u)**<span class="n">2</span>
+    
+    <span class="c"># Step C: Fixed-point iteration with Gram-Schmidt orthogonalisation</span>
+    W = np.<span class="f">zeros</span>((n_components, n_components))
+    
+    <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(n_components):
+        w = np.random.<span class="f">normal</span>(size=n_components)
+        w /= np.linalg.<span class="f">norm</span>(w)
+        
+        <span class="k">for</span> it <span class="k">in</span> <span class="k">range</span>(max_iters):
+            <span class="c"># w+ = E[x * g(w^T x)] - E[g'(w^T x)] * w</span>
+            wx = X_white @ w
+            w_new = np.<span class="f">mean</span>(X_white * <span class="f">g</span>(wx)[:, <span class="k">None</span>], axis=<span class="n">0</span>) - np.<span class="f">mean</span>(<span class="f">g_prime</span>(wx)) * w
+            
+            <span class="c"># Orthogonalise against previously found vectors</span>
+            <span class="k">for</span> j <span class="k">in</span> <span class="k">range</span>(i):
+                w_new -= (w_new @ W[j]) * W[j]
+            w_new /= np.linalg.<span class="f">norm</span>(w_new)
+            
+            <span class="c"># Check convergence</span>
+            <span class="k">if</span> np.<span class="f">abs</span>(np.<span class="f">abs</span>(w_new @ w) - <span class="n">1.0</span>) &lt; tol:
+                w = w_new
+                break
+            w = w_new
+            
+        W[i] = w
+        
+    <span class="c"># Reconstructed independent components</span>
+    S_hat = X_white @ W.T
+    <span class="k">return</span> S_hat, W
+
+S_recovered, W_est = <span class="f">fast_ica</span>(X, n_components=<span class="n">2</span>)
+
+<span class="c"># Normalise recovered signals to unit variance for correlation check</span>
+S_norm = (S - np.<span class="f">mean</span>(S, axis=<span class="n">0</span>)) / np.<span class="f">std</span>(S, axis=<span class="n">0</span>)
+S_rec_norm = (S_recovered - np.<span class="f">mean</span>(S_recovered, axis=<span class="n">0</span>)) / np.<span class="f">std</span>(S_recovered, axis=<span class="n">0</span>)
+
+<span class="c"># Check correlation matrix between original and recovered</span>
+corr = np.<span class="f">abs</span>(S_norm.T @ S_rec_norm) / <span class="k">len</span>(S)
+
+<span class="k">print</span>(<span class="s">f&quot;Mixing Matrix A:\n{A}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;\nCorrelation between original and recovered sources:&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Source 1 max correlation: {np.max(corr[0]):.4f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Source 2 max correlation: {np.max(corr[1]):.4f} (clean separation!)&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Gaussian source limitation: If two or more independent sources are Gaussian, their joint distribution is spherically symmetric, making rotation indeterminate.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Scale and sign ambiguity: The magnitude and sign of recovered sources are unidentifiable ($(-a) \cdot (-s) = a s$); recovered signals must be standardised.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Permutation ambiguity: ICA cannot infer the original ordering of sources; component 1 might correspond to source 2 or source 5.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>Why does Independent Component Analysis require that source distributions are non-Gaussian?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because the joint distribution of multiple Gaussian sources is spherically symmetric, making any orthogonal rotation equally valid and unidentifiable</span></button><button class="opt" type="button"><b>B</b><span>Because Gaussian random variables cannot be multiplied by matrices</span></button><button class="opt" type="button"><b>C</b><span>Because Gaussian distributions cannot be differentiated</span></button><button class="opt" type="button"><b>D</b><span>Because the Central Limit Theorem only applies to non-Gaussian variables</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A multivariate Gaussian with identity covariance is spherically symmetric: rotating it yields an identical Gaussian. Without non-Gaussianity, independent directions cannot be distinguished.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>What is the relationship between uncorrelatedness and statistical independence in the context of PCA and ICA?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Uncorrelatedness and independence are mathematically identical in all cases</span></button><button class="opt" type="button"><b>B</b><span>Independence implies uncorrelatedness (zero covariance), but uncorrelatedness does not imply independence for non-Gaussian variables</span></button><button class="opt" type="button"><b>C</b><span>PCA guarantees independence while ICA only guarantees uncorrelatedness</span></button><button class="opt" type="button"><b>D</b><span>Uncorrelated variables always have zero mutual information</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Uncorrelatedness only means E[XY] = E[X]E[Y] (second-order orthogonality). Statistical independence requires p(X, Y) = p(X)p(Y) across all higher-order moments.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/svd-and-truncated-svd/"><small class="kicker">Concept</small><b>SVD &amp; truncated SVD</b></a><a href="../../concepts/kernel-pca/"><small class="kicker">Concept</small><b>Kernel PCA</b></a><a href="../../concepts/non-negative-matrix-factorisation/"><small class="kicker">Concept</small><b>NMF</b></a><a href="../../concepts/mutual-information/"><small class="kicker">Concept</small><b>Mutual Information</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/kernel-pca/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Machine learning toolbox</small><b>Kernel PCA</b></a>
+    <a class="pager-next" href="../../concepts/non-negative-matrix-factorisation/"><small>Next · Machine learning toolbox <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>NMF</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

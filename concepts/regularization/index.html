@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Regularisation: L1, L2 and Beyond · Learn · Yogesh Awate</title>
+<meta name="description" content="Penalising complexity so models generalise. L2 shrinks, L1 selects, and early stopping, dropout and pruning do the same job.">
+<meta property="og:title" content="Regularisation: L1, L2 and Beyond · Learn · Yogesh Awate">
+<meta property="og:description" content="Penalising complexity so models generalise. L2 shrinks, L1 selects, and early stopping, dropout and pruning do the same job.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="regularization">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-foundations">Path 01 · Foundations</a> / Generalisation / Lesson 9 of 17</span>
+    <h1 class="case-title">Regularisation: L1, L2 and Beyond</h1>
+    <p class="lede rise" style="--d:3">Penalising complexity so models generalise. L2 shrinks, L1 selects, and early stopping, dropout and pruning do the same job.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      <span class="tagline lab">Live lab</span>
+      <span class="prereq">Before this: <a href="../../concepts/bias-variance-tradeoff/">Bias–variance trade-off</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Foundations · Generalisation</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>5 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#lab"><span>03</span>Try it</a></li><li><a href="#maths"><span>04</span>The maths</a></li><li><a href="#takeaways"><span>05</span>Key takeaways</a></li><li><a href="#code"><span>06</span>In code</a></li><li><a href="#quiz"><span>07</span>Check yourself</a></li><li><a href="#related"><span>08</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Regularisation adds a cost for complexity to the training objective. The model then has to justify every bit of flexibility with a real improvement in fit, which keeps it from memorising noise.</p>
+        <p><strong>L2</strong> (ridge, weight decay) adds $\lambda\lVert w\rVert_2^2$: weights shrink smoothly toward zero, and correlated features share the load. <strong>L1</strong> (lasso) adds $\lambda\lVert w\rVert_1$: weights hit exactly zero, so it selects features. The geometry explains the difference: the L1 ball has corners on the axes, the L2 ball is round.</p>
+        <p>Many other techniques are regularisation in disguise: limiting tree depth, pruning, early stopping, dropout, data augmentation, and averaging models. Each one restricts how much the model can adapt to the training sample.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>A spending limit on complexity: the model may only buy flexibility it can pay for with genuinely better predictions.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Standardise features so the penalty is fair.</li><li>Choose the penalty type (L2 by default, L1 for selection, both for elastic net).</li><li>Tune $\lambda$ on a log grid with cross-validation.</li><li>Never penalise the intercept.</li></ol>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>03</span> Try it</h2>
+        <p>Two weights, one loss. The ellipses are the loss contours; the shaded shape is the penalty’s constraint region. The solution is where they first touch.</p>
+        <div class="lab" data-lab="regularization" data-kind="concepts" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>With L1, shrink the budget until the solution lands on a corner: one weight becomes exactly 0.</li><li>Switch to L2 with the same budget: both weights shrink, neither hits zero.</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>04</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Penalised objective</h3><div class="formula">$$\min_w \;\frac1n\sum_i\ell(y_i, w^\top x_i) + \lambda\,\Omega(w), \qquad \Omega_{L2} = \lVert w\rVert_2^2, \;\; \Omega_{L1} = \lVert w\rVert_1$$</div><p>Equivalently, minimise the loss subject to $\Omega(w) \le t$: a constraint region in weight space.</p></li>
+          <li><h3>Bayesian view</h3><div class="formula">$$\text{L2} \leftrightarrow w_j \sim \mathcal N(0, \tau^2), \qquad \text{L1} \leftrightarrow w_j \sim \text{Laplace}(0, b)$$</div><p>The penalised solution is the MAP estimate under these priors. The Laplace prior’s sharp peak at zero is why L1 produces exact zeros.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>05</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Regularisation trades a little bias for a lot less variance.</li><li>Always tune its strength with validation data.</li><li>Scale matters: unscaled features make the penalty arbitrary.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>06</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">from</span> sklearn.linear_model <span class="k">import</span> Ridge, Lasso
+<span class="k">from</span> sklearn.preprocessing <span class="k">import</span> StandardScaler
+
+Xs = <span class="f">StandardScaler</span>().<span class="f">fit_transform</span>(X_tr)
+<span class="k">for</span> lam <span class="k">in</span> [<span class="n">0.001</span>, <span class="n">0.1</span>, <span class="n">1</span>, <span class="n">10</span>]:
+    r, l = <span class="f">Ridge</span>(alpha=lam).<span class="f">fit</span>(Xs, y_tr), <span class="f">Lasso</span>(alpha=lam / <span class="n">10</span>, max_iter=<span class="n">10000</span>).<span class="f">fit</span>(Xs, y_tr)
+    <span class="k">print</span>(lam, <span class="s">&quot;ridge |w|=%.2f&quot;</span> % np.<span class="f">abs</span>(r.coef_).<span class="f">sum</span>(), <span class="s">&quot;lasso nonzero=%d&quot;</span> % (l.coef_ != <span class="n">0</span>).<span class="f">sum</span>())</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Penalising without scaling features first.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Tuning λ on the test set.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>07</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>Which penalty can set weights exactly to zero?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>L1</span></button><button class="opt" type="button"><b>B</b><span>L2</span></button><button class="opt" type="button"><b>C</b><span>Neither</span></button><button class="opt" type="button"><b>D</b><span>Both</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The L1 constraint region has corners on the axes.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>Early stopping in gradient descent acts like:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>More data</span></button><button class="opt" type="button"><b>B</b><span>Feature selection</span></button><button class="opt" type="button"><b>C</b><span>A larger learning rate</span></button><button class="opt" type="button"><b>D</b><span>A form of regularisation</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> It limits how far weights move from their initialisation, similar to an L2 penalty.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>Why must the intercept (bias term $w_0$) NOT be penalised in regularised regression?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Scikit-learn crashes with a LinAlgError if the intercept is regularised</span></button><button class="opt" type="button"><b>B</b><span>The intercept reflects the baseline average of the target; penalising it forces the model predictions towards zero even if the true target mean is $1{,}000{,}000$</span></button><button class="opt" type="button"><b>C</b><span>The intercept always has zero gradient in gradient descent</span></button><button class="opt" type="button"><b>D</b><span>Penalising the intercept makes the objective function non-convex</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The intercept merely centres the regression plane at the target mean. Penalising it shifts predictions towards zero without providing any protection against overfitting feature slopes.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q4</span>Why is feature standardisation (e.g. using StandardScaler) mandatory before applying L1 or L2 regularisation?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Matrix inversion fails if features have non-zero means</span></button><button class="opt" type="button"><b>B</b><span>Standardisation ensures that all features have strictly positive values</span></button><button class="opt" type="button"><b>C</b><span>Without standardisation, features measured in larger units have smaller coefficients and escape penalisation, while features in smaller units receive unfairly harsh penalties</span></button><button class="opt" type="button"><b>D</b><span>L1 regularisation cannot compute absolute values on unstandardised numbers</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> If feature 1 is in metres ($w_1 = 1$) and feature 2 is in millimetres ($w_2 = 0.001$), the penalty $\lambda w_1^2 = \lambda$ penalises feature 1 a million times more than feature 2 despite measuring the exact same physical quantity.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q5</span>Geometric intuition: why does the L1 penalty (Lasso) set coefficients exactly to zero, while the L2 penalty (Ridge) only shrinks them smoothly?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The L2 ball has sharp corners on the coordinate axes that prevent sparsity</span></button><button class="opt" type="button"><b>B</b><span>The L1 norm constraint region $\{\lVert w\rVert_1 \le t\}$ has sharp vertices located on the coordinate axes where contours of the loss function naturally intersect first, setting coordinates to zero</span></button><button class="opt" type="button"><b>C</b><span>The L1 penalty uses a non-convex optimisation algorithm that drops features randomly</span></button><button class="opt" type="button"><b>D</b><span>L1 regularisation requires computing matrix eigenvalues</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The diamond-shaped $L_1$ ball has sharp corners where one or more coordinates are zero. As smooth elliptical loss contours expand from the unconstrained OLS minimum, they almost always touch an $L_1$ vertex first.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q6</span>From a Bayesian perspective, L2 regularisation (Ridge) corresponds to Maximum A Posteriori (MAP) estimation under which prior distribution on the weights?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>A uniform prior over the interval $[-1, 1]$</span></button><button class="opt" type="button"><b>B</b><span>A Laplace prior centered at zero</span></button><button class="opt" type="button"><b>C</b><span>A zero-mean Gaussian (normal) prior $w_j \sim \mathcal{N}(0, \tau^2)$</span></button><button class="opt" type="button"><b>D</b><span>A Poisson distribution</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Under a Gaussian prior $p(w) \propto \exp\left(-\frac{\lVert w\rVert_2^2}{2\tau^2}\right)$, taking the negative logarithm yields $\frac{1}{2\tau^2}\lVert w\rVert_2^2$, which is identical to the L2 penalty with $\lambda = 1/\tau^2$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q7</span>When two input features $X_1$ and $X_2$ are strongly collinear, how do L1 (Lasso) and L2 (Ridge) regularisation handle them differently?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Ridge tends to shrink their coefficients equally and share the weight between them, whereas Lasso tends to arbitrarily pick one feature and force the other to zero</span></button><button class="opt" type="button"><b>B</b><span>Both penalties cause the weights to diverge to infinity</span></button><button class="opt" type="button"><b>C</b><span>Lasso retains both features with equal weights, while Ridge zeroes out both features</span></button><button class="opt" type="button"><b>D</b><span>Ridge always sets one feature to zero, while Lasso retains both</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The quadratic $L_2$ penalty prefers two moderate weights over one large weight (since $1^2 + 1^2 = 2 &lt; 2^2 + 0^2 = 4$). The linear $L_1$ penalty has no preference between $(1, 1)$ and $(2, 0)$, so numerical noise leads it to pick one arbitrarily.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q8</span>What is Elastic Net regularisation, and when is it preferred over pure Lasso?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It applies regularisation only to the first principal component</span></button><button class="opt" type="button"><b>B</b><span>It combines decision trees with linear models to avoid overfitting</span></button><button class="opt" type="button"><b>C</b><span>It sets all weights strictly to either $+1$ or $-1$</span></button><button class="opt" type="button"><b>D</b><span>It linearly combines both L1 and L2 penalties ($\lambda_1 \lVert w\rVert_1 + \lambda_2 \lVert w\rVert_2^2$); it is preferred when there are groups of correlated features, allowing feature selection while retaining grouped predictive variables together</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Pure Lasso struggles with multicollinear groups by selecting one at random. Elastic Net's L2 component encourages grouped selection (correlated features enter together), while its L1 component maintains overall sparsity.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q9</span>How does Dropout in deep neural networks act as a form of regularisation?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By pruning 50% of the input data rows</span></button><button class="opt" type="button"><b>B</b><span>By randomly deactivating a fraction of neurons during each training pass, it prevents co-adaptation of features and approximates training an ensemble of exponentially many subnetworks</span></button><button class="opt" type="button"><b>C</b><span>By forcing the network weights to follow a Laplace distribution</span></button><button class="opt" type="button"><b>D</b><span>By setting the learning rate to zero for 50% of the epochs</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Dropout prevents neurons from relying on idiosyncratic co-dependencies with specific neighbours. Each iteration trains a thinned network, and testing averages their collective behaviour.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q10</span>For a 2D weight vector $w = [3.0, -4.0]$, what are the L1 norm $\lVert w\rVert_1$, the L2 norm squared $\lVert w\rVert_2^2$, and the Elastic Net penalty with $\lambda_1 = 2.0$ and $\lambda_2 = 0.5$ ($\Omega(w) = \lambda_1 \lVert w\rVert_1 + \lambda_2 \lVert w\rVert_2^2$)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$\lVert w\rVert_1 = 1.0$, $\lVert w\rVert_2^2 = 7.0$, and total penalty $= 5.5$</span></button><button class="opt" type="button"><b>B</b><span>$\lVert w\rVert_1 = 7.0$, $\lVert w\rVert_2^2 = 49.0$, and total penalty $= 38.5$</span></button><button class="opt" type="button"><b>C</b><span>$\lVert w\rVert_1 = 7.0$, $\lVert w\rVert_2^2 = 25.0$, and total penalty $= 26.5$</span></button><button class="opt" type="button"><b>D</b><span>$\lVert w\rVert_1 = 5.0$, $\lVert w\rVert_2^2 = 25.0$, and total penalty $= 22.5$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> $\lVert w\rVert_1 = |3.0| + |-4.0| = 3.0 + 4.0 = 7.0$. $\lVert w\rVert_2^2 = 3.0^2 + (-4.0)^2 = 9.0 + 16.0 = 25.0$. Elastic Net penalty $= \lambda_1 \lVert w\rVert_1 + \lambda_2 \lVert w\rVert_2^2 = 2.0(7.0) + 0.5(25.0) = 14.0 + 12.5 = 26.5$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q11</span>In coordinate descent for Lasso regression with orthonormal features, the update rule uses the soft-thresholding operator $S_\lambda(\hat{w}) = \operatorname{sign}(\hat{w})\max(0, |\hat{w}| - \lambda)$. If the unregularised OLS coefficients are $\hat{w}_1 = 2.50$ and $\hat{w}_2 = -0.60$, what are their Lasso estimates when penalty threshold is $\lambda = 1.00$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$w_1 = 0.50$ and $w_2 = -1.60$</span></button><button class="opt" type="button"><b>B</b><span>$w_1 = 1.50$ and $w_2 = 0.00$</span></button><button class="opt" type="button"><b>C</b><span>$w_1 = 1.50$ and $w_2 = -0.60$</span></button><button class="opt" type="button"><b>D</b><span>$w_1 = 2.50$ and $w_2 = 0.00$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> For $\hat{w}_1 = 2.50$: $|\hat{w}_1| = 2.50 &gt; 1.00$, so $S_1(2.50) = \operatorname{sign}(2.50)(2.50 - 1.00) = +1.50$. For $\hat{w}_2 = -0.60$: $|\hat{w}_2| = 0.60 \le 1.00$, so $\max(0, 0.60 - 1.00) = 0$, giving $S_1(-0.60) = 0.00$. The parameter whose unregularised magnitude is smaller than $\lambda$ is truncated exactly to zero.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q12</span>In a 1D linear regression with orthonormal data ($x^\top x = 1$), the OLS estimate is $\hat{w}_{\text{OLS}} = 6.0$. In Ridge regression, the estimate is $\hat{w}_{\text{Ridge}} = \frac{\hat{w}_{\text{OLS}}}{1 + \lambda}$. If $\lambda = 2.0$, what is the Ridge estimate, and by what percentage is the OLS weight shrunk?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$\hat{w}_{\text{Ridge}} = 2.0$, shrunk by $66.7\%$</span></button><button class="opt" type="button"><b>B</b><span>$\hat{w}_{\text{Ridge}} = 3.0$, shrunk by $50.0\%$</span></button><button class="opt" type="button"><b>C</b><span>$\hat{w}_{\text{Ridge}} = 1.0$, shrunk by $83.3\%$</span></button><button class="opt" type="button"><b>D</b><span>$\hat{w}_{\text{Ridge}} = 4.0$, shrunk by $33.3\%$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> $\hat{w}_{\text{Ridge}} = \frac{6.0}{1 + 2.0} = \frac{6.0}{3.0} = 2.0$. The weight is reduced from $6.0$ to $2.0$, a drop of $4.0$, which corresponds to a shrinkage of $\frac{4.0}{6.0} = \frac{2}{3} \approx 66.7\%$.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>08</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/bias-variance-tradeoff/"><small class="kicker">Concept</small><b>Bias–variance trade-off</b></a><a href="../../concepts/feature-selection/"><small class="kicker">Concept</small><b>Feature selection</b></a><a href="../../models/ridge_regression/"><small class="kicker">Regression</small><b>Ridge regression</b></a><a href="../../models/lasso_regression/"><small class="kicker">Regression</small><b>Lasso regression</b></a><a href="../../models/elastic_net/"><small class="kicker">Regression</small><b>Elastic net</b></a><a href="../../models/xgboost_regressor/"><small class="kicker">Regression</small><b>XGBoost</b></a><a href="../../models/mlp_classifier/"><small class="kicker">Deep learning</small><b>MLP classifier</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/bias-variance-tradeoff/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Foundations</small><b>Bias–variance trade-off</b></a>
+    <a class="pager-next" href="../../concepts/cross-validation/"><small>Next · Foundations <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Cross-validation</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

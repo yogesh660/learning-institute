@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Confidence Intervals · Learn · Yogesh Awate</title>
+<meta name="description" content="Quantifying parameter uncertainty with frequentist coverage: margin of error, critical values, Student's t distribution, and proper probabilistic interpretation.">
+<meta property="og:title" content="Confidence Intervals · Learn · Yogesh Awate">
+<meta property="og:description" content="Quantifying parameter uncertainty with frequentist coverage: margin of error, critical values, Student's t distribution, and proper probabilistic interpretation.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="confidence-intervals">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-statistics">Path 02 · Statistics</a> / Estimation / Lesson 8 of 51</span>
+    <h1 class="case-title">Confidence Intervals</h1>
+    <p class="lede rise" style="--d:3">Quantifying parameter uncertainty with frequentist coverage: margin of error, critical values, Student's t distribution, and proper probabilistic interpretation.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="1"><i><b></b></i>Beginner</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/sampling-and-standard-error/">Sampling &amp; standard error</a> <a href="../../concepts/central-limit-theorem-and-law-of-large-numbers/">CLT and LLN</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Statistics · Estimation</dd>
+          <dt>Level</dt><dd>Beginner</dd>
+          <dt>Used by</dt><dd>2 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">A point estimate alone provides an incomplete picture of an unknown population parameter. Confidence intervals construct a calibrated range around the estimate, guaranteeing that a chosen percentage of such intervals across repeated sampling will trap the true parameter value.</p>
+        <p>Imagine an archer shooting arrows at a bullseye hidden in thick fog. You cannot see where the bullseye is, but you can see where each arrow lands. If you only look at one arrow, you have a point estimate of where the target might be. But if you draw a circle around that arrow with a radius based on the archer's known spread, you create an interval. If the radius is calibrated for 95% confidence, then across 100 shots in the fog, about 95 of your circles will capture the hidden bullseye.</p>
+        <p>Notice what this means: the bullseye is fixed in one spot; it does not move. It is your circles that shift with each new shot. This is the heart of the frequentist confidence interval. You cannot say "there is a 95% probability the true target lies inside this specific circle"—either it does or it does not (0 or 1). What you can say is that the procedure used to draw the circle captures the target 95% of the time under repeated sampling.</p>
+        <p>In machine learning and statistics, we build these intervals by taking our point estimate (like a regression coefficient or validation accuracy) and adding and subtracting a margin of error: $\text{Estimate} \pm (\text{Critical Value} \times \text{Standard Error})$. If the population variance is known, we use the standard normal $z$-distribution; when estimating variance from a small sample, we switch to Student's $t$-distribution with heavier tails to account for extra uncertainty.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>A confidence interval is like tossing a ring around a fixed peg: the peg does not move, but 95 out of 100 tossed rings will successfully encircle it.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Specify the desired confidence level $1 - \alpha$ (most commonly 95%, where $\alpha = 0.05$).</li><li>Compute the point estimate (e.g. sample mean $\bar{x}$) from the empirical sample.</li><li>Compute the estimated standard error of the estimator: $\operatorname{SE} = s / \sqrt{n}$.</li><li>Select the appropriate critical value: $z_{1 - \alpha/2}$ for large samples or known $\sigma$; $t_{1 - \alpha/2, n-1}$ for unknown $\sigma$ on small samples.</li><li>Calculate the margin of error: $m = \text{Critical Value} \times \operatorname{SE}$.</li><li>Construct the interval boundaries: $[\bar{x} - m, \, \bar{x} + m]$.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Gaussian and Student's t Confidence Intervals</h3><div class="formula">$$\text{Known } \sigma: \quad \bar{x} \pm z_{1-\alpha/2} \frac{\sigma}{\sqrt{n}}, \qquad \text{Unknown } \sigma: \quad \bar{x} \pm t_{1-\alpha/2, \, n-1} \frac{s}{\sqrt{n}}$$</div><p>When $\sigma$ is unknown and estimated by $s$, the ratio follows Student's $t$-distribution with $n - 1$ degrees of freedom. The $t$-distribution has heavier tails than the standard normal distribution, widening the interval to reflect uncertainty in estimating the standard deviation. As $n \to \infty$, $t_{n-1} \to \mathcal{N}(0, 1)$.</p></li>
+          <li><h3>Margin of Error and Sample Size Determination</h3><div class="formula">$$m = z_{1-\alpha/2} \frac{\sigma}{\sqrt{n}} \implies n = \left(\frac{z_{1-\alpha/2} \cdot \sigma}{m}\right)^2$$</div><p>The margin of error $m$ is half the interval width. To achieve a specified target precision $m$ with $(1 - \alpha)$ confidence, the required sample size scales inversely with the square of the margin of error.</p></li>
+          <li><h3>Confidence Interval for a Population Proportion</h3><div class="formula">$$\hat{p} \pm z_{1-\alpha/2} \sqrt{\frac{\hat{p}(1 - \hat{p})}{n}}$$</div><p>The Wald interval for a Bernoulli proportion approximates the binomial distribution with a normal distribution. When $n\hat{p} &lt; 10$ or $n(1-\hat{p}) &lt; 10$, the Wilson score interval or Agresti–Coull adjustment is preferred to prevent coverage breakdown near 0 and 1.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Confidence is a property of the sampling procedure over infinite hypothetical replications, not a Bayesian posterior probability on a single interval.</li><li>Student's $t$-distribution automatically compensates for small sample sizes by expanding critical values.</li><li>Narrower intervals indicate higher precision, achieved by increasing sample size $n$ or accepting a lower confidence level.</li><li>If a 95% confidence interval for a treatment effect includes 0, the effect is not statistically significant at the $\alpha = 0.05$ level.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">from</span> scipy <span class="k">import</span> stats
+
+rng = np.random.<span class="f">default_rng</span>(<span class="n">42</span>)
+true_mu, true_sigma = <span class="n">75.0</span>, <span class="n">10.0</span>
+n = <span class="n">20</span>
+alpha = <span class="n">0.05</span>
+
+<span class="c"># Simulate 1,000 independent 95% confidence intervals</span>
+trials = <span class="n">1000</span>
+captured = <span class="n">0</span>
+
+<span class="k">for</span> _ <span class="k">in</span> <span class="k">range</span>(trials):
+    sample = rng.<span class="f">normal</span>(loc=true_mu, scale=true_sigma, size=n)
+    mean = np.<span class="f">mean</span>(sample)
+    se = stats.<span class="f">sem</span>(sample)
+    <span class="c"># Student's t critical value for df = n - 1</span>
+    t_crit = stats.t.<span class="f">ppf</span>(<span class="n">1.0</span> - alpha / <span class="n">2.0</span>, df=n - <span class="n">1</span>)
+    ci_lower = mean - t_crit * se
+    ci_upper = mean + t_crit * se
+    <span class="k">if</span> ci_lower &lt;= true_mu &lt;= ci_upper:
+        captured += <span class="n">1</span>
+
+<span class="k">print</span>(<span class="s">f&quot;Sample Size n={n}, Degrees of Freedom={n - 1}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;t Critical Value: {t_crit:.3f} (vs normal z = 1.960)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Empirical Coverage: {captured / trials * 100:.1f}% (Nominal: 95.0%)&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Interpreting a 95% CI as "there is a 95% probability the true parameter lies in this specific calculated interval" (that is a Bayesian credible interval).</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using the standard normal $z$-distribution on small samples ($n &lt; 30$) when the population standard deviation is unknown, leading to undercoverage.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Overlapping confidence intervals: two groups whose 95% CIs slightly overlap can still be statistically significantly different.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Ignoring the independence assumption; correlated or clustered data produces artificially narrow confidence intervals that fail to cover at the nominal rate.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>Which statement correctly reflects the frequentist meaning of a 95% confidence interval $[12.4, 18.2]$ for a population mean $\mu$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>95% of individual data points in the population lie between 12.4 and 18.2</span></button><button class="opt" type="button"><b>B</b><span>There is a 95% probability that $\mu$ is between 12.4 and 18.2</span></button><button class="opt" type="button"><b>C</b><span>Across many hypothetical random samples, 95% of the intervals computed using this exact method will contain $\mu$</span></button><button class="opt" type="button"><b>D</b><span>The probability that $\mu = 15.3$ (the midpoint) is 0.95</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In frequentist statistics, the population parameter $\mu$ is a fixed constant, not a random variable. The 95% confidence level describes the long-run success rate of the interval-generating procedure.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>Why is Student's $t$-distribution used instead of the standard normal $z$-distribution when constructing confidence intervals for small samples?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To force the confidence interval to be symmetric</span></button><button class="opt" type="button"><b>B</b><span>To account for the additional sampling uncertainty introduced by estimating $\sigma$ with the sample standard deviation $s$</span></button><button class="opt" type="button"><b>C</b><span>Because $t$-critical values are smaller than $z$-critical values</span></button><button class="opt" type="button"><b>D</b><span>Because the data is guaranteed to be non-normal</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Estimating the unknown population variance introduces extra randomness. Student's $t$-distribution has heavier tails, producing wider intervals that preserve the correct nominal coverage.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>If a 95% confidence interval for the difference between two model accuracies $(\text{Acc}_A - \text{Acc}_B)$ is $[-0.015, +0.062]$, what can you conclude at the $\alpha = 0.05$ significance level?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Model B is significantly better than Model A</span></button><button class="opt" type="button"><b>B</b><span>The difference is not statistically significant because the interval contains 0</span></button><button class="opt" type="button"><b>C</b><span>Both models have exactly identical accuracy</span></button><button class="opt" type="button"><b>D</b><span>Model A is significantly better than Model B</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because the 95% confidence interval spans across zero (from negative to positive), the null hypothesis of equal performance ($\text{Acc}_A - \text{Acc}_B = 0$) cannot be rejected at $\alpha = 0.05$.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q4</span>How does increasing the confidence level from 90% to 99% affect the width of a confidence interval (all else being equal)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The width remains unchanged</span></button><button class="opt" type="button"><b>B</b><span>The interval shifts to the right</span></button><button class="opt" type="button"><b>C</b><span>The interval becomes wider</span></button><button class="opt" type="button"><b>D</b><span>The interval becomes narrower</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A higher confidence level requires a larger critical value (e.g. $z = 2.576$ for 99% vs $z = 1.645$ for 90%), expanding the margin of error and widening the interval to guarantee higher coverage.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q5</span>A machine learning engineer measures model latency across $n = 100$ independent query runs, finding sample mean latency $\bar{x} = 45.0\text{ ms}$ and sample standard deviation $s = 15.0\text{ ms}$. Using standard normal approximation with $z_{0.975} = 1.96$, what is the margin of error for a 95% confidence interval for the mean latency?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$2.94\text{ ms}$</span></button><button class="opt" type="button"><b>B</b><span>$0.29\text{ ms}$</span></button><button class="opt" type="button"><b>C</b><span>$1.50\text{ ms}$</span></button><button class="opt" type="button"><b>D</b><span>$5.88\text{ ms}$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The standard error is $\operatorname{SE} = s / \sqrt{n} = 15.0 / \sqrt{100} = 1.50\text{ ms}$. The margin of error is $m = z_{0.975} \times \operatorname{SE} = 1.96 \times 1.50 = 2.94\text{ ms}$. The full width of the interval is $2m = 5.88\text{ ms}$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q6</span>When constructing a 95% confidence interval for the mean of a normally distributed feature from a sample of $n = 18$ observations with unknown population variance $\sigma^2$, which critical value must be used?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$t_{0.975, \, 17}$ from Student's $t$-distribution with 17 degrees of freedom</span></button><button class="opt" type="button"><b>B</b><span>$z_{0.975} = 1.960$</span></button><button class="opt" type="button"><b>C</b><span>$t_{0.975, \, 18}$ from Student's $t$-distribution with 18 degrees of freedom</span></button><button class="opt" type="button"><b>D</b><span>$\chi^2_{0.975, \, 17}$ from the chi-square distribution with 17 degrees of freedom</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> When the population standard deviation $\sigma$ is unknown and estimated by the sample standard deviation $s$, the standardised mean follows Student's $t$-distribution with $n - 1$ degrees of freedom. For $n = 18$, $\nu = 18 - 1 = 17$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q7</span>When estimating a 95% confidence interval for a conversion rate where only 3 conversions occurred out of 200 visitors ($\hat{p} = 0.015$), why is the standard Wald interval $[\hat{p} \pm 1.96\sqrt{\hat{p}(1-\hat{p})/n}]$ problematic?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It requires knowing the true population variance $\sigma^2$ in advance</span></button><button class="opt" type="button"><b>B</b><span>It tends to produce intervals with severe undercoverage and lower bounds that can extend below zero</span></button><button class="opt" type="button"><b>C</b><span>It always produces an interval that is twice as wide as the true parameter range</span></button><button class="opt" type="button"><b>D</b><span>It fails because proportions cannot be modelled with random variables</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The Wald interval relies on a normal approximation to the binomial distribution. When $n\hat{p} &lt; 10$ (here $200 \times 0.015 = 3$), the distribution is highly skewed; the Wald interval gives poor actual coverage (often well below nominal 95%) and can yield negative lower limits. Wilson score or Agresti–Coull intervals are preferred.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q8</span>Consider the following Python snippet using SciPy to construct a 95% confidence interval for a sample mean:
+<code>data = np.array([12, 15, 14, 18, 16])
+mean = np.mean(data)
+se = stats.sem(data)
+ci = stats.t.interval(0.95, df=len(data) - 1, loc=mean, scale=se)</code>
+What does <code>stats.sem(data)</code> compute in this snippet?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The sample standard deviation $s$ of the data points</span></button><button class="opt" type="button"><b>B</b><span>The 95% quantile of the Student's $t$-distribution</span></button><button class="opt" type="button"><b>C</b><span>The standard error of the mean, $s / \sqrt{n}$</span></button><button class="opt" type="button"><b>D</b><span>The margin of error $t_{0.975, 4} \times (s / \sqrt{n})$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> <code>stats.sem</code> computes the standard error of the mean, $\hat{\sigma} / \sqrt{n} = s / \sqrt{n}$. The <code>stats.t.interval</code> function multiplies this standard error by the two-tailed critical value and centres it around <code>loc</code>.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q9</span>In the standard notation of confidence intervals, if the desired confidence level is $99\%$, what is the significance level $\alpha$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>0.01</span></button><button class="opt" type="button"><b>B</b><span>0.001</span></button><button class="opt" type="button"><b>C</b><span>0.10</span></button><button class="opt" type="button"><b>D</b><span>0.05</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The confidence level is defined as $1 - \alpha$. For a $99\%$ confidence interval ($0.99$), the significance level is $\alpha = 1 - 0.99 = 0.01$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q10</span>An analytics team wants to estimate the mean response time of a web service to within a margin of error $m = 2.0\text{ ms}$ with $95\%$ confidence ($z_{0.975} = 1.96$). From past measurements, the standard deviation is known to be $\sigma = 20.0\text{ ms}$. What is the minimum sample size $n$ required?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>196</span></button><button class="opt" type="button"><b>B</b><span>385</span></button><button class="opt" type="button"><b>C</b><span>770</span></button><button class="opt" type="button"><b>D</b><span>98</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Using the sample size formula $n = (z_{1-\alpha/2} \cdot \sigma / m)^2 = (1.96 \times 20.0 / 2.0)^2 = (19.6)^2 = 384.16$. Rounding up to the next integer guarantees the desired precision: $n = 385$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q11</span>Suppose two independent models, Model 1 and Model 2, have estimated mean latencies whose 95% confidence intervals overlap slightly: Model 1 has $[10.0, 14.0]$ and Model 2 has $[13.0, 17.0]$. A colleague claims that because their individual 95% confidence intervals overlap, the difference between the two models cannot be statistically significant at $\alpha = 0.05$. Why is this claim incorrect?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because overlapping intervals prove that the null hypothesis is true with 95% certainty</span></button><button class="opt" type="button"><b>B</b><span>Because testing the difference requires the standard error of the difference $\sqrt{\operatorname{SE}_1^2 + \operatorname{SE}_2^2}$, which is smaller than the sum of the separate margins of error $\operatorname{SE}_1 + \operatorname{SE}_2$</span></button><button class="opt" type="button"><b>C</b><span>Because confidence intervals only apply to proportions, not continuous latencies</span></button><button class="opt" type="button"><b>D</b><span>Because Model 2 has a strictly higher upper bound than Model 1</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The margin of error for the difference $(m_{\text{diff}} = z \sqrt{\operatorname{SE}_1^2 + \operatorname{SE}_2^2})$ is strictly smaller than the sum of the individual margins of error $(m_1 + m_2 = z(\operatorname{SE}_1 + \operatorname{SE}_2))$ because $\sqrt{a^2 + b^2} &lt; a + b$. Two 95% confidence intervals can overlap by up to roughly 29% of their width while their difference remains statistically significant at $\alpha = 0.05$.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q12</span>In an A/B test with $n = 100$ visitors, 50 users convert, giving sample proportion $\hat{p} = 0.50$. Using the Wald method with $z_{0.975} = 1.96$, what is the 95% confidence interval for the population conversion rate?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$[0.350, 0.650]$</span></button><button class="opt" type="button"><b>B</b><span>$[0.304, 0.696]$</span></button><button class="opt" type="button"><b>C</b><span>$[0.450, 0.550]$</span></button><button class="opt" type="button"><b>D</b><span>$[0.402, 0.598]$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The estimated standard error is $\operatorname{SE} = \sqrt{\hat{p}(1 - \hat{p}) / n} = \sqrt{0.50 \times 0.50 / 100} = \sqrt{0.0025} = 0.050$. The margin of error is $m = 1.96 \times 0.050 = 0.098$. The interval is $0.500 \pm 0.098 = [0.402, 0.598]$.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/bootstrap-and-jackknife/"><small class="kicker">Concept</small><b>Bootstrap &amp; jackknife</b></a><a href="../../concepts/cross-validation/"><small class="kicker">Concept</small><b>Cross-validation</b></a><a href="../../models/ols_linear_regression/"><small class="kicker">Regression</small><b>Linear regression (OLS)</b></a><a href="../../models/bayesian_linear_regression/"><small class="kicker">Regression</small><b>Bayesian linear regression</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/sampling-and-standard-error/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Statistics</small><b>Sampling &amp; standard error</b></a>
+    <a class="pager-next" href="../../concepts/bootstrap-and-jackknife/"><small>Next · Statistics <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Bootstrap &amp; jackknife</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

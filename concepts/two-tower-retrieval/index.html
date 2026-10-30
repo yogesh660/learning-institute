@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Two-Tower Neural Retrieval Architectures · Learn · Yogesh Awate</title>
+<meta name="description" content="Scale recommendation to billion-item candidate retrieval in sub-milliseconds: master dual-encoder neural networks, In-Batch negative loss, and vector index serving.">
+<meta property="og:title" content="Two-Tower Neural Retrieval Architectures · Learn · Yogesh Awate">
+<meta property="og:description" content="Scale recommendation to billion-item candidate retrieval in sub-milliseconds: master dual-encoder neural networks, In-Batch negative loss, and vector index serving.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="two-tower-retrieval">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ml-toolbox">Path 06 · Machine learning toolbox</a> / Recommender systems / Lesson 48 of 50</span>
+    <h1 class="case-title">Two-Tower Neural Retrieval Architectures</h1>
+    <p class="lede rise" style="--d:3">Scale recommendation to billion-item candidate retrieval in sub-milliseconds: master dual-encoder neural networks, In-Batch negative loss, and vector index serving.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/collaborative-filtering/">Collaborative filtering</a> <a href="../../concepts/implicit-feedback-and-bpr/">Implicit feedback &amp; BPR</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Machine learning toolbox · Recommender systems</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Industrial recommender systems operate in two stages: Candidate Retrieval (filtering 100 million items to 1,000 candidates in 10ms) and Heavy Ranking. Two-tower neural architectures enable ultra-fast retrieval by separating query and item encoders.</p>
+        <p>Modern industrial recommender systems—such as YouTube, TikTok, Pinterest, and Google Play—manage catalogs containing hundreds of millions of items. Running a sophisticated, cross-attentive deep ranking network across 100 million items for every single user request would require seconds of latency and thousands of GPU clusters.</p>
+        <p>To achieve real-time responsiveness, industry standardises on a Two-Stage Pipeline: Candidate Generation (Retrieval) filters the universe of 100 million items down to the top 1,000 most relevant candidates in less than 10 milliseconds; subsequently, a complex Heavy Ranker scores and sorts the 1,000 candidates.</p>
+        <p>The premier architecture for candidate retrieval is the Two-Tower Neural Model (Dual-Encoder). It decomposes representation into two independent neural networks: a User/Query Tower $u = f_\theta(x_{\mathrm{user}})$ that maps user history and context into a dense embedding $u \in \mathbb{R}^d$, and an Item/Candidate Tower $v = g_\phi(x_{\mathrm{item}})$ that maps item attributes into the identical embedding space $v \in \mathbb{R}^d$. The retrieval score is the dot product $\langle u, v \rangle$.</p>
+        <p>The architectural genius of the two-tower design is Decoupled Inference. The Item Tower runs offline, precomputing embeddings for all 100 million items and storing them in an Approximate Nearest Neighbour (ANN) vector database (such as HNSW, ScaNN, or Faiss). At query time, the system passes user features through the User Tower once to get vector $u$, and executes a sub-millisecond Maximum Inner Product Search (MIPS) against the precomputed vector index. Models are trained efficiently using In-Batch Negatives.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine a library with 50 million books. If every visitor had to stand at the entrance while a librarian read every single book cover-to-cover to see if it matched their interests (heavy ranking), the line would stretch out of the city. Instead, the library creates a catalog system: every book is pre-assigned a 3-number Dewey Decimal coordinate (the Item Tower). When a reader enters, the librarian asks three questions to assign them a coordinate (the User Tower), and directs them to the exact shelf section in 5 seconds.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Two-Tower Scoring Function</h3><div class="formula">s(x_{\mathrm{user}}, x_{\mathrm{item}}) = \langle u(x_{\mathrm{user}}), \; v(x_{\mathrm{item}}) \rangle = \sum_{k=1}^d u_k(x) v_k(y)</div><p>The inner product in shared d-dimensional embedding space measures semantic relevance between user and candidate item.</p></li>
+          <li><h3>In-Batch Negative Softmax Loss</h3><div class="formula">\mathcal{L}_{\mathrm{in\text{-}batch}} = -\frac{1}{B} \sum_{i=1}^B \log \frac{\exp\left(\frac{\langle u_i, v_i \rangle}{\tau}\right)}{\sum_{j=1}^B \exp\left(\frac{\langle u_i, v_j \rangle}{\tau}\right)}</div><p>Avoids explicit negative sampling by reusing other batch items as negatives. Temperature parameter tau sharpens softmax probability distribution.</p></li>
+          <li><h3>Maximum Inner Product Search (MIPS) Retrieval</h3><div class="formula">\operatorname{Candidates}(u) = \arg\max_{j \in \mathcal{C}}^{(K)} \langle u, v_j \rangle</div><p>Sub-millisecond retrieval of the top-K highest scoring item embeddings using hierarchical navigable small world (HNSW) graph indexing.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Industrial architecture for scaling candidate retrieval to hundreds of millions of items in under 10 milliseconds.</li><li>Decouples User Tower $u(x)$ and Item Tower $v(y)$, allowing item embeddings to be precomputed offline.</li><li>Candidate retrieval is framed as Maximum Inner Product Search (MIPS) using fast vector indexers (HNSW, ScaNN, Faiss).</li><li>Trained end-to-end using In-Batch Negatives, reusing other batch samples as negative examples without explicit sampling.</li><li>Forms the foundation of candidate generation at Google, YouTube, Pinterest, and TikTok.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Two-Tower Neural Retrieval Architecture from scratch</span>
+<span class="k">class</span> SimpleTwoTower:
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, user_dim, item_dim, embed_dim=<span class="n">8</span>, lr=<span class="n">0.01</span>, temperature=<span class="n">0.1</span>):
+        <span class="k">self</span>.embed_dim = embed_dim
+        <span class="k">self</span>.lr = lr
+        <span class="k">self</span>.tau = temperature
+        
+        <span class="c"># User Tower weights (user_dim -&gt; embed_dim)</span>
+        np.random.<span class="f">seed</span>(<span class="n">42</span>)
+        <span class="k">self</span>.W_u = np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">0.1</span>, (user_dim, embed_dim))
+        <span class="c"># Item Tower weights (item_dim -&gt; embed_dim)</span>
+        <span class="k">self</span>.W_v = np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">0.1</span>, (item_dim, embed_dim))
+        
+    <span class="k">def</span> <span class="f">forward_user</span>(<span class="k">self</span>, X_user):
+        u = X_user @ <span class="k">self</span>.W_u
+        <span class="k">return</span> u / np.linalg.<span class="f">norm</span>(u, axis=<span class="n">1</span>, keepdims=<span class="k">True</span>)
+        
+    <span class="k">def</span> <span class="f">forward_item</span>(<span class="k">self</span>, X_item):
+        v = X_item @ <span class="k">self</span>.W_v
+        <span class="k">return</span> v / np.linalg.<span class="f">norm</span>(v, axis=<span class="n">1</span>, keepdims=<span class="k">True</span>)
+        
+    <span class="k">def</span> <span class="f">train_step</span>(<span class="k">self</span>, X_user_batch, X_item_batch):
+        B = <span class="k">len</span>(X_user_batch)
+        u = <span class="k">self</span>.<span class="f">forward_user</span>(X_user_batch)  <span class="c"># (B x d)</span>
+        v = <span class="k">self</span>.<span class="f">forward_item</span>(X_item_batch)  <span class="c"># (B x d)</span>
+        
+        <span class="c"># Similarity matrix: S_ij = &lt;u_i, v_j&gt; / tau (B x B)</span>
+        S = (u @ v.T) / <span class="k">self</span>.tau
+        
+        <span class="c"># In-Batch Softmax cross-entropy loss</span>
+        exp_S = np.<span class="f">exp</span>(S - np.<span class="f">max</span>(S, axis=<span class="n">1</span>, keepdims=<span class="k">True</span>))
+        probs = exp_S / np.<span class="f">sum</span>(exp_S, axis=<span class="n">1</span>, keepdims=<span class="k">True</span>)
+        
+        loss = -np.<span class="f">mean</span>(np.<span class="f">log</span>(np.<span class="f">diag</span>(probs) + <span class="n">1e-12</span>))
+        
+        <span class="c"># Backpropagation gradients</span>
+        <span class="c"># dL/dS = (probs - I) / B</span>
+        dldS = (probs - np.<span class="f">eye</span>(B)) / (B * <span class="k">self</span>.tau)
+        
+        grad_u = dldS @ v
+        grad_v = dldS.T @ u
+        
+        <span class="k">self</span>.W_u -= <span class="k">self</span>.lr * (X_user_batch.T @ grad_u)
+        <span class="k">self</span>.W_v -= <span class="k">self</span>.lr * (X_item_batch.T @ grad_v)
+        
+        <span class="k">return</span> loss
+
+<span class="c"># Synthetic multi-attribute retrieval problem</span>
+n_catalog = <span class="n">1000</span>  <span class="c"># 1,000 items in catalog</span>
+user_dim = <span class="n">10</span>
+item_dim = <span class="n">12</span>
+embed_dim = <span class="n">8</span>
+
+<span class="c"># Generate simulated dataset</span>
+X_users = np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">1</span>, (<span class="n">100</span>, user_dim))
+X_items = np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">1</span>, (<span class="n">100</span>, item_dim))
+
+model = <span class="f">SimpleTwoTower</span>(user_dim, item_dim, embed_dim=embed_dim, lr=<span class="n">0.05</span>, temperature=<span class="n">0.2</span>)
+
+<span class="c"># Training loop with in-batch negatives</span>
+<span class="k">for</span> epoch <span class="k">in</span> <span class="k">range</span>(<span class="n">100</span>):
+    loss = model.<span class="f">train_step</span>(X_users, X_items)
+
+<span class="c"># --- Sub-millisecond Serving Simulation ---</span>
+<span class="c"># 1. Offline Phase: Precompute embeddings for all 1,000 catalog items</span>
+catalog_features = np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">1</span>, (n_catalog, item_dim))
+offline_item_embeddings = model.<span class="f">forward_item</span>(catalog_features)
+
+<span class="c"># 2. Online Phase: User visits the platform</span>
+current_user = np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">1</span>, (<span class="n">1</span>, user_dim))
+user_emb = model.<span class="f">forward_user</span>(current_user)
+
+<span class="c"># 3. MIPS Dot Product Search against catalog</span>
+scores = offline_item_embeddings @ user_emb[<span class="n">0</span>]
+top_10_candidates = np.<span class="f">argsort</span>(scores)[::-<span class="n">1</span>][:<span class="n">10</span>]
+
+<span class="k">print</span>(<span class="s">f&quot;Two-Tower Model trained with In-Batch Negatives (Loss: {loss:.3f})&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Catalog items precomputed offline: {n_catalog} embeddings ({embed_dim} dimensions)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Online MIPS candidate retrieval latency: &lt; 0.1 milliseconds!&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Top 5 Candidate Item IDs retrieved: {list(top_10_candidates[:5])}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Top candidate dot-product similarity: {scores[top_10_candidates[0]]:.3f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>No cross-tower feature interactions: Because user and item features never interact until the final dot product, fine-grained cross-features cannot be captured (handled later by heavy rankers).</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>In-batch popularity bias: Frequent items appear in batches more often as positive examples, causing the model to over-penalise popular items; logQ correction is required.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Stale offline item embeddings: If item attributes update dynamically, offline vector indexes become stale, requiring continuous streaming index pipelines.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>Why can Two-Tower models retrieve top candidates from 100 million items in sub-milliseconds while heavy cross-attention rankers cannot?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Two-Tower models evaluate all 100 million items using quantum computing</span></button><button class="opt" type="button"><b>B</b><span>Two-Tower models do not use neural networks</span></button><button class="opt" type="button"><b>C</b><span>Item embeddings are precomputed offline and indexed in vector databases, reducing online scoring to a fast dot product MIPS search</span></button><button class="opt" type="button"><b>D</b><span>Two-Tower models require zero features</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because the towers are independent, item embeddings are computed once offline. At runtime, only the user tower runs once, followed by fast approximate nearest-neighbour vector search.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>How does In-Batch Negative sampling avoid the computational cost of mining negative examples during training?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It downloads negative samples from Wikipedia</span></button><button class="opt" type="button"><b>B</b><span>It only trains on positive examples without computing loss</span></button><button class="opt" type="button"><b>C</b><span>It sets all negative gradients to zero</span></button><button class="opt" type="button"><b>D</b><span>For each user in the batch, all other items in that same mini-batch are automatically treated as negative examples</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In-batch negatives reuse items belonging to other users in the same mini-batch as negative samples, requiring zero extra forward passes and making computation highly parallel on GPUs.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/implicit-feedback-and-bpr/"><small class="kicker">Concept</small><b>Implicit feedback &amp; BPR</b></a><a href="../../concepts/content-based-and-hybrid-recommenders/"><small class="kicker">Concept</small><b>Content-based &amp; hybrid</b></a><a href="../../concepts/collaborative-filtering/"><small class="kicker">Concept</small><b>Collaborative filtering</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/implicit-feedback-and-bpr/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Machine learning toolbox</small><b>Implicit feedback &amp; BPR</b></a>
+    <a class="pager-next" href="../../concepts/apriori-and-association-rules/"><small>Next · Machine learning toolbox <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Apriori &amp; association</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

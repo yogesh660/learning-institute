@@ -1,0 +1,22 @@
+{
+  "dataset": "mall customers sample",
+  "summary": "fuzzy c-means (c = 5, m = 2) on standardised annual income and spending score of the mall customers sample. No labels exist, so the scores are internal: higher silhouette and lower Davies–Bouldin are better.",
+  "model_label": "fuzzy c-means (c = 5, m = 2)",
+  "baseline_label": "k-means (k = 5)",
+  "metrics": {
+    "Clusters": 5,
+    "Noise points": 0,
+    "Silhouette": 0.385,
+    "Davies–Bouldin": 0.8817,
+    "Calinski–Harabasz": 472.2,
+    "Points with max membership < 0.6": 170
+  },
+  "baseline": {
+    "Clusters": 5,
+    "Noise points": 0,
+    "Silhouette": 0.4038,
+    "Davies–Bouldin": 0.8278,
+    "Calinski–Harabasz": 489.2
+  },
+  "generated": "generated 2026-10-28"
+}

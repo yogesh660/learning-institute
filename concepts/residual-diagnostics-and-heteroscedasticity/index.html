@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Residual Diagnostics and Heteroscedasticity · Learn · Yogesh Awate</title>
+<meta name="description" content="Diagnose regression failure modes with residual plots, detect non-constant variance using the Breusch–Pagan test, and correct inference with robust standard errors.">
+<meta property="og:title" content="Residual Diagnostics and Heteroscedasticity · Learn · Yogesh Awate">
+<meta property="og:description" content="Diagnose regression failure modes with residual plots, detect non-constant variance using the Breusch–Pagan test, and correct inference with robust standard errors.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="residual-diagnostics-and-heteroscedasticity">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-statistics">Path 02 · Statistics</a> / Regression inference / Lesson 30 of 51</span>
+    <h1 class="case-title">Residual Diagnostics and Heteroscedasticity</h1>
+    <p class="lede rise" style="--d:3">Diagnose regression failure modes with residual plots, detect non-constant variance using the Breusch–Pagan test, and correct inference with robust standard errors.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/ols-inference-t-tests-f-test-r2-and-adjusted-r2/">OLS Inference: t, F &amp; R-Squared</a> <a href="../../concepts/normality-tests-shapiro-wilk-kolmogorov-smirnov-anderson-darling/">Normality Tests</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Statistics · Regression inference</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>2 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">The Gauss–Markov theorem guarantees that ordinary least squares estimators are the Best Linear Unbiased Estimator (BLUE) only when errors are homoscedastic and uncorrelated. When residual variance expands or contracts across predictor ranges (heteroscedasticity), OLS coefficient estimates remain unbiased, but standard errors become severely distorted, invalidating confidence intervals and hypothesis tests. Systematic residual diagnostics and White's heteroscedasticity-consistent standard errors restore valid statistical inference.</p>
+        <p>Imagine predicting annual household expenditure on restaurant dining based on household income. For families earning £25,000 per year, dining spending is tightly constrained between £500 and £1,500 (small error variance). For affluent families earning £250,000 per year, dining spending varies wildly: some families cook gourmet meals at home and spend £2,000, while others dine out constantly and spend £30,000 (huge error variance).</p>
+        <p>If you plot residuals ($y - \hat{y}$) against fitted values $\hat{y}$, the points do not form a uniform horizontal band. Instead, they fan outward like an opening megaphone—classic heteroscedasticity.</p>
+        <p>What is the danger? Standard OLS assumes every single data point has identical error variance $\sigma^2$. It treats high-income households (where noise is £15,000) with the exact same credibility as low-income households (where noise is £300). While the estimated slope is still unbiased on average, the standard OLS formula underestimates the true standard error, producing artificially narrow confidence intervals and falsely low p-values. A formal test like the Breusch–Pagan test regresses squared residuals against predictors: if variance scales with income, it yields a significant chi-square statistic ($p &lt; 0.001$). Switching to Huber–White heteroscedasticity-robust standard errors (HC1) corrects the standard error without needing to throw away the linear model.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Fitting standard OLS under heteroscedasticity is like judging an archer's skill on windy days and calm days equally: it mistakes erratic, windblown shots for reliable evidence unless you account for changing conditions.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Fit the OLS regression model and compute raw residuals $e_i = y_i - \hat{y}_i$.</li><li>Plot residuals against fitted values $\hat{y}_i$ to visually check for non-linearity (curved patterns) and heteroscedasticity (fan shapes).</li><li>Plot standardised residuals against theoretical normal quantiles (Q-Q plot) to check for heavy-tailed or skewed errors.</li><li>Perform the Breusch–Pagan test: regress squared residuals $e_i^2$ on predictors and compute the LM test statistic $n R^2 \sim \chi^2(p)$.</li><li>If heteroscedasticity is detected, compute Huber–White heteroscedasticity-consistent (HC) sandwich covariance matrices (e.g. HC1).</li><li>Alternatively, apply variance-stabilising transforms (such as $\log y$) or Weighted Least Squares (WLS) if variance weights are known.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>The Homoscedasticity Assumption vs Heteroscedasticity</h3><div class="formula">$$\text{Homoscedasticity: } \text{Var}(\epsilon_i \mid \mathbf{x}_i) = \sigma^2, \qquad \text{Heteroscedasticity: } \text{Var}(\epsilon_i \mid \mathbf{x}_i) = \sigma_i^2$$</div><p>Under homoscedasticity, the covariance matrix of disturbances is $\boldsymbol{\Sigma} = \sigma^2 \mathbf{I}$, producing the classic textbook variance formula $\text{Var}(\hat{\boldsymbol{\beta}}) = \sigma^2 (\mathbf{X}^T\mathbf{X})^{-1}$. Under heteroscedasticity, the diagonal elements $\sigma_i^2$ vary, turning the true variance into the sandwich form $(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\boldsymbol{\Sigma}\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}$.</p></li>
+          <li><h3>The Breusch–Pagan Lagrange Multiplier Test</h3><div class="formula">$$e_i^2 = \gamma_0 + \gamma_1 x_{i1} + \dots + \gamma_p x_{ip} + u_i \implies \text{LM} = n R_{e^2}^2 \sim \chi^2(p)$$</div><p>The Breusch–Pagan test fits an auxiliary regression of squared residuals $e_i^2$ on the original predictors. Under the null hypothesis of homoscedasticity ($H_0: \gamma_1 = \dots = \gamma_p = 0$), the sample size $n$ multiplied by the auxiliary determination coefficient $R_{e^2}^2$ converges asymptotically to a chi-square distribution with $p$ degrees of freedom.</p></li>
+          <li><h3>Huber–White Heteroscedasticity-Consistent (HC1) Standard Errors</h3><div class="formula">$$\widehat{\text{Var}}_{\text{HC1}}(\hat{\boldsymbol{\beta}}) = \frac{n}{n - p - 1} (\mathbf{X}^T\mathbf{X})^{-1} \left(\sum_{i=1}^n e_i^2 \mathbf{x}_i \mathbf{x}_i^T\right) (\mathbf{X}^T\mathbf{X})^{-1}$$</div><p>The White sandwich estimator places squared sample residuals along the diagonal of the central "meat" matrix. Multiplying by degrees-of-freedom correction $\frac{n}{n - p - 1}$ yields HC1. This estimator converges asymptotically to the true covariance matrix without requiring knowledge of the functional form of heteroscedasticity.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Heteroscedasticity does not bias OLS slope estimates; it invalidates standard error formulas, making confidence intervals and p-values untrustworthy.</li><li>Residual-versus-fitted scatter plots serve as the primary diagnostic: homoscedastic errors display an even horizontal cloud with constant vertical spread.</li><li>The Breusch–Pagan test provides an objective hypothesis test for linear variance dependence on predictors.</li><li>Huber–White robust standard errors (HC1) fix inferential hypothesis testing without altering point estimates or discarding data.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">import</span> scipy.stats <span class="k">as</span> stats
+
+rng = np.random.<span class="f">default_rng</span>(<span class="n">42</span>)
+n = <span class="n">150</span>
+
+<span class="c"># Heteroscedastic data: error variance scales proportionally with x</span>
+x = rng.<span class="f">uniform</span>(<span class="n">1.0</span>, <span class="n">10.0</span>, size=n)
+y = <span class="n">2.0</span> + <span class="n">3.0</span> * x + rng.<span class="f">normal</span>(<span class="n">0.0</span>, <span class="n">0.8</span> * x, size=n)
+X = np.<span class="f">column_stack</span>([np.<span class="f">ones</span>(n), x])
+
+<span class="c"># OLS point estimates</span>
+beta = np.linalg.<span class="f">inv</span>(X.T @ X) @ X.T @ y
+e = y - X @ beta
+
+<span class="c"># 1. Breusch-Pagan test for heteroscedasticity</span>
+e2 = e**<span class="n">2</span>
+beta_aux = np.linalg.<span class="f">inv</span>(X.T @ X) @ X.T @ e2
+r2_aux = <span class="n">1.0</span> - np.<span class="f">sum</span>((e2 - X @ beta_aux)**<span class="n">2</span>) / np.<span class="f">sum</span>((e2 - np.<span class="f">mean</span>(e2))**<span class="n">2</span>)
+lm_stat = n * r2_aux
+p_bp = <span class="n">1.0</span> - stats.chi2.<span class="f">cdf</span>(lm_stat, df=<span class="n">1</span>)
+
+<span class="c"># 2. Standard OLS SE vs Huber-White HC1 robust SE</span>
+cov_ols = (np.<span class="f">sum</span>(e**<span class="n">2</span>) / (n - <span class="n">2</span>)) * np.linalg.<span class="f">inv</span>(X.T @ X)
+cov_hc1 = (n / (n - <span class="n">2</span>)) * np.linalg.<span class="f">inv</span>(X.T @ X) @ (X.T @ np.<span class="f">diag</span>(e2) @ X) @ np.linalg.<span class="f">inv</span>(X.T @ X)
+
+se_ols = np.<span class="f">sqrt</span>(np.<span class="f">diag</span>(cov_ols))[<span class="n">1</span>]
+se_hc1 = np.<span class="f">sqrt</span>(np.<span class="f">diag</span>(cov_hc1))[<span class="n">1</span>]
+
+<span class="k">print</span>(<span class="s">f&quot;Breusch-Pagan LM: {lm_stat:.2f} (p-value: {p_bp:.4e})&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Slope beta_1:     {beta[1]:.3f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Standard OLS SE:  {se_ols:.3f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Robust HC1 SE:    {se_hc1:.3f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Believing that heteroscedasticity makes regression coefficients biased; coefficients remain completely unbiased and consistent.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Throwing away linear regression models upon detecting heteroscedasticity instead of reporting heteroscedasticity-robust standard errors.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Running standard Breusch–Pagan tests on non-normal errors without Koenker's studentisation, which inflates false positive rates.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Confusing non-linearity with heteroscedasticity: an omitted quadratic term often produces both a curved residual pattern and apparent variance changes.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>What is the primary statistical consequence of ignoring heteroscedasticity in an OLS regression model?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The estimated regression coefficients become biased and inconsistent</span></button><button class="opt" type="button"><b>B</b><span>The model cannot compute fitted values</span></button><button class="opt" type="button"><b>C</b><span>The $R^2$ becomes negative</span></button><button class="opt" type="button"><b>D</b><span>Standard errors are computed incorrectly, invalidating t-tests, confidence intervals, and p-values</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> OLS coefficient estimates remain unbiased under heteroscedasticity, but the textbook formula for $\text{Var}(\hat{\boldsymbol{\beta}})$ is wrong, distorting standard errors and hypothesis tests.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>How does a classic residual-versus-fitted values plot look when heteroscedasticity is present?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>A widening cone or funnel shape where vertical scatter expands across fitted values</span></button><button class="opt" type="button"><b>B</b><span>A uniform rectangular band with constant vertical thickness</span></button><button class="opt" type="button"><b>C</b><span>A circle centered at the origin</span></button><button class="opt" type="button"><b>D</b><span>A single straight 45-degree diagonal line</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A widening cone (megaphone shape) indicates that error variance is not constant, but scales with the magnitude of predictions.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>What does the Breusch–Pagan test evaluate?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Whether the errors are normally distributed</span></button><button class="opt" type="button"><b>B</b><span>Whether squared residuals can be predicted by the independent variables, indicating non-constant variance</span></button><button class="opt" type="button"><b>C</b><span>Whether two predictors are collinear</span></button><button class="opt" type="button"><b>D</b><span>Whether the true relationship is non-linear</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The Breusch–Pagan test regresses squared residuals on the explanatory variables; a significant $R^2$ demonstrates that error variance depends on predictor values.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q4</span>How do Huber–White robust standard errors (HC1) resolve the problem of heteroscedasticity?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>They recalculate the parameter covariance matrix using a sandwich estimator that provides asymptotically consistent standard errors without changing point estimates</span></button><button class="opt" type="button"><b>B</b><span>They force residuals to follow a normal distribution</span></button><button class="opt" type="button"><b>C</b><span>They delete outliers from the dataset</span></button><button class="opt" type="button"><b>D</b><span>They apply a polynomial transformation to $Y$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Huber–White sandwich estimators substitute squared sample residuals into the covariance calculation, restoring consistent standard errors without altering regression coefficients.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../models/ols_linear_regression/"><small class="kicker">Regression</small><b>Linear regression (OLS)</b></a><a href="../../concepts/multicollinearity-and-vif/"><small class="kicker">Concept</small><b>Multicollinearity &amp; VIF</b></a><a href="../../models/robust_regression/"><small class="kicker">Regression</small><b>Robust regression</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/ols-inference-t-tests-f-test-r2-and-adjusted-r2/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Statistics</small><b>OLS Inference: t, F &amp; R-Squared</b></a>
+    <a class="pager-next" href="../../concepts/multicollinearity-and-vif/"><small>Next · Statistics <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Multicollinearity &amp; VIF</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

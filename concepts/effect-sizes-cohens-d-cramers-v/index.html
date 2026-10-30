@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Effect Sizes: Cohen's d, Cramér's V · Learn · Yogesh Awate</title>
+<meta name="description" content="Quantify the practical magnitude of experimental findings beyond mere p-values using standardised metrics for continuous and categorical differences.">
+<meta property="og:title" content="Effect Sizes: Cohen's d, Cramér's V · Learn · Yogesh Awate">
+<meta property="og:description" content="Quantify the practical magnitude of experimental findings beyond mere p-values using standardised metrics for continuous and categorical differences.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="effect-sizes-cohens-d-cramers-v">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-statistics">Path 02 · Statistics</a> / Hypothesis testing / Lesson 20 of 51</span>
+    <h1 class="case-title">Effect Sizes: Cohen's d, Cramér's V</h1>
+    <p class="lede rise" style="--d:3">Quantify the practical magnitude of experimental findings beyond mere p-values using standardised metrics for continuous and categorical differences.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="1"><i><b></b></i>Beginner</span></span>
+      <span class="tagline">15 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/hypothesis-testing-and-p-values/">Hypothesis Tests &amp; p-Values</a> <a href="../../concepts/type-i-ii-errors-power-and-sample-size/">Errors, Power and Sample Size</a> <a href="../../concepts/z-test-and-t-tests/">z-Test and Student's t-Tests</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Statistics · Hypothesis testing</dd>
+          <dt>Level</dt><dd>Beginner</dd>
+          <dt>Used by</dt><dd>2 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">A tiny p-value tells you an effect is unlikely to be pure noise, but says nothing about whether it actually matters. Effect size metrics decouple statistical significance from sample size, quantifying the real-world strength of relationships on standardised scales. Cohen's d, Hedges' g, and Cramér's V provide universal, scale-free benchmarks for comparing continuous mean shifts and categorical associations across experiments.</p>
+        <p>Suppose an online education platform evaluates a new tutorial on test scores. In a massive sample of 100,000 students, the new tutorial improves the average score from 75.00 to 75.15 points (a 0.15 point lift out of 100), with a pooled standard deviation $s = 15.0$ points. Because the sample size is enormous ($N = 100,000$), the standard error is $\approx 0.067$, producing $z = 2.24$ and $p = 0.025$. A naive team might announce a "statistically significant breakthrough".</p>
+        <p>However, dividing the 0.15 point difference by the standard deviation of 15.0 yields a Cohen's $d$ of just $0.01$—a minuscule shift of one-hundredth of a standard deviation. Over 99% of student scores overlap completely between the two cohorts. The effect is practically indistinguishable from zero. Conversely, a tiny pilot study of 20 users might show a massive 12-point jump ($d = 0.80$), but have $p = 0.08$ due to low sample size.</p>
+        <p>Effect sizes protect teams from both traps. For continuous two-group comparisons, Cohen's $d$ expresses the difference in terms of pooled standard deviations ($0.2$ is small, $0.5$ is medium, $0.8$ is large). Hedges' $g$ applies an exact small-sample correction. For categorical contingency tables, Cramér's $V$ bounds association between 0 (complete independence) and 1 (perfect correlation), converting unscaled chi-square statistics into interpretable association strengths.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>A p-value is like a telescope telling you whether a celestial body exists; the effect size is the measurement that tells you whether it is a pebble or a planet.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Determine the data type: continuous measurements between two groups (Cohen's $d$ or Hedges' $g$) or categorical counts in a contingency table (Cramér's $V$).</li><li>For continuous variables, compute the mean difference $\bar{X}_1 - \bar{X}_2$ and the pooled standard deviation $s_{\text{pooled}}$.</li><li>Divide the mean difference by $s_{\text{pooled}}$ to obtain Cohen's $d$; if $n &lt; 20$, multiply by the Hedges correction factor $J \approx 1 - \frac{3}{4(n_1 + n_2) - 9}$.</li><li>For categorical contingency tables, compute the Pearson chi-square statistic $\chi^2$ and total sample size $N$.</li><li>Compute Cramér's $V = \sqrt{\frac{\chi^2}{N \min(R - 1, C - 1)}}$.</li><li>Interpret the magnitude against established domain standards rather than treating p-values as proxies for impact.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Cohen's d and Pooled Standard Deviation</h3><div class="formula">$$d = \frac{\bar{X}_1 - \bar{X}_2}{s_{\text{pooled}}}, \qquad s_{\text{pooled}} = \sqrt{\frac{(n_1 - 1)s_1^2 + (n_2 - 1)s_2^2}{n_1 + n_2 - 2}}$$</div><p>Here $\bar{X}_1, \bar{X}_2$ are group sample means, $s_1^2, s_2^2$ are sample variances, and $n_1, n_2$ are sample sizes. The pooled standard deviation $s_{\text{pooled}}$ weights variances by their degrees of freedom, standardising the mean difference into units of population standard deviations.</p></li>
+          <li><h3>Hedges' g Small-Sample Correction</h3><div class="formula">$$g = d \cdot \left(1 - \frac{3}{4(n_1 + n_2) - 9}\right)$$</div><p>Cohen's $d$ exhibits a slight positive bias when estimated from small sample sizes ($n_1 + n_2 &lt; 30$). Larry Hedges introduced this exact scaling factor to produce an unbiased estimator $g$, which converges to $d$ as sample sizes increase.</p></li>
+          <li><h3>Cramér's V for Categorical Association</h3><div class="formula">$$V = \sqrt{\frac{\chi^2}{N \cdot \min(R - 1, C - 1)}}$$</div><p>Here $\chi^2$ is Pearson's chi-square test statistic, $N$ is total observations, and $R$ and $C$ are the row and column dimensions of the contingency table. Dividing by $N \cdot \min(R - 1, C - 1)$ normalises the metric into the interval $[0, 1]$, where 0 indicates statistical independence and 1 indicates perfect complete association.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Effect sizes measure the substantive magnitude of a difference or relationship completely independent of sample size.</li><li>A finding can achieve statistical significance ($p &lt; 0.05$) while remaining practically negligible ($d &lt; 0.05$), or carry huge real-world impact ($d &gt; 0.80$) while lacking significance in a small study.</li><li>Jacob Cohen's classic thresholds ($0.2$ small, $0.5$ medium, $0.8$ large) provide general heuristics, but must always be interpreted in domain-specific context.</li><li>Reporting effect sizes with confidence intervals gives readers both the magnitude of an effect and the precision of its estimation.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">import</span> scipy.stats <span class="k">as</span> stats
+
+rng = np.random.<span class="f">default_rng</span>(<span class="n">42</span>)
+
+<span class="c"># Continuous comparison: tutorial vs control test scores</span>
+scores_tut = rng.<span class="f">normal</span>(loc=<span class="n">78.5</span>, scale=<span class="n">12.0</span>, size=<span class="n">25</span>)
+scores_ctrl = rng.<span class="f">normal</span>(loc=<span class="n">71.2</span>, scale=<span class="n">11.5</span>, size=<span class="n">25</span>)
+n1, n2 = <span class="k">len</span>(scores_tut), <span class="k">len</span>(scores_ctrl)
+s1, s2 = np.<span class="f">std</span>(scores_tut, ddof=<span class="n">1</span>), np.<span class="f">std</span>(scores_ctrl, ddof=<span class="n">1</span>)
+s_pooled = np.<span class="f">sqrt</span>(((n1 - <span class="n">1</span>) * s1**<span class="n">2</span> + (n2 - <span class="n">1</span>) * s2**<span class="n">2</span>) / (n1 + n2 - <span class="n">2</span>))
+
+cohens_d = (np.<span class="f">mean</span>(scores_tut) - np.<span class="f">mean</span>(scores_ctrl)) / s_pooled
+hedges_g = cohens_d * (<span class="n">1.0</span> - <span class="n">3.0</span> / (<span class="n">4.0</span> * (n1 + n2) - <span class="n">9.0</span>))
+
+<span class="c"># Categorical association: 2x3 contingency table</span>
+table = np.<span class="f">array</span>([[<span class="n">120</span>, <span class="n">80</span>, <span class="n">50</span>], [<span class="n">180</span>, <span class="n">50</span>, <span class="n">20</span>]])
+chi2_val, _, _, _ = stats.<span class="f">chi2_contingency</span>(table)
+cramers_v = np.<span class="f">sqrt</span>(chi2_val / (np.<span class="f">sum</span>(table) * (<span class="f">min</span>(table.shape) - <span class="n">1</span>)))
+
+<span class="k">print</span>(<span class="s">f&quot;Mean difference: {np.mean(scores_tut) - np.mean(scores_ctrl):.2f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Cohen's d:       {cohens_d:.3f} (medium effect)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Hedges' g:       {hedges_g:.3f} (bias-corrected)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Cramér's V:      {cramers_v:.3f} (moderate association)&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Equating a small p-value with a large effect size: with huge datasets, trivial noise differences yield $p &lt; 0.0001$.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using unpooled standard deviations when computing Cohen's $d$ on groups with unequal variances; use Glass's delta or Welch-standardised metrics instead.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Ignoring Hedges' small-sample correction ($g$) when reporting results from pilot studies with fewer than 20 observations per group.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Comparing raw Cramér's V values across tables of different dimensions without accounting for the degrees of freedom scaling factor.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>Why is it dangerous to rely exclusively on p-values without reporting effect sizes?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because effect sizes eliminate experimental variance</span></button><button class="opt" type="button"><b>B</b><span>Because massive sample sizes can make minuscule, practically meaningless differences achieve $p &lt; 0.001$</span></button><button class="opt" type="button"><b>C</b><span>Because p-values only apply to non-parametric distributions</span></button><button class="opt" type="button"><b>D</b><span>Because p-values cannot be computed on continuous data</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The p-value conflates effect size and sample size: with large enough $N$, even an imperceptible difference of 0.01 standard deviations will produce a tiny p-value.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>Under Jacob Cohen's conventional benchmarks for continuous mean comparisons ($d$), what value represents a "medium" effect size?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>0.8</span></button><button class="opt" type="button"><b>B</b><span>0.5</span></button><button class="opt" type="button"><b>C</b><span>1.5</span></button><button class="opt" type="button"><b>D</b><span>0.1</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Cohen's widely adopted guidelines define $d = 0.2$ as small, $d = 0.5$ as medium, and $d = 0.8$ as large.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>When should an analyst report Hedges' $g$ instead of Cohen's $d$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>When population standard deviations are known exactly</span></button><button class="opt" type="button"><b>B</b><span>When comparing more than two groups simultaneously</span></button><button class="opt" type="button"><b>C</b><span>When sample sizes are small ($N &lt; 30$), to correct for positive small-sample bias in estimated pooled variance</span></button><button class="opt" type="button"><b>D</b><span>When data is categorical</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Cohen's $d$ slightly overestimates the true effect size in small samples. Hedges' $g$ applies an exact correction factor that removes this small-sample bias.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q4</span>What range of values can Cramér's $V$ take in an $R \times C$ contingency table?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$[-1, 1]$</span></button><button class="opt" type="button"><b>B</b><span>$[-0.5, 0.5]$</span></button><button class="opt" type="button"><b>C</b><span>$[0, 1]$</span></button><button class="opt" type="button"><b>D</b><span>$[0, \infty)$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Cramér's $V$ is normalised by dividing by $N \cdot \min(R - 1, C - 1)$, constraining the metric strictly to $[0, 1]$, where 0 reflects independence and 1 reflects complete association.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/chi-square-tests/"><small class="kicker">Concept</small><b>Chi-Square Tests</b></a><a href="../../concepts/anova-and-post-hoc-tests/"><small class="kicker">Concept</small><b>ANOVA and Post-Hoc Tests</b></a><a href="../../concepts/confidence-intervals/"><small class="kicker">Concept</small><b>Confidence intervals</b></a><a href="../../models/ols_linear_regression/"><small class="kicker">Regression</small><b>Linear regression (OLS)</b></a><a href="../../models/logistic_regression/"><small class="kicker">Classification</small><b>Logistic regression</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/multiple-testing-bonferroni-holm-benjamini-hochberg/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Statistics</small><b>Multiple Testing Corrections</b></a>
+    <a class="pager-next" href="../../concepts/permutation-tests/"><small>Next · Statistics <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Permutation Tests</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

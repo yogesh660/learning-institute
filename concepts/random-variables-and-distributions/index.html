@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Random Variables and Distributions · Learn · Yogesh Awate</title>
+<meta name="description" content="Mapping random outcomes to real numbers: discrete PMFs, continuous PDFs, CDFs, and canonical distributions from Bernoulli to Gaussian.">
+<meta property="og:title" content="Random Variables and Distributions · Learn · Yogesh Awate">
+<meta property="og:description" content="Mapping random outcomes to real numbers: discrete PMFs, continuous PDFs, CDFs, and canonical distributions from Bernoulli to Gaussian.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="random-variables-and-distributions">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-statistics">Path 02 · Statistics</a> / Probability / Lesson 2 of 51</span>
+    <h1 class="case-title">Random Variables and Distributions</h1>
+    <p class="lede rise" style="--d:3">Mapping random outcomes to real numbers: discrete PMFs, continuous PDFs, CDFs, and canonical distributions from Bernoulli to Gaussian.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="1"><i><b></b></i>Beginner</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/probability-rules-and-bayes-theorem/">Probability and Bayes</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Statistics · Probability</dd>
+          <dt>Level</dt><dd>Beginner</dd>
+          <dt>Used by</dt><dd>3 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">A random variable is not a variable in the algebraic sense, but a deterministic function mapping outcomes of a random process to real numbers. Probability mass functions (PMFs) and probability density functions (PDFs) formalise where those numbers land and how likelihood concentrates across continuous and discrete domains.</p>
+        <p>Consider rolling a pair of standard dice. The actual physical outcome is an ordered pair like $(3, 5)$ or $(1, 6)$. But as a game designer or gambler, you rarely care about the individual dice faces; you care about their sum. The rule that maps the outcome $(3, 5)$ to the number 8 is a random variable. It turns messy physical events into numbers we can analyse mathematically.</p>
+        <p>Random variables split into two families. Discrete random variables take separate, countable values: the number of website visits today, or whether an email is spam (0 or 1). We describe them with a Probability Mass Function (PMF), where each individual value has an exact probability, such as $P(X = 3) = 0.25$. Continuous random variables take values on a continuous continuum: the response time of a server in milliseconds, or the height of a person.</p>
+        <p>For continuous variables, the probability of hitting any single exact number—like a latency of precisely 142.385921... milliseconds—is technically 0. Instead, we use a Probability Density Function (PDF) where the area under the curve between two points gives the probability of landing in that interval. Cumulative Distribution Functions (CDFs) bridge both worlds by reporting the probability of being less than or equal to any threshold.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>A probability density function is like the elevation profile of a mountain: height at a single point does not give you volume, but integrating over an area gives the total mass of rock.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Define the random variable $X: \Omega \to \mathbb{R}$ by specifying what numeric quantity is extracted from each event.</li><li>Determine whether the support of $X$ is discrete (countable integers) or continuous (real intervals).</li><li>Assign the appropriate distribution model: PMF $p(x)$ for discrete cases or PDF $f(x)$ for continuous cases.</li><li>Verify normalisation: discrete probabilities must sum to 1 ($\sum p(x) = 1$), while continuous density must integrate to 1 ($\int f(x)dx = 1$).</li><li>Compute probabilities of intervals by integrating the PDF or evaluating the difference in CDF values: $P(a \le X \le b) = F(b) - F(a)$.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Discrete PMF and Continuous PDF</h3><div class="formula">$$P(X = x) = p(x), \quad \sum_{x} p(x) = 1 \qquad \text{vs.} \qquad P(a \le X \le b) = \int_a^b f(x)\,dx, \quad \int_{-\infty}^\infty f(x)\,dx = 1$$</div><p>For a discrete variable, $p(x)$ represents the exact point probability. For a continuous variable, $f(x)$ represents probability density; individual points have zero measure ($P(X = x) = 0$), so probabilities are non-zero only over intervals of non-zero width.</p></li>
+          <li><h3>Cumulative Distribution Function (CDF)</h3><div class="formula">$$F(x) = P(X \le x) = \begin{cases} \sum_{t \le x} p(t) &amp; \text{discrete} \\[6pt] \int_{-\infty}^x f(t)\,dt &amp; \text{continuous} \end{cases}$$</div><p>The CDF $F(x)$ is non-decreasing, right-continuous, and satisfies $\lim_{x \to -\infty} F(x) = 0$ and $\lim_{x \to +\infty} F(x) = 1$. By the Fundamental Theorem of Calculus, for continuous variables the PDF is the derivative of the CDF: $f(x) = F'(x)$.</p></li>
+          <li><h3>The Gaussian (Normal) Distribution</h3><div class="formula">$$f(x \mid \mu, \sigma^2) = \frac{1}{\sigma \sqrt{2\pi}} \exp\left(-\frac{(x - \mu)^2}{2\sigma^2}\right)$$</div><p>The bell-shaped normal distribution is parameterised by its mean $\mu$ (centre of mass) and variance $\sigma^2$ (dispersion). By the 68–95–99.7 empirical rule, approximately 68.3% of the density lies within $\mu \pm \sigma$, and 95.4% lies within $\mu \pm 2\sigma$.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>A probability density $f(x)$ can exceed 1 (unlike a discrete probability), provided the total area under the curve remains 1.</li><li>The CDF $F(x) = P(X \le x)$ exists for both discrete and continuous variables, making it the most general representation.</li><li>The Gaussian distribution arises naturally in errors and residuals because sums of independent random variables converge to normality.</li><li>Quantiles and percentiles are found by inverting the CDF: $x_q = F^{-1}(q)$.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">from</span> scipy <span class="k">import</span> stats
+
+<span class="c"># Continuous Gaussian distribution</span>
+mu, sigma = <span class="n">100.0</span>, <span class="n">15.0</span>
+dist = stats.<span class="f">norm</span>(loc=mu, scale=sigma)
+
+<span class="c"># Probability of falling within 1 standard deviation [85, 115]</span>
+p_1sigma = dist.<span class="f">cdf</span>(mu + sigma) - dist.<span class="f">cdf</span>(mu - sigma)
+<span class="c"># Exact density at the mode</span>
+density_mode = dist.<span class="f">pdf</span>(mu)
+<span class="c"># 95th percentile</span>
+p95 = dist.<span class="f">ppf</span>(<span class="n">0.95</span>)
+
+<span class="k">print</span>(<span class="s">f&quot;P(mu - sigma &lt;= X &lt;= mu + sigma) = {p_1sigma:.4f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Density at mode f({mu}) = {density_mode:.5f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;95th percentile = {p95:.2f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Interpreting a continuous PDF value $f(x)$ as the probability of observing $x$; point probabilities in continuous distributions are always 0.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Forgetting that changing scale or units alters continuous density values, while probabilities remain invariant.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming non-negative data is Gaussian, leading to negative predictions or distorted tail estimates where a Poisson, Gamma or Log-normal distribution is appropriate.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Confusing the parameter $\sigma$ (standard deviation) with $\sigma^2$ (variance) in software library arguments.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>For a continuous random variable $X$ with PDF $f(x)$, what is $P(X = 5)$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$f(5)$</span></button><button class="opt" type="button"><b>B</b><span>0</span></button><button class="opt" type="button"><b>C</b><span>$F(5)$</span></button><button class="opt" type="button"><b>D</b><span>$1 - F(5)$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The probability of any single real point in a continuous distribution is zero, because the integral of a density over an interval of width zero evaluates to 0.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>Can the probability density function $f(x)$ of a continuous distribution ever exceed 1.0?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Yes, because density is probability per unit length and can be arbitrarily large if concentrated in a tiny interval</span></button><button class="opt" type="button"><b>B</b><span>Only for discrete distributions</span></button><button class="opt" type="button"><b>C</b><span>Only if the variance is negative</span></button><button class="opt" type="button"><b>D</b><span>No, probabilities can never exceed 1.0</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> $f(x)$ is a density, not a probability. For example, a uniform distribution on $[0, 0.5]$ has constant density $f(x) = 2.0$, which integrates to 1.0 over its support.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>If $F(x)$ is the cumulative distribution function (CDF) of $X$, how do you compute $P(a &lt; X \le b)$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$F(b) - F(a)$</span></button><button class="opt" type="button"><b>B</b><span>$f(b) - f(a)$</span></button><button class="opt" type="button"><b>C</b><span>$F(b) / F(a)$</span></button><button class="opt" type="button"><b>D</b><span>$F(a) + F(b)$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> $P(a &lt; X \le b) = P(X \le b) - P(X \le a) = F(b) - F(a)$ by definition of the cumulative distribution function.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q4</span>What proportion of probability mass lies within two standard deviations ($\mu \pm 2\sigma$) of the mean for any Gaussian distribution?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Roughly 95.4%</span></button><button class="opt" type="button"><b>B</b><span>Roughly 50.0%</span></button><button class="opt" type="button"><b>C</b><span>Roughly 68.3%</span></button><button class="opt" type="button"><b>D</b><span>Roughly 99.7%</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The empirical rule for Gaussian distributions states that approximately 68.3% lies within $\pm 1\sigma$, 95.4% within $\pm 2\sigma$, and 99.7% within $\pm 3\sigma$.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q5</span>A continuous random variable $X$ is uniformly distributed on the interval $[2, 10]$. What is the value of its probability density function $f(x)$ for $x \in [2, 10]$, and what is $P(4 \le X \le 8)$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$f(x) = 0.10$ and $P(4 \le X \le 8) = 0.40$</span></button><button class="opt" type="button"><b>B</b><span>$f(x) = 0.125$ and $P(4 \le X \le 8) = 0.25$</span></button><button class="opt" type="button"><b>C</b><span>$f(x) = 0.25$ and $P(4 \le X \le 8) = 0.50$</span></button><button class="opt" type="button"><b>D</b><span>$f(x) = 0.125$ and $P(4 \le X \le 8) = 0.50$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The uniform PDF is $f(x) = 1 / (b - a) = 1 / (10 - 2) = 1/8 = 0.125$. The probability over the sub-interval $[4, 8]$ is the area $\int_4^8 0.125 \, dx = 0.125 \times (8 - 4) = 0.50$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q6</span>Mathematically, what is a random variable?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>An algebraic variable whose value cannot be determined until an equation is solved</span></button><button class="opt" type="button"><b>B</b><span>A deterministic function that maps outcomes from a sample space to real numbers</span></button><button class="opt" type="button"><b>C</b><span>A floating-point number generated by a pseudo-random number algorithm</span></button><button class="opt" type="button"><b>D</b><span>A probability value that fluctuates between 0 and 1</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A random variable is formally a function $X: \Omega \to \mathbb{R}$ assigning a numerical value to each outcome in the sample space.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q7</span>Executing <code>scipy.stats.norm(loc=50, scale=10).ppf(0.50)</code> evaluates to:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>50.0</span></button><button class="opt" type="button"><b>B</b><span>60.0</span></button><button class="opt" type="button"><b>C</b><span>0.0</span></button><button class="opt" type="button"><b>D</b><span>0.50</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The percent point function <code>ppf</code> computes quantiles (inverse CDF). For any symmetric Gaussian distribution, the 50th percentile (median) equals the mean (<code>loc</code>), which is 50.0.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q8</span>Which of the following functions could NOT be a valid Cumulative Distribution Function (CDF) $F(x)$ for a real-valued random variable?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>A continuous S-shaped function that decreases from 0.8 to 0.4 over the interval $[2, 4]$</span></button><button class="opt" type="button"><b>B</b><span>A step function that starts at 0 and jumps up at integers, reaching 1 for $x \ge 5$</span></button><button class="opt" type="button"><b>C</b><span>A piecewise linear function that rises steadily from 0 at $x = 0$ to 1 at $x = 10$</span></button><button class="opt" type="button"><b>D</b><span>A function that is 0 for all $x &lt; 0$ and $1 - e^{-2x}$ for $x \ge 0$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A CDF must be monotonically non-decreasing ($F(x_1) \le F(x_2)$ whenever $x_1 \le x_2$). A function that decreases violates this axiom and would imply negative probabilities for intervals.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q9</span>A discrete random variable $X$ takes values in $\{1, 2, 3, 4\}$ with probabilities $P(X=1) = 0.1$, $P(X=2) = 0.3$, and $P(X=3) = 0.4$. What must $P(X=4)$ be for this to be a valid PMF, and what is $P(X \ge 3)$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$P(X=4) = 0.2$ and $P(X \ge 3) = 0.6$</span></button><button class="opt" type="button"><b>B</b><span>$P(X=4) = 0.3$ and $P(X \ge 3) = 0.7$</span></button><button class="opt" type="button"><b>C</b><span>$P(X=4) = 0.2$ and $P(X \ge 3) = 0.4$</span></button><button class="opt" type="button"><b>D</b><span>$P(X=4) = 0.1$ and $P(X \ge 3) = 0.5$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Probabilities across all disjoint outcomes must sum to 1: $P(X=4) = 1 - (0.1 + 0.3 + 0.4) = 0.20$. Then $P(X \ge 3) = P(X=3) + P(X=4) = 0.4 + 0.2 = 0.60$.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q10</span>A continuous random variable $X$ has PDF $f(x) = c x^2$ for $x \in [0, 3]$, and $f(x) = 0$ elsewhere. What is the value of the normalising constant $c$, and what is $P(1 \le X \le 2)$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$c = 1/9$ and $P(1 \le X \le 2) = 1/3$</span></button><button class="opt" type="button"><b>B</b><span>$c = 1/3$ and $P(1 \le X \le 2) = 7/9$</span></button><button class="opt" type="button"><b>C</b><span>$c = 1/9$ and $P(1 \le X \le 2) = 7/27$</span></button><button class="opt" type="button"><b>D</b><span>$c = 1/27$ and $P(1 \le X \le 2) = 7/81$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Normalising requires $\int_0^3 c x^2 dx = c [x^3 / 3]_0^3 = 9c = 1$, giving $c = 1/9$. Then $P(1 \le X \le 2) = \int_1^2 \frac{1}{9}x^2 dx = \frac{1}{27}(2^3 - 1^3) = 7/27$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q11</span>For a standard normal random variable $Z \sim \mathcal{N}(0, 1)$, the PDF mode is $f(0) \approx 0.3989$. If $X \sim \mathcal{N}(100, 0.04)$, where variance $\sigma^2 = 0.04$ (so $\sigma = 0.2$), what is the value of the PDF at its mode $x = 100$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>1.9947</span></button><button class="opt" type="button"><b>B</b><span>0.3989</span></button><button class="opt" type="button"><b>C</b><span>9.9735</span></button><button class="opt" type="button"><b>D</b><span>0.0798</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> At the mode $x = \mu$, the exponential factor is $\exp(0) = 1$, leaving $f(\mu) = 1 / (\sigma \sqrt{2\pi})$. Since $\sigma = \sqrt{0.04} = 0.2$, $f(100) \approx 0.3989 / 0.2 = 1.9947$. This neatly illustrates why continuous densities can exceed 1.0.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q12</span>Suppose the CDF of server response time $T$ (in seconds) is $F(t) = 1 - e^{-\lambda t}$ for $t \ge 0$. Which expression gives the probability density function $f(t)$ and the probability that a response takes strictly longer than 3 seconds?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$f(t) = -\lambda e^{-\lambda t}$ and $P(T &gt; 3) = 1 - e^{-3\lambda}$</span></button><button class="opt" type="button"><b>B</b><span>$f(t) = \lambda e^{-\lambda t}$ and $P(T &gt; 3) = 1 - e^{-3\lambda}$</span></button><button class="opt" type="button"><b>C</b><span>$f(t) = e^{-\lambda t}$ and $P(T &gt; 3) = e^{-3\lambda}$</span></button><button class="opt" type="button"><b>D</b><span>$f(t) = \lambda e^{-\lambda t}$ and $P(T &gt; 3) = e^{-3\lambda}$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The PDF is the first derivative of the CDF: $f(t) = F'(t) = \frac{d}{dt}(1 - e^{-\lambda t}) = \lambda e^{-\lambda t}$. The tail probability $P(T &gt; 3)$ is $1 - F(3) = 1 - (1 - e^{-3\lambda}) = e^{-3\lambda}$.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/expectation-variance-and-covariance/"><small class="kicker">Concept</small><b>Expectation and variance</b></a><a href="../../concepts/maximum-likelihood-estimation/"><small class="kicker">Concept</small><b>Maximum likelihood</b></a><a href="../../models/gaussian_naive_bayes/"><small class="kicker">Classification</small><b>Gaussian Naive Bayes</b></a><a href="../../models/gaussian_mixture_models/"><small class="kicker">Clustering</small><b>Gaussian mixtures</b></a><a href="../../models/bayesian_linear_regression/"><small class="kicker">Regression</small><b>Bayesian linear regression</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/probability-rules-and-bayes-theorem/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Statistics</small><b>Probability and Bayes</b></a>
+    <a class="pager-next" href="../../concepts/expectation-variance-and-covariance/"><small>Next · Statistics <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Expectation and variance</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

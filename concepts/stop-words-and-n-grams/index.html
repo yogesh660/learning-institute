@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Stop words and n-grams · Learn · Yogesh Awate</title>
+<meta name="description" content="Stop words are ubiquitous grammatical function words (such as &quot;the&quot;, &quot;is&quot;, &quot;at&quot;, &quot;which&quot;) that provide syntactic scaffolding in prose but offer minimal domain-specific topical discrimination in information retrieval and document classification. N-grams capture local multi-word context by forming contiguous tuples of n consecutive tokens (unigrams, bigrams, trigrams), upgrading bag-of-words models into context-sensitive phrase extractors capable of distinguishing &quot;not guilty&quot; from &quot;guilty&quot;. Deciding when to filter stop words and engineering word or character n-gram vocabularies balances vector sparsity against semantic nuance.">
+<meta property="og:title" content="Stop words and n-grams · Learn · Yogesh Awate">
+<meta property="og:description" content="Stop words are ubiquitous grammatical function words (such as &quot;the&quot;, &quot;is&quot;, &quot;at&quot;, &quot;which&quot;) that provide syntactic scaffolding in prose but offer minimal domain-specific topical discrimination in information retrieval and document classification. N-grams capture local multi-word context by forming contiguous tuples of n consecutive tokens (unigrams, bigrams, trigrams), upgrading bag-of-words models into context-sensitive phrase extractors capable of distinguishing &quot;not guilty&quot; from &quot;guilty&quot;. Deciding when to filter stop words and engineering word or character n-gram vocabularies balances vector sparsity against semantic nuance.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="stop-words-and-n-grams">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-nlp">Path 10 · Natural language processing</a> / Words and text / Lesson 4 of 52</span>
+    <h1 class="case-title">Stop words and n-grams</h1>
+    <p class="lede rise" style="--d:3">Stop words are ubiquitous grammatical function words (such as "the", "is", "at", "which") that provide syntactic scaffolding in prose but offer minimal domain-specific topical discrimination in information retrieval and document classification. N-grams capture local multi-word context by forming contiguous tuples of $n$ consecutive tokens (unigrams, bigrams, trigrams), upgrading bag-of-words models into context-sensitive phrase extractors capable of distinguishing "not guilty" from "guilty". Deciding when to filter stop words and engineering word or character n-gram vocabularies balances vector sparsity against semantic nuance.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="1"><i><b></b></i>Beginner</span></span>
+      <span class="tagline">14 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/word-and-sentence-tokenization/">Word &amp; Sentence Tokenization</a> <a href="../../concepts/text-normalisation-unicode-and-regex/">Normalisation &amp; Regex</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Natural language processing · Words and text</dd>
+          <dt>Level</dt><dd>Beginner</dd>
+          <dt>Used by</dt><dd>2 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">If you tally the most frequent words in Shakespeare's plays, a corporate contract, and a medical textbook, the top of all three lists looks identical: "the", "and", "of", "to", "a", "in". These function words bind sentences together grammatically, but they reveal almost nothing about whether the document discusses Elizabethan tragedy, corporate liability, or cardiovascular surgery. Conversely, treating each word as an isolated island discards crucial phrasing: "hot dog" is not merely heat plus a canine, and "not bad" is positive praise despite containing a negative word. Navigating stop words and constructing n-grams provides the bridge from isolated word counts to contextual phrase representations.</p>
+        <p>Zipf's Law and the function word explosion: George Kingsley Zipf observed that the frequency of any word in a natural language corpus is inversely proportional to its rank in the frequency table: $f(w) \propto 1 / r^\alpha$ (where $\alpha \approx 1$). The top 50 to 100 most frequent words typically account for $40\%$ to $50\%$ of all word occurrences in a document. In tasks like topic modelling, search indexing, or author classification, these high-frequency function words inflate vector dimensionality, consume memory, and add noise without aiding class separation. Identifying and filtering stop words strips away this high-frequency noise floor.</p>
+        <p>The peril of aggressive stop word removal: While removing stop words helps simple bag-of-words document search, indiscriminate filtering can destroy meaning. Consider sentiment analysis: stripping the stop word "not" transforms the movie review "The movie was not entertaining" into "movie entertaining"—inverting the sentiment from negative to positive. In question answering, filtering "to be or not to be" eliminates the entire query. Modern deep language models (such as BERT and GPT) never remove stop words because self-attention relies heavily on prepositions and pronouns to resolve syntactic dependencies.</p>
+        <p>Capturing local context with N-grams: A unigram is a single isolated token ($n=1$). A bigram ($n=2$) groups two consecutive tokens ("machine learning", "deep learning"). A trigram ($n=3$) groups three ("natural language processing"). Moving from unigrams to n-grams allows statistical models to capture negation ("not good"), compound nouns ("New York City"), and domain idioms. Higher-order n-grams provide richer semantic context, but cause the vocabulary size to explode combinatorially.</p>
+        <p>Character-level N-grams for robust morphology: N-grams can also be constructed at the subword character level rather than the word level. For example, the 3-character n-grams (character trigrams) of "<cat>" are "<ca", "cat", and "at>". Character n-grams are immune to out-of-vocabulary errors, capture morphological roots across inflections ("run", "running", "runner"), and withstand spelling mistakes and OCR typos (such as "definately" matching "definitely"), forming the secret weapon behind FastText and modern subword tokenisers.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Think of assembling a jigsaw puzzle of a landscape. Stop words are like the thousands of plain blue sky pieces that look virtually identical: they make up half the box, take up huge table space, and tell you very little about whether the puzzle depicts Paris or the Grand Canyon. If you are indexing the puzzle in an inventory catalogue, sweeping the blue sky pieces aside (stop word filtering) lets you focus immediately on the distinctive landmark pieces (the Eiffel Tower or canyon cliffs). Single unigram words are like individual disconnected puzzle tabs: you hold a piece with a brown paw, another with red fabric, another with a wheel. Bigrams and trigrams are like clicking two or three interlocking pieces together: suddenly, you don't just have an isolated paw and wheel; you see a dog sitting in a bicycle basket. You capture the scene's composition without needing the entire thousand-piece puzzle.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Zipf's Law frequency distribution</h3><div class="formula">f(r) = \frac{C}{r^\alpha} \approx \frac{C}{r}, \quad \log f(r) = \log C - \alpha \log r</div><p>Here $r$ is the frequency rank of a word (where $r=1$ is the most frequent word, e.g. "the"), $f(r)$ is its empirical frequency, and $\alpha \approx 1$. A log-log plot of word frequency versus rank forms a straight line with slope $-1$, proving that a minuscule fraction of words dominates total corpus volume.</p></li>
+          <li><h3>N-gram token count and sliding window formulation</h3><div class="formula">\text{N-grams}(W, n) = \left\{ (w_i, w_{i+1}, \dots, w_{i+n-1}) \;\middle|\; 1 \le i \le |W| - n + 1 \right\}</div><p>A document of length $T = |W|$ tokens yields exactly $T - n + 1$ contiguous n-grams. Adding $n-1$ boundary padding symbols at the start and end yields exactly $T + n - 1$ padded n-grams, preserving transition probabilities for initial and terminal words.</p></li>
+          <li><h3>Maximum likelihood bigram transition probability</h3><div class="formula">P(w_i \mid w_{i-1}) = \frac{\operatorname{Count}(w_{i-1}, w_i)}{\operatorname{Count}(w_{i-1})}</div><p>In classical n-gram language modelling, the conditional probability of word $w_i$ given preceding word $w_{i-1}$ is evaluated as the joint bigram count divided by the unigram count of the conditioning prefix.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Stop words are high-frequency grammatical function words that carry minimal topical discrimination in bag-of-words search.</li><li>Zipf's Law demonstrates that the top 100 most frequent words account for approximately half of all tokens in natural language corpora.</li><li>Aggressive stop word removal destroys negation and subtle syntax, making it unsuitable for sentiment analysis and modern language models.</li><li>N-grams capture contiguous local word context, enabling models to differentiate between distinct phrases like "not guilty" and "guilty".</li><li>Character n-grams capture morphological variations and typos, providing robust representations for out-of-vocabulary words.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">from</span> collections <span class="k">import</span> Counter
+
+<span class="c"># Corpus of documents</span>
+documents = [
+    <span class="s">&quot;Machine learning is not magic, it is computer science.&quot;</span>,
+    <span class="s">&quot;Deep learning is a subset of machine learning.&quot;</span>,
+    <span class="s">&quot;Not bad at all, this machine learning model works well!&quot;</span>
+]
+
+<span class="c"># 1. Custom stop words list (preserving negation words: 'not')</span>
+standard_stop_words = {<span class="s">&quot;is&quot;</span>, <span class="s">&quot;it&quot;</span>, <span class="s">&quot;a&quot;</span>, <span class="s">&quot;of&quot;</span>, <span class="s">&quot;at&quot;</span>, <span class="s">&quot;all&quot;</span>, <span class="s">&quot;this&quot;</span>}
+
+<span class="k">def</span> <span class="f">simple_tokenize</span>(doc):
+    <span class="c"># Lowercase and split on non-alphanumeric characters</span>
+    <span class="k">import</span> re
+    <span class="k">return</span> [tok <span class="k">for</span> tok <span class="k">in</span> re.<span class="f">split</span>(r<span class="s">'\W+'</span>, doc.<span class="f">lower</span>()) <span class="k">if</span> tok]
+
+<span class="c"># Tokenise all documents</span>
+tokenized_docs = [<span class="f">simple_tokenize</span>(d) <span class="k">for</span> d <span class="k">in</span> documents]
+
+<span class="c"># 2. Filter stop words while retaining negations</span>
+filtered_docs = [
+    [w <span class="k">for</span> w <span class="k">in</span> doc <span class="k">if</span> w <span class="k">not</span> <span class="k">in</span> standard_stop_words]
+    <span class="k">for</span> doc <span class="k">in</span> tokenized_docs
+]
+
+<span class="k">print</span>(<span class="s">&quot;Document 1 before stop word filtering:&quot;</span>)
+<span class="k">print</span>(tokenized_docs[<span class="n">0</span>])
+<span class="k">print</span>(<span class="s">&quot;\nDocument 1 after stop word filtering (notice 'not' preserved):&quot;</span>)
+<span class="k">print</span>(filtered_docs[<span class="n">0</span>])
+
+<span class="c"># 3. Generate Word-Level Bigrams and Trigrams</span>
+<span class="k">def</span> <span class="f">generate_ngrams</span>(tokens, n=<span class="n">2</span>):
+    <span class="k">return</span> [<span class="f">tuple</span>(tokens[i:i+n]) <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(<span class="k">len</span>(tokens) - n + <span class="n">1</span>)]
+
+bigrams_doc1 = <span class="f">generate_ngrams</span>(filtered_docs[<span class="n">0</span>], n=<span class="n">2</span>)
+<span class="k">print</span>(<span class="s">f&quot;\nWord Bigrams (n=2) for Document 1:&quot;</span>)
+<span class="k">for</span> bg <span class="k">in</span> bigrams_doc1:
+    <span class="k">print</span>(<span class="s">f&quot;  {' '.join(bg)}&quot;</span>)
+
+<span class="c"># 4. Character-level N-Grams for Subword Morphology</span>
+<span class="k">def</span> <span class="f">generate_char_ngrams</span>(word, n=<span class="n">3</span>):
+    padded = <span class="s">f&quot;&lt;{word}&gt;&quot;</span>
+    <span class="k">return</span> [padded[i:i+n] <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(<span class="k">len</span>(padded) - n + <span class="n">1</span>)]
+
+sample_word = <span class="s">&quot;learning&quot;</span>
+char_trigrams = <span class="f">generate_char_ngrams</span>(sample_word, n=<span class="n">3</span>)
+<span class="k">print</span>(<span class="s">f&quot;\nCharacter Trigrams (n=3) for '{sample_word}':&quot;</span>)
+<span class="k">print</span>(char_trigrams)
+
+<span class="c"># 5. Bigram Frequency Distribution across Corpus</span>
+all_bigrams = [bg <span class="k">for</span> doc <span class="k">in</span> filtered_docs <span class="k">for</span> bg <span class="k">in</span> <span class="f">generate_ngrams</span>(doc, n=<span class="n">2</span>)]
+bigram_counts = <span class="f">Counter</span>(all_bigrams)
+
+<span class="k">print</span>(<span class="s">&quot;\nMost frequent bigrams across corpus:&quot;</span>)
+<span class="k">for</span> bg, count <span class="k">in</span> bigram_counts.<span class="f">most_common</span>(<span class="n">3</span>):
+    <span class="k">print</span>(<span class="s">f&quot;  '{' '.join(bg)}': {count} occurrences&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;Verified: Word and character n-gram extraction executed successfully!&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Stripping negation words in sentiment tasks: Blindly removing words like "not", "no", and "never" reverses sentiment polarities and ruins sentiment classifiers.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Unconstrained N-gram vocabulary explosion: Generating unigrams, bigrams, and trigrams on large corpora without min_df thresholds inflates vocabulary to millions of sparse columns, causing GPU memory exhaustion.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Applying stop word lists to modern Transformer models: Removing stop words before feeding text to BERT, RoBERTa, or GPT cripples self-attention, as transformers rely on prepositions and pronouns to parse sentence syntax.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Ignoring casing when matching stop words: If stop words are lowercased ("the") but document tokens retain capitalization ("The"), stop word filtering fails on sentence-initial words unless casing is normalised first.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Over-filtering rare domain terminology: Using automated frequency thresholds without domain review can inadvertently discard rare medical, legal, or technical acronyms that carry the highest topical information.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>Why does Zipf's Law motivate the filtering of stop words in classical information retrieval and topic modelling?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because the most frequent function words account for up to half of all tokens in a corpus while providing near-zero domain-specific topical discrimination</span></button><button class="opt" type="button"><b>B</b><span>Because stop words are only used in conversational speech rather than written text</span></button><button class="opt" type="button"><b>C</b><span>Because computers cannot store words with fewer than three letters</span></button><button class="opt" type="button"><b>D</b><span>Because stop words cause divide-by-zero errors in matrix multiplication</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Zipf's Law states that word frequency decays inversely with rank. The top 50 words ("the", "of", "and") appear in virtually every document regardless of topic, diluting term vectors without offering discrimination between categories.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>Under what natural language processing task can indiscriminate stop word removal cause severe model degradation?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Audio waveform Fourier analysis</span></button><button class="opt" type="button"><b>B</b><span>Speech synthesis</span></button><button class="opt" type="button"><b>C</b><span>Sentiment analysis, because removing negation stop words (such as "not" or "never") inverts the semantic polarity of phrases like "not good" to "good"</span></button><button class="opt" type="button"><b>D</b><span>Image classification</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Negation words ("not", "neither", "hardly") are often included in naive stop word lists. Stripping them completely reverses the sentiment of a sentence, turning praise into condemnation or vice versa.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>What critical advantage do character-level n-grams offer over word-level n-grams in text embeddings (as seen in FastText)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>They double the speed of GPU floating-point operations</span></button><button class="opt" type="button"><b>B</b><span>They eliminate the need for matrix multiplication</span></button><button class="opt" type="button"><b>C</b><span>They require zero memory storage</span></button><button class="opt" type="button"><b>D</b><span>They can construct representations for out-of-vocabulary words and are resilient to spelling mistakes and morphological inflections by sharing common subword character slices</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> If an unseen word or typo appears at test time (e.g. "definately"), word models fail (out-of-vocabulary). Character n-grams decompose the word into overlapping fragments ("def", "efi", "fin") that match known subwords, producing a robust embedding.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q4</span>Why do modern Transformer architectures (such as BERT and GPT) avoid removing stop words during pre-training and fine-tuning?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because stop words cannot be stored in PyTorch tensors</span></button><button class="opt" type="button"><b>B</b><span>Self-attention mechanisms require full grammatical syntax (including pronouns, prepositions, and auxiliaries) to compute bidirectional syntactic and semantic dependencies accurately</span></button><button class="opt" type="button"><b>C</b><span>Because removing stop words reduces the training speed of GPUs</span></button><button class="opt" type="button"><b>D</b><span>Because Transformer models can only process sentences with an even number of tokens</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Transformers model natural language holistically: function words provide essential structural clues for pronoun coreference, syntactic dependency parsing, and semantic role assignment. Deleting them destroys linguistic context.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/bag-of-words-and-tf-idf/"><small class="kicker">Concept</small><b>BoW &amp; TF-IDF</b></a><a href="../../concepts/tokenization/"><small class="kicker">Concept</small><b>Tokenization (BPE)</b></a><a href="../../concepts/word-and-sentence-tokenization/"><small class="kicker">Concept</small><b>Word &amp; Sentence Tokenization</b></a><a href="../../concepts/stemming-vs-lemmatisation/"><small class="kicker">Concept</small><b>Stemming vs Lemmatisation</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/tokenization/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Natural language processing</small><b>Tokenization (BPE)</b></a>
+    <a class="pager-next" href="../../concepts/stemming-vs-lemmatisation/"><small>Next · Natural language processing <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Stemming vs Lemmatisation</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

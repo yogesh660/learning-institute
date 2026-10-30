@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>CI/CD for Machine Learning: Continuous Integration, Testing, and Automated Delivery · Learn · Yogesh Awate</title>
+<meta name="description" content="Automating ML test suites, data pipeline regression tests, model quality gates, and containerised delivery using GitHub Actions and modern MLOps.">
+<meta property="og:title" content="CI/CD for Machine Learning: Continuous Integration, Testing, and Automated Delivery · Learn · Yogesh Awate">
+<meta property="og:description" content="Automating ML test suites, data pipeline regression tests, model quality gates, and containerised delivery using GitHub Actions and modern MLOps.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="ci-cd-for-ml">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-data-science">Path 07 · Data science</a> / MLOps and engineering / Lesson 42 of 47</span>
+    <h1 class="case-title">CI/CD for Machine Learning: Continuous Integration, Testing, and Automated Delivery</h1>
+    <p class="lede rise" style="--d:3">Automating ML test suites, data pipeline regression tests, model quality gates, and containerised delivery using GitHub Actions and modern MLOps.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Data science · MLOps and engineering</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Continuous Integration and Continuous Delivery (CI/CD) revolutionized traditional software engineering by automating testing and deployment. In machine learning, however, traditional code unit tests are fundamentally insufficient: code can be 100% bug-free and pass every linting check, while the resulting model is completely dysfunctional due to data leakage, silent feature corruption, or performance degradation. CI/CD for ML (CT/CD) expands automation to test code, data, and models.</p>
+        <p>Traditional CI verifies code syntax, unit tests, and integration tests. ML CI/CD introduces two new testing dimensions: Data Validation (testing data schemas, distributions, and null ratios) and Model Quality Testing (testing model accuracy, inference latency, bias, and adversarial robustness).</p>
+        <p>Continuous Training (CT) is a unique ML capability: when new data arrives or model decay alerts trigger, an automated pipeline re-executes data prep, hyperparameter tuning, model training, and evaluation without manual human intervention.</p>
+        <p>A robust ML CI pipeline executes tiered test gates: Fast pull request tests (code linting, unit tests on synthetic micro-datasets, schema validation), Nightly integration tests (end-to-end pipeline execution on sampled data), and Release qualification gates (evaluating trained candidate models against production champions on golden benchmark sets).</p>
+        <p>Continuous Delivery packages validated models into reproducible container images (Docker), registers them in an immutable model registry (MLflow / Vertex AI), and deploys them to staging environments for shadow testing and canary rollouts.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine an automated rocket assembly line. Standard software CI tests whether the robotic welding arms move correctly and screws fit into their sockets. ML CI goes a giant step further: it tests the purity of the rocket fuel in the tanks, tests that the payload weight matches physics calculations, and conducts a simulated static engine test fire in a wind tunnel before granting the rocket clearance for launch.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Fast PR gate: Run linters (Ruff, Flake8), type checks (Mypy), and unit tests on mock data fixtures using lightweight runners (GitHub Actions).</li><li>Data pipeline validation: Run automated data regression tests asserting that preprocessing functions preserve row counts, prevent lookahead leakage, and handle missing values.</li><li>Automated training & qualification: Train candidate model on staging data and evaluate performance against golden regression test suites and safety baselines.</li><li>Model card & metadata logging: Generate automated model performance cards documenting accuracy across demographic slices, latency benchmarks, and carbon footprint.</li><li>Containerisation & registry push: Build Docker image embedding dependencies and model weights; register with semantic versioning tag (`v2.4.0-rc1`).</li><li>Canary deployment & telemetry monitoring: Deploy container to production cluster with progressive traffic routing (5% $\to$ 25% $\to$ 100%) governed by automated error-budget alerts.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Non-Regression Quality Gate Assertion</h3><div class="formula">\mathcal{M}_{\mathrm{cand}}(\mathcal{D}_{\mathrm{test}}) \ge \mathcal{M}_{\mathrm{prod}}(\mathcal{D}_{\mathrm{test}}) - \epsilon_{\mathrm{tolerance}} \;\land\; \mathrm{Latency}_{\mathrm{p99}} \le L_{\max}</div><p>A candidate model passes the deployment gate only if its metric $\mathcal{M}$ meets parity with the production model within tolerance $\epsilon$, and its 99th percentile inference latency is below threshold $L_{\max}$.</p></li>
+          <li><h3>Slicing Invariance Fairness Constraint</h3><div class="formula">\max_{s \in \mathcal{S}} \left| \mathcal{M}_{\mathrm{cand}}(\mathcal{D}_s) - \mathcal{M}_{\mathrm{cand}}(\mathcal{D}_{\mathrm{test}}) \right| \le \delta_{\mathrm{slice}}</div><p>Ensures model performance does not severely degrade on critical sub-populations or demographic slices $s \in \mathcal{S}$.</p></li>
+          <li><h3>Canary Traffic Shift Transition</h3><div class="formula">w_{\mathrm{cand}}(t) = \min\left( 1.0, \; w_{\mathrm{cand}}(0) + \alpha \cdot t \right) \;\text{if } \operatorname{Errors}(t) < \tau_{\mathrm{error}}</div><p>Canary traffic weight $w_{\mathrm{cand}}$ expands linearly over time $t$ provided production operational error rates remain below threshold $\tau_{\mathrm{error}}$.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>CI/CD for ML expands standard software CI to test code, data, and models.</li><li>Automated qualification gates evaluate candidate models against incumbent production champions.</li><li>Data regression tests verify that preprocessing logic prevents lookahead data leakage.</li><li>Continuous Delivery packages models into reproducible Docker images deployed via canary rollouts.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> pytest
+<span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Example: Production ML Unit &amp; Integration Tests (pytest style)</span>
+
+<span class="k">def</span> <span class="f">test_feature_pipeline_zero_leakage</span>():
+    <span class="s">&quot;&quot;&quot;Assert feature scaling does not leak mean across train and test partitions.&quot;&quot;&quot;</span>
+    train_data = np.<span class="f">array</span>([<span class="n">10.0</span>, <span class="n">20.0</span>, <span class="n">30.0</span>])
+    test_data = np.<span class="f">array</span>([<span class="n">100.0</span>, <span class="n">200.0</span>])
+    
+    train_mean = np.<span class="f">mean</span>(train_data)
+    <span class="c"># Scaled test data must use train_mean, NOT test_mean!</span>
+    scaled_test = test_data - train_mean
+    assert np.<span class="f">allclose</span>(scaled_test, [<span class="n">80.0</span>, <span class="n">180.0</span>]), <span class="s">&quot;Test scaling leaked out-of-fold statistics!&quot;</span>
+
+<span class="k">def</span> <span class="f">test_model_inference_latency_benchmark</span>():
+    <span class="s">&quot;&quot;&quot;Assert candidate model satisfies SLA under 20 milliseconds per sample.&quot;&quot;&quot;</span>
+    <span class="k">import</span> time
+    <span class="c"># Simulate forward pass on batch</span>
+    start = time.<span class="f">perf_counter</span>()
+    _ = np.<span class="f">dot</span>(np.random.<span class="f">randn</span>(<span class="n">1</span>, <span class="n">50</span>), np.random.<span class="f">randn</span>(<span class="n">50</span>, <span class="n">1</span>))
+    elapsed_ms = (time.<span class="f">perf_counter</span>() - start) * <span class="n">1000.0</span>
+    assert elapsed_ms &lt; <span class="n">20.0</span>, <span class="s">f&quot;Inference latency breached SLA: {elapsed_ms:.2f}ms&quot;</span>
+
+<span class="k">def</span> <span class="f">test_model_non_negative_predictions</span>():
+    <span class="s">&quot;&quot;&quot;Domain assertion: Model predicting house prices must never output negative numbers.&quot;&quot;&quot;</span>
+    dummy_preds = np.<span class="f">array</span>([<span class="n">250000.0</span>, <span class="n">180000.0</span>, <span class="n">420000.0</span>])
+    assert np.<span class="f">all</span>(dummy_preds &gt;= <span class="n">0.0</span>), <span class="s">&quot;Model generated invalid negative prices!&quot;</span>
+
+<span class="k">print</span>(<span class="s">&quot;CI/CD Test Suite Passed: Zero leakage, latency within SLA, valid prediction bounds.&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Testing only model accuracy: Deploying a model that achieves 92% AUC but has a 400ms inference latency crashes user-facing web services under live load.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Testing on dynamic unpinned test sets: If the CI test dataset changes constantly, tests become flaky and pass or fail due to data shifts rather than model changes.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Running 8-hour deep learning training inside pull request CI: PR test runs should use small synthetic fixtures; full retraining should run in separate nightly CT pipelines.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>Why are traditional software unit tests insufficient for validating machine learning systems?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because ML algorithms only work in Jupyter Notebooks</span></button><button class="opt" type="button"><b>B</b><span>Because Python does not support unit testing</span></button><button class="opt" type="button"><b>C</b><span>Because unit tests cannot run on Linux servers</span></button><button class="opt" type="button"><b>D</b><span>Because ML code can compile and run with 100% test coverage while the resulting model is completely corrupted due to data leakage or metric degradation</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Traditional unit tests verify software syntax and logic execution, but cannot detect data distribution shifts, subtle lookahead leakage, or degraded statistical predictive performance.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>What is the role of a "golden evaluation dataset" in an ML CI/CD pipeline?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>A dataset containing only positive conversion labels</span></button><button class="opt" type="button"><b>B</b><span>It is a dataset that costs millions of pounds to store in cloud storage</span></button><button class="opt" type="button"><b>C</b><span>A dataset encrypted with blockchain technology</span></button><button class="opt" type="button"><b>D</b><span>A curated, immutable benchmark dataset used to evaluate every candidate model under identical conditions before production deployment</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> An immutable golden test set ensures that candidate models are judged objectively against the exact same test cases as the incumbent model, preventing regressions.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>What is "Continuous Training" (CT) in the context of MLOps pipelines?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>An automated pipeline that retrains, tests, and validates models automatically whenever new data arrives or performance decay triggers fire</span></button><button class="opt" type="button"><b>B</b><span>Running a model continuously without ever turning off the server</span></button><button class="opt" type="button"><b>C</b><span>Requiring data scientists to take weekly machine learning examinations</span></button><button class="opt" type="button"><b>D</b><span>A neural network that never converges to a loss minimum</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> CT automates the training and validation lifecycle, triggering retraining automatically in response to data updates or performance drift.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/docker-and-reproducible-environments/"><small class="kicker">Concept</small><b>Docker and reproducibility</b></a><a href="../../concepts/serving-models-with-fastapi/"><small class="kicker">Concept</small><b>Serving models with FastAPI</b></a><a href="../../concepts/data-quality-checks/"><small class="kicker">Concept</small><b>Data quality checks</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/batch-vs-online-inference/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Data science</small><b>Batch vs online inference</b></a>
+    <a class="pager-next" href="../../concepts/model-registry-and-versioning/"><small>Next · Data science <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Model registry &amp; versioning</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

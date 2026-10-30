@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Evaluating LLMs: benchmarks and judges · Learn · Yogesh Awate</title>
+<meta name="description" content="Evaluating Large Language Models requires rigorous, multi-faceted methodologies to assess reasoning, domain knowledge, coding competence, and conversational alignment. The evaluation ecosystem balances automated standardised benchmarks (MMLU for multidisciplinary knowledge, GSM8K for multi-step arithmetic, HumanEval for code synthesis via pass@k) with model-based LLM-as-a-judge frameworks and crowdsourced pairwise Elo arenas (LMSYS Chatbot Arena). Addressing benchmark contamination, position bias, and verbosity bias is essential for trustworthy assessment.">
+<meta property="og:title" content="Evaluating LLMs: benchmarks and judges · Learn · Yogesh Awate">
+<meta property="og:description" content="Evaluating Large Language Models requires rigorous, multi-faceted methodologies to assess reasoning, domain knowledge, coding competence, and conversational alignment. The evaluation ecosystem balances automated standardised benchmarks (MMLU for multidisciplinary knowledge, GSM8K for multi-step arithmetic, HumanEval for code synthesis via pass@k) with model-based LLM-as-a-judge frameworks and crowdsourced pairwise Elo arenas (LMSYS Chatbot Arena). Addressing benchmark contamination, position bias, and verbosity bias is essential for trustworthy assessment.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="evaluating-llms-benchmarks-and-judges">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ai">Path 11 · AI</a> / LLM foundations / Lesson 18 of 42</span>
+    <h1 class="case-title">Evaluating LLMs: benchmarks and judges</h1>
+    <p class="lede rise" style="--d:3">Evaluating Large Language Models requires rigorous, multi-faceted methodologies to assess reasoning, domain knowledge, coding competence, and conversational alignment. The evaluation ecosystem balances automated standardised benchmarks (MMLU for multidisciplinary knowledge, GSM8K for multi-step arithmetic, HumanEval for code synthesis via pass@k) with model-based LLM-as-a-judge frameworks and crowdsourced pairwise Elo arenas (LMSYS Chatbot Arena). Addressing benchmark contamination, position bias, and verbosity bias is essential for trustworthy assessment.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/prompting-and-in-context-learning/">Prompting &amp; In-Context Learning</a> <a href="../../concepts/evaluation-bleu-rouge-bertscore-llm-as-judge/">NLP Eval: BLEU to LLM Judges</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>AI · LLM foundations</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">How do you measure the intelligence of an artificial intelligence? When models were simple classifiers, accuracy or F1 was sufficient. Today, Large Language Models write code, compose poetry, diagnose medical symptoms, and negotiate contracts. Evaluating these open-ended capabilities demands navigating a complex landscape of standardised examination benchmarks, functional execution sandboxes, and automated LLM judge panels while guarding against benchmark memorisation and evaluator bias.</p>
+        <p>The Standardised Benchmark Suite: Different benchmarks probe distinct cognitive dimensions:
+- MMLU (Massive Multitask Language Understanding): 57 subjects across humanities, social sciences, and STEM tested via 5-shot multiple-choice questions.
+- GSM8K: 8,500 grade-school math word problems testing multi-step arithmetic reasoning with strict numerical answer matching.
+- HumanEval: 164 hand-crafted Python programming problems evaluated by executing generated code against unit tests in a secure sandbox.
+- Chatbot Arena: Crowdsourced human blind pairwise comparisons evaluated via the Elo rating system to reflect real-world conversational preference.</p>
+        <p>Benchmark contamination and test set leakage: When pre-training datasets span trillions of tokens scraped from the open web, evaluation test sets are frequently ingested into training corpora. If a model has already memorised the exact solutions to benchmark questions, high test scores reflect rote memorisation rather than generalisation. Rigorous evaluation requires 8-gram or 13-gram decontamination checks and regularly rotating private evaluation splits.</p>
+        <p>The pass@k metric for generative code evaluation: Evaluating generated code via simple sampling accuracy is biased: generating 100 samples and checking if any passed gives an inflated, high-variance estimate. The pass@k metric computes the unbiased probability that at least one of k generated samples passes all unit tests, calculated combinatorially from n total samples (where n >= k).</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Think of evaluating candidate physicians graduating from medical school. MMLU is the written medical board exam: hundreds of multiple-choice questions assessing textbook clinical knowledge. GSM8K is the pharmaceutical dosing exam: exact arithmetic calculations where a minor decimal error is disastrous. HumanEval is the surgical simulator: you do not evaluate the beauty of the surgeon's handwriting; you run the code in a sandbox to see if the patient survives. Chatbot Arena is bedside manner evaluated by real patients in clinical trials. A trustworthy assessment requires passing all four criteria, not just acing the multiple-choice exam.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Unbiased pass@k estimator for functional code evaluation</h3><div class="formula">\operatorname{pass}@k = \mathbb{E}_{\text{problems}} \left[ 1 - \frac{\binom{n - c}{k}}{\binom{n}{k}} \right]</div><p>Here $n$ is total samples generated per problem ($n \ge k$), and $c$ is the number of samples that pass all unit test assertions ($c \le n$). This combinatorial formula prevents sample variance from biasing pass estimates.</p></li>
+          <li><h3>Elo rating system expected outcome and score update</h3><div class="formula">E_A = \frac{1}{1 + 10^{(R_B - R_A) / 400}}, \quad R_A \leftarrow R_A + K \left( S_A - E_A \right)</div><p>Here $R_A, R_B$ are current Elo ratings for models $A$ and $B$, $E_A$ is the expected win probability for $A$, $S_A \in \{1, 0.5, 0\}$ is the actual outcome (win, tie, loss), and $K$ is the update scaling factor.</p></li>
+          <li><h3>G-Eval multi-criteria weighted expectation</h3><div class="formula">\operatorname{Score}(y) = \sum_{s=1}^5 s \cdot P(\text{score} = s \mid x, y, \mathcal{R})</div><p>Instead of taking a single greedy token rating, G-Eval computes the expected score across the top score token probabilities under rubric $\mathcal{R}$, yielding continuous, lower-variance human alignment.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>LLM evaluation combines standardised benchmarks (MMLU, GSM8K), functional code execution (HumanEval), and human/LLM pairwise judging.</li><li>Benchmark contamination must be actively monitored using n-gram decontamination scans to distinguish true reasoning from training memorisation.</li><li>The pass@k metric computes unbiased functional code execution probabilities without sampling distortion.</li><li>LLM-as-a-judge provides scalable open-ended evaluation, but requires position swapping and length controls to neutralise cognitive biases.</li><li>Crowdsourced blind arena evaluations (like Chatbot Arena) quantify real-world conversational utility using the Elo rating system.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> math
+<span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">def</span> <span class="f">compute_pass_at_k</span>(n, c, k):
+    <span class="s">&quot;&quot;&quot;
+    Unbiased pass@k estimator (Chen et al., 2021).
+    n: total samples generated per problem
+    c: number of samples that passed all unit tests
+    k: k-threshold to evaluate
+    &quot;&quot;&quot;</span>
+    <span class="k">if</span> n - c &lt; k:
+        <span class="k">return</span> <span class="n">1.0</span>
+    <span class="k">return</span> <span class="n">1.0</span> - (math.<span class="f">comb</span>(n - c, k) / math.<span class="f">comb</span>(n, k))
+
+<span class="k">def</span> <span class="f">update_elo</span>(rating_a, rating_b, score_a, k_factor=<span class="n">32</span>):
+    <span class="s">&quot;&quot;&quot;
+    Compute Elo rating update for Model A and Model B.
+    score_a: 1.0 for A win, 0.5 for tie, 0.0 for B win.
+    &quot;&quot;&quot;</span>
+    <span class="c"># Expected outcome for A</span>
+    expected_a = <span class="n">1.0</span> / (<span class="n">1.0</span> + <span class="n">10.0</span> ** ((rating_b - rating_a) / <span class="n">400.0</span>))
+    expected_b = <span class="n">1.0</span> - expected_a
+    
+    score_b = <span class="n">1.0</span> - score_a
+    new_rating_a = rating_a + k_factor * (score_a - expected_a)
+    new_rating_b = rating_b + k_factor * (score_b - expected_b)
+    
+    <span class="k">return</span> <span class="f">round</span>(new_rating_a, <span class="n">1</span>), <span class="f">round</span>(new_rating_b, <span class="n">1</span>)
+
+<span class="c"># 1. Evaluate pass@k on a mock coding problem</span>
+n_samples = <span class="n">20</span>
+c_passed = <span class="n">6</span>   <span class="c"># 6 of 20 samples passed unit tests</span>
+
+<span class="k">print</span>(<span class="s">&quot;1. Functional Code Evaluation (pass@k):&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;  Total samples generated (n): {n_samples}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;  Passed unit tests (c):       {c_passed}&quot;</span>)
+<span class="k">for</span> k <span class="k">in</span> [<span class="n">1</span>, <span class="n">5</span>, <span class="n">10</span>]:
+    pass_k = <span class="f">compute_pass_at_k</span>(n_samples, c_passed, k)
+    <span class="k">print</span>(<span class="s">f&quot;  pass@{k:2d}: {pass_k * 100:.2f}%&quot;</span>)
+
+<span class="c"># 2. Simulate LMSYS Chatbot Arena Elo updates</span>
+<span class="k">print</span>(<span class="s">&quot;\n2. LMSYS Pairwise Tournament Elo Ratings:&quot;</span>)
+model_ratings = {<span class="s">&quot;Model_Alpha&quot;</span>: <span class="n">1000.0</span>, <span class="s">&quot;Model_Beta&quot;</span>: <span class="n">1000.0</span>}
+
+<span class="c"># Match 1: Alpha beats Beta</span>
+r_a, r_b = <span class="f">update_elo</span>(model_ratings[<span class="s">&quot;Model_Alpha&quot;</span>], model_ratings[<span class="s">&quot;Model_Beta&quot;</span>], score_a=<span class="n">1.0</span>)
+model_ratings[<span class="s">&quot;Model_Alpha&quot;</span>] = r_a
+model_ratings[<span class="s">&quot;Model_Beta&quot;</span>] = r_b
+<span class="k">print</span>(<span class="s">f&quot;  After Round 1 (Alpha wins): Alpha={r_a}, Beta={r_b}&quot;</span>)
+
+<span class="c"># Match 2: Alpha beats Beta again</span>
+r_a, r_b = <span class="f">update_elo</span>(model_ratings[<span class="s">&quot;Model_Alpha&quot;</span>], model_ratings[<span class="s">&quot;Model_Beta&quot;</span>], score_a=<span class="n">1.0</span>)
+model_ratings[<span class="s">&quot;Model_Alpha&quot;</span>] = r_a
+model_ratings[<span class="s">&quot;Model_Beta&quot;</span>] = r_b
+<span class="k">print</span>(<span class="s">f&quot;  After Round 2 (Alpha wins): Alpha={r_a}, Beta={r_b}&quot;</span>)
+
+<span class="c"># Match 3: Beta wins Round 3</span>
+r_a, r_b = <span class="f">update_elo</span>(model_ratings[<span class="s">&quot;Model_Alpha&quot;</span>], model_ratings[<span class="s">&quot;Model_Beta&quot;</span>], score_a=<span class="n">0.0</span>)
+model_ratings[<span class="s">&quot;Model_Alpha&quot;</span>] = r_a
+model_ratings[<span class="s">&quot;Model_Beta&quot;</span>] = r_b
+<span class="k">print</span>(<span class="s">f&quot;  After Round 3 (Beta wins):  Alpha={r_a}, Beta={r_b}&quot;</span>)
+</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Evaluating code synthesis by string matching: Using BLEU or exact match to evaluate code fails because variable names and formatting differ widely; always evaluate code by executing unit tests in an isolated sandbox.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Over-interpreting MMLU benchmark gains: Multiple-choice benchmarks are susceptible to guessing artifacts, prompt formatting sensitivities, and test set contamination. Do not rely on MMLU alone as an indicator of general intelligence.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Ignoring verbosity bias in LLM evaluators: Judge models systematically prefer longer responses even when extra sentences contain repetitive fluff or subtle hallucinations. Enforce strict word count parity or explicitly penalise verbosity in rubrics.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Evaluating on public benchmark test sets without rotation: As soon as a benchmark becomes popular, its questions appear in training web scrapes. Maintain held-out, privately curated evaluation sets for reliable internal benchmarking.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>Why is the combinatorial pass@k formula used to evaluate code generation benchmarks rather than taking simple sample averages?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because generating k samples directly suffers from high variance; generating n >= k samples and computing the combinatorial expectation provides an unbiased estimator with significantly lower variance</span></button><button class="opt" type="button"><b>B</b><span>Because python unit tests can only run in batches of 100</span></button><button class="opt" type="button"><b>C</b><span>Because computers cannot evaluate code without combinations</span></button><button class="opt" type="button"><b>D</b><span>Because pass@k removes the need for unit tests</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Evaluating pass@k by generating only k samples requires thousands of trials to obtain low variance. Generating n samples (e.g. n=100) and calculating the analytical expectation of drawing at least one passing sample out of k yields an unbiased, low-variance estimate.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>What is test set contamination in the context of Large Language Model pre-training?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>When unit tests contain infinite loops</span></button><button class="opt" type="button"><b>B</b><span>When questions and solutions from evaluation benchmarks inadvertently leak into the massive web-crawled pre-training dataset, allowing models to memorise answers rather than reasoning</span></button><button class="opt" type="button"><b>C</b><span>When an evaluation server crashes due to out-of-memory errors</span></button><button class="opt" type="button"><b>D</b><span>When a model is fine-tuned on multiple GPUs simultaneously</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because pre-training crawls billions of web pages (including GitHub repos, exam cheat sheets, and research papers), benchmark problems frequently leak into training data. High scores then reflect training memorisation rather than authentic problem-solving.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>How does the LMSYS Chatbot Arena evaluate model alignment and conversational quality?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By measuring the GPU temperature during generation</span></button><button class="opt" type="button"><b>B</b><span>By counting the number of punctuation marks in model responses</span></button><button class="opt" type="button"><b>C</b><span>By evaluating models on 10,000 multiple-choice questions</span></button><button class="opt" type="button"><b>D</b><span>By collecting blind pairwise preference judgments from human users in real-world dialogue and computing dynamic model rankings using the Elo rating system</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Chatbot Arena presents users with two anonymous models answering the same user prompt side by side. Users vote on which response is better, and match results are aggregated using Elo rating mathematics, mirroring competitive chess rankings.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/prompting-and-in-context-learning/"><small class="kicker">Concept</small><b>Prompting &amp; In-Context Learning</b></a><a href="../../concepts/evaluation-bleu-rouge-bertscore-llm-as-judge/"><small class="kicker">Concept</small><b>NLP Eval: BLEU to LLM Judges</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/tool-use-and-function-calling/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · AI</small><b>Tool Use &amp; Function Calling</b></a>
+    <a class="pager-next" href="../../concepts/hallucination-and-grounding/"><small>Next · AI <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Hallucination &amp; Grounding</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

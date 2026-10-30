@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Lasso Regression (L1 Regularisation) · Learn · Yogesh Awate</title>
+<meta name="description" content="A linear model that switches off unhelpful features by driving their coefficients to exactly zero.">
+<meta property="og:title" content="Lasso Regression (L1 Regularisation) · Learn · Yogesh Awate">
+<meta property="og:description" content="A linear model that switches off unhelpful features by driving their coefficients to exactly zero.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="lasso_regression">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-regression">Path 03 · Regression</a> / Linear models / Lesson 4 of 23</span>
+    <h1 class="case-title">Lasso Regression (L1 Regularisation)</h1>
+    <p class="lede rise" style="--d:3">A linear model that switches off unhelpful features by driving their coefficients to exactly zero.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      <span class="tagline lab">Live lab</span>
+      <span class="prereq">Before this: <a href="../../models/ridge_regression/">Ridge regression</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Task</dt><dd>Regression</dd>
+          <dt>Family</dt><dd>Linear, L1 penalty</dd>
+          <dt>What it learns</dt><dd>Sparse weights (many exactly 0)</dd>
+          <dt>Training cost</dt><dd>$O(np)$ per coordinate-descent sweep</dd>
+          <dt>Prediction cost</dt><dd>$O(\text{non-zeros})$</dd>
+          <dt>In code</dt><dd><code class="no-math">sklearn.<wbr>linear_model.<wbr>LassoCV</code></dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>How it works</a></li><li><a href="#lab"><span>03</span>Try it</a></li><li><a href="#maths"><span>04</span>The maths</a></li><li><a href="#tuning"><span>05</span>Hyperparameters</a></li><li><a href="#when"><span>06</span>When to use it</a></li><li><a href="#code"><span>07</span>In code</a></li><li><a href="#results"><span>08</span>On real data</a></li><li><a href="#quiz"><span>09</span>Check yourself</a></li><li><a href="#related"><span>10</span>Related lessons</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Lasso swaps ridge’s squared penalty for an absolute-value one, $\lambda\lVert\beta\rVert_1$. That small change means weak features get coefficients of exactly zero: built-in feature selection.</p>
+        <p>Think of each coefficient as having to pay a flat fee per unit of size. For a feature that only helps a little, the fee is never worth it, so the cheapest choice is to set its weight to precisely zero. Ridge’s fee grows with the square, so it is almost free near zero and nothing ever gets switched off completely.</p>
+        <p>The geometric picture: the L1 constraint region is a diamond with corners on the axes. The elliptical contours of the squared error usually touch the diamond first at a corner, and a corner means some coefficients are zero. With the round L2 ball there are no corners to hit.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>A strict editor with a word budget: weak sentences are not shortened, they are cut entirely.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> How it works</h2>
+        <ol class="steps"><li>Standardise features so the penalty is fair across them.</li><li>Minimise squared error plus $\lambda\sum_j|\beta_j|$.</li><li>There is no closed form; solve with coordinate descent, cycling through the coefficients and applying soft-thresholding to each one.</li><li>Choose $\lambda$ by cross-validation; the non-zero coefficients that remain are your selected features.</li></ol>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>03</span> Try it</h2>
+        <p>The same degree-9 polynomial as in the ridge lesson, now with an L1 penalty, solved live with coordinate descent. Watch coefficient bars snap to zero.</p>
+        <div class="lab" data-lab="lasso_regression" data-kind="models" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>Increase $\lambda$ slowly and count how many bars are still non-zero.</li><li>Find a $\lambda$ that keeps 3–4 terms and still fits the shape well.</li><li>Compare which powers survive at high $\lambda$: lasso keeps the most useful terms, not the lowest ones.</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>04</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Objective</h3><div class="formula">$$\hat\beta_{\text{lasso}} = \arg\min_\beta \;\frac{1}{2n}\lVert y - X\beta\rVert_2^2 + \lambda\lVert\beta\rVert_1$$</div><p>The absolute value is not differentiable at zero, which is precisely what lets solutions sit at zero.</p></li>
+          <li><h3>Coordinate update: soft-thresholding</h3><div class="formula">$$\beta_j \leftarrow \frac{S\!\left(\tfrac1n x_j^\top r_{(j)},\; \lambda\right)}{\tfrac1n x_j^\top x_j}, \qquad S(z,\lambda) = \operatorname{sign}(z)\max(|z| - \lambda, 0)$$</div><p>$r_{(j)}$ is the residual ignoring feature $j$. If the feature’s correlation with that residual is smaller than $\lambda$, its coefficient is set to exactly 0.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="tuning">
+        <h2 class="h3"><span>05</span> Hyperparameters</h2>
+        <div class="table-wrap"><table class="kv">
+          <thead><tr><th>Setting</th><th>What it does</th><th>Typical choice</th></tr></thead>
+          <tbody><tr><td><span class="hp">alpha ($\lambda$)</span></td><td>Penalty strength; higher means fewer features.</td><td>LassoCV scans a path of values automatically.</td></tr><tr><td><span class="hp">max_iter / tol</span></td><td>Coordinate-descent stopping rules.</td><td>Raise max_iter if you see convergence warnings.</td></tr><tr><td><span class="hp">selection</span></td><td>"cyclic" or "random" coordinate order.</td><td>"random" can converge faster with many features.</td></tr></tbody>
+        </table></div>
+      </section>
+      <section class="reveal" id="when">
+        <h2 class="h3"><span>06</span> When to use it</h2>
+        <div class="split2">
+          <div class="box good"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Strengths</h3><ul><li>Automatic feature selection gives a sparse, readable model.</li><li>Works when $p \gg n$.</li><li>The regularisation path shows the order in which features enter.</li></ul></div>
+          <div class="box bad"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg> Limitations</h3><ul><li>Among a group of correlated features it picks one, somewhat arbitrarily.</li><li>Selects at most $n$ features when $p &gt; n$.</li><li>Shrinks the coefficients it keeps, so they are biased.</li></ul></div>
+          <div class="box use"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> Reach for it when</h3><p>You suspect only a few features matter and want the model to tell you which.</p></div>
+          <div class="box avoid"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Think twice when</h3><p>Groups of strongly correlated features that should stay together: prefer <a class="inline" href="../../models/elastic_net/">Elastic net</a>.</p></div>
+        </div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>07</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">from</span> sklearn.pipeline <span class="k">import</span> make_pipeline
+<span class="k">from</span> sklearn.preprocessing <span class="k">import</span> StandardScaler
+<span class="k">from</span> sklearn.linear_model <span class="k">import</span> LassoCV
+
+model = <span class="f">make_pipeline</span>(<span class="f">StandardScaler</span>(), <span class="f">LassoCV</span>(cv=<span class="n">5</span>, random_state=<span class="n">0</span>)).<span class="f">fit</span>(X_tr, y_tr)
+lasso = model[-<span class="n">1</span>]
+kept = [c <span class="k">for</span> c, w <span class="k">in</span> <span class="f">zip</span>(X.columns, lasso.coef_) <span class="k">if</span> w != <span class="n">0</span>]
+<span class="k">print</span>(<span class="s">f&quot;alpha={lasso.alpha_:.4f}, kept {len(kept)} of {X.shape[1]} features:&quot;</span>, kept)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Treating the selected set as "the true features". With correlated inputs, a slightly different sample can pick a different member of the group.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Forgetting to scale, which turns the penalty into a units contest.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Reading kept coefficients as unbiased effect sizes. Refit OLS on the selected features if you need that.</span></li></ul>
+      </section>
+      <section class="reveal" id="results">
+        <h2 class="h3"><span>08</span> On real data</h2>
+        <p>Lasso (CV-tuned alpha) trained on 80% of the diabetes progression sample (Target as target), scored on a held-out 20%. The baseline always predicts the training mean.</p>
+        <div class="table-wrap" style="margin-top:18px"><table class="kv results-table">
+          <thead><tr><th>Metric</th><th>Lasso (CV-tuned alpha)</th><th>Predict the mean</th></tr></thead>
+          <tbody><tr><td>RMSE</td><td>5.630</td><td>25.878</td></tr><tr><td>MAE</td><td>4.869</td><td>21.314</td></tr><tr><td>R²</td><td>0.953</td><td>-0.001</td></tr></tbody>
+        </table></div>
+        <p class="note">Produced by <a href="https://github.com/yogesh660/ml-model-zoo/blob/main/models/lasso_regression/train.py" target="_blank" rel="noopener">models/lasso_regression/train.py</a> · generated 2026-10-28. Run it yourself: <code class="no-math">python models/lasso_regression/train.py</code></p>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>09</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>Why does lasso produce exact zeros while ridge does not?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Lasso has a bigger $\lambda$</span></button><button class="opt" type="button"><b>B</b><span>The L1 penalty has a sharp corner at zero that solutions get stuck on</span></button><button class="opt" type="button"><b>C</b><span>Lasso uses gradient descent</span></button><button class="opt" type="button"><b>D</b><span>Ridge drops the intercept</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> At zero, the L1 penalty’s slope jumps from $-\lambda$ to $+\lambda$. If the data’s pull on a coefficient is weaker than $\lambda$, zero is the optimum.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>Two features are almost identical. Lasso will most likely:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Keep one and zero the other</span></button><button class="opt" type="button"><b>B</b><span>Fail to converge</span></button><button class="opt" type="button"><b>C</b><span>Keep both with equal weights</span></button><button class="opt" type="button"><b>D</b><span>Zero both</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> For lasso, splitting weight across duplicates costs as much as putting it on one, with no benefit, so the solution usually concentrates on one of them. Elastic net spreads it.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>Soft-thresholding $S(z, \lambda)$ with $z = 0.3, \lambda = 0.5$ returns:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>0.3</span></button><button class="opt" type="button"><b>B</b><span>0.8</span></button><button class="opt" type="button"><b>C</b><span>0</span></button><button class="opt" type="button"><b>D</b><span>-0.2</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> $|z| &lt; \lambda$, so $\max(|z| - \lambda, 0) = 0$.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>10</span> Related lessons</h2>
+        <div class="related"><a href="../../models/ridge_regression/"><small class="kicker">Regression</small><b>Ridge regression</b></a><a href="../../models/elastic_net/"><small class="kicker">Regression</small><b>Elastic net</b></a><a href="../../models/ols_linear_regression/"><small class="kicker">Regression</small><b>Linear regression (OLS)</b></a><a href="../../concepts/regularization/"><small class="kicker">Concept</small><b>Regularisation</b></a><a href="../../concepts/feature-selection/"><small class="kicker">Concept</small><b>Feature selection</b></a><a href="../../concepts/cross-validation/"><small class="kicker">Concept</small><b>Cross-validation</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../models/ridge_regression/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Regression</small><b>Ridge regression</b></a>
+    <a class="pager-next" href="../../models/elastic_net/"><small>Next · Regression <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Elastic net</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/sequences.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

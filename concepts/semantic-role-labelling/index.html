@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Semantic Role Labelling: PropBank, FrameNet, and the Predicate-Argument Structure · Learn · Yogesh Awate</title>
+<meta name="description" content="SRL abstracts surface syntax into predicate-argument structures answering core semantic questions. PropBank defines predicate-specific core semantic roles (ARG0 for agent/causer, ARG1 for patient/theme) and general adjunct modifiers (ARGM-TMP for time, ARGM-LOC for location). FrameNet organizes language into conceptual semantic frames (e.g. `Commerce_buy`) evoked by lexical targets with specific frame elements. Modern neural SRL casts argument extraction as BIO sequence tagging or span-based classification conditioned on identified predicate tokens.">
+<meta property="og:title" content="Semantic Role Labelling: PropBank, FrameNet, and the Predicate-Argument Structure · Learn · Yogesh Awate">
+<meta property="og:description" content="SRL abstracts surface syntax into predicate-argument structures answering core semantic questions. PropBank defines predicate-specific core semantic roles (ARG0 for agent/causer, ARG1 for patient/theme) and general adjunct modifiers (ARGM-TMP for time, ARGM-LOC for location). FrameNet organizes language into conceptual semantic frames (e.g. `Commerce_buy`) evoked by lexical targets with specific frame elements. Modern neural SRL casts argument extraction as BIO sequence tagging or span-based classification conditioned on identified predicate tokens.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="semantic-role-labelling">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-nlp">Path 10 · Natural language processing</a> / Meaning / Lesson 28 of 52</span>
+    <h1 class="case-title">Semantic Role Labelling: PropBank, FrameNet, and the Predicate-Argument Structure</h1>
+    <p class="lede rise" style="--d:3">SRL abstracts surface syntax into predicate-argument structures answering core semantic questions. PropBank defines predicate-specific core semantic roles (ARG0 for agent/causer, ARG1 for patient/theme) and general adjunct modifiers (ARGM-TMP for time, ARGM-LOC for location). FrameNet organizes language into conceptual semantic frames (e.g. `Commerce_buy`) evoked by lexical targets with specific frame elements. Modern neural SRL casts argument extraction as BIO sequence tagging or span-based classification conditioned on identified predicate tokens.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Natural language processing · Meaning</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Semantic Role Labelling (SRL) identifies "who did what to whom, when, where, and why" by parsing sentences into predicates and their semantic arguments. Grounded in computational formalisms like PropBank and FrameNet, SRL abstracts away surface syntactic variations to uncover invariant underlying event semantics.</p>
+        <p>Consider the three sentences: "The dog bit the postman", "The postman was bitten by the dog", and "The postman suffered a bite from the dog". Syntactically, these sentences look very different: "the dog" is a subject in the first sentence, an object of a preposition in the second, and absent as a direct verb subject in the third. Yet semantically, the underlying event is identical: the dog is the attacker (Agent / ARG0) and the postman is the victim (Patient / ARG1). Standard syntactic parsing stops at grammatical relations (subject, object). Semantic Role Labelling takes the crucial next step: given a predicate (verb or event noun), it labels each phrase with its semantic role, enabling information extraction, question answering, and dialogue systems to understand the core participants of any event.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine a theatre play script. Regardless of whether an actor enters from stage left or stage right, or speaks in active or passive voice, the cast list remains fixed: Actor A is the protagonist (Agent), Actor B is the target (Patient), and the clock on the wall sets the time (Temporal modifier). SRL identifies the cast list and assigns theatrical roles for every scene in a text.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Identify predicate tokens: scan the sentence for verbal or nominal event anchors (e.g. "acquired", "sold", "demolished").</li><li>Generate contextual token encodings: pass the sentence through a bidirectional transformer encoder along with a binary predicate indicator feature.</li><li>Extract candidate argument spans: enumerate valid candidate phrases or use BIO token tagging over the sequence.</li><li>Score span-role assignments: evaluate compatibility between the predicate embedding and candidate argument representations.</li><li>Enforce structural constraints: apply dynamic programming or integer linear programming to ensure spans do not overlap and grammatical constraints are satisfied.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Semantic Role Labelling: PropBank, FrameNet, and the Predicate-Argument Structure formulation (Part 1)</h3><div class="formula">\mathbf{g}_{i, j} = [\mathbf{h}_i \,;\, \mathbf{h}_j \,;\, \mathbf{h}_p \,;\, \mathbf{w}_{j-i}]</div><p>Argument classification score for semantic role $r \in \mathcal{R}$ is computed via multi-layer perceptron:</p></li>
+          <li><h3>Semantic Role Labelling: PropBank, FrameNet, and the Predicate-Argument Structure formulation (Part 2)</h3><div class="formula">\text{Score}(i, j, r) = \mathbf{W}_r \cdot \text{ReLU}(\mathbf{W}_g \mathbf{g}_{i, j} + \mathbf{b}_g) + b_r</div><p>Global span consistency enforces that arguments cannot overlap and each core role (ARG0, ARG1) typically appears at most once per predicate:</p></li>
+          <li><h3>Semantic Role Labelling: PropBank, FrameNet, and the Predicate-Argument Structure formulation (Part 3)</h3><div class="formula">\hat{\mathcal{Y}} = \arg\max_{\mathcal{Y} \in \text{ValidSpans}} \sum_{(i, j, r) \in \mathcal{Y}} \text{Score}(i, j, r)</div><p>Global span consistency enforces that arguments cannot overlap and each core role (ARG0, ARG1) typically appears at most once per predicate:</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Semantic Role Labelling identifies predicate-argument relationships, capturing who did what to whom across varied surface syntax.</li><li>PropBank standardises numbered core roles (ARG0–ARG5) and adjunct modifiers (ARGM-TMP, ARGM-LOC) per predicate sense.</li><li>Conditioning bidirectional contextual representations on predicate tokens allows models to extract clean, non-overlapping semantic argument spans.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">def</span> <span class="f">score_semantic_roles</span>(tokens, predicate_idx, candidate_spans, role_weights):
+    <span class="s">&quot;&quot;&quot;Simulates scoring semantic arguments for a designated predicate.&quot;&quot;&quot;</span>
+    pred_token = tokens[predicate_idx]
+    scored_arguments = []
+    
+    <span class="k">for</span> (start, end), span_type <span class="k">in</span> candidate_spans:
+        span_text = <span class="s">&quot; &quot;</span>.<span class="f">join</span>(tokens[start:end])
+        <span class="c"># Simple simulated affinity based on grammatical role heuristics</span>
+        <span class="k">if</span> span_type == <span class="s">'subject'</span> <span class="k">and</span> predicate_idx &gt; start:
+            role = <span class="s">'ARG0 (Agent/Doer)'</span>
+            confidence = <span class="n">0.94</span>
+        <span class="k">elif</span> span_type == <span class="s">'object'</span> <span class="k">and</span> predicate_idx &lt; start:
+            role = <span class="s">'ARG1 (Patient/Theme)'</span>
+            confidence = <span class="n">0.91</span>
+        <span class="k">elif</span> span_type == <span class="s">'prep_phrase'</span>:
+            role = <span class="s">'ARGM-LOC (Location)'</span>
+            confidence = <span class="n">0.88</span>
+        <span class="k">else</span>:
+            role = <span class="s">'O (None)'</span>
+            confidence = <span class="n">0.50</span>
+            
+        scored_arguments.<span class="f">append</span>({
+            <span class="s">'span'</span>: span_text,
+            <span class="s">'range'</span>: (start, end),
+            <span class="s">'role'</span>: role,
+            <span class="s">'confidence'</span>: confidence
+        })
+        
+    <span class="k">return</span> scored_arguments
+
+<span class="c"># Sentence: &quot;Google acquired DeepMind in London&quot;</span>
+sentence = <span class="s">&quot;Google acquired DeepMind in London&quot;</span>
+tokens = sentence.<span class="f">split</span>()
+predicate_idx = <span class="n">1</span>  <span class="c"># &quot;acquired&quot;</span>
+
+<span class="c"># Candidate syntactic constituents</span>
+candidate_spans = [
+    ((<span class="n">0</span>, <span class="n">1</span>), <span class="s">'subject'</span>),       <span class="c"># &quot;Google&quot;</span>
+    ((<span class="n">2</span>, <span class="n">3</span>), <span class="s">'object'</span>),        <span class="c"># &quot;DeepMind&quot;</span>
+    ((<span class="n">3</span>, <span class="n">5</span>), <span class="s">'prep_phrase'</span>)    <span class="c"># &quot;in London&quot;</span>
+]
+
+results = <span class="f">score_semantic_roles</span>(tokens, predicate_idx, candidate_spans, {})
+
+<span class="k">print</span>(<span class="s">f&quot;Sentence: '{sentence}'&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Target Predicate: '{tokens[predicate_idx]}'&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;Extracted Semantic Roles:&quot;</span>)
+<span class="k">for</span> r <span class="k">in</span> results:
+    <span class="k">print</span>(<span class="s">f&quot;  [{r['span']:12}] -&gt; {r['role']} (conf: {r['confidence']:.2f})&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming ARG0 always equals grammatical subject; in passive voice ("The suspect was arrested by the officer"), the subject is ARG1 while the prepositional agent is ARG0.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Failing to condition the argument extraction on specific predicate indicators; sentences with multiple verbs have distinct role assignments for each verb.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Treating semantic frames across languages as identical without adjusting for language-specific valence patterns and case-marking structures.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>In the PropBank annotation standard, what semantic entity is typically denoted by ARG0?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The patient, theme, or entity affected by the action</span></button><button class="opt" type="button"><b>B</b><span>The agent, causer, or primary instigator of the action</span></button><button class="opt" type="button"><b>C</b><span>The timestamp indicating when the action occurred</span></button><button class="opt" type="button"><b>D</b><span>The location where the event took place</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> PropBank designates ARG0 as the external argument or prototype agent/causer, whereas ARG1 represents the prototype patient or theme.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>Why does Semantic Role Labelling provide more consistent semantic representation than pure dependency parsing across active and passive voices?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Dependency parsing cannot be run on passive sentences</span></button><button class="opt" type="button"><b>B</b><span>SRL assigns the same underlying roles (ARG0/ARG1) regardless of surface subject/object position shifts</span></button><button class="opt" type="button"><b>C</b><span>SRL eliminates the need for tokenisation</span></button><button class="opt" type="button"><b>D</b><span>SRL only functions on nouns rather than verbs</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Active ("A bit B") and passive ("B was bitten by A") have reversed grammatical subjects and objects, but SRL consistently maps A to ARG0 and B to ARG1.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>What distinguishes FrameNet from PropBank in lexical semantic modelling?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>FrameNet is restricted exclusively to acoustic audio analysis</span></button><button class="opt" type="button"><b>B</b><span>FrameNet organizes words into conceptual semantic frames with domain-specific frame elements rather than numbered arguments</span></button><button class="opt" type="button"><b>C</b><span>FrameNet only supports numerical database queries</span></button><button class="opt" type="button"><b>D</b><span>PropBank does not support English verbs</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> FrameNet groups words into conceptual frames (e.g. `Commerce_buy`, with elements `Buyer`, `Seller`, `Goods`) reflecting frame semantics, whereas PropBank uses general numbered arguments.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/conditional-random-fields/"><small class="kicker">Concept</small><b>Conditional Random Fields (CRF)</b></a><a href="../../concepts/bert-and-masked-language-models/"><small class="kicker">Concept</small><b>BERT &amp; Masked LMs</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/word-sense-disambiguation-and-lesk/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Natural language processing</small><b>Word Sense Disambiguation &amp; Lesk</b></a>
+    <a class="pager-next" href="../../concepts/evaluating-embeddings-similarity-analogy-bias/"><small>Next · Natural language processing <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Evaluating Embeddings &amp; Bias</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

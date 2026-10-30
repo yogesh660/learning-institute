@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Convolutional Neural Networks (CNNs) · Learn · Yogesh Awate</title>
+<meta name="description" content="Networks that slide small learned filters across an image, so they spot the same pattern wherever it appears.">
+<meta property="og:title" content="Convolutional Neural Networks (CNNs) · Learn · Yogesh Awate">
+<meta property="og:description" content="Networks that slide small learned filters across an image, so they spot the same pattern wherever it appears.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="convolutional_neural_networks">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-neural">Path 08 · Deep learning</a> / Seeing: convolution / Lesson 17 of 42</span>
+    <h1 class="case-title">Convolutional Neural Networks (CNNs)</h1>
+    <p class="lede rise" style="--d:3">Networks that slide small learned filters across an image, so they spot the same pattern wherever it appears.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="3"><i><b></b></i>Advanced</span></span>
+      <span class="tagline">24 min</span>
+      <span class="tagline lab">Live lab</span>
+      <span class="prereq">Before this: <a href="../../models/mlp_classifier/">MLP classifier</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Task</dt><dd>Classification</dd>
+          <dt>Family</dt><dd>Deep, convolutional</dd>
+          <dt>What it learns</dt><dd>Filters and dense weights</dd>
+          <dt>Training cost</dt><dd>$O(H\,W\,F^2\,C_{\text{in}}\,C_{\text{out}})$ per layer</dd>
+          <dt>Prediction cost</dt><dd>Same per image</dd>
+          <dt>In code</dt><dd><code class="no-math">torch.<wbr>nn.<wbr>Conv2d</code></dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>How it works</a></li><li><a href="#arch"><span>03</span>The architecture</a></li><li><a href="#watch"><span>04</span>Watch it work</a></li><li><a href="#lab"><span>05</span>Try it</a></li><li><a href="#maths"><span>06</span>The maths</a></li><li><a href="#tuning"><span>07</span>Hyperparameters</a></li><li><a href="#when"><span>08</span>When to use it</a></li><li><a href="#code"><span>09</span>In code</a></li><li><a href="#quiz"><span>10</span>Check yourself</a></li><li><a href="#related"><span>11</span>Related lessons</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">A convolutional layer slides a small grid of weights (a filter) across the image and records how strongly each patch matches. Stacking such layers builds up from edges to textures to parts to objects.</p>
+        <p>A fully connected network on a 224×224 colour image would need 150,000 weights <em>per neuron</em> and would have to learn "cat ear" separately for every position. Convolution shares one small filter across all positions (<strong>weight sharing</strong>) and looks at local patches only (<strong>local connectivity</strong>). The same edge detector works everywhere: translation equivariance.</p>
+        <p>After convolution, a non-linearity (ReLU) keeps only positive evidence, and pooling summarises small neighbourhoods so the representation shrinks and becomes tolerant to small shifts. Deeper layers see larger regions of the original image (a larger receptive field), so they can respond to bigger structures. A classifier head on top turns the final features into class probabilities.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Scanning a page with a magnifying glass that lights up whenever it passes over a particular shape.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> How it works</h2>
+        <ol class="steps"><li>Convolve the input with $K$ learned filters to produce $K$ feature maps.</li><li>Apply ReLU.</li><li>Pool (e.g. 2×2 max) to downsample.</li><li>Repeat conv–ReLU–pool blocks, increasing the number of filters.</li><li>Flatten or global-average-pool, then a dense softmax layer.</li><li>Train end-to-end with cross-entropy and backpropagation; augment data (flips, crops) to generalise.</li></ol>
+      </section>
+      <section class="reveal" id="arch">
+        <h2 class="h3"><span>03</span> The architecture</h2>
+        <p>A small CNN that reads 28×28 handwritten digits, drawn layer by layer. Hover over any part (or tap it on a phone) to see what it does, its input and output shape and how many weights it learns.</p>
+        <div class="arch" data-architecture="cnn" style="margin-top:18px"><noscript><p class="lab-noscript">The diagram needs JavaScript.</p></noscript></div>
+      </section>
+      <section class="reveal" id="watch">
+        <h2 class="h3"><span>04</span> Watch it work</h2>
+        <p>Press play, or step through at your own pace. Each step adds one idea.</p>
+        <div class="explainer" data-explainer="cnn" style="margin-top:18px"><noscript><p class="lab-noscript">The animation needs JavaScript.</p></noscript></div>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>05</span> Try it</h2>
+        <p>Pick an image and a filter. The middle panel is the feature map (the filter’s response at each position); the right panel is that map after ReLU and 2×2 max-pooling. Hover over the input to see the patch under the filter.</p>
+        <div class="lab" data-lab="convolutional_neural_networks" data-kind="models" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>Apply the vertical-edge filter to the square: only the left and right sides light up.</li><li>Edit the filter weights by hand and design a horizontal-line detector.</li><li>Compare the pooled map with the feature map: same pattern, a quarter of the size.</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>06</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Discrete 2-D convolution (cross-correlation)</h3><div class="formula">$$S(i, j) = \sum_{m}\sum_{n} I(i + m,\, j + n)\,K(m, n) + b$$</div><p>Each output pixel is the dot product of the filter with the patch under it. Deep-learning libraries use cross-correlation and still call it convolution.</p></li>
+          <li><h3>Output size</h3><div class="formula">$$H_{\text{out}} = \Big\lfloor\frac{H_{\text{in}} + 2P - F}{S}\Big\rfloor + 1$$</div><p>$F$ = filter size, $P$ = padding, $S$ = stride. A 3×3 filter with padding 1 and stride 1 keeps the size.</p></li>
+          <li><h3>Parameter count</h3><div class="formula">$$\#\text{params} = (F\cdot F\cdot C_{\text{in}} + 1)\cdot C_{\text{out}}$$</div><p>A 3×3 conv from 64 to 128 channels has about 74k weights, regardless of image size.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="tuning">
+        <h2 class="h3"><span>07</span> Hyperparameters</h2>
+        <div class="table-wrap"><table class="kv">
+          <thead><tr><th>Setting</th><th>What it does</th><th>Typical choice</th></tr></thead>
+          <tbody><tr><td><span class="hp">filters, kernel size</span></td><td>Number and size of learned patterns.</td><td>32→64→128…, 3×3.</td></tr><tr><td><span class="hp">stride, padding</span></td><td>Step size and border handling.</td><td>stride 1, "same" padding.</td></tr><tr><td><span class="hp">pooling</span></td><td>Downsampling.</td><td>2×2 max or global average.</td></tr><tr><td><span class="hp">optimiser, lr, weight decay</span></td><td>Training.</td><td>AdamW 1e-3 or SGD + momentum with a schedule.</td></tr><tr><td><span class="hp">augmentation</span></td><td>Synthetic variations of images.</td><td>Flips, crops, colour jitter.</td></tr></tbody>
+        </table></div>
+      </section>
+      <section class="reveal" id="when">
+        <h2 class="h3"><span>08</span> When to use it</h2>
+        <div class="split2">
+          <div class="box good"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Strengths</h3><ul><li>State of the art on images and other grid data.</li><li>Far fewer parameters than dense nets thanks to weight sharing.</li><li>Pre-trained backbones transfer well to new tasks.</li></ul></div>
+          <div class="box bad"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg> Limitations</h3><ul><li>Needs lots of labelled data or transfer learning.</li><li>GPU-hungry training.</li><li>Hard to interpret; vulnerable to adversarial perturbations.</li></ul></div>
+          <div class="box use"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> Reach for it when</h3><p>Images, spectrograms, some time series and any data with local spatial structure.</p></div>
+          <div class="box avoid"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Think twice when</h3><p>Tabular data, where trees win.</p></div>
+        </div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>09</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> torch, torch.nn <span class="k">as</span> nn
+
+<span class="k">class</span> <span class="f">SmallCNN</span>(nn.Module):
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, n_classes=<span class="n">10</span>):
+        <span class="k">super</span>().<span class="f">__init__</span>()
+        <span class="k">self</span>.features = nn.<span class="f">Sequential</span>(
+            nn.<span class="f">Conv2d</span>(<span class="n">1</span>, <span class="n">32</span>, <span class="n">3</span>, padding=<span class="n">1</span>), nn.<span class="f">ReLU</span>(), nn.<span class="f">MaxPool2d</span>(<span class="n">2</span>),     <span class="c"># 28 -&gt; 14</span>
+            nn.<span class="f">Conv2d</span>(<span class="n">32</span>, <span class="n">64</span>, <span class="n">3</span>, padding=<span class="n">1</span>), nn.<span class="f">ReLU</span>(), nn.<span class="f">MaxPool2d</span>(<span class="n">2</span>),    <span class="c"># 14 -&gt; 7</span>
+        )
+        <span class="k">self</span>.head = nn.<span class="f">Sequential</span>(nn.<span class="f">Flatten</span>(), nn.<span class="f">Linear</span>(<span class="n">64</span> * <span class="n">7</span> * <span class="n">7</span>, <span class="n">128</span>), nn.<span class="f">ReLU</span>(),
+                                  nn.<span class="f">Dropout</span>(<span class="n">0.3</span>), nn.<span class="f">Linear</span>(<span class="n">128</span>, n_classes))
+
+    <span class="k">def</span> <span class="f">forward</span>(<span class="k">self</span>, x):
+        <span class="k">return</span> <span class="k">self</span>.<span class="f">head</span>(<span class="k">self</span>.<span class="f">features</span>(x))
+
+model = <span class="f">SmallCNN</span>()
+<span class="k">print</span>(<span class="f">sum</span>(p.<span class="f">numel</span>() <span class="k">for</span> p <span class="k">in</span> model.<span class="f">parameters</span>()), <span class="s">&quot;parameters&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Training from scratch on a few thousand images; start from a pre-trained backbone.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Forgetting to normalise inputs the way the pre-trained model expects.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Augmenting the validation set.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>10</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>Why do CNNs need far fewer parameters than dense networks on images?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>They use smaller images</span></button><button class="opt" type="button"><b>B</b><span>They use pooling only</span></button><button class="opt" type="button"><b>C</b><span>One small filter is shared across every position</span></button><button class="opt" type="button"><b>D</b><span>They skip the bias</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Weight sharing: the same $3\times3$ weights are applied everywhere.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>A 32×32 input, 5×5 filter, padding 0, stride 1 gives an output of:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>28×28</span></button><button class="opt" type="button"><b>B</b><span>32×32</span></button><button class="opt" type="button"><b>C</b><span>16×16</span></button><button class="opt" type="button"><b>D</b><span>27×27</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> $(32 + 0 - 5)/1 + 1 = 28$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>What does max-pooling add?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Colour invariance</span></button><button class="opt" type="button"><b>B</b><span>Downsampling and tolerance to small shifts</span></button><button class="opt" type="button"><b>C</b><span>Non-linearity only</span></button><button class="opt" type="button"><b>D</b><span>More parameters</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Taking the max over a window keeps the strongest response wherever it occurs in that window.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q4</span>In a convolutional layer, if an object in an image shifts 5 pixels to the right, what happens to the resulting feature map?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The activated features shift 5 pixels to the right in the feature map (translation equivariance)</span></button><button class="opt" type="button"><b>B</b><span>The output feature map remains in the exact same coordinates without moving (strict invariance)</span></button><button class="opt" type="button"><b>C</b><span>The feature map collapses to a scalar zero</span></button><button class="opt" type="button"><b>D</b><span>The feature values are completely inverted because spatial locality is lost</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Convolution is translation equivariant: shifting the input causes the output feature map to shift by the corresponding amount, preserving the spatial layout of detected patterns. Pooling subsequently introduces local translation invariance.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q5</span>Why do modern CNN architectures often use Global Average Pooling (GAP) before the final classification layer instead of flattening all features into a massive dense layer?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>GAP drastically reduces parameter count and prevents overfitting by collapsing each 2D feature map into a single average value</span></button><button class="opt" type="button"><b>B</b><span>GAP eliminates the need for activation functions throughout the entire network</span></button><button class="opt" type="button"><b>C</b><span>GAP enforces that all input images must have exactly the same fixed pixel resolution</span></button><button class="opt" type="button"><b>D</b><span>GAP doubles the number of trainable parameters to improve model capacity</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Flattening a $7 \times 7 \times 512$ tensor into a dense layer requires millions of parameters, making the classifier head prone to overfitting. Global average pooling reduces each spatial map to its mean scalar, producing a compact 512-dimensional vector with zero extra parameters.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q6</span>What is meant by the "effective receptive field" of a neuron in a deep convolutional network?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The number of channels output by the layer containing that neuron</span></button><button class="opt" type="button"><b>B</b><span>The total number of non-zero parameters in the neuron's filter kernel</span></button><button class="opt" type="button"><b>C</b><span>The specific region of the original raw input image that can influence that neuron's activation value</span></button><button class="opt" type="button"><b>D</b><span>The memory allocated to the neuron on the GPU during the backward pass</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The receptive field is the patch of pixels in the input image that feeds into that unit through successive convolutions and pooling layers. Deeper units possess wider receptive fields, enabling them to recognise high-level shapes and full objects.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q7</span>What is the primary purpose of using a $1 \times 1$ convolutional layer (pointwise convolution) in deep networks like ResNet or Inception?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To increase the spatial resolution of the feature maps</span></button><button class="opt" type="button"><b>B</b><span>To change the number of feature channels while combining cross-channel information, without altering spatial height and width</span></button><button class="opt" type="button"><b>C</b><span>To rotate the input image by 90 degrees</span></button><button class="opt" type="button"><b>D</b><span>To perform spatial downsampling instead of max pooling</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A $1 \times 1$ filter operates across all input channels at a single pixel location. It computes a linear combination of channels followed by a non-linearity, allowing the network to project channels up or down cheaply while leaving spatial dimensions $(H, W)$ intact.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q8</span>A convolutional layer receives a $64 \times 64$ feature map. It applies a $3 \times 3$ filter with padding $P = 1$ and stride $S = 2$. What is the spatial resolution of the output feature map?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$64 \times 64$</span></button><button class="opt" type="button"><b>B</b><span>$31 \times 31$</span></button><button class="opt" type="button"><b>C</b><span>$33 \times 33$</span></button><button class="opt" type="button"><b>D</b><span>$32 \times 32$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Using $H_{\text{out}} = \lfloor \frac{H_{\text{in}} + 2P - F}{S} \rfloor + 1$: here $\lfloor \frac{64 + 2(1) - 3}{2} \rfloor + 1 = \lfloor \frac{63}{2} \rfloor + 1 = 31 + 1 = 32$. A stride of 2 with padding 1 cleanly halves the spatial dimension from 64 to 32.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q9</span>When training a CNN on image classification, why is data augmentation (such as random horizontal flips and random crops) applied strictly to the training split and NEVER to the validation or test splits?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Data augmentation reduces the number of samples in the validation set</span></button><button class="opt" type="button"><b>B</b><span>Applying augmentation to validation data would corrupt the GPU memory cache</span></button><button class="opt" type="button"><b>C</b><span>Convolutional layers cannot process augmented images during evaluation mode</span></button><button class="opt" type="button"><b>D</b><span>Validation and test splits must measure performance on uncorrupted, real-world data distributions to provide an unbiased evaluation</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Validation and test sets serve as ground-truth benchmarks for real-world generalisation. Augmenting them would introduce synthetic artefacts and prevent fair, reproducible measurement of model performance.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q10</span>A 2D convolutional layer receives an input with 32 channels and produces 64 output feature maps using $3 \times 3$ filters. Each output filter has an independent learnable bias term. How many learnable parameters does this layer contain?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>6,144</span></button><button class="opt" type="button"><b>B</b><span>73,792</span></button><button class="opt" type="button"><b>C</b><span>18,496</span></button><button class="opt" type="button"><b>D</b><span>18,432</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Each of the 64 filters spans all 32 input channels with a $3 \times 3$ kernel, giving $3 \times 3 \times 32 = 288$ weights per filter. Adding 1 bias per filter gives 289 parameters per filter. In total, $64 \times 289 = 18,496$ learnable parameters (completely invariant to the input image's spatial height and width).</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q11</span>A $3 \times 3$ patch of an image channel has values $\begin{bmatrix} 1 &amp; 0 &amp; 2 \\ 0 &amp; 3 &amp; 1 \\ 2 &amp; 1 &amp; 0 \end{bmatrix}$. It is convolved with a filter kernel $\begin{bmatrix} 0 &amp; 1 &amp; 0 \\ 1 &amp; -2 &amp; 1 \\ 0 &amp; 1 &amp; 0 \end{bmatrix}$ with bias $b = 1.0$. What is the linear pre-activation value $S$ at this position?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$-3.0$</span></button><button class="opt" type="button"><b>B</b><span>$-5.0$</span></button><button class="opt" type="button"><b>C</b><span>$+1.0$</span></button><button class="opt" type="button"><b>D</b><span>$+4.0$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Compute the sum of elementwise products: row 1 gives $1(0) + 0(1) + 2(0) = 0$; row 2 gives $0(1) + 3(-2) + 1(1) = -5$; row 3 gives $2(0) + 1(1) + 0(0) = 1$. Adding the rows gives $0 - 5 + 1 = -4$. Finally, adding bias $b = 1.0$ yields $S = -4 + 1 = -3.0$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q12</span>During the backward pass (backpropagation) through a $2 \times 2$ max-pooling layer with stride 2, how does the incoming gradient $\frac{\partial L}{\partial y}$ get routed to the 4 input units of the pooling window?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The full gradient is routed entirely to the single unit that had the maximum forward value, while the other 3 units receive a gradient of zero</span></button><button class="opt" type="button"><b>B</b><span>The gradient is divided equally by 4 and distributed to all 4 input units</span></button><button class="opt" type="button"><b>C</b><span>The gradient is dropped completely because pooling layers have zero learnable parameters</span></button><button class="opt" type="button"><b>D</b><span>The gradient is routed to the unit with the smallest value to push it towards the mean</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The forward operation is $y = \max(x_1, x_2, x_3, x_4)$. The partial derivative $\frac{\partial y}{\partial x_i}$ is 1 for the winning unit ($x_i = \max$) and 0 for all other units. By the chain rule, the entire incoming gradient flows solely through the winning unit, while the losing units receive zero gradient.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>11</span> Related lessons</h2>
+        <div class="related"><a href="../../models/mlp_classifier/"><small class="kicker">Deep learning</small><b>MLP classifier</b></a><a href="../../models/recurrent_neural_networks/"><small class="kicker">Deep learning</small><b>RNNs</b></a><a href="../../concepts/gradient-descent/"><small class="kicker">Concept</small><b>Gradient descent</b></a><a href="../../concepts/regularization/"><small class="kicker">Concept</small><b>Regularisation</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/distributed-training-ddp-and-fsdp/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>DDP &amp; FSDP distributed training</b></a>
+    <a class="pager-next" href="../../models/recurrent_neural_networks/"><small>Next · Deep learning <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>RNNs</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/sequences.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/explainers.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/architecture.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

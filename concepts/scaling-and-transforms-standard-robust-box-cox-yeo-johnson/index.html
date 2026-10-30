@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Scaling and Transforms: Standard, Robust, Box–Cox, Yeo–Johnson · Learn · Yogesh Awate</title>
+<meta name="description" content="Standardising feature ranges and normalising skewed distributions to satisfy linear assumptions and accelerate gradient convergence.">
+<meta property="og:title" content="Scaling and Transforms: Standard, Robust, Box–Cox, Yeo–Johnson · Learn · Yogesh Awate">
+<meta property="og:description" content="Standardising feature ranges and normalising skewed distributions to satisfy linear assumptions and accelerate gradient convergence.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="scaling-and-transforms-standard-robust-box-cox-yeo-johnson">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-data-science">Path 07 · Data science</a> / Feature engineering / Lesson 8 of 47</span>
+    <h1 class="case-title">Scaling and Transforms: Standard, Robust, Box–Cox, Yeo–Johnson</h1>
+    <p class="lede rise" style="--d:3">Standardising feature ranges and normalising skewed distributions to satisfy linear assumptions and accelerate gradient convergence.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/outlier-handling/">Outlier handling</a> <a href="../../concepts/sampling-and-standard-error/">Sampling &amp; standard error</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Data science · Feature engineering</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>1 model lesson</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Distance metrics, regularisation penalties, and gradient descent updates are acutely sensitive to feature scales. If one feature spans $[0, 1]$ while another ranges $[0, 1{,}000{,}000]$, the larger variable completely dominates Euclidean distances and distorts L1/L2 penalties. Transforming features via standard, robust, or power transformations aligns feature scales and normalises skewed distributions into symmetrical Gaussian-like shapes.</p>
+        <p>Imagine training a k-Nearest Neighbours or Support Vector Machine model to evaluate bank loan risk based on two customer attributes: age in years (ranging from 18 to 75) and annual income in pounds (ranging from £15,000 to £500,000). If you compute the Euclidean distance between two applicants, a difference of 30 years in age contributes $(30)^2 = 900$ to the squared distance, while a difference of £10,000 in income contributes $(10,000)^2 = 100,000,000$. The income feature is over 100,000 times more influential simply because of the arbitrary choice of measurement currency. Age becomes completely invisible to the algorithm.</p>
+        <p>Scaling resolves this by transforming variables into comparable dimensionless numerical spaces. Standard scaling (Z-score normalisation) shifts the mean to 0 and rescales variance to 1. Min-max scaling squashes values into a bounded interval such as $[0, 1]$. However, both techniques are vulnerable to extreme outliers: a single massive outlier compresses all normal data points into a microscopic cluster near zero. Robust scaling replaces the sample mean and variance with the median and interquartile range (IQR), ensuring scale normalisation remains unaffected by rogue outliers.</p>
+        <p>Beyond scaling spread, many linear algorithms and hypothesis tests assume underlying errors or features are normally distributed. Highly skewed variables (such as website visit durations or insurance claim amounts) violate these assumptions. Power transformations—such as the Box-Cox transform for strictly positive data and the Yeo-Johnson transform for data containing zero or negative values—estimate an optimal power parameter $\lambda$ that mathematically bends skewed probability distributions into symmetrical, near-Gaussian bell curves.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Converting currencies from Yen, Pounds, and Dollars into a single standardised international credit unit so that prices can be compared on equal terms.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Diagnose distribution characteristics: inspect feature skewness, presence of negative values, and outlier density using histograms and quantile plots.</li><li>Select scaling mechanism: apply standard scaling ($z = (x - \mu)/\sigma$) for Gaussian features, Min-Max scaling for bounded bounds (e.g. neural network inputs), or robust scaling (median/IQR) for outlier-rich data.</li><li>Fit scaler exclusively on training data: calculate $\mu$, $\sigma$, or median strictly on training folds to prevent distribution leakage.</li><li>Evaluate power transformations for skewed data: apply Box-Cox for strictly positive features ($x &gt; 0$) or Yeo-Johnson for real-valued features with zeros and negatives.</li><li>Optimise transformation parameter $\lambda$: maximise profile log-likelihood across grid search to find the power that minimises distribution skewness.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Standard scaling vs Robust scaling</h3><div class="formula">$$z_i = \frac{x_i - \bar{x}}{s}, \qquad r_i = \frac{x_i - \text{median}(X)}{\text{IQR}(X)}$$</div><p>Standard scaling centres at sample mean $\bar{x}$ and scales by standard deviation $s$. Robust scaling centres at the sample median and divides by $\text{IQR} = Q_3 - Q_1$, maintaining a 50% breakdown point that resists distortion from extreme outliers.</p></li>
+          <li><h3>Box-Cox power transformation ($x &gt; 0$)</h3><div class="formula">$$y^{(\lambda)} = \begin{cases} \frac{x^\lambda - 1}{\lambda} &amp; \text{if } \lambda \ne 0 \\ \ln(x) &amp; \text{if } \lambda = 0 \end{cases}$$</div><p>Parametrised by power $\lambda$, Box-Cox continuous power scaling maps positive distributions into Gaussian profiles. At $\lambda = 1$, the transform is linear (shift); at $\lambda = 0.5$, it acts as a square root; at $\lambda = 0$, it becomes the natural logarithm, compressing heavy right tails.</p></li>
+          <li><h3>Yeo-Johnson power transformation (all $x \in \mathbb{R}$)</h3><div class="formula">$$\psi(\lambda, x) = \begin{cases} \frac{(x + 1)^\lambda - 1}{\lambda} &amp; \text{if } \lambda \ne 0, x \ge 0 \\ \ln(x + 1) &amp; \text{if } \lambda = 0, x \ge 0 \\ -\frac{(-x + 1)^{2 - \lambda} - 1}{2 - \lambda} &amp; \text{if } \lambda \ne 2, x &lt; 0 \\ -\ln(-x + 1) &amp; \text{if } \lambda = 2, x &lt; 0 \end{cases}$$</div><p>Yeo-Johnson generalises Box-Cox to accommodate zero and negative values, guaranteeing monotonic continuity across the entire real line without requiring arbitrary additive positive shifts.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Distance and gradient invariance: scaling ensures features contribute proportionately to Euclidean distance calculations and prevents elongated, zig-zagging gradient descent trajectories.</li><li>Robust scaling resistance: median/IQR scaling resists outlier contamination, preventing extreme observations from squashing normal feature distributions.</li><li>Yeo-Johnson zero-handling: unlike Box-Cox, Yeo-Johnson operates over positive, zero, and negative values without requiring arbitrary positive offset shifts.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">from</span> scipy <span class="k">import</span> stats
+
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+raw = np.random.<span class="f">exponential</span>(scale=<span class="n">2.0</span>, size=<span class="n">100</span>)
+
+standardised = (raw - np.<span class="f">mean</span>(raw)) / np.<span class="f">std</span>(raw)
+med = np.<span class="f">median</span>(raw)
+iqr_val = np.<span class="f">percentile</span>(raw, <span class="n">75</span>) - np.<span class="f">percentile</span>(raw, <span class="n">25</span>)
+robust = (raw - med) / iqr_val
+boxcox_trans, opt_lambda = stats.<span class="f">boxcox</span>(raw)
+
+<span class="k">print</span>(<span class="s">f&quot;Raw skewness:        {stats.skew(raw):.3f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Standardised skew:   {stats.skew(standardised):.3f} (mean: {np.mean(standardised):.1f})&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Robust scaled skew:  {stats.skew(robust):.3f} (median: {np.median(robust):.1f})&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Box-Cox skew (lambda={opt_lambda:.2f}): {stats.skew(boxcox_trans):.3f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Data leakage by fitting on entire dataset: computing scaler parameters ($\mu, \sigma$) across training and test sets leaks test distribution bounds.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Tree-based model misconception: applying monotonic scaling or power transforms to features fed into decision trees, Random Forests, or XGBoost is computationally superfluous, as trees are invariant to monotonic univariate transforms.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Inverting predictions without inverse transformation: when transforming a continuous target variable $y$ with Box-Cox, predictions must be inverted via inverse power transform back to original monetary or physical units.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>Why does standardising or min-max scaling features have virtually zero effect on the predictive accuracy of a Random Forest or XGBoost model?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Decision trees split on monotonic rank thresholds, making split decisions completely invariant to monotonic univariate scaling</span></button><button class="opt" type="button"><b>B</b><span>Ensemble algorithms only process categorical variables</span></button><button class="opt" type="button"><b>C</b><span>Gradient boosting automatically divides all numbers by 100</span></button><button class="opt" type="button"><b>D</b><span>Tree models internally normalise all columns to Gaussian distributions</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Decision trees evaluate splits of the form $x_j \le \theta$. Monotonically scaling $x_j$ by $a x_j + b$ simply transforms the threshold $\theta$ by the same factor, leaving sample partitions and impurity gains identical.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>What is the primary constraint that limits the use of the classic Box-Cox transformation?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It can only be applied to binary classification labels</span></button><button class="opt" type="button"><b>B</b><span>All feature values must be strictly positive ($x &gt; 0$)</span></button><button class="opt" type="button"><b>C</b><span>The data must already follow a normal distribution</span></button><button class="opt" type="button"><b>D</b><span>The dataset must have fewer than 100 rows</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Box-Cox relies on power functions and natural logarithms ($\ln x$), which are undefined for zero and negative real numbers. The Yeo-Johnson transform was developed specifically to overcome this constraint.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>Why is RobustScaler (median and IQR) preferred over StandardScaler when scaling data with severe unclipped outliers?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>RobustScaler eliminates the need for test set splitting</span></button><button class="opt" type="button"><b>B</b><span>RobustScaler guarantees all outputs fall strictly between 0 and 1</span></button><button class="opt" type="button"><b>C</b><span>StandardScaler cannot process floating-point data</span></button><button class="opt" type="button"><b>D</b><span>StandardScaler's mean and variance are heavily distorted by outliers, squashing normal data into a narrow band, whereas median and IQR resist outlier leverage</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In StandardScaler, an extreme outlier inflates the sample standard deviation, shrinking the scaled values of typical records into a tiny range near zero. RobustScaler's median and IQR have a 50% breakdown point, preserving normal variation.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/outlier-handling/"><small class="kicker">Concept</small><b>Outlier handling</b></a><a href="../../concepts/encoding-categoricals-one-hot-ordinal-target-woe/"><small class="kicker">Concept</small><b>Encoding categoricals</b></a><a href="../../models/knn_classifier/"><small class="kicker">Classification</small><b>k-NN classifier</b></a><a href="../../models/ridge_regression/"><small class="kicker">Regression</small><b>Ridge regression</b></a><a href="../../concepts/lag-and-rolling-window-features/"><small class="kicker">Concept</small><b>Lag and rolling-window features</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/encoding-categoricals-one-hot-ordinal-target-woe/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Data science</small><b>Encoding categoricals</b></a>
+    <a class="pager-next" href="../../concepts/lag-and-rolling-window-features/"><small>Next · Data science <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Lag and rolling-window features</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

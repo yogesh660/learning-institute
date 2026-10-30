@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Distributional semantics · Learn · Yogesh Awate</title>
+<meta name="description" content="Distributional semantics is the theoretical and computational foundation of modern lexical representation. Rooted in J.R. Firth's famous 1957 maxim—&quot;You shall know a word by the company it keeps&quot;—the distributional hypothesis posits that words occurring in similar linguistic contexts possess similar semantic meanings. By counting word co-occurrences in sliding symmetric windows, applying statistical association metrics like Positive Pointwise Mutual Information (PPMI), and evaluating geometric distance via cosine similarity, distributional models transform discrete linguistic tokens into continuous vector spaces.">
+<meta property="og:title" content="Distributional semantics · Learn · Yogesh Awate">
+<meta property="og:description" content="Distributional semantics is the theoretical and computational foundation of modern lexical representation. Rooted in J.R. Firth's famous 1957 maxim—&quot;You shall know a word by the company it keeps&quot;—the distributional hypothesis posits that words occurring in similar linguistic contexts possess similar semantic meanings. By counting word co-occurrences in sliding symmetric windows, applying statistical association metrics like Positive Pointwise Mutual Information (PPMI), and evaluating geometric distance via cosine similarity, distributional models transform discrete linguistic tokens into continuous vector spaces.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="distributional-semantics">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-nlp">Path 10 · Natural language processing</a> / Meaning / Lesson 18 of 52</span>
+    <h1 class="case-title">Distributional semantics</h1>
+    <p class="lede rise" style="--d:3">Distributional semantics is the theoretical and computational foundation of modern lexical representation. Rooted in J.R. Firth's famous 1957 maxim—"You shall know a word by the company it keeps"—the distributional hypothesis posits that words occurring in similar linguistic contexts possess similar semantic meanings. By counting word co-occurrences in sliding symmetric windows, applying statistical association metrics like Positive Pointwise Mutual Information (PPMI), and evaluating geometric distance via cosine similarity, distributional models transform discrete linguistic tokens into continuous vector spaces.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">15 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/bag-of-words-and-tf-idf/">BoW &amp; TF-IDF</a> <a href="../../concepts/stop-words-and-n-grams/">Stop Words &amp; N-Grams</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Natural language processing · Meaning</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">If you encounter an invented English word like "roozle" in the sentences "She poured a chilled glass of fresh roozle", "He sliced the ripe roozle into quarters", and "The tart citrus scent of roozle filled the kitchen", you immediately deduce what it is: a citrus fruit. You did not look it up in a dictionary; you inferred its semantic meaning purely from the surrounding context words ("glass", "poured", "sliced", "ripe", "citrus"). Distributional semantics formalises this human intuition into computational linear algebra.</p>
+        <p>The Distributional Hypothesis and contextual substitutability: Formalised by Zellig Harris and J.R. Firth in the 1950s, the distributional hypothesis states that the degree of semantic similarity between two words is an empirical function of the similarity of their contextual distributions. Words with high contextual overlap (such as "doctor" and "physician", or "cat" and "kitten") can frequently be substituted into the same sentence frames without violating grammatical or semantic validity.</p>
+        <p>From raw co-occurrence counts to statistical information: Counting raw co-occurrences in a text corpus introduces massive frequency distortion. High-frequency function words like "the", "of", and "is" appear adjacent to almost every word, dominating raw counts without conveying specific semantic information. Pointwise Mutual Information (PMI) resolves this by measuring the ratio between the observed joint probability of two words and their independent probability under random chance.</p>
+        <p>Geometric spaces and cosine similarity: When words are projected as vectors in a high-dimensional vocabulary space, semantic relatedness corresponds to spatial proximity. Rather than measuring Euclidean distance—which is heavily biased by absolute word frequency—distributional models measure the cosine of the angle between vectors. Normalising by Euclidean length ensures that frequent words and rare synonyms align in identical directional rays.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Think of profiling people based on their social circles. If you want to know who someone is, you do not need to interrogate their inner psyche; you simply observe who they spend time with. If Alice spends her weekends rock-climbing with mountaineers, talking about carabiners and ropes, and Bob spends his weekends at the exact same climbing gym with the exact same people discussing harnesses and chalk, you can confidently conclude that Alice and Bob share a passion for rock climbing, even if Alice and Bob have never personally met. Distributional semantics profiles words by their textual companions: words that hang out with the same linguistic friends share the same underlying meaning.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Pointwise Mutual Information (PMI)</h3><div class="formula">\operatorname{PMI}(w, c) = \log_2 \frac{P(w, c)}{P(w) P(c)} = \log_2 \frac{C(w, c) \cdot N}{\sum_{c'} C(w, c') \cdot \sum_{w'} C(w', c)}</div><p>Here $C(w, c)$ is the co-occurrence count of target $w$ and context $c$, and $N = \sum_{w, c} C(w, c)$ is the total sum of all co-occurrences in the corpus. If $w$ and $c$ are completely independent, $P(w, c) = P(w)P(c)$ and $\operatorname{PMI} = 0$.</p></li>
+          <li><h3>Positive Pointwise Mutual Information (PPMI)</h3><div class="formula">\operatorname{PPMI}(w, c) = \max \left( 0, \, \operatorname{PMI}(w, c) \right)</div><p>Because negative PMI values are dominated by statistical noise on rare words with insufficient observation counts, PPMI clamps all negative values to zero, producing a non-negative sparse representation.</p></li>
+          <li><h3>Directional cosine similarity in vector space</h3><div class="formula">\cos(\mathbf{u}, \mathbf{v}) = \frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\|_2 \|\mathbf{v}\|_2} = \frac{\sum_{i=1}^d u_i v_i}{\sqrt{\sum_{i=1}^d u_i^2} \sqrt{\sum_{i=1}^d v_i^2}}</div><p>Cosine similarity measures the angular alignment between two word vectors on the unit hypersphere, decoupling semantic orientation from raw term frequency magnitude.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>The distributional hypothesis asserts that words occurring in similar textual contexts possess similar semantic meanings.</li><li>Raw co-occurrence counts are heavily distorted by ubiquitous function words; Pointwise Mutual Information (PMI) normalises against random expectation.</li><li>Positive PMI (PPMI) clips uninformative negative associations to zero, yielding robust non-negative semantic vectors.</li><li>Cosine similarity measures semantic proximity as angular alignment, preventing document length or word frequency from skewing comparisons.</li><li>While PPMI matrices capture rich lexical meaning, their extreme sparsity and high dimensionality (|V| x |V|) motivate dense dimensionality reduction techniques.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> math
+<span class="k">import</span> re
+<span class="k">from</span> collections <span class="k">import</span> defaultdict, Counter
+
+<span class="k">class</span> DistributionalSemantics:
+    <span class="s">&quot;&quot;&quot;
+    Co-occurrence matrix builder and PPMI calculator
+    for distributional word vectors and cosine similarity.
+    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, window_size=<span class="n">2</span>):
+        <span class="k">self</span>.window_size = window_size
+        <span class="k">self</span>.vocab = <span class="f">set</span>()
+        <span class="k">self</span>.cooccur = <span class="f">defaultdict</span>(Counter)
+        <span class="k">self</span>.word_counts = <span class="f">Counter</span>()
+        <span class="k">self</span>.total_pairs = <span class="n">0</span>
+        <span class="k">self</span>.ppmi_vectors = <span class="f">defaultdict</span>(dict)
+
+    <span class="k">def</span> <span class="f">_tokenize</span>(<span class="k">self</span>, text):
+        <span class="k">return</span> [w.<span class="f">lower</span>() <span class="k">for</span> w <span class="k">in</span> re.<span class="f">findall</span>(r<span class="s">'\b[a-zA-Z]+\b'</span>, text)]
+
+    <span class="k">def</span> <span class="f">fit</span>(<span class="k">self</span>, corpus):
+        <span class="c"># Count co-occurrences in sliding symmetric window</span>
+        <span class="k">for</span> sentence <span class="k">in</span> corpus:
+            tokens = <span class="k">self</span>.<span class="f">_tokenize</span>(sentence)
+            <span class="k">for</span> i, target <span class="k">in</span> <span class="f">enumerate</span>(tokens):
+                <span class="k">self</span>.vocab.<span class="f">add</span>(target)
+                <span class="k">self</span>.word_counts[target] += <span class="n">1</span>
+                
+                start = <span class="f">max</span>(<span class="n">0</span>, i - <span class="k">self</span>.window_size)
+                end = <span class="f">min</span>(<span class="k">len</span>(tokens), i + <span class="k">self</span>.window_size + <span class="n">1</span>)
+                
+                <span class="k">for</span> j <span class="k">in</span> <span class="k">range</span>(start, end):
+                    <span class="k">if</span> i != j:
+                        ctx = tokens[j]
+                        <span class="k">self</span>.cooccur[target][ctx] += <span class="n">1</span>
+                        <span class="k">self</span>.total_pairs += <span class="n">1</span>
+                        
+        <span class="k">self</span>.<span class="f">_compute_ppmi</span>()
+
+    <span class="k">def</span> <span class="f">_compute_ppmi</span>(<span class="k">self</span>):
+        <span class="c"># Marginal context sums</span>
+        context_totals = <span class="f">Counter</span>()
+        <span class="k">for</span> target, contexts <span class="k">in</span> <span class="k">self</span>.cooccur.<span class="f">items</span>():
+            <span class="k">for</span> ctx, count <span class="k">in</span> contexts.<span class="f">items</span>():
+                context_totals[ctx] += count
+
+        N = <span class="k">self</span>.total_pairs
+        <span class="k">for</span> target, contexts <span class="k">in</span> <span class="k">self</span>.cooccur.<span class="f">items</span>():
+            target_total = <span class="f">sum</span>(contexts.<span class="f">values</span>())
+            <span class="k">for</span> ctx, count <span class="k">in</span> contexts.<span class="f">items</span>():
+                <span class="c"># Joint and independent probabilities</span>
+                p_wc = count / N
+                p_w = target_total / N
+                p_c = context_totals[ctx] / N
+                
+                pmi = math.<span class="f">log2</span>(p_wc / (p_w * p_c))
+                ppmi = <span class="f">max</span>(<span class="n">0.0</span>, pmi)
+                <span class="k">if</span> ppmi &gt; <span class="n">0.0</span>:
+                    <span class="k">self</span>.ppmi_vectors[target][ctx] = ppmi
+
+    <span class="k">def</span> <span class="f">cosine_similarity</span>(<span class="k">self</span>, word1, word2):
+        v1 = <span class="k">self</span>.ppmi_vectors.<span class="f">get</span>(word1.<span class="f">lower</span>(), {})
+        v2 = <span class="k">self</span>.ppmi_vectors.<span class="f">get</span>(word2.<span class="f">lower</span>(), {})
+        
+        <span class="k">if</span> <span class="k">not</span> v1 <span class="k">or</span> <span class="k">not</span> v2:
+            <span class="k">return</span> <span class="n">0.0</span>
+            
+        <span class="c"># Sparse dot product</span>
+        common_keys = <span class="f">set</span>(v1.<span class="f">keys</span>()) &amp; <span class="f">set</span>(v2.<span class="f">keys</span>())
+        dot = <span class="f">sum</span>(v1[k] * v2[k] <span class="k">for</span> k <span class="k">in</span> common_keys)
+        
+        norm1 = math.<span class="f">sqrt</span>(<span class="f">sum</span>(val ** <span class="n">2</span> <span class="k">for</span> val <span class="k">in</span> v1.<span class="f">values</span>()))
+        norm2 = math.<span class="f">sqrt</span>(<span class="f">sum</span>(val ** <span class="n">2</span> <span class="k">for</span> val <span class="k">in</span> v2.<span class="f">values</span>()))
+        
+        <span class="k">if</span> norm1 == <span class="n">0.0</span> <span class="k">or</span> norm2 == <span class="n">0.0</span>:
+            <span class="k">return</span> <span class="n">0.0</span>
+            
+        <span class="k">return</span> dot / (norm1 * norm2)
+
+<span class="c"># Training corpus with distinct semantic domains (drinks vs animals)</span>
+corpus = [
+    <span class="s">&quot;She poured a chilled glass of fresh orange juice into the cup&quot;</span>,
+    <span class="s">&quot;He drank a hot mug of black tea and sweet coffee in the morning&quot;</span>,
+    <span class="s">&quot;Cold juice and warm tea are delicious refreshing drinks&quot;</span>,
+    <span class="s">&quot;The domestic cat chased the small brown mouse across the garden&quot;</span>,
+    <span class="s">&quot;A hungry dog barked at the swift cat near the wooden fence&quot;</span>,
+    <span class="s">&quot;The lively puppy played with the clever dog in the backyard&quot;</span>
+]
+
+model = <span class="f">DistributionalSemantics</span>(window_size=<span class="n">2</span>)
+model.<span class="f">fit</span>(corpus)
+
+<span class="k">print</span>(<span class="s">f&quot;Vocabulary size: {len(model.vocab)} words&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Total co-occurrence events: {model.total_pairs}&quot;</span>)
+
+pairs = [
+    (<span class="s">&quot;juice&quot;</span>, <span class="s">&quot;tea&quot;</span>),     <span class="c"># High semantic similarity (drinks)</span>
+    (<span class="s">&quot;cat&quot;</span>, <span class="s">&quot;dog&quot;</span>),       <span class="c"># High semantic similarity (pets)</span>
+    (<span class="s">&quot;juice&quot;</span>, <span class="s">&quot;dog&quot;</span>),     <span class="c"># Unrelated (drink vs pet)</span>
+    (<span class="s">&quot;coffee&quot;</span>, <span class="s">&quot;tea&quot;</span>)     <span class="c"># High semantic similarity (beverages)</span>
+]
+
+<span class="k">print</span>(<span class="s">&quot;\nDistributional Cosine Similarities (PPMI):&quot;</span>)
+<span class="k">for</span> w1, w2 <span class="k">in</span> pairs:
+    sim = model.<span class="f">cosine_similarity</span>(w1, w2)
+    <span class="k">print</span>(<span class="s">f&quot;  Similarity('{w1}', '{w2}'): {sim:.4f}&quot;</span>)
+</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Rare-word bias in raw PMI: Very rare words that happen to co-occur once receive artificially gigantic PMI scores because P(w) and P(c) in the denominator are minuscule. Mitigate using smoothed context marginal distributions: P_alpha(c) proportional to P(c)^0.75.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Selecting inappropriate context window sizes: Small context windows (w = 1 to 2) capture tight syntactic relations (adjective-noun, verb-object); large context windows (w = 8 to 15) capture broad topical/domain associations. Choose window size deliberately based on task.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Conflating antonyms with non-synonyms: Because antonyms like "hot" and "cold" or "large" and "small" share almost identical contexts, distributional models score them with high cosine similarity. Distributional similarity reflects relatedness, not necessarily identical polarity.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Extreme memory consumption on raw matrices: A vocabulary of 100,000 words produces a 100,000 x 100,000 matrix with 10 billion cells. Always store co-occurrence counts using sparse matrix formats (such as CSR).</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>What is the foundational premise of the Distributional Hypothesis formulated by J.R. Firth and Zellig Harris?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Every word in a language can be mapped to an integer ASCII code</span></button><button class="opt" type="button"><b>B</b><span>Word meaning is entirely independent of neighbouring tokens</span></button><button class="opt" type="button"><b>C</b><span>Words that occur in similar linguistic contexts possess similar semantic meanings</span></button><button class="opt" type="button"><b>D</b><span>Grammar rules must be manually hand-crafted by lexicographers</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Firth's principle—"You shall know a word by the company it keeps"—establishes that contextual co-occurrence distributions reflect underlying lexical meaning, allowing models to learn semantic representations from raw text.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>Why is Positive Pointwise Mutual Information (PPMI) preferred over raw Pointwise Mutual Information (PMI)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because negative PMI values are dominated by statistical sampling noise on rare words that co-occur less than random chance on finite text corpora</span></button><button class="opt" type="button"><b>B</b><span>Because raw PMI requires quadratic memory while PPMI requires linear memory</span></button><button class="opt" type="button"><b>C</b><span>Because computers cannot compute negative numbers</span></button><button class="opt" type="button"><b>D</b><span>Because PPMI doubles the vocabulary size</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Negative PMI arises when two words co-occur less frequently than expected under independence. On finite corpora, this often reflects lack of data rather than genuine semantic repulsion. Truncating negative values to zero produces a clean, stable representation.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>Why does cosine similarity measure semantic relatedness more reliably than Euclidean distance between raw frequency vectors?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Cosine similarity works only on square matrices</span></button><button class="opt" type="button"><b>B</b><span>Cosine similarity normalises by vector length, ensuring that frequent words and rare synonyms pointing in the same direction are judged as highly similar despite disparate frequency magnitudes</span></button><button class="opt" type="button"><b>C</b><span>Cosine similarity converts all negative vectors into positive scalars</span></button><button class="opt" type="button"><b>D</b><span>Euclidean distance can only be computed in two dimensions</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A frequent word like "car" might appear 10,000 times while its synonym "automobile" appears 50 times. Their Euclidean distance is huge due to frequency scale differences. Cosine similarity evaluates the angle between vectors, measuring contextual distribution shape rather than absolute volume.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/bag-of-words-and-tf-idf/"><small class="kicker">Concept</small><b>BoW &amp; TF-IDF</b></a><a href="../../concepts/stop-words-and-n-grams/"><small class="kicker">Concept</small><b>Stop Words &amp; N-Grams</b></a><a href="../../concepts/word-and-sentence-tokenization/"><small class="kicker">Concept</small><b>Word &amp; Sentence Tokenization</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/conditional-random-fields/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Natural language processing</small><b>Conditional Random Fields (CRF)</b></a>
+    <a class="pager-next" href="../../concepts/lsa-and-svd-for-text/"><small>Next · Natural language processing <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>LSA &amp; SVD for Text</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

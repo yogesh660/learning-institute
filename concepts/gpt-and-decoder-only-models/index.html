@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>GPT and decoder-only models · Learn · Yogesh Awate</title>
+<meta name="description" content="Generative Pre-trained Transformer (GPT) models established the decoder-only architecture as the dominant paradigm for modern Large Language Models (LLMs). By training on the standard autoregressive language modelling objective—predicting the next token given preceding context—GPT models scale cleanly with compute, data, and parameters. Using causal lower-triangular attention masking to enforce temporal directionality, GPT unifies natural language generation, reasoning, and few-shot in-context learning without requiring task-specific architecture modifications.">
+<meta property="og:title" content="GPT and decoder-only models · Learn · Yogesh Awate">
+<meta property="og:description" content="Generative Pre-trained Transformer (GPT) models established the decoder-only architecture as the dominant paradigm for modern Large Language Models (LLMs). By training on the standard autoregressive language modelling objective—predicting the next token given preceding context—GPT models scale cleanly with compute, data, and parameters. Using causal lower-triangular attention masking to enforce temporal directionality, GPT unifies natural language generation, reasoning, and few-shot in-context learning without requiring task-specific architecture modifications.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="gpt-and-decoder-only-models">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-nlp">Path 10 · Natural language processing</a> / Language models / Lesson 34 of 52</span>
+    <h1 class="case-title">GPT and decoder-only models</h1>
+    <p class="lede rise" style="--d:3">Generative Pre-trained Transformer (GPT) models established the decoder-only architecture as the dominant paradigm for modern Large Language Models (LLMs). By training on the standard autoregressive language modelling objective—predicting the next token given preceding context—GPT models scale cleanly with compute, data, and parameters. Using causal lower-triangular attention masking to enforce temporal directionality, GPT unifies natural language generation, reasoning, and few-shot in-context learning without requiring task-specific architecture modifications.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/bert-and-masked-language-models/">BERT &amp; Masked LMs</a> <a href="../../models/transformer_networks/">Transformers</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Natural language processing · Language models</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Before GPT-3, the dominant paradigm in machine learning was task-specific fine-tuning: you pre-trained a model, threw away its output head, and trained a new classifier on thousands of human-annotated examples for each specific task. GPT proved a startling alternative: if you train a sufficiently large decoder-only Transformer on the simple task of predicting the next word across internet-scale text, the model spontaneously develops the ability to translate languages, answer factual questions, write computer code, and reason through logic puzzles purely by prompting it with a few demonstration examples.</p>
+        <p>Autoregressive factorization and the chain rule of probability: The joint probability of any sequence of words factorises exactly using the chain rule of probability: P(w_1, ..., w_T) = prod_{t=1}^T P(w_t | w_<t). By conditioning each token strictly on its predecessors, autoregressive models solve both training and generation seamlessly. During training, teacher forcing evaluates all T token predictions in parallel; during generation, the model predicts one token at a time, feeding its output back as input.</p>
+        <p>Causal attention masking: In standard self-attention, token i computes dot products with all tokens j in the sequence. To prevent information leakage from future tokens (w_{i+1}, ..., w_T), causal attention adds an upper-triangular mask of negative infinity (-inf) to the attention logits before the softmax step. Because exp(-inf) = 0, every token is mathematically prevented from looking ahead, guaranteeing valid autoregressive generation.</p>
+        <p>The emergence of in-context learning through scale: As language models grew from GPT-1 (117M parameters) to GPT-2 (1.5B) and GPT-3 (175B), their capabilities underwent a qualitative shift. Rather than updating model weights via gradient descent, users could steer the model's behaviour at inference time simply by prepending natural language instructions and a few input-output demonstrations (few-shot prompting). The model recognizes the pattern and completes the prompt accordingly.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Think of reading an enthralling mystery novel. As you turn each page, you constantly anticipate what happens next based strictly on the clues you have read so far. You are never allowed to peek ahead at the final chapter (causal masking). If you read ten thousand mystery novels in this manner, you do not merely learn vocabulary: you learn the laws of physics, human psychology, forensic detective procedure, and dramatic narrative structure—because accurately guessing the next word requires understanding the world that generated the text.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Autoregressive sequence log-likelihood objective</h3><div class="formula">\mathcal{L}_{\text{AR}}(\theta) = -\sum_{t=1}^T \log P(w_t \mid w_1, w_2, \dots, w_{t-1}; \theta)</div><p>The causal language modelling objective trains network parameters $\theta$ to maximise the log-probability of every token conditioned strictly on its preceding context tokens, evaluated across the entire training corpus.</p></li>
+          <li><h3>Causal masked multi-head self-attention</h3><div class="formula">\operatorname{Attention}(Q, K, V) = \operatorname{softmax}\left( \frac{Q K^T}{\sqrt{d_k}} + M \right) V, \quad M_{i, j} = \begin{cases} 0 & j \le i \\ -\infty & j > i \end{cases}</div><p>The additive mask $M \in \mathbb{R}^{T \times T}$ contains $-\infty$ in its strict upper triangle. When passed through the softmax exponentiation, $\exp(-\infty) = 0$, ensuring future tokens receive exactly zero attention weight.</p></li>
+          <li><h3>Temperature-scaled next-token sampling distribution</h3><div class="formula">P(w_t = v \mid w_{<t}) = \frac{\exp(z_v / \tau)}{\sum_{j=1}^{|V|} \exp(z_j / \tau)}</div><p>Here $z_v$ is the raw unnormalised logit for token $v$, and $\tau &gt; 0$ is the sampling temperature. Lower temperatures ($\tau \to 0$) approach greedy argmax decoding; higher temperatures ($\tau &gt; 1$) flatten the distribution, increasing diversity.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>GPT models use a decoder-only Transformer architecture trained autoregressively on next-token prediction.</li><li>Causal lower-triangular masking prevents tokens from attending to future positions, ensuring temporal validity.</li><li>During training, teacher forcing enables parallel evaluation of all sequence positions in a single forward pass.</li><li>Scaling model parameters, dataset volume, and training compute yields emergent capabilities like few-shot in-context learning.</li><li>At inference time, Key-Value (KV) caching preserves past key and value vectors, avoiding redundant O(T^2) recomputations.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">class</span> MiniCausalAttention:
+    <span class="s">&quot;&quot;&quot;
+    Simulation of Causal (Autoregressive) Multi-Head Self-Attention
+    with lower-triangular masking and next-token generation.
+    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, d_model=<span class="n">4</span>):
+        <span class="k">self</span>.d_model = d_model
+        
+    <span class="k">def</span> <span class="f">causal_attention</span>(<span class="k">self</span>, Q, K, V):
+        <span class="s">&quot;&quot;&quot;
+        Compute causal masked self-attention.
+        Q, K, V shapes: (seq_len, d_model)
+        &quot;&quot;&quot;</span>
+        T = Q.shape[<span class="n">0</span>]
+        <span class="c"># Scaled dot-product: (T x T)</span>
+        scores = np.<span class="f">dot</span>(Q, K.T) / np.<span class="f">sqrt</span>(<span class="k">self</span>.d_model)
+        
+        <span class="c"># Upper-triangular mask of -inf</span>
+        mask = np.<span class="f">triu</span>(np.<span class="f">full</span>((T, T), -np.inf), k=<span class="n">1</span>)
+        masked_scores = scores + mask
+        
+        <span class="c"># Softmax over columns</span>
+        exp_scores = np.<span class="f">exp</span>(masked_scores - np.<span class="f">max</span>(masked_scores, axis=-<span class="n">1</span>, keepdims=<span class="k">True</span>))
+        attn_weights = exp_scores / np.<span class="f">sum</span>(exp_scores, axis=-<span class="n">1</span>, keepdims=<span class="k">True</span>)
+        
+        output = np.<span class="f">dot</span>(attn_weights, V)
+        <span class="k">return</span> output, attn_weights
+
+<span class="k">def</span> <span class="f">sample_next_token</span>(logits, temperature=<span class="n">0.7</span>):
+    <span class="s">&quot;&quot;&quot;Temperature sampling over vocabulary logits.&quot;&quot;&quot;</span>
+    scaled = logits / <span class="f">max</span>(temperature, <span class="n">1e-5</span>)
+    exp_l = np.<span class="f">exp</span>(scaled - np.<span class="f">max</span>(scaled))
+    probs = exp_l / np.<span class="f">sum</span>(exp_l)
+    <span class="k">return</span> np.random.<span class="f">choice</span>(<span class="k">len</span>(probs), p=probs), probs
+
+<span class="c"># Sample sequence of 4 tokens</span>
+vocab = [<span class="s">&quot;The&quot;</span>, <span class="s">&quot;neural&quot;</span>, <span class="s">&quot;network&quot;</span>, <span class="s">&quot;generates&quot;</span>, <span class="s">&quot;text&quot;</span>, <span class="s">&quot;smoothly&quot;</span>]
+tokens = [<span class="s">&quot;The&quot;</span>, <span class="s">&quot;neural&quot;</span>, <span class="s">&quot;network&quot;</span>, <span class="s">&quot;generates&quot;</span>]
+T = <span class="k">len</span>(tokens)
+
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+d = <span class="n">4</span>
+mock_embeddings = np.random.<span class="f">randn</span>(T, d)
+
+attn_layer = <span class="f">MiniCausalAttention</span>(d_model=d)
+output, weights = attn_layer.<span class="f">causal_attention</span>(mock_embeddings, mock_embeddings, mock_embeddings)
+
+<span class="k">print</span>(<span class="s">f&quot;Causal Attention Weights Matrix (shape {T}x{T}):&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;Notice strict zeros in upper triangle (tokens cannot look to the future):\n&quot;</span>)
+<span class="k">for</span> i, tok <span class="k">in</span> <span class="f">enumerate</span>(tokens):
+    row_str = <span class="s">&quot; &quot;</span>.<span class="f">join</span>([<span class="s">f&quot;{w:6.3f}&quot;</span> <span class="k">for</span> w <span class="k">in</span> weights[i]])
+    <span class="k">print</span>(<span class="s">f&quot;  Token {i} ('{tok:&lt;9}'): [ {row_str} ]&quot;</span>)
+
+<span class="c"># Next-token prediction head simulation</span>
+mock_head_weights = np.random.<span class="f">randn</span>(d, <span class="k">len</span>(vocab))
+last_hidden_state = output[-<span class="n">1</span>]  <span class="c"># Representation of last token ('generates')</span>
+next_token_logits = np.<span class="f">dot</span>(last_hidden_state, mock_head_weights)
+
+sampled_idx, probs = <span class="f">sample_next_token</span>(next_token_logits, temperature=<span class="n">0.7</span>)
+<span class="k">print</span>(<span class="s">f&quot;\nNext Token Predictions given: '{' '.join(tokens)}'&quot;</span>)
+<span class="k">for</span> v_idx, word <span class="k">in</span> <span class="f">enumerate</span>(vocab):
+    <span class="k">print</span>(<span class="s">f&quot;  P('{word}'): {probs[v_idx]:.4f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;\nSampled next token: '{vocab[sampled_idx]}'&quot;</span>)
+</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Neglecting causal masking in decoder training: Forgetting to apply the upper-triangular mask allows the model to see future tokens during self-attention, causing training loss to drop to zero while rendering generation completely broken.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Quadratic inference slowdown without KV caching: Generating a sequence of length T by re-encoding all preceding tokens at every step takes O(T^2) operations. Always maintain a KV cache during generation to achieve O(1) step complexity.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Greedy decoding degradation: Pure greedy argmax decoding (temperature = 0) frequently causes generative models to enter degenerate repetitive loops. Use nucleus (top-p) sampling with p in [0.9, 0.95] for creative text.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Context window truncation without sliding buffers: Passing prompts longer than the model's context window (e.g. 2,048 or 4,096 tokens) triggers out-of-bounds indexing; ensure prompts are truncated or use rotary positional embeddings (RoPE) with context extension.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>Why do decoder-only GPT models apply a causal lower-triangular mask to the self-attention matrix?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To eliminate the need for training data</span></button><button class="opt" type="button"><b>B</b><span>To double the throughput of floating-point operations on tensor cores</span></button><button class="opt" type="button"><b>C</b><span>To invert the matrix during backpropagation</span></button><button class="opt" type="button"><b>D</b><span>To prevent each token from attending to future tokens, preserving strict autoregressive directionality so predictions depend only on past context</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> If tokens could attend to future positions, next-token prediction would be trivial because the model would simply copy the answer from position t+1. The causal mask forces attention weights on positions j > i to zero.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>What is the primary operational advantage of maintaining a Key-Value (KV) cache during autoregressive inference?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It compresses model weights from 16-bit to 4-bit precision</span></button><button class="opt" type="button"><b>B</b><span>It translates the output text into multiple languages simultaneously</span></button><button class="opt" type="button"><b>C</b><span>It stores precomputed key and value vectors for past tokens, avoiding redundant re-encoding of the entire prompt and reducing per-token generation complexity from O(T^2) to O(1)</span></button><button class="opt" type="button"><b>D</b><span>It allows the model to train without gradient updates</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because past tokens never change, their K and V projections are identical at every generation step. Storing them in a KV cache allows the model to compute attention for just the single newly generated token, yielding massive inference speedups.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>How does few-shot in-context learning in GPT-3 differ from standard fine-tuning?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>In-context learning steers model outputs purely by providing natural language instructions and demonstration examples in the prompt without modifying any network weights via backpropagation</span></button><button class="opt" type="button"><b>B</b><span>In-context learning requires retraining the embedding layer on the test set</span></button><button class="opt" type="button"><b>C</b><span>In-context learning requires access to model weight gradients</span></button><button class="opt" type="button"><b>D</b><span>In-context learning only works on classification tasks with two classes</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In-context learning is entirely gradient-free at inference time. The model relies on its pre-trained pattern recognition capabilities to condition on prompt demonstrations and infer the required mapping without parameter updates.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/bert-and-masked-language-models/"><small class="kicker">Concept</small><b>BERT &amp; Masked LMs</b></a><a href="../../models/transformer_networks/"><small class="kicker">Natural language processing</small><b>Transformers</b></a><a href="../../concepts/sentence-embeddings-and-sbert/"><small class="kicker">Concept</small><b>Sentence Embeddings &amp; SBERT</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/bert-and-masked-language-models/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Natural language processing</small><b>BERT &amp; Masked LMs</b></a>
+    <a class="pager-next" href="../../concepts/neural-language-models/"><small>Next · Natural language processing <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Neural Language Models: NNLM</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

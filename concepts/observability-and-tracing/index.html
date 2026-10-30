@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>LLM Observability and Tracing: OpenTelemetry, Spans, Evaluations, and Cost Auditing · Learn · Yogesh Awate</title>
+<meta name="description" content="Instrumentation and monitoring architectures for AI applications, capturing execution spans, token metrics, latency breakdowns, and regression evaluations.">
+<meta property="og:title" content="LLM Observability and Tracing: OpenTelemetry, Spans, Evaluations, and Cost Auditing · Learn · Yogesh Awate">
+<meta property="og:description" content="Instrumentation and monitoring architectures for AI applications, capturing execution spans, token metrics, latency breakdowns, and regression evaluations.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="observability-and-tracing">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ai">Path 11 · AI</a> / LLM systems / Lesson 37 of 42</span>
+    <h1 class="case-title">LLM Observability and Tracing: OpenTelemetry, Spans, Evaluations, and Cost Auditing</h1>
+    <p class="lede rise" style="--d:3">Instrumentation and monitoring architectures for AI applications, capturing execution spans, token metrics, latency breakdowns, and regression evaluations.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>AI · LLM systems</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Modern compound AI systems consist of multi-turn agent loops, chained tool calls, retrieval pipelines, and multiple LLM invocations. Debugging and monitoring these systems requires end-to-end observability: capturing OpenTelemetry-standardised distributed traces, tracking token usage and latency waterfalls, and detecting silent degradation through automated evaluation pipelines.</p>
+        <p>In traditional web applications, debugging is straightforward: functions return deterministic codes and error stack traces point to line numbers. In LLM applications, failures are silent: the model produces fluent prose that subtly hallucinates a tool argument or fails to call a necessary retrieval function. Without telemetry, identifying whether a failure originated in bad chunking, poor reranking, or prompt drift is impossible.</p>
+        <p>AI observability instruments applications using distributed tracing: 1) Trace: the complete end-to-end lifecycle of a user request; 2) Spans: timed units of work within the trace (e.g. Embedding generation span: 45ms, Vector search span: 120ms, LLM generation span: 1.8s); 3) Metadata attributes: recording prompt text, completion tokens, costs, model IDs, and automated evaluation scores for every execution span.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Running a complex agent without observability is like managing an international airline using only a paper notepad. When a flight is delayed 4 hours, you have no idea whether it was caused by maintenance, luggage loading, air traffic control, or weather. Distributed tracing is flight telemetry: it instruments every second of the plane's journey, pinning down the exact 12-minute maintenance hangup.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Instrument application lifecycle: wrap agent workflows, tool calls, and LLM API invocations with OpenTelemetry-compliant trace spans.</li><li>Record span metadata: capture input tokens, completion tokens, model parameters (temperature), latency, and monetary cost per call.</li><li>Correlate multi-step agent trajectories: propagate parent-child span IDs across sub-agent calls and asynchronous task executions.</li><li>Configure automated online evaluations: evaluate sample traces asynchronously using LLM-as-a-judge for faithfulness and toxicity.</li><li>Aggregate metrics dashboards: visualise latency percentiles (P50, P95, P99), token consumption trends, error rates, and cache hit ratios.</li><li>Set automated alerting thresholds: trigger alerts on cost anomalies, rate limit spikes, or sudden drops in task success rates.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Total Trace Latency Waterfall</h3><div class="formula">T_{\text{total}} = \sum_{s \in \text{Sequential}} T_s + \max_{p \in \text{Parallel}} T_p</div><p>Calculates overall request duration by summing sequential execution spans and bottleneck parallel asynchronous spans.</p></li>
+          <li><h3>Total Session Operational Cost</h3><div class="formula">\text{Cost} = \sum_{i=1}^M \left( N_{\text{prompt}}^{(i)} \cdot P_{\text{in}} + N_{\text{comp}}^{(i)} \cdot P_{\text{out}} \right)</div><p>Aggregates token consumption across $M$ distinct spans weighted by input price $P_{\text{in}}$ and output price $P_{\text{out}}$.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Observability instruments multi-step agent systems with distributed traces, spans, and execution metadata.</li><li>Telemetry captures token consumption, latency waterfalls, and monetary cost breakdowns per request.</li><li>Continuous evaluation and automated LLM-as-a-judge monitoring detect silent quality regressions in production.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> time
+
+<span class="k">class</span> SimpleSpan:
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, name, parent=<span class="k">None</span>):
+        <span class="k">self</span>.name = name
+        <span class="k">self</span>.parent = parent
+        <span class="k">self</span>.start_time = <span class="k">None</span>
+        <span class="k">self</span>.end_time = <span class="k">None</span>
+        <span class="k">self</span>.attributes = {}
+
+    <span class="k">def</span> <span class="f">__enter__</span>(<span class="k">self</span>):
+        <span class="k">self</span>.start_time = time.<span class="f">time</span>()
+        <span class="k">return</span> <span class="k">self</span>
+
+    <span class="k">def</span> <span class="f">__exit__</span>(<span class="k">self</span>, exc_type, exc_val, exc_tb):
+        <span class="k">self</span>.end_time = time.<span class="f">time</span>()
+
+    <span class="k">def</span> <span class="f">set_attribute</span>(<span class="k">self</span>, key, value):
+        <span class="k">self</span>.attributes[key] = value
+
+    @property
+    <span class="k">def</span> <span class="f">duration_ms</span>(<span class="k">self</span>):
+        <span class="k">return</span> (<span class="k">self</span>.end_time - <span class="k">self</span>.start_time) * <span class="n">1000</span>
+
+<span class="c"># Simulate an instrumented RAG pipeline trace</span>
+trace_spans = []
+
+<span class="k">def</span> <span class="f">run_instrumented_rag</span>(query):
+    <span class="k">with</span> <span class="f">SimpleSpan</span>(<span class="s">&quot;rag_pipeline&quot;</span>) <span class="k">as</span> root_span:
+        root_span.<span class="f">set_attribute</span>(<span class="s">&quot;query&quot;</span>, query)
+        
+        <span class="c"># Child Span 1: Embedding</span>
+        <span class="k">with</span> <span class="f">SimpleSpan</span>(<span class="s">&quot;embed_query&quot;</span>, parent=root_span) <span class="k">as</span> s1:
+            time.<span class="f">sleep</span>(<span class="n">0.02</span>)  <span class="c"># Simulate 20ms embedding</span>
+            s1.<span class="f">set_attribute</span>(<span class="s">&quot;model&quot;</span>, <span class="s">&quot;text-embedding-3&quot;</span>)
+        trace_spans.<span class="f">append</span>(s1)
+        
+        <span class="c"># Child Span 2: Vector Search</span>
+        <span class="k">with</span> <span class="f">SimpleSpan</span>(<span class="s">&quot;vector_search&quot;</span>, parent=root_span) <span class="k">as</span> s2:
+            time.<span class="f">sleep</span>(<span class="n">0.05</span>)  <span class="c"># Simulate 50ms search</span>
+            s2.<span class="f">set_attribute</span>(<span class="s">&quot;results_count&quot;</span>, <span class="n">3</span>)
+        trace_spans.<span class="f">append</span>(s2)
+        
+        <span class="c"># Child Span 3: LLM Generation</span>
+        <span class="k">with</span> <span class="f">SimpleSpan</span>(<span class="s">&quot;llm_generation&quot;</span>, parent=root_span) <span class="k">as</span> s3:
+            time.<span class="f">sleep</span>(<span class="n">0.12</span>)  <span class="c"># Simulate 120ms generation</span>
+            s3.<span class="f">set_attribute</span>(<span class="s">&quot;prompt_tokens&quot;</span>, <span class="n">850</span>)
+            s3.<span class="f">set_attribute</span>(<span class="s">&quot;completion_tokens&quot;</span>, <span class="n">140</span>)
+            s3.<span class="f">set_attribute</span>(<span class="s">&quot;cost_usd&quot;</span>, <span class="n">0.0032</span>)
+        trace_spans.<span class="f">append</span>(s3)
+        
+    trace_spans.<span class="f">append</span>(root_span)
+
+<span class="f">run_instrumented_rag</span>(<span class="s">&quot;Explain quantum computing&quot;</span>)
+
+<span class="k">print</span>(<span class="s">&quot;LLM Observability Trace Report:&quot;</span>)
+<span class="k">for</span> span <span class="k">in</span> trace_spans:
+    parent_info = <span class="s">f&quot; (parent: {span.parent.name})&quot;</span> <span class="k">if</span> span.parent <span class="k">else</span> <span class="s">&quot; [ROOT]&quot;</span>
+    <span class="k">print</span>(<span class="s">f&quot;  Span: {span.name:18} | Duration: {span.duration_ms:5.1f} ms{parent_info}&quot;</span>)
+    <span class="k">if</span> <span class="s">&quot;cost_usd&quot;</span> <span class="k">in</span> span.attributes:
+        <span class="k">print</span>(<span class="s">f&quot;    --&gt; Tokens: {span.attributes['prompt_tokens']} in / {span.attributes['completion_tokens']} out | Cost: ${span.attributes['cost_usd']:.4f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Logging sensitive user personal identifiable information (PII) directly into unencrypted telemetry span payloads.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Running synchronous evaluations on every single production request, doubling user latency; use asynchronous sampling instead.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>What is a "span" in distributed tracing for AI systems?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>A physical cable connecting two servers</span></button><button class="opt" type="button"><b>B</b><span>The font size of output text</span></button><button class="opt" type="button"><b>C</b><span>The maximum number of tokens in a vocabulary</span></button><button class="opt" type="button"><b>D</b><span>A single timed unit of work within a trace (such as a database query, embedding lookup, or LLM API call) with associated start/end times and metadata</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In OpenTelemetry, a trace represents the end-to-end request, while spans represent individual timed operations within that request.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>Why are traditional software error stack traces insufficient for debugging compound AI applications?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because failures in AI systems are frequently silent semantic degradations (e.g. hallucinations, flawed retrieval, or invalid tool parameters) that return HTTP 200 success codes</span></button><button class="opt" type="button"><b>B</b><span>Because traces only work in test environments</span></button><button class="opt" type="button"><b>C</b><span>Because Python does not support logging</span></button><button class="opt" type="button"><b>D</b><span>Because LLMs cannot run on servers</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A model can return an incorrect or hallucinated answer with status code 200 without throwing an exception, requiring semantic monitoring and tracing.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>How should evaluation metrics (e.g. faithfulness, toxicity) be collected in high-throughput production environments?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By halting generation until three human annotators approve every token</span></button><button class="opt" type="button"><b>B</b><span>By forcing the client to compute BLEU scores</span></button><button class="opt" type="button"><b>C</b><span>By logging traces and running automated evaluations asynchronously on a sampled percentage of sessions</span></button><button class="opt" type="button"><b>D</b><span>By deleting all logs to save disk space</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Asynchronous evaluation on a sampled stream avoids adding latency to end users while maintaining statistical visibility over system health.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/serving-latency-and-cost/"><small class="kicker">Concept</small><b>Serving, Latency &amp; Cost</b></a><a href="../../concepts/the-agent-loop-react/"><small class="kicker">Concept</small><b>ReAct Agent Loop</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/caching-and-model-routing/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · AI</small><b>Caching and Model Routing</b></a>
+    <a class="pager-next" href="../../concepts/prompt-injection-and-jailbreaks/"><small>Next · AI <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Prompt Injection &amp; Jailbreaks</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Hallucination and grounding · Learn · Yogesh Awate</title>
+<meta name="description" content="Hallucination in Large Language Models refers to the generation of fluent, syntactically convincing text that is factually false, unfaithful to provided source material, or entirely fabricated. Rooted in the disconnect between autoregressive next-token probability maximisation and objective truth, hallucinations pose critical safety and reliability hazards in legal, medical, and technical domains. Grounding techniques—such as Retrieval-Augmented Generation (RAG), Chain-of-Verification (CoVe), and consistency sampling—mitigate ungrounded fabrications.">
+<meta property="og:title" content="Hallucination and grounding · Learn · Yogesh Awate">
+<meta property="og:description" content="Hallucination in Large Language Models refers to the generation of fluent, syntactically convincing text that is factually false, unfaithful to provided source material, or entirely fabricated. Rooted in the disconnect between autoregressive next-token probability maximisation and objective truth, hallucinations pose critical safety and reliability hazards in legal, medical, and technical domains. Grounding techniques—such as Retrieval-Augmented Generation (RAG), Chain-of-Verification (CoVe), and consistency sampling—mitigate ungrounded fabrications.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="hallucination-and-grounding">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ai">Path 11 · AI</a> / LLM foundations / Lesson 19 of 42</span>
+    <h1 class="case-title">Hallucination and grounding</h1>
+    <p class="lede rise" style="--d:3">Hallucination in Large Language Models refers to the generation of fluent, syntactically convincing text that is factually false, unfaithful to provided source material, or entirely fabricated. Rooted in the disconnect between autoregressive next-token probability maximisation and objective truth, hallucinations pose critical safety and reliability hazards in legal, medical, and technical domains. Grounding techniques—such as Retrieval-Augmented Generation (RAG), Chain-of-Verification (CoVe), and consistency sampling—mitigate ungrounded fabrications.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/evaluating-llms-benchmarks-and-judges/">Evaluating LLMs</a> <a href="../../concepts/prompting-and-in-context-learning/">Prompting &amp; In-Context Learning</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>AI · LLM foundations</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">In 2023, two lawyers submitted a legal brief to a federal judge in New York citing over half a dozen precedent cases complete with detailed quotes, docket numbers, and judicial opinions. The judge discovered that none of the cases existed: they had been completely fabricated by a generative AI assistant. The prose was immaculate, the legal terminology was flawless, but the facts were entirely imaginary. Why do Large Language Models hallucinate, and how do we anchor them to verifiable reality?</p>
+        <p>Likelihood versus Truth: The root cause of hallucination: An autoregressive language model is trained to minimise cross-entropy loss: predicting which token is most statistically likely to follow preceding tokens across web text. It has no built-in database of verified facts, no concept of physical reality, and no internal truth sensor. If a hallucinated fact sounds grammatically plausible and statistically aligns with common phrasing patterns, the model will output it with supreme confidence.</p>
+        <p>Factuality vs Faithfulness hallucinations:
+- Factuality Hallucination: The model generates claims that contradict real-world objective facts (e.g. claiming Neil Armstrong walked on Mars in 1975).
+- Faithfulness (Ungrounded) Hallucination: In summarisation or RAG setups where a reference document is provided, the model generates statements that contradict the source or introduces extraneous claims unsupported by the text.</p>
+        <p>The Mechanisms of Grounding: Grounding anchors language generation to external, verifiable sources of truth:
+1. RAG Grounding: Forcing the model to condition its answers strictly on retrieved passages provided in the prompt context.
+2. Chain-of-Verification (CoVe): A four-step self-correction pipeline: generate baseline response, draft independent factual verification questions, answer questions factually without seeing the baseline, and rewrite the final response reconciling discrepancies.
+3. SelfCheckGPT: Measuring self-consistency across stochastic generations: if a fact is firmly grounded in the model's knowledge, multiple sampled generations will agree; if it is hallucinated, alternative samples will contradict each other.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Think of a brilliant, charismatic storyteller at a dinner party who has read thousands of books but suffers from slight memory gaps. If you ask them about the history of Antarctic exploration, they tell a gripping, cinematic story about Captain Robert Scott. But when their memory reaches a minor factual blank—like the name of a specific supply ship—they do not pause to say "I do not know". Because their primary instinct is to maintain a seamless, entertaining narrative, their brain effortlessly invents a believable ship name on the fly without breaking conversational stride. Grounding is like putting an encyclopedic history book in front of the storyteller and making them point to the exact printed sentence before speaking.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>SelfCheckGPT sampling consistency score</h3><div class="formula">\mathcal{S}_{\text{hallucination}}(s_i) = 1 - \frac{1}{N} \sum_{k=1}^N \mathbb{I}\left( R_k \models s_i \right)</div><p>Here $s_i$ is a sentence from the primary generation, $R_1, \dots, R_N$ are independently sampled stochastic response variants, and $\models$ denotes semantic entailment evaluated by a natural language inference model. High scores indicate factual inconsistency across samples.</p></li>
+          <li><h3>Attribution fidelity ratio</h3><div class="formula">\operatorname{Fidelity}(Y, \mathcal{C}) = \frac{\sum_{s \in Y} \mathbb{I}(s \text{ is fully entailed by } \mathcal{C}_{c(s)})}{|Y|}</div><p>Here $Y$ is the set of generated sentences, $\mathcal{C}_{c(s)}$ is the specific context chunk cited by sentence $s$. Full fidelity requires that every asserted claim is strictly entailed by its cited source, penalising ungrounded extrapolation.</p></li>
+          <li><h3>Calibration error across factual confidence</h3><div class="formula">\operatorname{ECE} = \sum_{m=1}^M \frac{|B_m|}{N} \left| \operatorname{acc}(B_m) - \operatorname{conf}(B_m) \right|</div><p>Expected Calibration Error measures the gap between the model's linguistic confidence $\operatorname{conf}(B_m)$ and its actual factual accuracy $\operatorname{acc}(B_m)$ across probability bins $B_m$. Poorly calibrated models exhibit high confidence on false assertions.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Hallucination is the generation of fluent, syntactically coherent text that is factually false or unfaithful to source context.</li><li>Hallucinations stem from the fundamental divergence between probabilistic next-token prediction and verified real-world truth.</li><li>Factuality hallucinations contradict objective world facts; faithfulness hallucinations introduce ungrounded claims in contextual tasks.</li><li>Grounding techniques anchor model generations to retrieved context documents using strict prompt constraints and citation checks.</li><li>Chain-of-Verification (CoVe) and SelfCheckGPT use multi-turn verification and sample consistency to detect and correct fabrications.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">class</span> GroundingValidator:
+    <span class="s">&quot;&quot;&quot;
+    Simulation of grounding validation and factual consistency
+    checking between source context and generated claims.
+    &quot;&quot;&quot;</span>
+    @staticmethod
+    <span class="k">def</span> <span class="f">check_lexical_grounding</span>(context, claim_sentence):
+        <span class="s">&quot;&quot;&quot;
+        Evaluate token grounding overlap ratio between source context
+        and generated claim sentence.
+        &quot;&quot;&quot;</span>
+        <span class="k">import</span> re
+        ctx_words = <span class="f">set</span>(re.<span class="f">findall</span>(r<span class="s">'\b[a-zA-Z]+\b'</span>, context.<span class="f">lower</span>()))
+        claim_words = re.<span class="f">findall</span>(r<span class="s">'\b[a-zA-Z]+\b'</span>, claim_sentence.<span class="f">lower</span>())
+        
+        <span class="c"># Stop words to ignore in grounding ratio</span>
+        stop_words = {<span class="s">&quot;the&quot;</span>, <span class="s">&quot;a&quot;</span>, <span class="s">&quot;an&quot;</span>, <span class="s">&quot;is&quot;</span>, <span class="s">&quot;was&quot;</span>, <span class="s">&quot;in&quot;</span>, <span class="s">&quot;on&quot;</span>, <span class="s">&quot;at&quot;</span>, <span class="s">&quot;to&quot;</span>, <span class="s">&quot;and&quot;</span>, <span class="s">&quot;of&quot;</span>}
+        content_words = [w <span class="k">for</span> w <span class="k">in</span> claim_words <span class="k">if</span> w <span class="k">not</span> <span class="k">in</span> stop_words]
+        
+        <span class="k">if</span> <span class="k">not</span> content_words:
+            <span class="k">return</span> <span class="n">1.0</span>, []
+            
+        grounded_count = <span class="f">sum</span>(<span class="n">1</span> <span class="k">for</span> w <span class="k">in</span> content_words <span class="k">if</span> w <span class="k">in</span> ctx_words)
+        ungrounded = [w <span class="k">for</span> w <span class="k">in</span> content_words <span class="k">if</span> w <span class="k">not</span> <span class="k">in</span> ctx_words]
+        ratio = grounded_count / <span class="k">len</span>(content_words)
+        <span class="k">return</span> ratio, ungrounded
+
+<span class="c"># Grounding reference document</span>
+context_doc = (
+    <span class="s">&quot;Apollo 11 was the American spaceflight that first landed humans on the Moon. &quot;</span>
+    <span class="s">&quot;Commander Neil Armstrong and Lunar Module Pilot Buzz Aldrin landed the Apollo Lunar Module Eagle &quot;</span>
+    <span class="s">&quot;on July 20, 1969. Armstrong became the first person to step onto the lunar surface six hours later.&quot;</span>
+)
+
+<span class="c"># Test generated claims</span>
+claims = [
+    <span class="s">&quot;Neil Armstrong stepped onto the lunar surface in July 1969.&quot;</span>,
+    <span class="s">&quot;Buzz Aldrin landed the Apollo Lunar Module Eagle on the Moon.&quot;</span>,
+    <span class="s">&quot;Neil Armstrong and Buzz Aldrin explored Martian craters in 1975.&quot;</span>  <span class="c"># Hallucinated!</span>
+]
+
+<span class="k">print</span>(<span class="s">&quot;Grounding Reference Context:&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot; &quot;</span>, context_doc)
+<span class="k">print</span>(<span class="s">&quot;\nEvaluating Generated Claims:&quot;</span>)
+
+validator = <span class="f">GroundingValidator</span>()
+<span class="k">for</span> i, claim <span class="k">in</span> <span class="f">enumerate</span>(claims, <span class="n">1</span>):
+    ratio, ungrounded_tokens = validator.<span class="f">check_lexical_grounding</span>(context_doc, claim)
+    is_grounded = ratio &gt;= <span class="n">0.85</span>
+    status = <span class="s">&quot;GROUNDED&quot;</span> <span class="k">if</span> is_grounded <span class="k">else</span> <span class="s">&quot;HALLUCINATION DETECTED&quot;</span>
+    
+    <span class="k">print</span>(<span class="s">f&quot;\nClaim {i}: '{claim}'&quot;</span>)
+    <span class="k">print</span>(<span class="s">f&quot;  Status: {status} (Grounding Score: {ratio * 100:.1f}%)&quot;</span>)
+    <span class="k">if</span> ungrounded_tokens:
+        <span class="k">print</span>(<span class="s">f&quot;  Ungrounded entities/tokens: {ungrounded_tokens}&quot;</span>)
+</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming high linguistic confidence implies factual accuracy: Large language models use authoritative, confident tone regardless of whether they are stating historical truth or complete fantasy. Never treat confident phrasing as proof of truth.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Sycophancy and user bias confirmation: When a user asks a leading question containing a false premise (e.g. 'Why did Thomas Jefferson invent the telephone?'), models often confirm the false premise rather than correcting the user.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Contextual hallucination in long documents (Lost in the Middle): When relevant grounding facts are buried deep in the middle of long multi-thousand-token prompts, models often overlook them and default to parametric hallucination.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Fabricated citations: Models prompted to provide references frequently hallucinate fictitious academic papers with believable authors and fabricated DOI links. Always verify citations using external search tools.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>What is the foundational theoretical reason why autoregressive Large Language Models produce hallucinations?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because models are trained with learning rates that are always too high</span></button><button class="opt" type="button"><b>B</b><span>Because GPUs can only process floating point numbers between 0 and 1</span></button><button class="opt" type="button"><b>C</b><span>Because tokenisers delete all factual knowledge from text</span></button><button class="opt" type="button"><b>D</b><span>Because models are trained to maximise statistical next-token likelihood across web text rather than verifying factual truth against an external world model</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Language models predict tokens based on statistical likelihood in training data. A hallucinated fact that uses common grammatical phrasing and high-probability idioms has high likelihood under the cross-entropy objective, despite being completely false.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>How does the Chain-of-Verification (CoVe) framework reduce hallucinated claims in generated responses?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It forces the model to run on an optical quantum processor</span></button><button class="opt" type="button"><b>B</b><span>It translates the response into French and back into English</span></button><button class="opt" type="button"><b>C</b><span>It generates an initial response, formulates targeted factual verification questions, answers them independently without seeing the draft, and rewrites the final output resolving discrepancies</span></button><button class="opt" type="button"><b>D</b><span>It deletes all sentences longer than twenty words</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Dhuliawala et al. designed CoVe to break generation into four steps: draft generation, verification question planning, independent fact-checking, and final revision. Answering verification questions independently prevents the model from defending its own initial mistakes.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>What does a high score in the SelfCheckGPT consistency metric indicate regarding a generated sentence?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It indicates that the sentence was generated in less than one millisecond</span></button><button class="opt" type="button"><b>B</b><span>It indicates high factual inconsistency and potential hallucination, as multiple independently sampled response variants contradict the claim</span></button><button class="opt" type="button"><b>C</b><span>It indicates that the sentence is 100% verified by Wikipedia</span></button><button class="opt" type="button"><b>D</b><span>It indicates that the sentence contains zero adjectives</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> SelfCheckGPT operates on the principle of self-consistency: when a model generates true knowledge, alternative stochastic samples agree. When a model hallucinates, alternative random generations produce conflicting, divergent facts, signaling hallucination.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/evaluating-llms-benchmarks-and-judges/"><small class="kicker">Concept</small><b>Evaluating LLMs</b></a><a href="../../concepts/prompting-and-in-context-learning/"><small class="kicker">Concept</small><b>Prompting &amp; In-Context Learning</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/evaluating-llms-benchmarks-and-judges/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · AI</small><b>Evaluating LLMs</b></a>
+    <a class="pager-next" href="../../concepts/context-windows-and-memory/"><small>Next · AI <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Context Windows &amp; Memory</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

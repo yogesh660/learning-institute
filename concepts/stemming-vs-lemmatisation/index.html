@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Stemming vs lemmatisation · Learn · Yogesh Awate</title>
+<meta name="description" content="Words occur in diverse inflected, derived, and conjugated surface forms across grammatical moods, numbers, and tenses (&quot;organise&quot;, &quot;organises&quot;, &quot;organising&quot;, &quot;organised&quot;). Stemming and lemmatisation are two distinct linguistic normalisation techniques designed to collapse these surface variants into a common base representation, consolidating vocabulary size and enhancing document recall. Stemming applies heuristic, rule-based suffix-stripping algorithms (such as the Porter and Snowball stemmers) that chop word endings into crude root stems (&quot;organ&quot;), often yielding non-dictionary words and suffering from over-stemming and under-stemming. Lemmatisation applies full morphological analysis using comprehensive lexical databases (such as WordNet) and Part-of-Speech context to reduce words to their authentic canonical dictionary lemma (&quot;better&quot; &quot;good&quot;, &quot;was&quot; &quot;be&quot;).">
+<meta property="og:title" content="Stemming vs lemmatisation · Learn · Yogesh Awate">
+<meta property="og:description" content="Words occur in diverse inflected, derived, and conjugated surface forms across grammatical moods, numbers, and tenses (&quot;organise&quot;, &quot;organises&quot;, &quot;organising&quot;, &quot;organised&quot;). Stemming and lemmatisation are two distinct linguistic normalisation techniques designed to collapse these surface variants into a common base representation, consolidating vocabulary size and enhancing document recall. Stemming applies heuristic, rule-based suffix-stripping algorithms (such as the Porter and Snowball stemmers) that chop word endings into crude root stems (&quot;organ&quot;), often yielding non-dictionary words and suffering from over-stemming and under-stemming. Lemmatisation applies full morphological analysis using comprehensive lexical databases (such as WordNet) and Part-of-Speech context to reduce words to their authentic canonical dictionary lemma (&quot;better&quot; &quot;good&quot;, &quot;was&quot; &quot;be&quot;).">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="stemming-vs-lemmatisation">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-nlp">Path 10 · Natural language processing</a> / Words and text / Lesson 5 of 52</span>
+    <h1 class="case-title">Stemming vs lemmatisation</h1>
+    <p class="lede rise" style="--d:3">Words occur in diverse inflected, derived, and conjugated surface forms across grammatical moods, numbers, and tenses ("organise", "organises", "organising", "organised"). Stemming and lemmatisation are two distinct linguistic normalisation techniques designed to collapse these surface variants into a common base representation, consolidating vocabulary size and enhancing document recall. Stemming applies heuristic, rule-based suffix-stripping algorithms (such as the Porter and Snowball stemmers) that chop word endings into crude root stems ("organ"), often yielding non-dictionary words and suffering from over-stemming and under-stemming. Lemmatisation applies full morphological analysis using comprehensive lexical databases (such as WordNet) and Part-of-Speech context to reduce words to their authentic canonical dictionary lemma ("better" $\to$ "good", "was" $\to$ "be").</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="1"><i><b></b></i>Beginner</span></span>
+      <span class="tagline">15 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/word-and-sentence-tokenization/">Word &amp; Sentence Tokenization</a> <a href="../../concepts/text-normalisation-unicode-and-regex/">Normalisation &amp; Regex</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Natural language processing · Words and text</dd>
+          <dt>Level</dt><dd>Beginner</dd>
+          <dt>Used by</dt><dd>1 model lesson</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">If a user searches an e-commerce catalogue for "running shoes", they expect the engine to return products described as "runs", "runner", and "ran". If a sentiment classifier encounters the word "frustrated", it should leverage everything it learned about "frustrates", "frustrating", and "frustration". Without morphological normalisation, each inflected variant becomes an independent vocabulary dimension, fragmenting training counts and causing severe sparsity. But should we chop word endings with heuristic rules, or look them up in a morphological dictionary? Understanding the speed, precision, and grammatical trade-offs between stemming and lemmatisation is crucial for designing robust text processing pipelines.</p>
+        <p>The morphology challenge: In natural languages, inflectional morphology modifies words to express grammatical features (tense, person, number, case) without changing the core semantic meaning ("walk", "walks", "walked", "walking"). Derivational morphology forms completely new words from existing roots ("organise" $\to$ "organisation"). In un-normalised text, these variations inflate the vocabulary exponentially, spreading statistical frequencies thin across dozens of rare tokens.</p>
+        <p>Stemming: Heuristic rule-based suffix chopping: In 1980, Martin Porter introduced the Porter Stemmer, which remains the most widely deployed stemming algorithm in computer science. Porter stemming consists of five sequential phases of hand-crafted cascading rewrite rules: for instance, mapping "sses" to "ss" ("caresses" $\to$ "caress"), "ies" to "i" ("ponies" $\to$ "poni"), and stripping "ing" or "ed" if the preceding stem contains a vowel ("motoring" $\to$ "motor"). Stemmers are blindingly fast because they rely purely on string pattern matching without lexical dictionaries. However, stems are often non-words ("poni", "commun"), and stemmers cannot handle irregular English grammar ("went" cannot be stemmed to "go").</p>
+        <p>The twin pitfalls: Over-stemming and under-stemming: Stemmers suffer from two fundamental error modes: (1) Over-stemming occurs when two words with completely different semantic meanings are conflated to the identical root stem (e.g. "universe", "universal", and "university" all stem to "univers", erroneously equating higher education with astrophysics). (2) Under-stemming occurs when two words expressing the exact same semantic concept fail to stem to the same root (e.g. "European" and "Europe" yield "european" and "europ", remaining disjoint in the index).</p>
+        <p>Lemmatisation: Lexical analysis with Part-of-Speech context: Lemmatisation resolves the shortcomings of stemming by performing complete morphological analysis. A lemmatiser requires two inputs: the surface word and its grammatical Part-of-Speech (POS) tag. By consulting comprehensive lexical databases like WordNet, a lemmatiser handles irregular inflections with ease: "better" with POS=adjective becomes "good", "saw" with POS=verb becomes "see", whereas "saw" with POS=noun remains "saw" (the cutting tool). Lemmatisation guarantees that the resulting base is a legitimate, human-interpretable dictionary headword ("lemma"), providing superior semantic fidelity at the expense of computational lookup overhead.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Think of pruning and tending a large overgrown botanical garden. Stemming is like a groundskeeper armed with a petrol-powered hedge trimmer who walks along hedges blindly shearing three inches off the end of every branch: it is extraordinarily fast and reduces the wild bush to a tidy uniform height, but occasionally it shears off valuable roses, cuts electrical garden cables, or leaves splintered bare twigs (non-words like "poni"). Lemmatisation is like a skilled master horticulturist who examines each plant individually with pruning shears, identifies the exact plant species from its tag (Part-of-Speech context), traces the branches back to their healthy botanical joints, and trims them neatly to their canonical root system. The master horticulturist takes significantly longer than the petrol hedge trimmer, but every plant remains pristine and identifiable.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Porter Stemmer measure of syllable complexity</h3><div class="formula">[C](VC)^m [V], \quad m = \text{measure of syllable alternation}</div><p>The Porter stemmer represents any word as an optional initial consonant sequence $[C]$, followed by $m$ alternating vowel-consonant sequences $(VC)^m$, followed by an optional trailing vowel sequence $[V]$. Suffix stripping rules fire only if the remaining stem satisfies a minimum syllable measure $m &gt; 0$ or $m &gt; 1$, preventing short root words like "bed" or "sing" from being destroyed into single letters.</p></li>
+          <li><h3>Over-stemming and Under-stemming error rates</h3><div class="formula">E_{\text{over}} = \frac{|\{(w_i, w_j) : \operatorname{stem}(w_i) = \operatorname{stem}(w_j) \land \text{lemma}(w_i) \neq \text{lemma}(w_j)\}|}{\text{Total Pairs}}, \quad E_{\text{under}} = \frac{|\{(w_i, w_j) : \operatorname{stem}(w_i) \neq \operatorname{stem}(w_j) \land \text{lemma}(w_i) = \text{lemma}(w_j)\}|}{\text{Total Related Pairs}}</div><p>Over-stemming measures false conflations (unrelated words mapped to identical stems, harming search precision), while under-stemming measures missed conflations (related words mapped to different stems, harming search recall).</p></li>
+          <li><h3>Vocabulary reduction efficiency ratio</h3><div class="formula">\text{Compression Ratio} = 1 - \frac{|\mathcal{V}_{\text{normalised}}|}{|\mathcal{V}_{\text{raw}}|}, \quad |\mathcal{V}_{\text{stemmed}}| \le |\mathcal{V}_{\text{lemmatised}}| < |\mathcal{V}_{\text{raw}}|</div><p>Stemming achieves higher vocabulary compression than lemmatisation because aggressive suffix stripping frequently collapses distinct semantic words together. Lemmatisation balances vocabulary compression while strictly preserving dictionary headwords.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Stemming applies heuristic suffix stripping rules without dictionaries, producing crude roots that are often non-words.</li><li>Lemmatisation applies full morphological analysis using lexical databases and Part-of-Speech tags, guaranteeing valid dictionary lemmas.</li><li>Over-stemming erroneously conflates semantically unrelated words (e.g. "university" and "universe"), reducing retrieval precision.</li><li>Under-stemming fails to group related morphological inflections (e.g. "Europe" and "European"), reducing retrieval recall.</li><li>Stemming is favoured in high-speed search indexing; lemmatisation is preferred for syntactic parsing and semantic understanding.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="c"># Comparative implementation of Stemming vs Lemmatisation in pure Python</span>
+
+<span class="c"># 1. Simplified rule-based suffix stripper (mini-Porter style rules)</span>
+<span class="k">def</span> <span class="f">simple_porter_stem</span>(word):
+    w = word.<span class="f">lower</span>()
+    <span class="c"># Step 1a: plurals and past participles</span>
+    <span class="k">if</span> w.<span class="f">endswith</span>(<span class="s">'sses'</span>): w = w[:-<span class="n">2</span>]
+    <span class="k">elif</span> w.<span class="f">endswith</span>(<span class="s">'ies'</span>): w = w[:-<span class="n">2</span>]  <span class="c"># ponies -&gt; poni</span>
+    <span class="k">elif</span> w.<span class="f">endswith</span>(<span class="s">'ss'</span>): pass
+    <span class="k">elif</span> w.<span class="f">endswith</span>(<span class="s">'s'</span>) <span class="k">and</span> <span class="k">len</span>(w) &gt; <span class="n">2</span>: w = w[:-<span class="n">1</span>]
+    
+    <span class="c"># Step 1b: -ed, -ing</span>
+    <span class="k">if</span> w.<span class="f">endswith</span>(<span class="s">'eed'</span>):
+        <span class="k">if</span> <span class="k">len</span>(w) &gt; <span class="n">4</span>: w = w[:-<span class="n">1</span>]
+    <span class="k">elif</span> w.<span class="f">endswith</span>(<span class="s">'ed'</span>):
+        stem = w[:-<span class="n">2</span>]
+        <span class="k">if</span> <span class="f">any</span>(c <span class="k">in</span> <span class="s">'aeiou'</span> <span class="k">for</span> c <span class="k">in</span> stem): w = stem
+    <span class="k">elif</span> w.<span class="f">endswith</span>(<span class="s">'ing'</span>):
+        stem = w[:-<span class="n">3</span>]
+        <span class="k">if</span> <span class="f">any</span>(c <span class="k">in</span> <span class="s">'aeiou'</span> <span class="k">for</span> c <span class="k">in</span> stem): w = stem
+        
+    <span class="c"># Step 2: derivational suffixes</span>
+    <span class="k">if</span> w.<span class="f">endswith</span>(<span class="s">'ational'</span>): w = w[:-<span class="n">7</span>] + <span class="s">'ate'</span>  <span class="c"># relational -&gt; relate</span>
+    <span class="k">elif</span> w.<span class="f">endswith</span>(<span class="s">'tional'</span>): w = w[:-<span class="n">6</span>] + <span class="s">'tion'</span>
+    <span class="k">elif</span> w.<span class="f">endswith</span>(<span class="s">'izer'</span>) <span class="k">or</span> w.<span class="f">endswith</span>(<span class="s">'iser'</span>): w = w[:-<span class="n">4</span>] + <span class="s">'ise'</span>
+    <span class="k">elif</span> w.<span class="f">endswith</span>(<span class="s">'ly'</span>): w = w[:-<span class="n">2</span>]
+    
+    <span class="k">return</span> w
+
+<span class="c"># 2. Dictionary-based Lemmatiser with POS-context support</span>
+<span class="c"># Minimal WordNet-style irregular inflection dictionary</span>
+lemma_dict = {
+    <span class="c"># Verbs: (word, 'v') -&gt; lemma</span>
+    (<span class="s">'went'</span>, <span class="s">'v'</span>): <span class="s">'go'</span>, (<span class="s">'gone'</span>, <span class="s">'v'</span>): <span class="s">'go'</span>, (<span class="s">'going'</span>, <span class="s">'v'</span>): <span class="s">'go'</span>, (<span class="s">'goes'</span>, <span class="s">'v'</span>): <span class="s">'go'</span>,
+    (<span class="s">'saw'</span>, <span class="s">'v'</span>): <span class="s">'see'</span>, (<span class="s">'seen'</span>, <span class="s">'v'</span>): <span class="s">'see'</span>, (<span class="s">'seeing'</span>, <span class="s">'v'</span>): <span class="s">'see'</span>, (<span class="s">'sees'</span>, <span class="s">'v'</span>): <span class="s">'see'</span>,
+    (<span class="s">'running'</span>, <span class="s">'v'</span>): <span class="s">'run'</span>, (<span class="s">'ran'</span>, <span class="s">'v'</span>): <span class="s">'run'</span>, (<span class="s">'runs'</span>, <span class="s">'v'</span>): <span class="s">'run'</span>,
+    (<span class="s">'studying'</span>, <span class="s">'v'</span>): <span class="s">'study'</span>, (<span class="s">'studied'</span>, <span class="s">'v'</span>): <span class="s">'study'</span>, (<span class="s">'studies'</span>, <span class="s">'v'</span>): <span class="s">'study'</span>,
+    <span class="c"># Nouns: (word, 'n') -&gt; lemma</span>
+    (<span class="s">'mice'</span>, <span class="s">'n'</span>): <span class="s">'mouse'</span>, (<span class="s">'geese'</span>, <span class="s">'n'</span>): <span class="s">'goose'</span>, (<span class="s">'feet'</span>, <span class="s">'n'</span>): <span class="s">'foot'</span>,
+    (<span class="s">'ponies'</span>, <span class="s">'n'</span>): <span class="s">'pony'</span>, (<span class="s">'studies'</span>, <span class="s">'n'</span>): <span class="s">'study'</span>, (<span class="s">'saw'</span>, <span class="s">'n'</span>): <span class="s">'saw'</span>,
+    <span class="c"># Adjectives: (word, 'a') -&gt; lemma</span>
+    (<span class="s">'better'</span>, <span class="s">'a'</span>): <span class="s">'good'</span>, (<span class="s">'best'</span>, <span class="s">'a'</span>): <span class="s">'good'</span>, (<span class="s">'worse'</span>, <span class="s">'a'</span>): <span class="s">'bad'</span>
+}
+
+<span class="k">def</span> <span class="f">simple_lemmatize</span>(word, pos=<span class="s">'n'</span>):
+    w = word.<span class="f">lower</span>()
+    <span class="c"># Direct irregular dictionary lookup</span>
+    <span class="k">if</span> (w, pos) <span class="k">in</span> lemma_dict:
+        <span class="k">return</span> lemma_dict[(w, pos)]
+        
+    <span class="c"># Regular inflection rules</span>
+    <span class="k">if</span> pos == <span class="s">'n'</span> <span class="k">and</span> w.<span class="f">endswith</span>(<span class="s">'s'</span>) <span class="k">and</span> <span class="k">len</span>(w) &gt; <span class="n">3</span>:
+        <span class="k">if</span> w.<span class="f">endswith</span>(<span class="s">'ies'</span>): <span class="k">return</span> w[:-<span class="n">3</span>] + <span class="s">'y'</span>
+        <span class="k">return</span> w[:-<span class="n">1</span>]
+    <span class="k">if</span> pos == <span class="s">'v'</span> <span class="k">and</span> w.<span class="f">endswith</span>(<span class="s">'ing'</span>) <span class="k">and</span> <span class="k">len</span>(w) &gt; <span class="n">4</span>:
+        <span class="k">return</span> w[:-<span class="n">3</span>]
+    <span class="k">return</span> w
+
+<span class="c"># 3. Test words showing key distinctions</span>
+test_cases = [
+    (<span class="s">&quot;running&quot;</span>, <span class="s">&quot;v&quot;</span>, <span class="s">&quot;Regular verb inflection&quot;</span>),
+    (<span class="s">&quot;went&quot;</span>, <span class="s">&quot;v&quot;</span>, <span class="s">&quot;Irregular verb&quot;</span>),
+    (<span class="s">&quot;ponies&quot;</span>, <span class="s">&quot;n&quot;</span>, <span class="s">&quot;Plural noun&quot;</span>),
+    (<span class="s">&quot;better&quot;</span>, <span class="s">&quot;a&quot;</span>, <span class="s">&quot;Irregular comparative adjective&quot;</span>),
+    (<span class="s">&quot;saw&quot;</span>, <span class="s">&quot;v&quot;</span>, <span class="s">&quot;Ambiguous: past tense verb 'to see'&quot;</span>),
+    (<span class="s">&quot;saw&quot;</span>, <span class="s">&quot;n&quot;</span>, <span class="s">&quot;Ambiguous: noun tool 'saw'&quot;</span>),
+    (<span class="s">&quot;university&quot;</span>, <span class="s">&quot;n&quot;</span>, <span class="s">&quot;Over-stemming candidate&quot;</span>),
+    (<span class="s">&quot;universe&quot;</span>, <span class="s">&quot;n&quot;</span>, <span class="s">&quot;Over-stemming candidate&quot;</span>)
+]
+
+<span class="k">print</span>(<span class="s">f&quot;{'Input Word':&lt;12} | {'POS':&lt;4} | {'Stem (Porter)':&lt;15} | {'Lemma (WordNet)':&lt;15} | {'Note':&lt;30}&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;-&quot;</span> * <span class="n">85</span>)
+
+<span class="k">for</span> word, pos, note <span class="k">in</span> test_cases:
+    stem_val = <span class="f">simple_porter_stem</span>(word)
+    lemma_val = <span class="f">simple_lemmatize</span>(word, pos)
+    <span class="k">print</span>(<span class="s">f&quot;{word:&lt;12} | {pos:&lt;4} | {stem_val:&lt;15} | {lemma_val:&lt;15} | {note:&lt;30}&quot;</span>)
+
+<span class="k">print</span>(<span class="s">&quot;\nKey observations:&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;1. Stemming turns 'ponies' into non-word 'poni'; Lemmatisation returns valid dictionary word 'pony'.&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;2. Stemming fails on irregular 'went' ('went'); Lemmatisation correctly maps to root 'go'.&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;3. POS context allows Lemmatisation to distinguish verb 'saw' ('see') from noun 'saw' ('saw').&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Lemmatising without providing Part-of-Speech tags: Most lemmatisers default to Noun if no POS tag is supplied; attempting to lemmatise the verb "running" without POS='v' leaves it un-lemmatised as "running" instead of "run".</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Over-stemming in specialized domains: Applying aggressive stemmers to medical or legal documents conflates distinct terminology (e.g. "policy" and "police", or "medical" and "medication"), corrupting domain retrieval.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming stemming produces valid dictionary words: Stemming outputs like "commun", "poni", and "relat" are algorithmically convenient index keys, but cannot be displayed to end users in polished search results.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Computational latency bottlenecks with lemmatisation: Lemmatisation requires dictionary hash lookups and prior POS tagging, running orders of magnitude slower than simple regex stemming on multi-gigabyte corpora.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Irregular verb failure in stemmers: Rule-based stemmers cannot map irregular past tenses ("went" $\to$ "go", "sang" $\to$ "sing", "mice" $\to$ "mouse") because irregular inflections require lexical dictionary mapping.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>What is the primary operational difference between stemming and lemmatisation?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Stemming uses heuristic suffix-stripping rules without dictionaries (often producing non-words), whereas lemmatisation uses lexical databases and Part-of-Speech context to return authentic dictionary lemmas</span></button><button class="opt" type="button"><b>B</b><span>Stemming is for sentences, while lemmatisation is for paragraphs</span></button><button class="opt" type="button"><b>C</b><span>Stemming can only be computed on GPU hardware</span></button><button class="opt" type="button"><b>D</b><span>Lemmatisation deletes all vowels from input words</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Stemming chops word endings using cascading heuristic string matching rules (producing roots like "poni" or "comput"). Lemmatisation consults a morphological lexicon (WordNet) with grammatical context to output valid dictionary headwords ("pony", "compute").</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>What does "over-stemming" mean in natural language processing?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>When a stemmer converts text into binary numbers</span></button><button class="opt" type="button"><b>B</b><span>When two semantically distinct words are incorrectly chopped into the identical root stem (e.g. "universe" and "university" both stemming to "univers")</span></button><button class="opt" type="button"><b>C</b><span>When a stemmer crashes due to memory overflow</span></button><button class="opt" type="button"><b>D</b><span>When a word is stemmed more than three times consecutively</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Over-stemming is a false positive conflation error: the stemmer strips too aggressively, equating distinct concepts (such as "universal" and "university") under the same root, degrading search precision.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>Why does effective lemmatisation require providing the Part-of-Speech (POS) tag of a word?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because POS tags double the frame rate of neural networks</span></button><button class="opt" type="button"><b>B</b><span>Because lexical databases only store adjectives</span></button><button class="opt" type="button"><b>C</b><span>Because grammatical role dictates the root lemma: "saw" as a verb maps to "see", whereas "saw" as a noun remains "saw" (the cutting tool)</span></button><button class="opt" type="button"><b>D</b><span>Because words without POS tags are deleted by the operating system</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Many English surface forms are grammatically ambiguous. Without POS context, a lemmatiser cannot know whether "leaves" is the plural of noun "leaf" or the third-person present form of verb "leave".</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q4</span>Under what scenario is stemming typically preferred over lemmatisation in production systems?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>In translation systems where exact dictionary words are required</span></button><button class="opt" type="button"><b>B</b><span>In medical billing software where strict legal compliance is required</span></button><button class="opt" type="button"><b>C</b><span>In speech synthesis text-to-speech systems</span></button><button class="opt" type="button"><b>D</b><span>In large-scale search engines and high-throughput document retrieval indexing where sub-millisecond execution speed outweighs morphological linguistic purity</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Stemming executes orders of magnitude faster than lemmatisation because it avoids POS tagging and dictionary lookups. For web search engines indexing billions of documents, its speed and recall improvements make it the industry standard.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/bag-of-words-and-tf-idf/"><small class="kicker">Concept</small><b>BoW &amp; TF-IDF</b></a><a href="../../concepts/stop-words-and-n-grams/"><small class="kicker">Concept</small><b>Stop Words &amp; N-Grams</b></a><a href="../../concepts/word-and-sentence-tokenization/"><small class="kicker">Concept</small><b>Word &amp; Sentence Tokenization</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/stop-words-and-n-grams/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Natural language processing</small><b>Stop Words &amp; N-Grams</b></a>
+    <a class="pager-next" href="../../concepts/bag-of-words-and-tf-idf/"><small>Next · Natural language processing <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>BoW &amp; TF-IDF</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

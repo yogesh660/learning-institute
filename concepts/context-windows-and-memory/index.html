@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Context Windows and Memory: KV Cache Management, Working Memory, and Long-Term Stores · Learn · Yogesh Awate</title>
+<meta name="description" content="The principles of LLM memory architectures, spanning short-term working context windows, KV-cache compression, and long-term external vector memory.">
+<meta property="og:title" content="Context Windows and Memory: KV Cache Management, Working Memory, and Long-Term Stores · Learn · Yogesh Awate">
+<meta property="og:description" content="The principles of LLM memory architectures, spanning short-term working context windows, KV-cache compression, and long-term external vector memory.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="context-windows-and-memory">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ai">Path 11 · AI</a> / LLM foundations / Lesson 20 of 42</span>
+    <h1 class="case-title">Context Windows and Memory: KV Cache Management, Working Memory, and Long-Term Stores</h1>
+    <p class="lede rise" style="--d:3">The principles of LLM memory architectures, spanning short-term working context windows, KV-cache compression, and long-term external vector memory.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>AI · LLM foundations</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">While large language models exhibit impressive reasoning, their memory is bounded by fixed context window limits and linear memory scaling during generation. Architecting robust AI agents requires decoupling memory into short-term working context (KV caching, sliding windows) and long-term persistent episodic memory (external vector stores and memory compaction).</p>
+        <p>Transformers process tokens through an in-context working memory: self-attention allows all tokens within the context window to attend to each other. During autoregressive decoding, recomputing key and value representations for all past tokens at every step is wasteful $\mathcal{O}(N^2)$ work. The Key-Value (KV) cache stores past token key and value projections in GPU memory, reducing per-token generation step complexity to $\mathcal{O}(N)$.</p>
+        <p>However, KV-cache size grows linearly with sequence length, batch size, and layer count, easily demanding 40+ GB of VRAM for long documents. Long-running AI systems overcome this constraint through hierarchical memory: short-term active context managed via sliding-window attention and memory compaction, paired with long-term semantic stores queried through dense retrieval.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>An LLM's context window is like a student's desk. It holds open notebooks and reference pens for whatever problem is being actively solved right now. But the desk has finite surface area. When the desk fills up, the student must either file older notes into a filing cabinet in the corner (an external vector database) or write a 1-page summary index card to clear space on the desk.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Allocate KV-cache buffers: allocate pre-allocated tensors in GPU memory to store key and value states for past tokens.</li><li>Append incremental token states: at each decoding step, compute $\mathbf{k}_t, \mathbf{v}_t$ for the newest token and append to the active cache.</li><li>Monitor memory footprint: calculate VRAM consumption using the formula $2 \times 2 \times n_{\text{layers}} \times d_{\text{model}} \times N \times B$ bytes.</li><li>Trigger context compaction: when token count nears window limits, generate an abstractive summary of older conversation turns.</li><li>Offload to external storage: persist episodic memories and user profile details to an indexed vector store for semantic retrieval on demand.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>KV-Cache Memory Footprint (FP16)</h3><div class="formula">\text{Memory}_{\text{KV}} = 4 \cdot b \cdot s \cdot l \cdot h \cdot d_k \quad \text{bytes}</div><p>Calculates the memory in bytes for batch size $b$, sequence length $s$, layers $l$, attention heads $h$, and head dimension $d_k$ in 16-bit precision.</p></li>
+          <li><h3>Sliding Window Attention Complexity</h3><div class="formula">\mathcal{O}(N \cdot W \cdot d), \quad \text{where } W \ll N</div><p>Restricts self-attention to a localized window of $W$ previous tokens, reducing quadratic scaling to linear scaling with sequence length $N$.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>KV caching transforms autoregressive token generation from quadratic time $\mathcal{O}(N^2)$ to linear time $\mathcal{O}(N)$.</li><li>The linear memory growth of KV caches necessitates multi-query attention (MQA), grouped-query attention (GQA), and paged memory.</li><li>Hierarchical memory combines immediate working context windows with external vector indices for long-term agent persistence.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">def</span> <span class="f">calculate_kv_cache_size</span>(batch_size, seq_len, num_layers, num_heads, head_dim, precision_bytes=<span class="n">2</span>):
+    <span class="s">&quot;&quot;&quot;Calculates KV cache memory footprint in gigabytes.&quot;&quot;&quot;</span>
+    <span class="c"># 2 matrices (Key and Value) per layer</span>
+    total_elements = <span class="n">2</span> * batch_size * seq_len * num_layers * num_heads * head_dim
+    total_bytes = total_elements * precision_bytes
+    <span class="k">return</span> total_bytes / (<span class="n">1024</span> ** <span class="n">3</span>)
+
+<span class="k">class</span> SlidingWindowKVCache:
+    <span class="s">&quot;&quot;&quot;Demonstrates sliding-window working memory for autoregressive decoding.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, window_size=<span class="n">4</span>, dim=<span class="n">8</span>):
+        <span class="k">self</span>.window_size = window_size
+        <span class="k">self</span>.dim = dim
+        <span class="k">self</span>.keys = []
+        <span class="k">self</span>.values = []
+
+    <span class="k">def</span> <span class="f">update</span>(<span class="k">self</span>, new_key, new_val):
+        <span class="k">self</span>.keys.<span class="f">append</span>(new_key)
+        <span class="k">self</span>.values.<span class="f">append</span>(new_val)
+        <span class="c"># Evict oldest tokens beyond window size</span>
+        <span class="k">if</span> <span class="k">len</span>(<span class="k">self</span>.keys) &gt; <span class="k">self</span>.window_size:
+            <span class="k">self</span>.keys.<span class="f">pop</span>(<span class="n">0</span>)
+            <span class="k">self</span>.values.<span class="f">pop</span>(<span class="n">0</span>)
+            
+    <span class="k">def</span> <span class="f">get_context</span>(<span class="k">self</span>):
+        <span class="k">return</span> np.<span class="f">array</span>(<span class="k">self</span>.keys), np.<span class="f">array</span>(<span class="k">self</span>.values)
+
+<span class="c"># 1. Memory benchmark for 70B parameter model</span>
+vram_gb = <span class="f">calculate_kv_cache_size</span>(batch_size=<span class="n">4</span>, seq_len=<span class="n">32768</span>, num_layers=<span class="n">80</span>, num_heads=<span class="n">64</span>, head_dim=<span class="n">128</span>)
+<span class="k">print</span>(<span class="s">f&quot;KV Cache VRAM for 70B model (Batch 4, 32k Context): {vram_gb:.2f} GB&quot;</span>)
+
+<span class="c"># 2. Sliding window working memory simulation</span>
+cache = <span class="f">SlidingWindowKVCache</span>(window_size=<span class="n">3</span>, dim=<span class="n">4</span>)
+<span class="k">for</span> t <span class="k">in</span> <span class="k">range</span>(<span class="n">5</span>):
+    cache.<span class="f">update</span>(new_key=np.<span class="f">ones</span>(<span class="n">4</span>) * t, new_val=np.<span class="f">zeros</span>(<span class="n">4</span>) * t)
+
+keys, _ = cache.<span class="f">get_context</span>()
+<span class="k">print</span>(<span class="s">f&quot;Active Tokens Retained in Sliding Window (t=5): {keys[:, 0]}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Running out of GPU memory during batch inference due to unmanaged KV-cache allocation when users submit long documents.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Truncating conversation history naively with hard cut-offs rather than structured summary compaction, causing the model to lose instructions.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>What is the primary function of the KV cache in LLM inference engines?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It automatically searches the web for factual answers</span></button><button class="opt" type="button"><b>B</b><span>It quantises weights into binary values</span></button><button class="opt" type="button"><b>C</b><span>It compiles Python code into C++</span></button><button class="opt" type="button"><b>D</b><span>It stores key and value projection tensors of previously processed tokens so they do not need to be recomputed at every generation step</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Without a KV cache, generating the $N$-th token requires recomputing self-attention over all previous $N-1$ tokens from scratch.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>How does Grouped-Query Attention (GQA) reduce KV-cache memory consumption?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It shares a single set of key and value heads across multiple query heads, cutting KV-cache size proportionally</span></button><button class="opt" type="button"><b>B</b><span>It trains the model only on numbers</span></button><button class="opt" type="button"><b>C</b><span>It deletes the value matrix entirely</span></button><button class="opt" type="button"><b>D</b><span>It limits the model to processing one token at a time</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In GQA (used by Llama 2/3), several query heads share each key/value head, reducing cache memory bandwidth and VRAM usage by 4x to 8x.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>What is "context compaction" in conversational agent architectures?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Restricting user input to 10 words</span></button><button class="opt" type="button"><b>B</b><span>Periodically summarising older dialog turns into a concise briefing that fits within the active context window</span></button><button class="opt" type="button"><b>C</b><span>Deleting all user prompts from memory</span></button><button class="opt" type="button"><b>D</b><span>Compressing text files into ZIP archives on disk</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Context compaction prevents context overflow by periodically distilling historical turns into an executive summary that retains salient facts.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/inference-kv-cache-batching-paged-attention/"><small class="kicker">Concept</small><b>KV Cache &amp; PagedAttention</b></a><a href="../../concepts/the-agent-loop-react/"><small class="kicker">Concept</small><b>ReAct Agent Loop</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/hallucination-and-grounding/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · AI</small><b>Hallucination &amp; Grounding</b></a>
+    <a class="pager-next" href="../../concepts/chunking-and-embeddings-for-retrieval/"><small>Next · AI <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Chunking &amp; Embeddings for RAG</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

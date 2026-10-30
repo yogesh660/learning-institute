@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Maximum Likelihood Estimation · Learn · Yogesh Awate</title>
+<meta name="description" content="Choose the parameters under which the observed data is most probable. Where most loss functions come from.">
+<meta property="og:title" content="Maximum Likelihood Estimation · Learn · Yogesh Awate">
+<meta property="og:description" content="Choose the parameters under which the observed data is most probable. Where most loss functions come from.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="maximum-likelihood-estimation">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-foundations">Path 01 · Foundations</a> / Learning as optimisation / Lesson 6 of 17</span>
+    <h1 class="case-title">Maximum Likelihood Estimation</h1>
+    <p class="lede rise" style="--d:3">Choose the parameters under which the observed data is most probable. Where most loss functions come from.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      <span class="tagline lab">Live lab</span>
+      <span class="prereq">Before this: <a href="../../concepts/loss-functions/">Loss functions</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Foundations · Learning as optimisation</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>4 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#lab"><span>03</span>Try it</a></li><li><a href="#maths"><span>04</span>The maths</a></li><li><a href="#takeaways"><span>05</span>Key takeaways</a></li><li><a href="#code"><span>06</span>In code</a></li><li><a href="#quiz"><span>07</span>Check yourself</a></li><li><a href="#related"><span>08</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Maximum likelihood estimation (MLE) asks: of all possible parameter values, which one makes the data we actually observed most probable? Many familiar losses are just negative log-likelihoods in disguise.</p>
+        <p>Flip a coin 10 times and see 7 heads. If the coin’s bias were $p = 0.5$, that outcome has probability 0.117; if $p = 0.7$, it is 0.267, the highest of any $p$. So the MLE is $\hat p = 0.7$: the observed frequency.</p>
+        <p>We maximise the <em>log</em>-likelihood because products of many small probabilities underflow, and logs turn products into sums without moving the maximum. Assume Gaussian noise and the negative log-likelihood becomes squared error, so OLS is MLE. Assume Bernoulli labels and you get log-loss, so <a class="inline" href="../../models/logistic_regression/">Logistic regression</a> is MLE.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>A detective choosing the explanation that makes the evidence least surprising.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Write down a probability model $p(x \mid \theta)$ for one observation.</li><li>Assume independence: the likelihood is the product over observations.</li><li>Take logs: the log-likelihood is a sum.</li><li>Maximise it, analytically (set derivative to zero) or numerically (gradient-based).</li></ol>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>03</span> Try it</h2>
+        <p>Flip a virtual coin. The curve is the log-likelihood of every possible bias $p$; its peak is the MLE.</p>
+        <div class="lab" data-lab="maximum-likelihood-estimation" data-kind="concepts" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>Flip 5 times, then 100 times: the peak sharpens as evidence accumulates.</li><li>Drag the probe to $p = 0.5$ and compare its log-likelihood with the peak.</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>04</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Likelihood and log-likelihood</h3><div class="formula">$$L(\theta) = \prod_{i=1}^n p(x_i \mid \theta), \qquad \ell(\theta) = \sum_{i=1}^n\log p(x_i \mid \theta)$$</div><p>$\hat\theta_{\text{MLE}} = \arg\max_\theta\ell(\theta)$.</p></li>
+          <li><h3>Bernoulli example</h3><div class="formula">$$\ell(p) = k\log p + (n - k)\log(1 - p), \qquad \frac{d\ell}{dp} = \frac kp - \frac{n-k}{1-p} = 0 \;\Rightarrow\; \hat p = \frac kn$$</div><p>The MLE is the sample proportion. Its negative per-example version is exactly binary cross-entropy.</p></li>
+          <li><h3>Gaussian noise gives least squares</h3><div class="formula">$$y_i = x_i^\top\beta + \varepsilon_i,\;\varepsilon_i \sim \mathcal N(0, \sigma^2) \;\Rightarrow\; -\ell(\beta) = \frac{1}{2\sigma^2}\sum_i(y_i - x_i^\top\beta)^2 + \text{const}$$</div><p>Maximising likelihood is minimising squared error.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>05</span> Key takeaways</h2>
+        <div class="box use"><ul><li>MLE is consistent and efficient for large samples, but can overfit small ones (7/10 heads is not strong evidence of a biased coin).</li><li>Adding a prior and maximising the posterior (MAP) gives regularisation.</li><li>Choosing a loss is choosing a noise model.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>06</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">from</span> scipy.optimize <span class="k">import</span> minimize_scalar
+
+flips = np.<span class="f">array</span>([<span class="n">1</span>, <span class="n">1</span>, <span class="n">0</span>, <span class="n">1</span>, <span class="n">1</span>, <span class="n">1</span>, <span class="n">0</span>, <span class="n">1</span>, <span class="n">0</span>, <span class="n">1</span>])        <span class="c"># 7 heads out of 10</span>
+nll = <span class="k">lambda</span> p: -(flips.<span class="f">sum</span>() * np.<span class="f">log</span>(p) + (<span class="k">len</span>(flips) - flips.<span class="f">sum</span>()) * np.<span class="f">log</span>(<span class="n">1</span> - p))
+res = <span class="f">minimize_scalar</span>(nll, bounds=(<span class="n">1e-6</span>, <span class="n">1</span> - <span class="n">1e-6</span>), method=<span class="s">&quot;bounded&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;numerical MLE:&quot;</span>, <span class="f">round</span>(res.x, <span class="n">4</span>), <span class="s">&quot;closed form:&quot;</span>, flips.<span class="f">mean</span>())</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Treating the MLE from a tiny sample as reliable.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Forgetting the independence assumption behind the product.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>07</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>Why maximise the log-likelihood instead of the likelihood?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Logs turn products into sums and avoid numerical underflow, without moving the maximum</span></button><button class="opt" type="button"><b>B</b><span>It adds regularisation</span></button><button class="opt" type="button"><b>C</b><span>It is required by the data</span></button><button class="opt" type="button"><b>D</b><span>It gives a different answer</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> $\log$ is monotonic, so the arg max is unchanged.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>Minimising binary cross-entropy is equivalent to:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Minimising MAE</span></button><button class="opt" type="button"><b>B</b><span>Bayesian inference with a flat prior over functions</span></button><button class="opt" type="button"><b>C</b><span>MLE under a Gaussian model</span></button><button class="opt" type="button"><b>D</b><span>MLE under a Bernoulli model</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Cross-entropy is the negative Bernoulli log-likelihood per example.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>What critical assumption about the data points $x_1, x_2, \dots, x_n$ allows the total likelihood to be written as a simple product $\prod_{i=1}^n p(x_i \mid \theta)$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The feature matrix must be full column rank</span></button><button class="opt" type="button"><b>B</b><span>The data points must be independent and identically distributed (i.i.d.) conditional on parameter $\theta$</span></button><button class="opt" type="button"><b>C</b><span>The sample size $n$ must be strictly greater than $1{,}000$</span></button><button class="opt" type="button"><b>D</b><span>The data must follow a standard normal distribution with mean zero</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> By the probability product rule for independent events, $P(A \cap B) = P(A)P(B)$. If observations are independent and identically distributed, the joint likelihood factors into the product of individual marginal densities.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q4</span>Maximising the likelihood of a linear regression model with independent additive Gaussian noise $\varepsilon_i \sim \mathcal{N}(0, \sigma^2)$ is mathematically identical to minimising which loss function?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Mean Absolute Error</span></button><button class="opt" type="button"><b>B</b><span>Quantile pinball loss</span></button><button class="opt" type="button"><b>C</b><span>Hinge loss</span></button><button class="opt" type="button"><b>D</b><span>Mean Squared Error (Ordinary Least Squares)</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The Gaussian probability density includes the term $\exp\left(-\frac{(y_i - \hat{y}_i)^2}{2\sigma^2}\right)$. Taking the negative logarithm yields $\frac{1}{2\sigma^2}\sum (y_i - \hat{y}_i)^2 + \text{constant}$, which is exactly proportional to the squared error loss.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q5</span>If the noise in a linear regression model follows a Laplace distribution $p(\varepsilon) = \frac{1}{2b}\exp\left(-\frac{|\varepsilon|}{b}\right)$ rather than a Gaussian distribution, what loss function does Maximum Likelihood Estimation yield?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Huber loss with $\delta = 1$</span></button><button class="opt" type="button"><b>B</b><span>Mean Squared Error (L2 loss)</span></button><button class="opt" type="button"><b>C</b><span>Binary cross-entropy loss</span></button><button class="opt" type="button"><b>D</b><span>Mean Absolute Error (L1 loss)</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Taking the negative logarithm of the Laplace density $-\ln p(\varepsilon) = \frac{|\varepsilon|}{b} + \ln(2b)$ produces an objective proportional to $\sum |y_i - \hat{y}_i|$, which is Mean Absolute Error (MAE). This explains why MAE regression corresponds to assuming Laplace-distributed errors.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q6</span>What is the connection between Maximum A Posteriori (MAP) estimation and regularised empirical loss?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>MAP requires all model weights to be non-negative</span></button><button class="opt" type="button"><b>B</b><span>MAP eliminates the need for computing likelihoods</span></button><button class="opt" type="button"><b>C</b><span>MAP maximises $\log p(y \mid X, w) + \log p(w)$; placing a zero-mean Gaussian prior on weights $w$ adds an L2 penalty ($\lVert w\rVert_2^2$), while a Laplace prior adds an L1 penalty ($\lVert w\rVert_1$)</span></button><button class="opt" type="button"><b>D</b><span>MAP is identical to MLE without any prior assumptions</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> By Bayes' theorem, the posterior is proportional to likelihood times prior: $p(w \mid D) \propto p(D \mid w) p(w)$. In log-space, this is $\log L(w) + \log p(w)$. A Gaussian prior $\mathcal{N}(0, \sigma_w^2)$ gives Ridge regularisation ($\lambda \sum w_j^2$), and a Laplace prior gives Lasso ($\lambda \sum |w_j|$).</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q7</span>A coin is tossed 3 times and lands on Heads every time ($k = 3, n = 3$). What is the Maximum Likelihood Estimate of the probability of heads $\hat{p}_{\text{MLE}}$, and what severe flaw does this illustrate?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$\hat{p}_{\text{MLE}} = 0.0$; MLE estimates the error probability instead of the success probability</span></button><button class="opt" type="button"><b>B</b><span>$\hat{p}_{\text{MLE}} = 0.75$; MLE automatically applies Laplace add-one smoothing</span></button><button class="opt" type="button"><b>C</b><span>$\hat{p}_{\text{MLE}} = 1.0$; on small samples, MLE severely overfits to chance observations, assigning zero probability to future tails</span></button><button class="opt" type="button"><b>D</b><span>$\hat{p}_{\text{MLE}} = 0.5$; MLE always reverts to an uninformative prior</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The Bernoulli MLE is $\hat{p} = k/n = 3/3 = 1.0$. Because MLE incorporates no prior knowledge, it claims that getting tails is impossible ($P(\text{Tails}) = 0$). In small samples, this extreme overfitting causes infinite log-loss if tails occurs in test data.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q8</span>Why does multiplying raw probabilities directly in the likelihood $L(\theta) = \prod_{i=1}^n p(x_i \mid \theta)$ cause catastrophic failure in computer programs for datasets with hundreds of rows?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Floating point multiplication cannot be executed in parallel on multi-core CPUs</span></button><button class="opt" type="button"><b>B</b><span>Multiplying many probabilities (numbers between 0 and 1) rapidly causes numerical underflow, causing floating-point representations to round down to exactly zero</span></button><button class="opt" type="button"><b>C</b><span>Likelihood products produce complex numbers when probabilities are small</span></button><button class="opt" type="button"><b>D</b><span>Product operations change the location of the parameter maximum</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> For example, $0.1^{100} = 10^{-100}$, which quickly underflows 64-bit double precision (limit $\sim 10^{-308}$). In contrast, log-likelihood sums values: $\sum \log(0.1) = 100 \times (-2.30) = -230$, which is completely numerically stable.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q9</span>What is the asymptotic consistency property of Maximum Likelihood Estimators as the sample size $n \to \infty$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The model complexity automatically increases to match $n$</span></button><button class="opt" type="button"><b>B</b><span>The variance of the MLE grows proportionally with $n$</span></button><button class="opt" type="button"><b>C</b><span>The parameter estimates become independent of the log-likelihood function</span></button><button class="opt" type="button"><b>D</b><span>Under standard regularity conditions, the MLE $\hat{\theta}_n$ converges in probability to the true underlying parameter value $\theta_0$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Consistency means $\lim_{n \to \infty} P(|\hat{\theta}_n - \theta_0| &gt; \epsilon) = 0$. Given enough data and an appropriately specified model, MLE is guaranteed to recover the true data-generating parameters.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q10</span>Suppose you observe 10 independent coin tosses with $k = 7$ heads and $n - k = 3$ tails. If the true parameter is $p$, the probability of this outcome is $P(k=7 \mid p) = \binom{10}{7} p^7 (1-p)^3$. What is the ratio of the likelihood under $p = 0.70$ compared to $p = 0.50$? (Given $P(k=7 \mid p=0.7) \approx 0.2668$ and $P(k=7 \mid p=0.5) \approx 0.1172$).</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$0.70 / 0.50 = 1.40$</span></button><button class="opt" type="button"><b>B</b><span>$0.2668 / 0.1172 \approx 2.28$: the data is over twice as likely under $p=0.70$ than under $p=0.50$</span></button><button class="opt" type="button"><b>C</b><span>$1.00$: both likelihoods are equivalent at the mode</span></button><button class="opt" type="button"><b>D</b><span>$0.1172 / 0.2668 \approx 0.44$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Likelihood ratio $= \frac{L(0.70)}{L(0.50)} = \frac{0.2668}{0.1172} \approx 2.276 \approx 2.28$. The observed evidence is more than 2.2 times more probable under the MLE hypothesis ($p = 0.70$) than under a fair coin hypothesis ($p = 0.50$).</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q11</span>For an exponential distribution with probability density $f(x \mid \lambda) = \lambda e^{-\lambda x}$ ($x \ge 0$), the log-likelihood for $n$ independent observations is $\ell(\lambda) = n\ln(\lambda) - \lambda \sum_{i=1}^n x_i$. Solving $\frac{d\ell}{d\lambda} = 0$, what is the analytical Maximum Likelihood Estimator $\hat{\lambda}$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$\hat{\lambda} = \frac{1}{\bar{x}}$ (the reciprocal of the sample mean)</span></button><button class="opt" type="button"><b>B</b><span>$\hat{\lambda} = \frac{1}{n}\sum_{i=1}^n x_i^2$</span></button><button class="opt" type="button"><b>C</b><span>$\hat{\lambda} = \bar{x}$ (the sample mean)</span></button><button class="opt" type="button"><b>D</b><span>$\hat{\lambda} = \ln(\bar{x})$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Derivative: $\frac{d\ell}{d\lambda} = \frac{n}{\lambda} - \sum x_i = 0 \implies \frac{n}{\lambda} = \sum x_i \implies \hat{\lambda} = \frac{n}{\sum x_i} = \frac{1}{\bar{x}}$. The rate parameter MLE is the inverse of the sample mean.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q12</span>A dataset of 4 independent observations from a normal distribution $\mathcal{N}(\mu, \sigma^2)$ with known variance $\sigma^2 = 1$ has values $\{1.0, 2.0, 3.0, 6.0\}$. What is the Maximum Likelihood Estimate of the mean $\hat{\mu}_{\text{MLE}}$, and what is the value of the log-likelihood $\ell(\hat{\mu}) = -\frac{1}{2}\sum (x_i - \hat{\mu})^2 + C$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$\hat{\mu} = 3.0$ and $\ell(\hat{\mu}) = -14.0 + C$</span></button><button class="opt" type="button"><b>B</b><span>$\hat{\mu} = 4.0$ and $\ell(\hat{\mu}) = -10.0 + C$</span></button><button class="opt" type="button"><b>C</b><span>$\hat{\mu} = 2.5$ and $\ell(\hat{\mu}) = -8.0 + C$</span></button><button class="opt" type="button"><b>D</b><span>$\hat{\mu} = 3.0$ and $\ell(\hat{\mu}) = -7.0 + C$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Sample mean $\hat{\mu} = (1.0 + 2.0 + 3.0 + 6.0) / 4 = 12.0 / 4 = 3.0$. Squared deviations from 3.0: $(1 - 3)^2 = 4$, $(2 - 3)^2 = 1$, $(3 - 3)^2 = 0$, $(6 - 3)^2 = 9$. Sum of squared deviations $= 4 + 1 + 0 + 9 = 14$. Thus $-\frac{1}{2}\sum (x_i - \hat{\mu})^2 = -\frac{1}{2}(14) = -7.0$. Total log-likelihood $= -7.0 + C$.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>08</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/log-odds/"><small class="kicker">Concept</small><b>Log-odds (logit)</b></a><a href="../../concepts/sigmoid-and-link-functions/"><small class="kicker">Concept</small><b>Sigmoid &amp; link functions</b></a><a href="../../models/logistic_regression/"><small class="kicker">Classification</small><b>Logistic regression</b></a><a href="../../models/gaussian_mixture_models/"><small class="kicker">Clustering</small><b>Gaussian mixtures</b></a><a href="../../models/gaussian_naive_bayes/"><small class="kicker">Classification</small><b>Gaussian Naive Bayes</b></a><a href="../../models/bayesian_linear_regression/"><small class="kicker">Regression</small><b>Bayesian linear regression</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/gradient-descent/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Foundations</small><b>Gradient descent</b></a>
+    <a class="pager-next" href="../../concepts/quasi-newton-and-lbfgs/"><small>Next · Foundations <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Newton, BFGS &amp; L-BFGS</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

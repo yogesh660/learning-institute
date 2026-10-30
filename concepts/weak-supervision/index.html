@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Weak Supervision and Programmatic Labeling · Learn · Yogesh Awate</title>
+<meta name="description" content="Label millions of data points programmatically using noisy heuristic functions: master Snorkel, label models, and generative matrix completion.">
+<meta property="og:title" content="Weak Supervision and Programmatic Labeling · Learn · Yogesh Awate">
+<meta property="og:description" content="Label millions of data points programmatically using noisy heuristic functions: master Snorkel, label models, and generative matrix completion.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="weak-supervision">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ml-toolbox">Path 06 · Machine learning toolbox</a> / Semi-supervised and active / Lesson 42 of 50</span>
+    <h1 class="case-title">Weak Supervision and Programmatic Labeling</h1>
+    <p class="lede rise" style="--d:3">Label millions of data points programmatically using noisy heuristic functions: master Snorkel, label models, and generative matrix completion.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/probability-rules-and-bayes-theorem/">Probability and Bayes</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Machine learning toolbox · Semi-supervised and active</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Hand-labelling training datasets is the primary bottleneck in production AI. Weak supervision replaces manual labelling with heuristic labeling functions (LFs), using an unsupervised generative label model to resolve conflicts.</p>
+        <p>In modern machine learning, hand-labelling millions of training examples is often impossible: data changes dynamically, privacy laws forbid human annotators from viewing sensitive medical records or financial transactions, and expert wages are exorbitant.</p>
+        <p>Weak Supervision (pioneered by Alexander Ratner, Christopher Ré, and the Stanford Snorkel team in 2017) fundamentally re-engineers data creation: instead of manually hand-labelling individual samples, domain experts write programmatic Labeling Functions (LFs).</p>
+        <p>A Labeling Function is a short Python script encoding a noisy heuristic: a regular expression pattern, a keyword dictionary lookup, a heuristic threshold on metadata, a legacy third-party model, or distant supervision from an external database. Each LF inspects an unlabelled sample and either outputs a candidate label (e.g. $+1$ or $-1$) or abstains ($0$).</p>
+        <p>Because human heuristics are imperfect, LFs frequently overlap, conflict, and correlate. Weak supervision resolves these conflicts through a two-stage architecture: first, an unsupervised Generative Label Model observes how LFs agree and disagree across millions of unlabelled samples, estimating the unknown accuracy and correlation of each LF without needing ground-truth labels. The Label Model outputs calibrated probabilistic training labels $P(Y \mid \Lambda)$. Second, an arbitrary end-to-end deep neural network is trained on these probabilistic labels, generalising far beyond the heuristic rules.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine a murder trial with five flawed witnesses. Witness 1 has poor eyesight; Witness 2 dislikes the defendant; Witness 3 only saw what happened from a distance; Witness 4 heard a loud noise; Witness 5 heard a rumor. A wise judge does not take a simple show of hands. By cross-examining the witnesses and observing which details they consistently agree on across 100 questions, the judge deduces the reliability of each witness without having been at the crime scene, synthesising their testimonies into the truth.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Label Matrix Definition</h3><div class="formula">\Lambda \in \{-1, 0, +1\}^{n \times m}, \quad \Lambda_{ij} = \lambda_j(x_i)</div><p>Matrix of weak labels from m labeling functions applied to n unlabelled samples. Zero denotes that the labeling function abstained on that sample.</p></li>
+          <li><h3>Generative Label Model Factorisation</h3><div class="formula">P_\theta(\Lambda, Y) = \frac{1}{Z_\theta} \exp\left( \sum_{j=1}^m \theta_j Y \Lambda_j + \sum_{j < k} \theta_{jk} \Lambda_j \Lambda_k \right)</div><p>Ising/Markov Random Field model over latent true label Y and observed weak votes Lambda_j, parameterised by LF accuracies theta_j and pairwise correlations theta_{jk}.</p></li>
+          <li><h3>Unsupervised Covariance Matching (Matrix Completion)</h3><div class="formula">\operatorname{Cov}(\Lambda_j, \Lambda_k) = \mathbb{E}[\Lambda_j \Lambda_k] - \mathbb{E}[\Lambda_j] \mathbb{E}[\Lambda_k] = \mu_j \mu_k \quad (\text{for conditionally independent LFs})</div><p>Because observable covariance between LFs factorises into the product of their latent accuracies mu_j = Cov(Lambda_j, Y), accuracy can be solved without true labels via rank-1 matrix completion.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Replaces expensive manual hand-labelling with programmatic Labeling Functions (LFs) encoding heuristics.</li><li>Unsupervised Generative Label Model learns the accuracy and correlation of each LF without ground-truth labels.</li><li>Label model aggregates noisy, conflicting, overlapping votes into calibrated probabilistic labels $P(Y \mid \Lambda)$.</li><li>Downstream discriminative model (neural network or boosted trees) generalises beyond heuristic rules via feature representations.</li><li>Foundational paradigm of data-centric AI (e.g. Snorkel), enabling rapid iteration and privacy-preserving training on sensitive data.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">from</span> sklearn.linear_model <span class="k">import</span> LogisticRegression
+
+<span class="c"># Programmatic Weak Supervision (Snorkel-style Label Model) from scratch</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+n_samples = <span class="n">500</span>
+
+<span class="c"># Synthetic spam classification problem</span>
+<span class="c"># Ground truth: 1 = Spam, 0 = Ham</span>
+<span class="c"># Features: [contains_link, has_dollar_sign, all_caps_title, sender_reputation]</span>
+X = np.random.<span class="f">uniform</span>(<span class="n">0</span>, <span class="n">1</span>, (n_samples, <span class="n">4</span>))
+y_true = ((X[:, <span class="n">0</span>] * <span class="n">1.5</span> + X[:, <span class="n">1</span>] * <span class="n">2.0</span> + X[:, <span class="n">2</span>] * <span class="n">1.0</span> - X[:, <span class="n">3</span>] * <span class="n">2.5</span>) &gt; <span class="n">0.5</span>).<span class="f">astype</span>(int)
+
+<span class="c"># 1. Define 3 noisy Labeling Functions (LFs)</span>
+<span class="c"># Votes: 1 (Spam), 0 (Ham), -1 (Abstain)</span>
+<span class="k">def</span> <span class="f">lf_dollar</span>(x):
+    <span class="c"># If high dollar sign presence, vote Spam; else abstain</span>
+    <span class="k">return</span> <span class="n">1</span> <span class="k">if</span> x[<span class="n">1</span>] &gt; <span class="n">0.6</span> <span class="k">else</span> -<span class="n">1</span>
+
+<span class="k">def</span> <span class="f">lf_link</span>(x):
+    <span class="c"># If link present and low sender rep, vote Spam</span>
+    <span class="k">if</span> x[<span class="n">0</span>] &gt; <span class="n">0.7</span> <span class="k">and</span> x[<span class="n">3</span>] &lt; <span class="n">0.4</span>: <span class="k">return</span> <span class="n">1</span>
+    <span class="k">if</span> x[<span class="n">0</span>] &lt; <span class="n">0.2</span> <span class="k">and</span> x[<span class="n">3</span>] &gt; <span class="n">0.7</span>: <span class="k">return</span> <span class="n">0</span>
+    <span class="k">return</span> -<span class="n">1</span>
+
+<span class="k">def</span> <span class="f">lf_caps</span>(x):
+    <span class="c"># If all caps title, vote Spam</span>
+    <span class="k">return</span> <span class="n">1</span> <span class="k">if</span> x[<span class="n">2</span>] &gt; <span class="n">0.8</span> <span class="k">else</span> -<span class="n">1</span>
+
+<span class="c"># 2. Build Label Matrix Lambda (n x m)</span>
+lfs = [lf_dollar, lf_link, lf_caps]
+m_lfs = <span class="k">len</span>(lfs)
+Lambda = np.<span class="f">zeros</span>((n_samples, m_lfs), dtype=int)
+
+<span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(n_samples):
+    <span class="k">for</span> j <span class="k">in</span> <span class="k">range</span>(m_lfs):
+        Lambda[i, j] = lfs[j](X[i])
+
+<span class="c"># 3. Simple Generative Majority / Accuracy-Weighted Label Model</span>
+<span class="c"># Calculate empirical agreement rates between LFs to weight reliability</span>
+weights = np.<span class="f">zeros</span>(m_lfs)
+<span class="k">for</span> j <span class="k">in</span> <span class="k">range</span>(m_lfs):
+    <span class="c"># Empirical accuracy estimate using inter-LF agreement</span>
+    active_mask = Lambda[:, j] != -<span class="n">1</span>
+    agreements = []
+    <span class="k">for</span> k <span class="k">in</span> <span class="k">range</span>(m_lfs):
+        <span class="k">if</span> j != k:
+            overlap = active_mask &amp; (Lambda[:, k] != -<span class="n">1</span>)
+            <span class="k">if</span> np.<span class="f">sum</span>(overlap) &gt; <span class="n">0</span>:
+                agreements.<span class="f">append</span>(np.<span class="f">mean</span>(Lambda[overlap, j] == Lambda[overlap, k]))
+    weights[j] = np.<span class="f">mean</span>(agreements) <span class="k">if</span> agreements <span class="k">else</span> <span class="n">0.5</span>
+
+<span class="c"># Compute soft probabilistic labels P(Y=1 | Lambda)</span>
+soft_labels = np.<span class="f">zeros</span>(n_samples)
+<span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(n_samples):
+    votes = Lambda[i]
+    active = votes != -<span class="n">1</span>
+    <span class="k">if</span> np.<span class="f">any</span>(active):
+        <span class="c"># Weighted log-odds combination</span>
+        log_odds = np.<span class="f">sum</span>(weights[active] * (votes[active] * <span class="n">2</span> - <span class="n">1</span>))
+        soft_labels[i] = <span class="n">1.0</span> / (<span class="n">1.0</span> + np.<span class="f">exp</span>(-log_odds))
+    <span class="k">else</span>:
+        soft_labels[i] = <span class="n">0.50</span>  <span class="c"># Default prior</span>
+
+<span class="c"># 4. Train downstream discriminative model on soft pseudo-labels</span>
+downstream_model = <span class="f">LogisticRegression</span>()
+<span class="c"># Convert soft labels to binary training targets (p &gt; 0.5)</span>
+y_weak = (soft_labels &gt; <span class="n">0.5</span>).<span class="f">astype</span>(int)
+downstream_model.<span class="f">fit</span>(X, y_weak)
+
+preds_downstream = downstream_model.<span class="f">predict</span>(X)
+acc = np.<span class="f">mean</span>(preds_downstream == y_true)
+
+lf_coverages = [np.<span class="f">mean</span>(Lambda[:, j] != -<span class="n">1</span>) * <span class="n">100</span> <span class="k">for</span> j <span class="k">in</span> <span class="k">range</span>(m_lfs)]
+
+<span class="k">print</span>(<span class="s">f&quot;Total unlabelled samples processed: {n_samples}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;LF 1 (Dollar) Coverage: {lf_coverages[0]:.1f}%&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;LF 2 (Link)   Coverage: {lf_coverages[1]:.1f}%&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;LF 3 (Caps)   Coverage: {lf_coverages[2]:.1f}%&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Overall Label Matrix Coverage: {np.mean(np.any(Lambda != -1, axis=1))*100:.1f}%&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Downstream Model Accuracy (trained on zero human labels!): {acc * 100:.1f}%&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Correlated labeling functions: If multiple LFs share common dependencies (e.g. three keyword variations of the same rule), naive independent label models double-count their evidence; correlation graphs are required.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Low coverage / high abstention: If LFs abstain on 90% of samples, the downstream model receives zero training signal on the majority of data.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Heuristic concept drift: As language or data distributions shift over time, hard-coded rules can degrade into high-error noise, requiring continuous LF monitoring.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>How does a Weak Supervision label model estimate the accuracy of labeling functions without access to ground truth labels?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By assuming all labeling functions are 100% accurate</span></button><button class="opt" type="button"><b>B</b><span>By analysing the statistical covariance, agreement, and disagreement patterns across multiple labeling functions on unlabelled data</span></button><button class="opt" type="button"><b>C</b><span>By asking human annotators to verify all samples</span></button><button class="opt" type="button"><b>D</b><span>By taking the Fourier transform of the label matrix</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Observable covariance between pairs of LFs equals the product of their unknown accuracies under conditional independence. Rank-1 matrix completion solves for accuracies without true labels.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>Why is a downstream deep neural network trained on weak labels rather than deploying the heuristic labeling functions directly as the production classifier?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The downstream network learns rich continuous feature embeddings, allowing it to generalise to instances where all labeling functions abstained</span></button><button class="opt" type="button"><b>B</b><span>Neural networks are required by law for classification</span></button><button class="opt" type="button"><b>C</b><span>Labeling functions cannot be executed in production</span></button><button class="opt" type="button"><b>D</b><span>Labeling functions only work on small datasets</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> LFs only fire on specific keywords or patterns and abstain on everything else. A downstream neural network learns feature representations that generalise to samples the rules never anticipated.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/self-training-and-pseudo-labels/"><small class="kicker">Concept</small><b>Self-training &amp; pseudo-labels</b></a><a href="../../concepts/active-learning/"><small class="kicker">Concept</small><b>Active learning</b></a><a href="../../concepts/label-propagation/"><small class="kicker">Concept</small><b>Label propagation</b></a><a href="../../concepts/markov-random-fields/"><small class="kicker">Concept</small><b>Markov random fields</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/active-learning/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Machine learning toolbox</small><b>Active learning</b></a>
+    <a class="pager-next" href="../../concepts/collaborative-filtering/"><small>Next · Machine learning toolbox <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Collaborative filtering</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Model-Based Reinforcement Learning, World Models, and AlphaZero · Learn · Yogesh Awate</title>
+<meta name="description" content="Model-based reinforcement learning frameworks that learn world models or leverage tree search to plan trajectories, exemplified by AlphaZero and MuZero.">
+<meta property="og:title" content="Model-Based Reinforcement Learning, World Models, and AlphaZero · Learn · Yogesh Awate">
+<meta property="og:description" content="Model-based reinforcement learning frameworks that learn world models or leverage tree search to plan trajectories, exemplified by AlphaZero and MuZero.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="model-based-rl-and-alphazero">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ai">Path 11 · AI</a> / Reinforcement learning / Lesson 15 of 42</span>
+    <h1 class="case-title">Model-Based Reinforcement Learning, World Models, and AlphaZero</h1>
+    <p class="lede rise" style="--d:3">Model-based reinforcement learning frameworks that learn world models or leverage tree search to plan trajectories, exemplified by AlphaZero and MuZero.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="3"><i><b></b></i>Advanced</span></span>
+      <span class="tagline">18 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>AI · Reinforcement learning</dd>
+          <dt>Level</dt><dd>Advanced</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Model-free reinforcement learning requires millions of environment interactions because it learns purely through trial and error. Model-Based RL constructs an internal predictive model of environment dynamics—predicting next states and rewards—enabling agents to imagine future trajectories, plan via tree search, and achieve superhuman mastery with zero human data, as demonstrated by AlphaZero and MuZero.</p>
+        <p>In model-free RL, the agent treats the environment as an opaque black box. In Model-Based RL, the agent explicitly models the transition dynamics $s_{t+1} \sim P(s_{t+1}|s_t, a_t)$ and reward function $r_t = R(s_t, a_t)$. With this model, the agent can generate synthetic experience (Dyna architecture) or simulate future action sequences using planning algorithms.</p>
+        <p>AlphaZero merged deep learning with Monte Carlo Tree Search: a dual-headed neural network takes a board state and simultaneously outputs move probabilities (policy prior $\mathbf{p}$) and expected game outcome (value $v$). MCTS uses the policy prior to guide tree expansion and the value network to evaluate leaf states without expensive rollouts. MuZero took this further by learning an abstract latent dynamics model directly from sensory observations without knowing the true game rules.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>A model-free driver navigates an unfamiliar city by wandering down random streets and bumping into cul-de-sacs until they accidentally find the destination after months. A model-based driver consults a mental map (a World Model), visualises alternative turns in their imagination, and selects the optimal route before ever taking their foot off the brake.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Learn transition and reward model: train neural networks to predict next latent state $\mathbf{z}_{t+1}$ and scalar reward $r_t$ given current state $\mathbf{z}_t$ and action $a_t$.</li><li>Initialize MCTS root node: project current observation into latent state $\mathbf{z}_0$ using representation network $h_\theta$.</li><li>Execute neural-guided MCTS: expand search trees using the learned dynamics model $g_\theta$ and evaluate leaf nodes using prediction network $f_\theta$.</li><li>Compute search policy $\pi$: set move probabilities proportional to visit counts: $\pi(a|s_0) \propto N(s_0, a)^{1/\tau}$.</li><li>Self-play and store games: play matches against self, recording trajectories $(\mathbf{x}_t, \pi_t, z_t)$ where $z_t$ is the final game outcome.</li><li>Train network end-to-end: minimise combined loss over policy cross-entropy, value mean-squared error, and reward prediction error.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>AlphaZero Joint Loss Function</h3><div class="formula">\mathcal{L}(\theta) = (z - v)^2 - \boldsymbol{\pi}^T \ln \mathbf{p} + c \|\theta\|^2</div><p>Jointly optimises value prediction $v$ against game outcome $z$, policy prior $\mathbf{p}$ against MCTS search policy $\boldsymbol{\pi}$, and $L_2$ weight decay.</p></li>
+          <li><h3>MuZero Recurrent Latent Formulation</h3><div class="formula">r_k, \mathbf{z}_k = g_\theta(\mathbf{z}_{k-1}, a_k), \quad \mathbf{p}_k, v_k = f_\theta(\mathbf{z}_k)</div><p>Dynamics model $g_\theta$ unrolls future latent states and rewards in imagination without decoding back to raw pixel space.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Model-based RL enables agents to imagine future consequences of actions before executing them in the physical world.</li><li>AlphaZero replaces hand-crafted heuristics with a unified policy-value network guided by MCTS self-play.</li><li>MuZero plans in abstract latent state space, eliminating the need to model irrelevant visual environment details.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">class</span> ToyAlphaZeroEvaluator:
+    <span class="s">&quot;&quot;&quot;Demonstrates joint policy-value evaluation and MCTS prior guidance.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, action_dim=<span class="n">4</span>):
+        <span class="k">self</span>.action_dim = action_dim
+
+    <span class="k">def</span> <span class="f">predict</span>(<span class="k">self</span>, state_vector):
+        <span class="s">&quot;&quot;&quot;Dual-head prediction: policy prior (p) and scalar value (v).&quot;&quot;&quot;</span>
+        <span class="c"># Simulated forward pass of dual-head ResNet</span>
+        raw_logits = np.<span class="f">dot</span>(state_vector, np.<span class="f">ones</span>((<span class="k">len</span>(state_vector), <span class="k">self</span>.action_dim)))
+        exp_logits = np.<span class="f">exp</span>(raw_logits - np.<span class="f">max</span>(raw_logits))
+        policy_prior = exp_logits / np.<span class="f">sum</span>(exp_logits)
+        
+        <span class="c"># Value in [-1, +1] representing win/loss expectation</span>
+        value = np.<span class="f">tanh</span>(np.<span class="f">sum</span>(state_vector) * <span class="n">0.1</span>)
+        <span class="k">return</span> policy_prior, value
+
+<span class="c"># Test state representation</span>
+state = np.<span class="f">array</span>([<span class="n">0.5</span>, -<span class="n">0.2</span>, <span class="n">1.2</span>, <span class="n">0.1</span>])
+model = <span class="f">ToyAlphaZeroEvaluator</span>(action_dim=<span class="n">4</span>)
+p_prior, v_val = model.<span class="f">predict</span>(state)
+
+<span class="c"># MCTS visit count policy target</span>
+mcts_visits = np.<span class="f">array</span>([<span class="n">120</span>, <span class="n">15</span>, <span class="n">310</span>, <span class="n">55</span>])
+target_policy = mcts_visits / np.<span class="f">sum</span>(mcts_visits)
+game_outcome = <span class="n">1.0</span>  <span class="c"># Player won</span>
+
+<span class="c"># AlphaZero loss calculation</span>
+loss_value = (game_outcome - v_val) ** <span class="n">2</span>
+loss_policy = -np.<span class="f">sum</span>(target_policy * np.<span class="f">log</span>(p_prior + <span class="n">1e-12</span>))
+total_loss = loss_value + loss_policy
+
+<span class="k">print</span>(<span class="s">f&quot;Predicted Policy Prior: {p_prior.round(3)}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;MCTS Search Policy:    {target_policy.round(3)}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Predicted Value:        {v_val:.3f} (True Outcome: {game_outcome})&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;AlphaZero Joint Loss:   {total_loss:.4f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Suffering from compounding model errors in long rollout horizons; small imperfections in the transition model multiply exponentially over multi-step planning.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Attempting to reconstruct full raw pixel frames in visual world models, wasting model capacity on task-irrelevant background pixels.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>What is the primary difference between model-free and model-based reinforcement learning?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Model-based RL explicitly learns or uses a model of environment transitions and rewards to plan, while model-free learns directly from trial-and-error experience</span></button><button class="opt" type="button"><b>B</b><span>Model-free RL uses decision trees, while model-based RL uses neural networks</span></button><button class="opt" type="button"><b>C</b><span>Model-free RL only runs on CPU, while model-based runs on GPU</span></button><button class="opt" type="button"><b>D</b><span>Model-based RL cannot be used for games</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Model-based methods learn or exploit environment dynamics $P(s'|s, a)$ to simulate future trajectories, enabling predictive planning.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>How does MuZero extend AlphaZero to environments where the game rules are completely unknown (e.g. Atari)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It learns an abstract latent dynamics model that predicts future latent states, rewards, and policy values directly from observation history</span></button><button class="opt" type="button"><b>B</b><span>It disables tree search entirely</span></button><button class="opt" type="button"><b>C</b><span>It converts Atari games into chess boards</span></button><button class="opt" type="button"><b>D</b><span>It asks human annotators for rules via crowd-sourcing</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> MuZero learns an internal dynamics function operating on latent embeddings, learning to predict task-relevant rewards and policies without explicit rule models.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>In AlphaZero's loss function, what acts as the training target for the neural network's policy head?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The uniform random distribution</span></button><button class="opt" type="button"><b>B</b><span>The normalised visit count distribution generated by the MCTS search algorithm</span></button><button class="opt" type="button"><b>C</b><span>Human grandmaster move databases</span></button><button class="opt" type="button"><b>D</b><span>The reward from the previous timestep</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> MCTS search acts as a powerful policy improvement operator; the neural network policy head is trained to mimic the high-quality MCTS visit distribution.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/monte-carlo-tree-search/"><small class="kicker">Concept</small><b>Monte Carlo Tree Search (MCTS)</b></a><a href="../../concepts/dynamic-programming-value-and-policy-iteration/"><small class="kicker">Concept</small><b>Value &amp; Policy Iteration</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/actor-critic-and-ppo/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · AI</small><b>Actor–Critic and PPO</b></a>
+    <a class="pager-next" href="../../concepts/prompting-and-in-context-learning/"><small>Next · AI <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Prompting &amp; In-Context Learning</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

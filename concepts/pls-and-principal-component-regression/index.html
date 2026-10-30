@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Partial Least Squares and Principal Component Regression · Learn · Yogesh Awate</title>
+<meta name="description" content="Solve severe multicollinearity and high dimensions by projecting features onto low-dimensional latent subspaces: compare unsupervised PCR with covariance-maximising supervised PLS.">
+<meta property="og:title" content="Partial Least Squares and Principal Component Regression · Learn · Yogesh Awate">
+<meta property="og:description" content="Solve severe multicollinearity and high dimensions by projecting features onto low-dimensional latent subspaces: compare unsupervised PCR with covariance-maximising supervised PLS.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="pls-and-principal-component-regression">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-regression">Path 03 · Regression</a> / Beyond the basics / Lesson 22 of 23</span>
+    <h1 class="case-title">Partial Least Squares and Principal Component Regression</h1>
+    <p class="lede rise" style="--d:3">Solve severe multicollinearity and high dimensions by projecting features onto low-dimensional latent subspaces: compare unsupervised PCR with covariance-maximising supervised PLS.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/ols-inference-t-tests-f-test-r2-and-adjusted-r2/">OLS Inference: t, F &amp; R-Squared</a> <a href="../../concepts/multicollinearity-and-vif/">Multicollinearity &amp; VIF</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Regression · Beyond the basics</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">When predictors outnumber samples (p >> n) or exhibit collinearity, OLS is rank-deficient or unstable. PCR projects onto top variance directions without looking at the target; PLS finds latent components that simultaneously maximise covariance between predictors and the target.</p>
+        <p>In modern high-dimensional settings—such as spectroscopy in chemometrics, genomics, or financial factor models—we frequently encounter hundreds or thousands of features with high inter-correlation, often exceeding sample size ($p \gg n$). Under these conditions, the ordinary least squares covariance matrix $X^T X$ is singular or ill-conditioned, blowing up coefficient variances and destroying generalisation.</p>
+        <p>Principal Component Regression (PCR) addresses this problem via a two-stage pipeline: first, perform Principal Component Analysis (PCA) on feature matrix $X$ to extract the top $k$ orthogonal principal components; second, fit an ordinary least squares regression using these $k$ components as predictors. Because components are orthogonal, multicollinearity vanishes completely, and dimension is reduced from $p$ to $k$.</p>
+        <p>However, PCR has a fundamental structural vulnerability: PCA is entirely unsupervised. It constructs components that maximise variance within $X$, paying zero attention to the response $y$. If the variance in $X$ is dominated by background sensor drift or irrelevant noise, PCR selects high-variance noise directions while discarding low-variance directions that actually contain the predictive signal.</p>
+        <p>Partial Least Squares (PLS) regression resolves this flaw by making the latent component extraction supervised. Instead of maximising variance $\operatorname{Var}(X w)$, PLS finds weight vectors $w$ that maximise squared sample covariance $\operatorname{Cov}(X w, y)^2$. By balancing feature variance with target correlation, PLS achieves equal or superior predictive performance to PCR using significantly fewer latent components.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine scouting a football team. PCR watches players practice alone in an empty field, selecting the players who run the greatest distance and move the fastest (unsupervised feature variance). But some of those players might be running aimlessly without passing or shooting at goal. PLS scouts players during an active match against an opponent, selecting the players whose runs directly result in goals and assists (covariance between player movement and match score).</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>PCR Estimator</h3><div class="formula">T_k = X V_k, \quad \hat{\gamma} = (T_k^T T_k)^{-1} T_k^T y, \quad \hat{\beta}_{\mathrm{PCR}} = V_k (T_k^T T_k)^{-1} T_k^T y</div><p>PCR projects predictors onto the first k eigenvectors of sample covariance X^T X, effectively performing OLS on orthogonal latent scores.</p></li>
+          <li><h3>PLS Objective Function</h3><div class="formula">\max_{\|w\| = 1} \operatorname{Cov}(X w, y)^2 = \max_{\|w\| = 1} \operatorname{Var}(X w) \operatorname{Corr}(X w, y)^2</div><p>PLS simultaneously balances feature variance with response correlation, ensuring latent directions carry both strong descriptive spread and predictive power.</p></li>
+          <li><h3>NIPALS Deflation Equations</h3><div class="formula">t_m = X_m w_m, \quad p_m = \frac{X_m^T t_m}{t_m^T t_m}, \quad X_{m+1} = X_m - t_m p_m^T, \quad y_{m+1} = y_m - t_m \frac{y_m^T t_m}{t_m^T t_m}</div><p>Subtracting the outer product of score t_m and loading p_m orthogonalises remaining feature space, preventing duplicate information in subsequent components.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>PCR performs unsupervised PCA on features followed by OLS on the top $k$ principal components, eliminating multicollinearity.</li><li>Vulnerability of PCR: PCA maximises feature variance without regard to $y$; if predictors with high variance carry no signal, PCR fails.</li><li>PLS performs supervised latent component extraction, finding directions that maximise squared covariance $\operatorname{Cov}(X w, y)^2$.</li><li>PLS typically matches or beats PCR using substantially fewer components because every extracted component is steered toward the response.</li><li>Both methods require careful standardisation of features prior to decomposition and selection of component count $k$ via cross-validation.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Principal Component Regression (PCR) vs Partial Least Squares (PLS) from scratch</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+n_samples = <span class="n">80</span>
+n_features = <span class="n">20</span>
+
+<span class="c"># Create collinear high-dimensional features</span>
+latent = np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">1</span>, (n_samples, <span class="n">3</span>))
+<span class="c"># Features: 10 correlate with latent 0, 5 with latent 1, 5 are high-variance noise</span>
+X_signal = latent @ np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">1</span>, (<span class="n">3</span>, <span class="n">15</span>))
+X_noise = np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">3.0</span>, (n_samples, <span class="n">5</span>))  <span class="c"># High variance noise!</span>
+X = np.<span class="f">hstack</span>([X_signal, X_noise])
+<span class="c"># True response depends ONLY on latent[0] (low total variance compared to noise)</span>
+y = <span class="n">3.0</span> * latent[:, <span class="n">0</span>] - <span class="n">2.0</span> * latent[:, <span class="n">1</span>] + np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">0.5</span>, n_samples)
+
+<span class="c"># Standardise X and centre y</span>
+X_std = (X - np.<span class="f">mean</span>(X, axis=<span class="n">0</span>)) / np.<span class="f">std</span>(X, axis=<span class="n">0</span>)
+y_std = y - np.<span class="f">mean</span>(y)
+
+<span class="c"># 1. PCR Implementation (Unsupervised SVD)</span>
+<span class="k">def</span> <span class="f">fit_pcr</span>(X, y, k):
+    U, S, Vt = np.linalg.<span class="f">svd</span>(X, full_matrices=<span class="k">False</span>)
+    V_k = Vt[:k, :].T
+    T_k = X @ V_k
+    gamma = np.linalg.<span class="f">lstsq</span>(T_k, y, rcond=<span class="k">None</span>)[<span class="n">0</span>]
+    beta_pcr = V_k @ gamma
+    <span class="k">return</span> beta_pcr
+
+<span class="c"># 2. PLS Implementation (Supervised NIPALS)</span>
+<span class="k">def</span> <span class="f">fit_pls</span>(X, y, k):
+    n, p = X.shape
+    X_m = X.<span class="f">copy</span>()
+    y_m = y.<span class="f">copy</span>()
+    
+    W = np.<span class="f">zeros</span>((p, k))
+    P = np.<span class="f">zeros</span>((p, k))
+    q = np.<span class="f">zeros</span>(k)
+    
+    <span class="k">for</span> m <span class="k">in</span> <span class="k">range</span>(k):
+        <span class="c"># Weight vector: covariance with target</span>
+        w_m = X_m.T @ y_m
+        w_m /= np.linalg.<span class="f">norm</span>(w_m)
+        t_m = X_m @ w_m
+        t_norm_sq = t_m @ t_m
+        
+        p_m = (X_m.T @ t_m) / t_norm_sq
+        q_m = (y_m @ t_m) / t_norm_sq
+        
+        <span class="c"># Deflate</span>
+        X_m -= np.<span class="f">outer</span>(t_m, p_m)
+        y_m -= t_m * q_m
+        
+        W[:, m] = w_m
+        P[:, m] = p_m
+        q[m] = q_m
+        
+    <span class="c"># Compute regression coefficients beta_pls</span>
+    <span class="c"># beta = W (P^T W)^{-1} q</span>
+    beta_pls = W @ np.linalg.<span class="f">inv</span>(P.T @ W) @ q
+    <span class="k">return</span> beta_pls
+
+<span class="c"># Compare PCR and PLS with k=3 components</span>
+k = <span class="n">3</span>
+beta_pcr = <span class="f">fit_pcr</span>(X_std, y_std, k)
+beta_pls = <span class="f">fit_pls</span>(X_std, y_std, k)
+
+pred_pcr = X_std @ beta_pcr
+pred_pls = X_std @ beta_pls
+
+r2_pcr = <span class="n">1.0</span> - np.<span class="f">sum</span>((y_std - pred_pcr)**<span class="n">2</span>) / np.<span class="f">sum</span>(y_std**<span class="n">2</span>)
+r2_pls = <span class="n">1.0</span> - np.<span class="f">sum</span>((y_std - pred_pls)**<span class="n">2</span>) / np.<span class="f">sum</span>(y_std**<span class="n">2</span>)
+
+<span class="k">print</span>(<span class="s">f&quot;Dataset shape: {X.shape} (high multicollinearity + high-variance noise)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;PCR (k={k}) R^2: {r2_pcr:.4f} (dragged down by high-variance noise features)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;PLS (k={k}) R^2: {r2_pls:.4f} (targets predictive covariance)&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Failing to standardise features: PCA and PLS are scale-sensitive; features with large arbitrary numerical ranges dominate components regardless of predictive power.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming PCR components are predictive: The first principal component has maximal variance, but may have zero correlation with the response target.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Information leakage in cross-validation: Decompositions (both PCA and PLS) must be computed strictly inside each training fold, not on the entire dataset.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>What is the fundamental difference in the objective function between PCR and PLS?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>PLS requires inverting the full p x p matrix while PCR never inverts matrices</span></button><button class="opt" type="button"><b>B</b><span>PCR can only be used for classification while PLS is only for regression</span></button><button class="opt" type="button"><b>C</b><span>PCR maximises variance Var(Xw) in an unsupervised manner, while PLS maximises squared covariance Cov(Xw, y)^2 with the target</span></button><button class="opt" type="button"><b>D</b><span>PCR is a non-linear method while PLS is strictly linear</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> PCR extracts components via PCA to maximise feature variance alone; PLS extracts components that simultaneously maximise feature variance and correlation with target y.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>Why might PCR perform poorly when high-variance sensor noise is added to a dataset?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The OLS stage will produce imaginary numbers</span></button><button class="opt" type="button"><b>B</b><span>The number of principal components cannot exceed the sample size</span></button><button class="opt" type="button"><b>C</b><span>PCA prioritises the noise features due to their large variance, putting them into the top components rather than the true signal</span></button><button class="opt" type="button"><b>D</b><span>SVD fails to converge when noise is present</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because PCA is unsupervised, it orders components strictly by variance. High-variance noise dominates the first principal components, pushing the predictive signal into discarded lower components.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../models/ols_linear_regression/"><small class="kicker">Regression</small><b>Linear regression (OLS)</b></a><a href="../../models/ridge_regression/"><small class="kicker">Regression</small><b>Ridge regression</b></a><a href="../../concepts/multicollinearity-and-vif/"><small class="kicker">Concept</small><b>Multicollinearity &amp; VIF</b></a><a href="../../concepts/poisson-and-tweedie-regression/"><small class="kicker">Concept</small><b>Poisson &amp; Tweedie reg.</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/isotonic-regression/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Regression</small><b>Isotonic regression</b></a>
+    <a class="pager-next" href="../../concepts/mars/"><small>Next · Regression <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>MARS</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

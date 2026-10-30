@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Neural Scaling Laws: Chinchilla Optimality, Compute Frontiers, and Power Laws · Learn · Yogesh Awate</title>
+<meta name="description" content="Predicting downstream model loss using empirical power laws across model parameters N, dataset tokens D, and FLOP compute budgets C.">
+<meta property="og:title" content="Neural Scaling Laws: Chinchilla Optimality, Compute Frontiers, and Power Laws · Learn · Yogesh Awate">
+<meta property="og:description" content="Predicting downstream model loss using empirical power laws across model parameters N, dataset tokens D, and FLOP compute budgets C.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="scaling-laws">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-neural">Path 08 · Deep learning</a> / Efficiency and scale / Lesson 39 of 42</span>
+    <h1 class="case-title">Neural Scaling Laws: Chinchilla Optimality, Compute Frontiers, and Power Laws</h1>
+    <p class="lede rise" style="--d:3">Predicting downstream model loss using empirical power laws across model parameters $N$, dataset tokens $D$, and FLOP compute budgets $C$.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">17 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Deep learning · Efficiency and scale</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Before training large language models that cost tens of millions of pounds in electricity and cloud GPU clusters, AI laboratories cannot rely on trial and error. Neural scaling laws (Kaplan et al., Chinchilla / Hoffmann et al.) demonstrate that cross-entropy loss follows strict, highly predictable mathematical power laws as compute, dataset size, and parameter counts scale over several orders of magnitude.</p>
+        <p>Empirical studies demonstrate that cross-entropy loss $L$ scales as a power law with three primary factors: parameter count $N$ (excluding embedding layers), training dataset size $D$ (in tokens), and total floating point compute budget $C \approx 6 N D$.</p>
+        <p>The Kaplan et al. (OpenAI, 2020) scaling formulation suggested that model parameters $N$ should scale significantly faster than dataset tokens $D$ ($N \propto C^{0.73}, D \propto C^{0.27}$), leading to massive under-trained models like GPT-3 (175B parameters trained on only 300B tokens).</p>
+        <p>Hoffmann et al. (DeepMind Chinchilla, 2022) identified a critical flaw in Kaplan's learning rate schedule assumptions. When properly tuned with cosine schedules matching the training horizon, model size $N$ and token count $D$ should scale in equal, 1:1 proportion: $N \propto C^{0.5}$ and $D \propto C^{0.5}$.</p>
+        <p>Under Chinchilla optimality, for every doubling of compute budget $C$, parameters and training tokens should both increase by $\sqrt{2} \approx 1.41\times$. This proved that earlier models were severely data-starved, leading modern architectures (Llama) to train compact models on trillions of tokens for low inference costs.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine launching a spacecraft to Mars. Rocket scientists do not guess how much liquid oxygen to pour into the tanks by trial and error on launch day; they calculate trajectory physics equations that accurately predict fuel consumption and escape velocities based on payload mass. Neural scaling laws provide that precise celestial navigation for pretraining large AI models.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Define total compute budget $C$: Calculate available floating point operations based on cluster size, training duration, and Model FLOPs Utilization (MFU).</li><li>Calculate optimal parameter count $N^*$ and token count $D^*$: Apply Chinchilla scaling coefficients ($N^* = G \cdot (C/6)^a, D^* = G^{-1} \cdot (C/6)^b$, where $a \approx b \approx 0.5$).</li><li>Configure cosine learning rate schedule: Set the learning rate decay horizon to match the target token count $D^*$ exactly, ensuring the learning rate decays to 10% of maximum at the final step.</li><li>Train small-scale calibration runs: Train small models across $10^{18}$ to $10^{20}$ FLOPs to fit precise empirical power law constants $(A, B, E, \alpha, \beta)$ for the specific architecture.</li><li>Extrapolate final loss: Project final cross-entropy loss and downstream benchmark capabilities prior to committing multi-million-dollar cluster compute resources.</li><li>Consider inference-optimal trade-offs: For models serving millions of customer queries, intentionally over-train beyond the compute-optimal point (e.g. Llama training a 7B model on 2T tokens) to minimise per-token inference serving latency.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Chinchilla Parametric Loss Power Law</h3><div class="formula">L(N, D) = E + \frac{A}{N^\alpha} + \frac{B}{D^\beta}</div><p>Decomposes cross-entropy loss into irreducible entropy $E$, parameter error decaying as $N^{-\alpha}$, and data error decaying as $D^{-\beta}$.</p></li>
+          <li><h3>Total Training Compute Approximation</h3><div class="formula">C \approx 6 N D \text{ FLOPs} \quad [\text{Forward: } 2 N D, \; \text{Backward: } 4 N D]</div><p>Estimates total pretraining floating point operations for standard Transformer decoder architectures.</p></li>
+          <li><h3>Compute-Optimal Parameter-Data Allocation</h3><div class="formula">N^* \propto C^a, \quad D^* \propto C^b, \quad a = \frac{\beta}{\alpha + \beta} \approx 0.50, \quad b = \frac{\alpha}{\alpha + \beta} \approx 0.50</div><p>Under optimal resource allocation where $\alpha \approx \beta$, model parameters $N$ and training tokens $D$ should scale at identical rates.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Neural scaling laws allow predicting large model loss from cheap, small-scale experimental runs.</li><li>Cross-entropy loss follows strict empirical power laws as compute, data, and parameters scale.</li><li>Chinchilla optimality dictates that model parameters and dataset tokens should scale in equal 1:1 proportion ($C^{0.5}$).</li><li>For heavy inference serving, over-training smaller models on vast token corpora (inference-optimal) minimises long-term serving costs.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">def</span> <span class="f">chinchilla_optimal_allocation</span>(compute_budget_flops: float):
+    <span class="s">&quot;&quot;&quot;Calculate compute-optimal parameters N* and tokens D* given total FLOPs budget.&quot;&quot;&quot;</span>
+    <span class="c"># Empirical Chinchilla constants (Hoffmann et al., 2022)</span>
+    <span class="c"># C = 6 * N * D, with N* proportional to C^0.5 and D* proportional to C^0.5</span>
+    <span class="c"># Ratio roughly yields ~20 tokens per parameter at compute optimality</span>
+    tokens_per_param = <span class="n">20.0</span>
+    
+    <span class="c"># C = 6 * N * (20 * N) = 120 * N^2  =&gt;  N* = sqrt(C / 120)</span>
+    optimal_params = np.<span class="f">sqrt</span>(compute_budget_flops / <span class="n">120.0</span>)
+    optimal_tokens = optimal_params * tokens_per_param
+    
+    <span class="k">return</span> optimal_params, optimal_tokens
+
+<span class="c"># Scenario 1: Moderate research cluster (1e23 FLOPs)</span>
+c1 = <span class="n">1e23</span>
+n1, d1 = <span class="f">chinchilla_optimal_allocation</span>(c1)
+<span class="k">print</span>(<span class="s">&quot;=== Compute Budget: 1e23 FLOPs ===&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Optimal Parameters: {n1 / 1e9:.2f} Billion&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Optimal Data Tokens: {d1 / 1e9:.2f} Billion Tokens (~{d1/n1:.0f} tokens/param)&quot;</span>)
+
+<span class="c"># Scenario 2: Frontier cluster scale (1e25 FLOPs)</span>
+c2 = <span class="n">1e25</span>
+n2, d2 = <span class="f">chinchilla_optimal_allocation</span>(c2)
+<span class="k">print</span>(<span class="s">&quot;\n=== Compute Budget: 1e25 FLOPs ===&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Optimal Parameters: {n2 / 1e9:.2f} Billion&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Optimal Data Tokens: {d2 / 1e9:.2f} Billion Tokens (~{d2/n2:.0f} tokens/param)&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Decoupling the learning rate schedule from token counts: The Chinchilla law assumes the cosine learning rate decays to minimum at token $D^*$; using a schedule that assumes 10x more tokens distorts optimality.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Confusing training-optimal with inference-optimal: Chinchilla optimises compute during training; if you serve 100M queries per day, spending more training compute to train a smaller model reduces production serving costs.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Data exhaustion limits: Assuming tokens can scale infinitely ignores the looming "data wall"—high-quality human language on the internet is finite.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>What was the major correction that the Chinchilla scaling law (Hoffmann et al., 2022) made to the earlier Kaplan et al. (2020) scaling law?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Chinchilla proved that neural networks should never exceed 1 million parameters</span></button><button class="opt" type="button"><b>B</b><span>Chinchilla showed that parameters and tokens should scale equally ($C^{0.5}$ and $C^{0.5}$), proving that previous models like GPT-3 were severely undertrained relative to their size</span></button><button class="opt" type="button"><b>C</b><span>Chinchilla proved that Transformers scale worse than RNNs</span></button><button class="opt" type="button"><b>D</b><span>Chinchilla showed that compute budget has zero correlation with validation loss</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Kaplan suggested scaling parameters 3x faster than tokens. Chinchilla proved both should scale equally ($\approx 1:1$), showing GPT-3 (175B params on 300B tokens) was data-starved.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>What is the relationship between model parameters $N$, dataset tokens $D$, and total training FLOPs $C$ for a standard Transformer?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$C \approx 6 N D$ FLOPs (2 FLOPs per parameter on forward pass, 4 on backward pass)</span></button><button class="opt" type="button"><b>B</b><span>$C = \log(N) \times \log(D)$</span></button><button class="opt" type="button"><b>C</b><span>$C = N + D$</span></button><button class="opt" type="button"><b>D</b><span>$C = 65,536 \times N$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Forward pass matrix multiplication requires $\approx 2 N$ operations per token; backward pass requires $\approx 4 N$ (computing parameter and activation gradients), totaling $\approx 6 N D$.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>Why do modern production models like Llama deliberately train far past the compute-optimal Chinchilla point (e.g. 7B params trained on 2 trillion tokens)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To compress the model into a zip archive</span></button><button class="opt" type="button"><b>B</b><span>Because Chinchilla laws do not apply to open-source models</span></button><button class="opt" type="button"><b>C</b><span>To optimise for inference: smaller models are drastically cheaper and faster to serve to millions of live users, justifying extra upfront training compute</span></button><button class="opt" type="button"><b>D</b><span>Because the engineers forgot to stop the training script</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Inference-optimal scaling invests more compute during training to compress capability into smaller models, minimising inference latency and GPU serving costs over billions of queries.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/the-pytorch-training-loop/"><small class="kicker">Concept</small><b>PyTorch training loop</b></a><a href="../../concepts/lora-and-parameter-efficient-fine-tuning/"><small class="kicker">Concept</small><b>LoRA &amp; PEFT</b></a><a href="../../concepts/quantisation/"><small class="kicker">Concept</small><b>Model quantisation</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/pruning-and-sparsity/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>Pruning &amp; sparsity</b></a>
+    <a class="pager-next" href="../../concepts/uncertainty-mc-dropout-and-deep-ensembles/"><small>Next · Deep learning <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>MC dropout &amp; deep ensembles</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

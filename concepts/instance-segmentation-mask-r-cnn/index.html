@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Instance Segmentation with Mask R-CNN: Extending Faster R-CNN with RoIAlign and Mask FCN · Learn · Yogesh Awate</title>
+<meta name="description" content="Detecting and segmenting individual object instances simultaneously using Faster R-CNN backbones, RoIAlign, and parallel pixel-level mask FCN heads.">
+<meta property="og:title" content="Instance Segmentation with Mask R-CNN: Extending Faster R-CNN with RoIAlign and Mask FCN · Learn · Yogesh Awate">
+<meta property="og:description" content="Detecting and segmenting individual object instances simultaneously using Faster R-CNN backbones, RoIAlign, and parallel pixel-level mask FCN heads.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="instance-segmentation-mask-r-cnn">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-vision">Path 09 · Computer vision</a> / Detection and segmentation / Lesson 24 of 37</span>
+    <h1 class="case-title">Instance Segmentation with Mask R-CNN: Extending Faster R-CNN with RoIAlign and Mask FCN</h1>
+    <p class="lede rise" style="--d:3">Detecting and segmenting individual object instances simultaneously using Faster R-CNN backbones, RoIAlign, and parallel pixel-level mask FCN heads.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="3"><i><b></b></i>Advanced</span></span>
+      <span class="tagline">18 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Computer vision · Detection and segmentation</dd>
+          <dt>Level</dt><dd>Advanced</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Semantic segmentation classifies every pixel into a category (e.g. "person"), but cannot distinguish between two people standing side by side. Object detection places a bounding box around each person, but cannot capture exact contours. Instance Segmentation achieves both: detecting each individual object instance and predicting a pixel-accurate binary mask for each. Mask R-CNN (He et al., 2017) solved this elegantly by adding a small Fully Convolutional Network mask branch in parallel with Faster R-CNN.</p>
+        <p>Instance segmentation follows a "Detect then Segment" paradigm: first detect candidate object bounding boxes, and then predict a binary segmentation mask inside each proposed box.</p>
+        <p>Mask R-CNN extends Faster R-CNN by adding a third parallel output branch for each Region of Interest (RoI): in addition to the classification branch (predicting class $c$) and bounding box regression branch (predicting box deltas), it adds a small Fully Convolutional Network (FCN) predicting a $K \times m \times m$ binary mask (where $m \times m$ is typically $28 \times 28$).</p>
+        <p>The critical enabler was RoIAlign: Faster R-CNN's original `RoIPool` used integer quantization (rounding $16.7$ to $16$), introducing up to half-pixel misalignments. While harmless for coarse bounding boxes, a 1-pixel shift completely misaligns fine object masks. RoIAlign uses bilinear interpolation at four sampling points per bin, preserving continuous floating-point spatial fidelity.</p>
+        <p>Decoupling mask and class prediction: For each RoI, the mask branch outputs $K$ independent binary masks (one for each class), without competition between classes. The classification branch independently decides which class label to apply, preventing inter-class competition from corrupting mask quality.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine a factory quality-control robot inspecting apples on a conveyor belt. Semantic segmentation says: "80% of the belt area is apple". Object detection says: "there are four separate rectangular apple crates". Instance segmentation assigns a distinct numbered label to each individual apple and shrink-wraps an exact plastic clingfilm contour around every single apple skin, isolating bruised spots to sub-millimeter precision.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Extract multi-scale feature pyramid: Pass image through ResNet with Feature Pyramid Network (FPN) generating feature maps at strides 4, 8, 16, 32.</li><li>Generate candidate proposals via RPN: Region Proposal Network proposes high-recall candidate bounding boxes.</li><li>Extract aligned RoI features via RoIAlign: Extract continuous $14 \times 14$ feature representations for each proposal using bilinear interpolation without quantization.</li><li>Classify and regress box (Standard Faster R-CNN): Pass features through fully connected layers to predict class logits and refined bounding box offsets.</li><li>Predict pixel-accurate masks in parallel: Pass $14 \times 14$ features through a 4-layer $3 \times 3$ FCN followed by a $2 \times 2$ deconvolution, emitting $28 \times 28$ binary mask logits for each class.</li><li>Paste and threshold mask: Threshold the target class mask at $0.5$ and paste back onto the original image within the predicted bounding box coordinates.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Mask R-CNN Multi-Task Total Loss</h3><div class="formula">\mathcal{L}_{\mathrm{total}} = \mathcal{L}_{\mathrm{cls}} + \mathcal{L}_{\mathrm{box}} + \mathcal{L}_{\mathrm{mask}}</div><p>Jointly trains classification loss $\mathcal{L}_{\mathrm{cls}}$, bounding box regression $\mathcal{L}_{\mathrm{box}}$, and pixel binary cross-entropy $\mathcal{L}_{\mathrm{mask}}$.</p></li>
+          <li><h3>Decoupled Binary Mask Cross-Entropy Loss</h3><div class="formula">\mathcal{L}_{\mathrm{mask}} = -\frac{1}{m^2} \sum_{i=1}^{m} \sum_{j=1}^{m} \left[ y_{ij} \ln \sigma(s_{ij}^k) + (1 - y_{ij}) \ln (1 - \sigma(s_{ij}^k)) \right]</div><p>Evaluates average binary cross-entropy strictly on the $k$-th mask slice corresponding to ground-truth class $k$, avoiding inter-class competition.</p></li>
+          <li><h3>RoIAlign Continuous Bilinear Interpolation</h3><div class="formula">f(x, y) = \sum_{i, j \in \{0, 1\}} w_{ij} \cdot f(\lfloor x \rfloor + i, \; \lfloor y \rfloor + j), \quad w_{ij} = |1 - i - (x - \lfloor x \rfloor)| \cdot |1 - j - (y - \lfloor y \rfloor)|</div><p>Samples exact continuous sub-pixel coordinates without spatial rounding, eliminating mask boundary quantization artifacts.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Mask R-CNN adds a small parallel FCN branch to Faster R-CNN to predict pixel masks.</li><li>RoIAlign eliminates spatial quantization by sampling four continuous bilinear points per bin.</li><li>Decouples class and mask prediction: predicts independent binary masks for each category.</li><li>Represents the industry standard foundation for instance segmentation in robotics and medical imaging.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> torch
+<span class="k">import</span> torch.nn <span class="k">as</span> nn
+<span class="k">import</span> torch.nn.functional <span class="k">as</span> F
+
+<span class="k">class</span> <span class="f">MiniMaskBranch</span>(nn.Module):
+    <span class="s">&quot;&quot;&quot;Educational demonstration of Mask R-CNN's FCN mask prediction branch.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, in_channels: int = <span class="n">256</span>, num_classes: int = <span class="n">4</span>, mask_res: int = <span class="n">14</span>):
+        <span class="k">super</span>().<span class="f">__init__</span>()
+        <span class="c"># 4 consecutive conv layers</span>
+        <span class="k">self</span>.convs = nn.<span class="f">Sequential</span>(
+            nn.<span class="f">Conv2d</span>(in_channels, in_channels, kernel_size=<span class="n">3</span>, padding=<span class="n">1</span>),
+            nn.<span class="f">ReLU</span>(),
+            nn.<span class="f">Conv2d</span>(in_channels, in_channels, kernel_size=<span class="n">3</span>, padding=<span class="n">1</span>),
+            nn.<span class="f">ReLU</span>()
+        )
+        <span class="c"># Deconvolution (transpose conv) to upsample 14x14 -&gt; 28x28</span>
+        <span class="k">self</span>.upsample = nn.<span class="f">ConvTranspose2d</span>(in_channels, in_channels, kernel_size=<span class="n">2</span>, stride=<span class="n">2</span>)
+        <span class="c"># 1x1 conv predicting K binary mask channels</span>
+        <span class="k">self</span>.mask_head = nn.<span class="f">Conv2d</span>(in_channels, num_classes, kernel_size=<span class="n">1</span>)
+
+    <span class="k">def</span> <span class="f">forward</span>(<span class="k">self</span>, roi_features: torch.Tensor):
+        <span class="c"># roi_features from RoIAlign: [num_rois, in_channels, 14, 14]</span>
+        h = <span class="k">self</span>.<span class="f">convs</span>(roi_features)
+        h = F.<span class="f">relu</span>(<span class="k">self</span>.<span class="f">upsample</span>(h))  <span class="c"># [num_rois, in_channels, 28, 28]</span>
+        mask_logits = <span class="k">self</span>.<span class="f">mask_head</span>(h)  <span class="c"># [num_rois, num_classes, 28, 28]</span>
+        <span class="k">return</span> mask_logits
+
+<span class="c"># Test mask branch on 2 RoIs (e.g. 2 detected pedestrians)</span>
+roi_feat = torch.<span class="f">randn</span>(<span class="n">2</span>, <span class="n">256</span>, <span class="n">14</span>, <span class="n">14</span>)
+mask_net = <span class="f">MiniMaskBranch</span>(in_channels=<span class="n">256</span>, num_classes=<span class="n">4</span>)
+masks = <span class="f">mask_net</span>(roi_feat)
+
+<span class="k">print</span>(<span class="s">f&quot;Input RoIAlign feature shape: {roi_feat.shape}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Output mask logits shape:     {masks.shape} (2 RoIs, 4 classes, 28x28 resolution)&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;Each class receives an independent binary mask channel, preventing inter-class competition!&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using `RoIPool` instead of `RoIAlign`: Using coarse integer RoIPool degrades mask average precision (AP) by up to 10 points due to spatial quantization misalignments.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Coupling mask channels with Softmax: Using Softmax across mask channels forces classes to compete for pixels, destroying overlapping mask contours; use per-pixel sigmoid binary cross-entropy.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Memory consumption during training: Predicting $28 \times 28$ masks across 512 candidate RoIs per image increases GPU VRAM consumption; tune sampled positive RoIs.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>What distinguishes Instance Segmentation from Semantic Segmentation?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Semantic segmentation predicts 3D bounding boxes</span></button><button class="opt" type="button"><b>B</b><span>Instance segmentation only works on black and white images</span></button><button class="opt" type="button"><b>C</b><span>Semantic segmentation classifies pixels into broad categories without distinguishing separate individual objects; Instance segmentation identifies and segments each distinct object instance independently</span></button><button class="opt" type="button"><b>D</b><span>Semantic segmentation runs on GPUs, while instance segmentation runs on CPUs</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Semantic segmentation assigns all "person" pixels to one class. Instance segmentation distinguishes Person 1, Person 2, and Person 3 with individual masks.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>Why did the authors of Mask R-CNN decouple mask prediction from classification by using per-pixel Sigmoid instead of Softmax across classes?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To prevent inter-class competition: the mask branch predicts binary shape masks for all classes independently, while the classification branch decides which mask to select</span></button><button class="opt" type="button"><b>B</b><span>Because PyTorch does not support Softmax on 2D maps</span></button><button class="opt" type="button"><b>C</b><span>Because Sigmoid runs faster than Softmax</span></button><button class="opt" type="button"><b>D</b><span>To reduce parameter counts to zero</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Decoupling avoids forcing classes to compete for pixels. The network learns pure binary object silhouettes independently for each candidate category.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>What was the specific bug in `RoIPool` that RoIAlign fixed in Mask R-CNN?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>A memory leak in the C++ CUDA kernel</span></button><button class="opt" type="button"><b>B</b><span>Coordinate quantization (rounding continuous floating point RoI boundaries to nearest integers), which introduced severe sub-pixel misalignments that ruined mask accuracy</span></button><button class="opt" type="button"><b>C</b><span>Division by zero when depth was negative</span></button><button class="opt" type="button"><b>D</b><span>Inability to process non-square proposals</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> RoIPool rounded floating coordinates to integers ($x/16$), introducing half-pixel errors that misaligned pixel-level mask boundaries with real object edges.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/two-stage-detectors-the-r-cnn-family/"><small class="kicker">Concept</small><b>The R-CNN family</b></a><a href="../../concepts/semantic-segmentation-fcn-and-u-net/"><small class="kicker">Concept</small><b>FCN &amp; U-Net</b></a><a href="../../concepts/segment-anything/"><small class="kicker">Concept</small><b>Segment Anything (SAM)</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/anchor-free-detection-and-detr/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Computer vision</small><b>Anchor-free &amp; DETR</b></a>
+    <a class="pager-next" href="../../concepts/segment-anything/"><small>Next · Computer vision <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Segment Anything (SAM)</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

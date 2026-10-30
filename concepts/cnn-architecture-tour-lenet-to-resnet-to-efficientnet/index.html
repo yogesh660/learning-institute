@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>CNN architecture tour: LeNet to ResNet to EfficientNet · Learn · Yogesh Awate</title>
+<meta name="description" content="The evolution of convolutional neural networks charts a thirty-year trajectory of overcoming vanishing gradients, parameter explosion, and computational bottlenecks. From Yann LeCun's LeNet-5 (1998) and Alex Krizhevsky's AlexNet (2012) to VGG's modular 3 3 factorisation, GoogLeNet's multi-scale Inception branches, He et al.'s revolutionary ResNet identity skip connections (x + F(x)), DenseNet's dense connectivity, and Tan &amp; Le's EfficientNet compound scaling (d, w, r), this architectural progression reveals the fundamental design principles that power deep visual representation learning.">
+<meta property="og:title" content="CNN architecture tour: LeNet to ResNet to EfficientNet · Learn · Yogesh Awate">
+<meta property="og:description" content="The evolution of convolutional neural networks charts a thirty-year trajectory of overcoming vanishing gradients, parameter explosion, and computational bottlenecks. From Yann LeCun's LeNet-5 (1998) and Alex Krizhevsky's AlexNet (2012) to VGG's modular 3 3 factorisation, GoogLeNet's multi-scale Inception branches, He et al.'s revolutionary ResNet identity skip connections (x + F(x)), DenseNet's dense connectivity, and Tan &amp; Le's EfficientNet compound scaling (d, w, r), this architectural progression reveals the fundamental design principles that power deep visual representation learning.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="cnn-architecture-tour-lenet-to-resnet-to-efficientnet">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-vision">Path 09 · Computer vision</a> / CNN foundations / Lesson 17 of 37</span>
+    <h1 class="case-title">CNN architecture tour: LeNet to ResNet to EfficientNet</h1>
+    <p class="lede rise" style="--d:3">The evolution of convolutional neural networks charts a thirty-year trajectory of overcoming vanishing gradients, parameter explosion, and computational bottlenecks. From Yann LeCun's LeNet-5 (1998) and Alex Krizhevsky's AlexNet (2012) to VGG's modular $3 \times 3$ factorisation, GoogLeNet's multi-scale Inception branches, He et al.'s revolutionary ResNet identity skip connections ($\mathbf{x} + \mathcal{F}(\mathbf{x})$), DenseNet's dense connectivity, and Tan & Le's EfficientNet compound scaling ($d, w, r$), this architectural progression reveals the fundamental design principles that power deep visual representation learning.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/receptive-field-stride-and-pooling/">Receptive Field &amp; Pooling</a> <a href="../../models/convolutional_neural_networks/">CNNs</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Computer vision · CNN foundations</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>1 model lesson</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">In 1998, a state-of-the-art convolutional network could process $32 \times 32$ greyscale cheques using 60,000 parameters. By 2012, AlexNet ignited the modern deep learning revolution by classifying 1.2 million high-resolution ImageNet photographs across dual GPUs using 60 million parameters. Yet training networks beyond twenty layers caused performance to degrade rapidly—not from overfitting, but from vanishing gradients. Overcoming this barrier demanded a series of architectural breakthroughs that reshaped how representations flow through deep computation graphs.</p>
+        <p>The pioneer era: LeNet and AlexNet: Yann LeCun established the core paradigm of modern computer vision in LeNet-5: alternating convolutional layers (for translation-equivariant local feature extraction) and subsampling layers (for spatial pooling), followed by fully connected classification heads. In 2012, AlexNet scaled this blueprint to ImageNet by replacing sigmoid non-linearities with Rectified Linear Units (ReLU) to avert gradient saturation, employing Dropout to combat overfitting, and implementing parallel split-convolution layers across two GPUs. AlexNet slashed the ImageNet top-5 error rate from $26\%$ to $16\%$, proving the viability of deep learning.</p>
+        <p>Factorisation and multi-scale branching: VGG and Inception: VGG (2014) introduced mathematical elegance and architectural discipline: replacing heterogeneous filter sizes ($11 \times 11, 5 \times 5$) with homogeneous stacks of $3 \times 3$ convolutions. VGG demonstrated that depth itself is a critical dimension of representational power. Simultaneously, GoogLeNet (Inception-v1) tackled computational efficiency by processing features across parallel multi-scale branches ($1 \times 1, 3 \times 3, 5 \times 5$, and max-pooling), introducing $1 \times 1$ "bottleneck" convolutions to project channel dimensions down prior to expensive spatial convolutions.</p>
+        <p>The residual revolution: ResNet and DenseNet: As researchers tried stacking VGG layers to 30 or 50 tiers, training error degraded—a fundamental optimisation failure. In 2015, Kaiming He et al. introduced ResNet (Residual Networks), transforming the layer learning objective from fitting an underlying mapping $\mathcal{H}(\mathbf{x})$ directly to fitting a residual function $\mathcal{F}(\mathbf{x}) = \mathcal{H}(\mathbf{x}) - \mathbf{x}$. By adding identity shortcut skip connections $\mathbf{y} = \mathbf{x} + \mathcal{F}(\mathbf{x})$, gradients can flow unimpeded directly from the loss back to early layers via the identity operator. ResNet trained models of 152 layers—and even 1,202 layers—winning ImageNet with a superhuman $3.57\%$ error rate. DenseNet pushed this logic further by concatenating all preceding feature maps directly into every subsequent layer.</p>
+        <p>Principled scaling: EfficientNet: After ResNet, practitioners scaled networks arbitrarily by making them deeper (more layers), wider (more channels), or higher resolution (larger input images). In 2019, Mingxing Tan and Quoc Le demonstrated that scaling only one dimension yields diminishing returns because receptive fields, channel capacities, and spatial pixel details must balance. EfficientNet introduced "compound scaling": using a compound coefficient $\phi$ to scale depth, width, and resolution simultaneously via fixed power ratios ($\alpha^\phi, \beta^\phi, \gamma^\phi$). Paired with lightweight inverted residual bottleneck blocks (MBConv), EfficientNet achieved state-of-the-art accuracy with up to $8.4\times$ fewer parameters and $6.1\times$ fewer FLOPs than previous architectures.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Think of designing a deep transport railway network across a vast continent. LeNet built the first small regional tram line. AlexNet proved that an industrial steam locomotive could traverse massive mountain ranges, though it burned enormous coal and belched smoke (millions of dense fully connected weights). VGG standardised the track gauges using uniform steel segments ($3 \times 3$ blocks), proving that longer trains carry more cargo. ResNet's identity skip connection was the invention of express bypass tracks: rather than forcing every single package to be unloaded and reloaded at every tiny local village station (where goods get lost or delayed by gradient degradation), express bypass tracks allow trains to shoot uninterrupted across hundreds of kilometres directly to destination terminals, dropping off local freight along the way. EfficientNet acts like modern transport logistics optimisation: rather than blindly making trains twice as long without upgrading station platforms or track width, it balances train length, carriage width, and track gauge in mathematical harmony.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>ResNet residual block formulation and gradient highway</h3><div class="formula">\mathbf{y} = \mathcal{F}(\mathbf{x}, \{W_i\}) + \mathbf{x} \implies \frac{\partial \mathcal{E}}{\partial \mathbf{x}} = \frac{\partial \mathcal{E}}{\partial \mathbf{y}} \left(\frac{\partial \mathcal{F}}{\partial \mathbf{x}} + I\right)</div><p>The gradient of the loss $\mathcal{E}$ with respect to input $\mathbf{x}$ contains the additive term $\frac{\partial \mathcal{E}}{\partial \mathbf{y}} \cdot I$. Even if the Jacobian term $\frac{\partial \mathcal{F}}{\partial \mathbf{x}}$ vanishes or approaches zero across dozens of layers, the identity operator $I$ guarantees that gradients flow cleanly back to shallow layers without vanishing.</p></li>
+          <li><h3>Depthwise separable convolution parameter reduction</h3><div class="formula">\frac{|\Theta_{\text{depthwise-separable}}|}{|\Theta_{\text{standard}}|} = \frac{k^2 \cdot C_{\text{in}} + C_{\text{in}} \cdot C_{\text{out}}}{k^2 \cdot C_{\text{in}} \cdot C_{\text{out}}} = \frac{1}{C_{\text{out}}} + \frac{1}{k^2}</div><p>A standard convolution requires $k^2 \cdot C_{\text{in}} \cdot C_{\text{out}}$ weights. Factoring into a depthwise convolution ($k^2 \cdot C_{\text{in}}$) followed by a $1 \times 1$ pointwise projection ($C_{\text{in}} \cdot C_{\text{out}}$) reduces computational cost and parameter storage by approximately $8\times$ to $9\times$ for $3 \times 3$ kernels.</p></li>
+          <li><h3>EfficientNet compound scaling equations</h3><div class="formula">\text{Depth: } d = \alpha^\phi, \quad \text{Width: } w = \beta^\phi, \quad \text{Resolution: } r = \gamma^\phi, \quad \text{s.t. } \alpha \beta^2 \gamma^2 \approx 2, \; \alpha \ge 1, \beta \ge 1, \gamma \ge 1</div><p>Doubling network depth doubles FLOPs ($d \propto \text{FLOP}$), whereas doubling width or resolution quadruples FLOPs ($w^2, r^2 \propto \text{FLOP}$). Constraining $\alpha \beta^2 \gamma^2 \approx 2$ ensures that for any integer compound coefficient $\phi$, total computational requirements scale predictably as $2^\phi$.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>LeNet and AlexNet established the foundational paradigm of convolutions, pooling, and non-linearities for visual recognition.</li><li>VGG demonstrated that stacks of uniform $3 \times 3$ convolutions reduce parameter counts while increasing network depth and non-linear expressiveness.</li><li>ResNet introduced identity shortcut connections ($\mathbf{x} + \mathcal{F}(\mathbf{x})$), creating gradient highways that solved the degradation problem for ultra-deep networks.</li><li>Depthwise separable convolutions decouple spatial filtering from cross-channel combination, slashing FLOPs by over $80\%$.</li><li>EfficientNet compound scaling balances depth, width, and input image resolution simultaneously, achieving superior accuracy with fewer parameters.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Comparative architectural parameter and FLOP analysis across generations</span>
+<span class="c"># Consider an intermediate layer mapping 64 input channels to 128 output channels</span>
+H, W = <span class="n">28</span>, <span class="n">28</span>
+c_in, c_out = <span class="n">64</span>, <span class="n">128</span>
+k = <span class="n">3</span>
+
+<span class="c"># 1. Standard Convolution (VGG-style: 3x3 conv)</span>
+params_vgg = (k * k * c_in) * c_out
+flops_vgg = <span class="n">2</span> * (k * k * c_in) * c_out * (H * W)
+
+<span class="c"># 2. ResNet Bottleneck block (1x1 down -&gt; 3x3 spatial -&gt; 1x1 up)</span>
+c_bottleneck = <span class="n">32</span>
+params_resnet = (<span class="n">1</span> * <span class="n">1</span> * c_in * c_bottleneck) + (k * k * c_bottleneck * c_bottleneck) + (<span class="n">1</span> * <span class="n">1</span> * c_bottleneck * c_out)
+flops_resnet = <span class="n">2</span> * params_resnet * (H * W)
+
+<span class="c"># 3. Depthwise Separable Conv (MobileNet / EfficientNet MBConv)</span>
+<span class="c"># Depthwise 3x3 conv (per channel) + Pointwise 1x1 conv (cross channel)</span>
+params_dw = (k * k * c_in)
+params_pw = (<span class="n">1</span> * <span class="n">1</span> * c_in * c_out)
+params_mobilenet = params_dw + params_pw
+flops_mobilenet = <span class="n">2</span> * (params_dw + params_pw) * (H * W)
+
+<span class="k">print</span>(<span class="s">f&quot;{'Architecture Style':&lt;25} | {'Parameters':&lt;12} | {'FLOPs (MFLOPs)':&lt;15} | {'Rel Parameter Cost':&lt;18}&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;-&quot;</span> * <span class="n">75</span>)
+<span class="k">print</span>(<span class="s">f&quot;{'VGG Standard (3x3)':&lt;25} | {params_vgg:&lt;12,d} | {flops_vgg / 1e6:&lt;15.2f} | 100.0%&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;{'ResNet Bottleneck':&lt;25} | {params_resnet:&lt;12,d} | {flops_resnet / 1e6:&lt;15.2f} | {params_resnet / params_vgg * 100:.1f}%&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;{'Depthwise Separable':&lt;25} | {params_mobilenet:&lt;12,d} | {flops_mobilenet / 1e6:&lt;15.2f} | {params_mobilenet / params_vgg * 100:.1f}%\n&quot;</span>)
+
+<span class="c"># 4. Demonstrate ResNet Identity Skip Connection forward pass in NumPy</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+x = np.random.<span class="f">randn</span>(<span class="n">2</span>, c_in, H, W).<span class="f">astype</span>(np.float32)  <span class="c"># batch of 2</span>
+
+<span class="c"># Simulated residual branch weights (initialized small)</span>
+W_res = np.random.<span class="f">randn</span>(c_in, c_in).<span class="f">astype</span>(np.float32) * <span class="n">0.01</span>
+
+<span class="c"># Compute residual mapping F(x) = W @ x</span>
+F_x = np.<span class="f">einsum</span>(<span class="s">'oi,bihw-&gt;bohw'</span>, W_res, x)
+
+<span class="c"># Add identity shortcut connection: y = F(x) + x</span>
+y = F_x + x
+
+<span class="c"># Verify gradient highway: dy/dx = dF/dx + I</span>
+diff_norm = np.linalg.<span class="f">norm</span>(y - x) / np.linalg.<span class="f">norm</span>(x)
+<span class="k">print</span>(<span class="s">f&quot;Residual branch relative perturbation: {diff_norm:.4f}&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;Verified: Identity skip connection preserves input signal when residual weights are small!&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Blindly scaling a single architectural dimension: Making a network excessively deep without increasing width or image resolution leads to diminishing returns and early feature saturation.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Placing activation non-linearities on the identity skip connection path: Placing ReLU or batch normalisation directly onto the identity shortcut breaks the clean gradient highway, re-introducing gradient degradation in ultra-deep networks.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Over-parameterising fully connected classifier heads: Retaining AlexNet/VGG-style dense linear heads ($4096 \times 4096$) wastes hundreds of megabytes of memory; always terminate modern convolutional backbones with Global Average Pooling.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Mismatching channel dimensions in residual addition: Adding $\mathcal{F}(\mathbf{x}) + \mathbf{x}$ requires both tensors to have identical spatial shapes and channel counts; when downsampling, apply a strided $1 \times 1$ projection on the shortcut path.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Ignoring FLOP and memory latency divergence: Inverted bottleneck blocks reduce theoretical FLOPs dramatically, but high channel expansion factors can increase memory bandwidth traffic on resource-constrained edge hardware.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>Why did ResNet's identity skip connection ($\mathbf{y} = \mathcal{F}(\mathbf{x}) + \mathbf{x}$) resolve the vanishing gradient degradation problem in very deep networks?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It quantises all activations into 8-bit integers</span></button><button class="opt" type="button"><b>B</b><span>It removes all convolution operations from the computation graph</span></button><button class="opt" type="button"><b>C</b><span>It forces the loss function to be strictly convex</span></button><button class="opt" type="button"><b>D</b><span>The additive identity shortcut provides an uninterrupted gradient pathway ($\frac{\partial \mathcal{E}}{\partial \mathbf{y}} \cdot I$) back to early layers, preventing gradients from vanishing even across hundreds of layers</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because $\frac{\partial \mathbf{y}}{\partial \mathbf{x}} = \frac{\partial \mathcal{F}}{\partial \mathbf{x}} + I$, backpropagating gradients incorporates an additive identity term $I$. Even if the learned residual transformation has near-zero gradients, error signals flow unimpeded directly back through the identity highway.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>What core insight guided VGG to replace large kernels ($11 \times 11, 7 \times 7$) with stacks of $3 \times 3$ convolutions?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Large kernels cannot be computed using floating-point operations</span></button><button class="opt" type="button"><b>B</b><span>GPU memory caches only support matrix sizes that are multiples of three</span></button><button class="opt" type="button"><b>C</b><span>Stacking two $3 \times 3$ kernels covers the same $5 \times 5$ spatial receptive field while using $28\%$ fewer parameters and incorporating two non-linear activations instead of one</span></button><button class="opt" type="button"><b>D</b><span>Stacking $3 \times 3$ filters eliminates the need for zero-padding</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Stacking multiple $3 \times 3$ convolutions maintains receptive field coverage while dramatically reducing total weights ($2 \times 3^2 = 18$ vs $5^2 = 25$) and injecting additional non-linear activation functions that increase expressive power.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>How does a depthwise separable convolution achieve substantial parameter reduction compared to a standard convolution?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By decoupling spatial filtering (depthwise convolution per channel) from cross-channel feature fusion ($1 \times 1$ pointwise convolution)</span></button><button class="opt" type="button"><b>B</b><span>By discarding all odd-numbered feature channels during the forward pass</span></button><button class="opt" type="button"><b>C</b><span>By computing fast Fourier transforms over downsampled spatial patches</span></button><button class="opt" type="button"><b>D</b><span>By converting all convolutional weights to binary values ($-1, +1$)</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Standard convolutions filter spatial patterns and mix channels simultaneously ($k^2 C_{\text{in}} C_{\text{out}}$). Depthwise separable convolutions separate this into a depthwise spatial filter ($k^2 C_{\text{in}}$) followed by a $1 \times 1$ channel projection ($C_{\text{in}} C_{\text{out}}$), slashing parameters by roughly $k^2$ (8 to 9 times for $3 \times 3$).</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q4</span>What is the central premise behind EfficientNet's compound scaling principle?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Resolution should always be fixed at $224 \times 224$ pixels regardless of model size</span></button><button class="opt" type="button"><b>B</b><span>Scaling depth, channel width, and input image resolution concurrently with fixed power coefficients yields superior accuracy and efficiency compared to scaling any single dimension in isolation</span></button><button class="opt" type="button"><b>C</b><span>Only the fully connected classification head should receive additional parameters</span></button><button class="opt" type="button"><b>D</b><span>Networks should be made infinitely deep while keeping width fixed at 64 channels</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Tan and Le proved that scaling depth, width, and resolution independently suffers from rapid diminishing returns. Compound scaling balances all three dimensions simultaneously based on available computational resources.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/residual-networks-and-skip-connections/"><small class="kicker">Concept</small><b>ResNets and skip connections</b></a><a href="../../concepts/receptive-field-stride-and-pooling/"><small class="kicker">Concept</small><b>Receptive Field &amp; Pooling</b></a><a href="../../concepts/the-pytorch-training-loop/"><small class="kicker">Concept</small><b>PyTorch training loop</b></a><a href="../../concepts/one-stage-detectors-ssd-and-yolo/"><small class="kicker">Concept</small><b>SSD &amp; YOLO</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/receptive-field-stride-and-pooling/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Computer vision</small><b>Receptive Field &amp; Pooling</b></a>
+    <a class="pager-next" href="../../concepts/depthwise-separable-convolutions-and-convnext/"><small>Next · Computer vision <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Depthwise convs &amp; ConvNeXt</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

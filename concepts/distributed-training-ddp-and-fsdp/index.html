@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Distributed Deep Learning: Distributed Data Parallel (DDP) and Fully Sharded Data Parallel (FSDP) · Learn · Yogesh Awate</title>
+<meta name="description" content="Scaling model training across multiple GPUs and nodes using Ring-AllReduce DDP and parameter/gradient/optimiser sharding with FSDP (ZeRO).">
+<meta property="og:title" content="Distributed Deep Learning: Distributed Data Parallel (DDP) and Fully Sharded Data Parallel (FSDP) · Learn · Yogesh Awate">
+<meta property="og:description" content="Scaling model training across multiple GPUs and nodes using Ring-AllReduce DDP and parameter/gradient/optimiser sharding with FSDP (ZeRO).">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="distributed-training-ddp-and-fsdp">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-neural">Path 08 · Deep learning</a> / Practical deep learning / Lesson 16 of 42</span>
+    <h1 class="case-title">Distributed Deep Learning: Distributed Data Parallel (DDP) and Fully Sharded Data Parallel (FSDP)</h1>
+    <p class="lede rise" style="--d:3">Scaling model training across multiple GPUs and nodes using Ring-AllReduce DDP and parameter/gradient/optimiser sharding with FSDP (ZeRO).</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="3"><i><b></b></i>Advanced</span></span>
+      <span class="tagline">18 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Deep learning · Practical deep learning</dd>
+          <dt>Level</dt><dd>Advanced</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Modern deep learning models have expanded beyond the compute and memory limits of any single GPU. A 70-billion parameter LLM requires over 140 GB of RAM just to store 16-bit weights—before accounting for gradients and optimiser states, which require another 560 GB. Scaling training across dozens or thousands of GPUs requires distributed parallelism: Distributed Data Parallel (DDP) scales throughput for models that fit in one GPU, while Fully Sharded Data Parallel (FSDP) shards models across GPU memories.</p>
+        <p>Single-GPU training is constrained by three memory consumers: Model Parameters, Gradients, and Optimiser States (in AdamW, 2 states per parameter: momentum $m$ and variance $v$, requiring $12$ bytes per parameter in mixed precision). Activations add further memory scaling with batch size.</p>
+        <p>Distributed Data Parallel (DDP) replicates the entire model on each GPU. Each GPU processes an independent minibatch slice, computes local gradients, and synchronises gradients across all GPUs using an efficient Ring-AllReduce collective communication algorithm before taking an identical optimiser step.</p>
+        <p>DDP fails when the model itself exceeds a single GPU's VRAM. ZeRO (Zero Redundancy Optimiser) and PyTorch FSDP (Fully Sharded Data Parallel) eliminate memory redundancy by sharding states across ranks: ZeRO-1 shards optimiser states (4x memory reduction), ZeRO-2 shards optimiser states and gradients (8x reduction), and ZeRO-3 / FSDP shards optimiser states, gradients, and model parameters.</p>
+        <p>In FSDP, during the forward pass, each layer's parameters are gathered via `AllGather` across ranks just in time for computation, and immediately discarded after the layer computes. Backward passes repeat this just-in-time gather and execute `ReduceScatter` to compute and shard gradients.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine transcribing an ancient 1,000-page manuscript. In DDP, each scribe receives an identical copy of the full dictionary (model weights) and transcribes a separate chapter (minibatch); at the end of each hour, all scribes shout out their edits and average their notes. In FSDP, the dictionary itself is so enormous that no scribe has room on their desk for it; each scribe holds 1/8th of the dictionary pages in their drawer, swapping pages on demand right when a word needs translating and immediately discarding it afterwards.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Evaluate model memory footprint: Compute total memory $M_{\mathrm{total}} = 16 \times N_{\mathrm{params}} + M_{\mathrm{activations}}$. If $M_{\mathrm{model}} \le V_{\mathrm{GPU}}$, select DDP; otherwise select FSDP.</li><li>Initialise process group: Call `torch.distributed.init_process_group(backend="nccl")` using NVIDIA Collective Communications Library (NCCL).</li><li>Wrap model: Wrap PyTorch module with `torch.nn.parallel.DistributedDataParallel(model)` or `FullyShardedDataParallel(model, auto_wrap_policy=...)`.</li><li>Distribute data partitions: Attach a `DistributedSampler(dataset)` to the DataLoader to ensure each GPU receives a disjoint, non-overlapping batch slice.</li><li>Set epoch seed in sampler: Call `sampler.set_epoch(epoch)` at the start of each epoch to shuffle batches uniquely across GPUs.</li><li>Execute synchronized training step: Compute forward pass, backward pass (which triggers overlapping communication and computation), and optimiser step.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Total Training Memory Overhead (AdamW FP16/FP32)</h3><div class="formula">M_{\mathrm{static}} = \underbrace{2 N}_{\text{FP16 Weights}} + \underbrace{2 N}_{\text{FP16 Grads}} + \underbrace{4 N}_{\text{FP32 Master Weights}} + \underbrace{8 N}_{\text{Adam } m, v} = 16 N \text{ bytes}</div><p>Static memory overhead scales at 16 bytes per parameter, requiring 160GB for a 10-billion parameter model before activations.</p></li>
+          <li><h3>Ring-AllReduce Communication Volume</h3><div class="formula">\operatorname{Comm}_{\mathrm{AllReduce}} = 2 \cdot \left( \frac{K - 1}{K} \right) \cdot N_{\mathrm{bytes}}</div><p>The communication volume per GPU in Ring-AllReduce is completely independent of the total GPU count $K$, scaling only with model byte size.</p></li>
+          <li><h3>FSDP (ZeRO-3) Memory per GPU Rank</h3><div class="formula">M_{\mathrm{FSDP}}(K) = \frac{16 N}{K} + M_{\mathrm{layer\_buffer}} + M_{\mathrm{activations}}</div><p>Shards all parameters, gradients, and optimiser states across $K$ GPUs, scaling static memory linearly down with cluster size.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>DDP replicates the model on each GPU, synchronising gradients using Ring-AllReduce communication.</li><li>DDP communication volume is independent of the number of GPUs, scaling near-linearly with cluster size.</li><li>FSDP (ZeRO-3) shards parameters, gradients, and optimiser states, dividing static memory consumption by $K$ GPUs.</li><li>FSDP enables training models with tens of billions of parameters that cannot fit into single GPU VRAM.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> torch
+<span class="k">import</span> torch.nn <span class="k">as</span> nn
+<span class="k">import</span> os
+
+<span class="c"># Conceptual structure of PyTorch Distributed Data Parallel (DDP)</span>
+<span class="k">def</span> <span class="f">ddp_training_step</span>():
+    <span class="c"># In practice: run with 'torchrun --nproc_per_node=4 script.py'</span>
+    <span class="c"># Environment variables set automatically by torchrun</span>
+    local_rank = <span class="f">int</span>(os.environ.<span class="f">get</span>(<span class="s">&quot;LOCAL_RANK&quot;</span>, <span class="n">0</span>))
+    world_size = <span class="f">int</span>(os.environ.<span class="f">get</span>(<span class="s">&quot;WORLD_SIZE&quot;</span>, <span class="n">1</span>))
+    
+    <span class="k">print</span>(<span class="s">f&quot;Initialising rank {local_rank} of {world_size}&quot;</span>)
+    
+    <span class="c"># Model definition</span>
+    model = nn.<span class="f">Sequential</span>(
+        nn.<span class="f">Linear</span>(<span class="n">512</span>, <span class="n">1024</span>),
+        nn.<span class="f">ReLU</span>(),
+        nn.<span class="f">Linear</span>(<span class="n">1024</span>, <span class="n">10</span>)
+    )
+    
+    <span class="c"># In multi-GPU environment:</span>
+    <span class="c"># torch.distributed.init_process_group(&quot;nccl&quot;)</span>
+    <span class="c"># model = nn.parallel.DistributedDataParallel(model.cuda(local_rank), device_ids=[local_rank])</span>
+    <span class="c"># sampler = torch.utils.data.distributed.DistributedSampler(dataset)</span>
+    
+    <span class="k">print</span>(<span class="s">&quot;DDP model wrapped: Gradients will synchronize via Ring-AllReduce on .backward()&quot;</span>)
+
+<span class="f">ddp_training_step</span>()</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Forgetting `sampler.set_epoch(epoch)`: If omitted, the DistributedSampler generates the exact same batch sequence on every epoch, degrading training stochasticity.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using PyTorch DataParallel (`nn.DataParallel`): Single-process multi-threaded `DataParallel` suffers from Python GIL bottlenecks and master-GPU memory imbalance; always use DDP.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Communication overhead on slow interconnects: Running FSDP across nodes connected by standard 1Gbps Ethernet causes GPUs to spend 90% of their time waiting for network AllGather; high-speed InfiniBand (RoCE) is essential.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>Why is `DistributedDataParallel` (DDP) far superior to `DataParallel` (DP) in PyTorch?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>DDP does not require backpropagation</span></button><button class="opt" type="button"><b>B</b><span>DDP only works on MacBooks</span></button><button class="opt" type="button"><b>C</b><span>DP cannot train neural networks with more than 1 layer</span></button><button class="opt" type="button"><b>D</b><span>DDP spawns a separate Python process per GPU, avoiding Python GIL contention and distributing communication evenly without single-GPU bottlenecks</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> `DataParallel` runs in a single process subject to Python GIL locks and concentrates all gradient aggregation on GPU 0. DDP spawns separate processes with decentralized Ring-AllReduce.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>When must an engineer switch from standard DDP to FSDP (Fully Sharded Data Parallel)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>When training on images instead of text</span></button><button class="opt" type="button"><b>B</b><span>When the model parameters, gradients, and optimiser states exceed the VRAM of a single physical GPU</span></button><button class="opt" type="button"><b>C</b><span>When training on CPUs only</span></button><button class="opt" type="button"><b>D</b><span>When the learning rate is less than 0.001</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> DDP requires the full model to fit on every single GPU. When a model is too large for one GPU, FSDP shards parameters and states across multiple GPUs.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>What collective communication operation does DDP use to synchronize gradients across GPUs?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Ring-AllReduce, where gradients are averaged in parallel with communication volume independent of GPU count</span></button><button class="opt" type="button"><b>B</b><span>Single master database write</span></button><button class="opt" type="button"><b>C</b><span>Point-to-point HTTP POST requests</span></button><button class="opt" type="button"><b>D</b><span>Broadcasting weights from rank 0 only</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Ring-AllReduce divides tensor buffers into chunks passed around a logical ring of nodes, achieving optimal network bandwidth utilization.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/the-pytorch-training-loop/"><small class="kicker">Concept</small><b>PyTorch training loop</b></a><a href="../../concepts/mixed-precision-and-training-stability/"><small class="kicker">Concept</small><b>Mixed precision training</b></a><a href="../../concepts/vanishing-and-exploding-gradients-clipping/"><small class="kicker">Concept</small><b>Vanishing/exploding gradients</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/data-augmentation-and-mixup/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>Data augmentation &amp; Mixup</b></a>
+    <a class="pager-next" href="../../models/convolutional_neural_networks/"><small>Next · Deep learning <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>CNNs</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

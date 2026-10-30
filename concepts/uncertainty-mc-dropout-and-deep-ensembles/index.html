@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Uncertainty Estimation in Deep Learning: Monte Carlo Dropout and Deep Ensembles · Learn · Yogesh Awate</title>
+<meta name="description" content="Distinguishing epistemic (model) and aleatoric (data) uncertainty in deep neural networks using Bayesian MC Dropout and Deep Ensembles.">
+<meta property="og:title" content="Uncertainty Estimation in Deep Learning: Monte Carlo Dropout and Deep Ensembles · Learn · Yogesh Awate">
+<meta property="og:description" content="Distinguishing epistemic (model) and aleatoric (data) uncertainty in deep neural networks using Bayesian MC Dropout and Deep Ensembles.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="uncertainty-mc-dropout-and-deep-ensembles">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-neural">Path 08 · Deep learning</a> / Reliability / Lesson 40 of 42</span>
+    <h1 class="case-title">Uncertainty Estimation in Deep Learning: Monte Carlo Dropout and Deep Ensembles</h1>
+    <p class="lede rise" style="--d:3">Distinguishing epistemic (model) and aleatoric (data) uncertainty in deep neural networks using Bayesian MC Dropout and Deep Ensembles.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="3"><i><b></b></i>Advanced</span></span>
+      <span class="tagline">18 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Deep learning · Reliability</dd>
+          <dt>Level</dt><dd>Advanced</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Standard deep neural networks are notoriously overconfident: a model outputting a 99% softmax probability for cancer diagnosis might be completely guessing when presented with an unseen scan artifact. In high-stakes applications (autonomous driving, medical diagnosis, algorithmic trading), models must know when they do not know. Monte Carlo Dropout and Deep Ensembles provide practical, scalable frameworks for quantifying predictive uncertainty.</p>
+        <p>Uncertainty decomposes into two distinct types: Aleatoric Uncertainty (inherent noise in the data, e.g. blurry image sensors or ambient audio static, which cannot be reduced by collecting more data) and Epistemic Uncertainty (uncertainty due to lack of knowledge in regions where training data is sparse, which can be eliminated with more data).</p>
+        <p>Standard deep networks collapse epistemic uncertainty by learning a single point estimate of weights $\theta$. True Bayesian neural networks place a prior distribution over weights $P(\theta)$ and infer the posterior $P(\theta \mid \mathcal{D})$, but exact Bayesian inference is computationally intractable.</p>
+        <p>Monte Carlo Dropout (Gal & Ghahramani, 2016) shows that keeping standard dropout active during inference is mathematically equivalent to approximate variational inference in a deep Gaussian process. Passing the same test sample through the network $T$ times with random dropout masks samples from the predictive distribution.</p>
+        <p>Deep Ensembles (Lakshminarayanan et al.) train $M$ identical neural networks from different random initialisations. Ensembles explore distinct local minima in the non-convex loss landscape, consistently outperforming MC Dropout in calibration, out-of-distribution (OOD) detection, and uncertainty quality.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine consulting a medical panel. A single deterministic doctor might glance at a scan and state with 99% confidence that no tumour exists. If you consult an ensemble of five independent doctors, and three see nothing while two express grave concern, their disagreement immediately reveals high epistemic uncertainty, prompting a mandatory biopsy.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Decompose target uncertainty: Determine whether the application requires aleatoric uncertainty (predicting conditional variance $\sigma^2(x)$) or epistemic uncertainty (model disagreement).</li><li>Select uncertainty architecture: Choose MC Dropout (low training cost; single model with stochastic inference) or Deep Ensembles (highest quality; $M=5$ models trained independently).</li><li>Predict aleatoric variance: Modify the network output layer to emit both mean $\mu(x)$ and log-variance $s(x) = \log \sigma^2(x)$, trained with Gaussian negative log-likelihood loss.</li><li>Execute stochastic inference: In MC Dropout, enable `model.train()` or keep `p > 0` active during test time; pass query input $T$ times ($T \approx 30\text{--}50$). In Ensembles, pass query through all $M$ models.</li><li>Compute predictive statistics: Calculate the predictive mean $\bar{y} = \frac{1}{M} \sum_m \mu_m(x)$ and total predictive variance $\operatorname{Var}(y) = \text{Aleatoric} + \text{Epistemic}$.</li><li>Trigger safety fallback: If epistemic variance exceeds safety threshold $\tau_{\mathrm{safe}}$, route the sample to human expert review or fail-safe operational modes.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Total Predictive Variance Decomposition (Law of Total Variance)</h3><div class="formula">\operatorname{Var}(y^* \mid x^*) = \underbrace{\frac{1}{M} \sum_{m=1}^M \sigma_m^2(x^*)}_{\text{Expected Aleatoric Noise}} + \underbrace{\frac{1}{M} \sum_{m=1}^M \left( \mu_m(x^*) - \bar{\mu}(x^*) \right)^2}_{\text{Epistemic Model Disagreement}}</div><p>Total predictive uncertainty decomposes into the mean predicted data variance (aleatoric) plus the variance of individual model predictions (epistemic).</p></li>
+          <li><h3>Aleatoric Heteroscedastic Negative Log-Likelihood Loss</h3><div class="formula">\mathcal{L}_{\mathrm{NLL}}(x_i, y_i) = \frac{1}{2} \exp(-s_i) \| y_i - \mu_i \|^2 + \frac{1}{2} s_i, \quad s_i = \ln \sigma_i^2</div><p>Forces the network to learn input-dependent noise variance $\sigma_i^2$ without requiring explicit variance ground-truth labels.</p></li>
+          <li><h3>MC Dropout Variational Approximation</h3><div class="formula">P(y^* \mid x^*, \mathcal{D}) \approx \frac{1}{T} \sum_{t=1}^T f_{\hat{\mathbf{W}}_t}(x^*), \quad \hat{\mathbf{W}}_t = \mathbf{W} \cdot \operatorname{diag}(z_t), \; z_{t,j} \sim \operatorname{Bernoulli}(1 - p)</div><p>Averaging $T$ forward passes with stochastic dropout masks approximates marginalisation over the weight posterior.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Standard deep networks produce overconfident probabilities; uncertainty estimation quantifies predictive confidence.</li><li>Aleatoric uncertainty measures inherent data noise; Epistemic uncertainty measures model lack of knowledge.</li><li>MC Dropout enables dropout during test time, sampling stochastic forward passes to approximate Bayesian posteriors.</li><li>Deep Ensembles train multiple randomly-initialised models, providing state-of-the-art uncertainty and OOD detection.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> torch
+<span class="k">import</span> torch.nn <span class="k">as</span> nn
+<span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">class</span> <span class="f">MCDropoutModel</span>(nn.Module):
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, in_features: int = <span class="n">1</span>, hidden: int = <span class="n">64</span>):
+        <span class="k">super</span>().<span class="f">__init__</span>()
+        <span class="k">self</span>.net = nn.<span class="f">Sequential</span>(
+            nn.<span class="f">Linear</span>(in_features, hidden),
+            nn.<span class="f">ReLU</span>(),
+            nn.<span class="f">Dropout</span>(p=<span class="n">0.3</span>),  <span class="c"># Dropout kept active during inference!</span>
+            nn.<span class="f">Linear</span>(hidden, hidden),
+            nn.<span class="f">ReLU</span>(),
+            nn.<span class="f">Dropout</span>(p=<span class="n">0.3</span>),
+            nn.<span class="f">Linear</span>(hidden, <span class="n">1</span>)
+        )
+
+    <span class="k">def</span> <span class="f">forward</span>(<span class="k">self</span>, x: torch.Tensor):
+        <span class="k">return</span> <span class="k">self</span>.<span class="f">net</span>(x)
+
+    <span class="k">def</span> <span class="f">predict_uncertainty</span>(<span class="k">self</span>, x: torch.Tensor, n_samples: int = <span class="n">30</span>):
+        <span class="s">&quot;&quot;&quot;Execute MC Dropout: force dropout active and sample T passes.&quot;&quot;&quot;</span>
+        <span class="k">self</span>.<span class="f">train</span>()  <span class="c"># Crucial: enable dropout during inference</span>
+        preds = []
+        <span class="k">with</span> torch.<span class="f">no_grad</span>():
+            <span class="k">for</span> _ <span class="k">in</span> <span class="k">range</span>(n_samples):
+                preds.<span class="f">append</span>(<span class="k">self</span>.<span class="f">forward</span>(x))
+        <span class="c"># [n_samples, batch, 1]</span>
+        preds_tensor = torch.<span class="f">stack</span>(preds)
+        mean = preds_tensor.<span class="f">mean</span>(dim=<span class="n">0</span>)
+        epistemic_var = preds_tensor.<span class="f">var</span>(dim=<span class="n">0</span>)
+        <span class="k">return</span> mean, epistemic_var
+
+<span class="c"># Simulate test query</span>
+model = <span class="f">MCDropoutModel</span>()
+x_test = torch.<span class="f">tensor</span>([[<span class="n">2.5</span>]])  <span class="c"># Point in unseen region</span>
+mean, variance = model.<span class="f">predict_uncertainty</span>(x_test, n_samples=<span class="n">50</span>)
+
+<span class="k">print</span>(<span class="s">f&quot;MC Dropout Predictive Mean:     {mean.item():.3f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Epistemic Variance (Disagreement): {variance.item():.4f}&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;High variance indicates model uncertainty in out-of-distribution regions!&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Disabling dropout at test time: Calling `model.eval()` disables standard dropout, collapsing MC Dropout back into a single deterministic point estimate.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming softmax probability equals confidence: In neural networks, an out-of-distribution point can produce 99.9% softmax probability due to unconstrained logit extrapolation.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Computational inference cost: Running 50 MC Dropout passes or 5 ensemble models multiplies inference latency by $5\times$ to $50\times$.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>What is the fundamental difference between Aleatoric Uncertainty and Epistemic Uncertainty?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Aleatoric uncertainty only applies to text models</span></button><button class="opt" type="button"><b>B</b><span>Aleatoric uncertainty is inherent data noise that cannot be reduced by collecting more data; Epistemic uncertainty reflects model lack of knowledge and shrinks with more data</span></button><button class="opt" type="button"><b>C</b><span>Epistemic uncertainty can only be calculated with decision trees</span></button><button class="opt" type="button"><b>D</b><span>Aleatoric uncertainty is measured in decibels, while epistemic is measured in pixels</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Aleatoric is sensor/data noise (irreducible). Epistemic is model parameter uncertainty in sparse data regions, which vanishes as infinite training data is observed.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>How does Monte Carlo Dropout (Gal & Ghahramani, 2016) estimate uncertainty at test time?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By retraining the network on every test sample</span></button><button class="opt" type="button"><b>B</b><span>By dropping out random input images from the test set</span></button><button class="opt" type="button"><b>C</b><span>By calculating the determinant of the Hessian</span></button><button class="opt" type="button"><b>D</b><span>By keeping dropout layers active during inference and passing the same query through the network multiple times to observe output variance across stochastic masks</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> MC Dropout keeps dropout active during inference, using repeated forward passes to approximate sampling from a deep Gaussian process posterior.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>Why do Deep Ensembles consistently outperform MC Dropout in real-world benchmark evaluations?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Deep ensembles use fewer parameters than single models</span></button><button class="opt" type="button"><b>B</b><span>Ensemble models start from different random initialisations and explore diverse, distant local minima in the loss landscape, whereas MC Dropout samples locally around a single minimum</span></button><button class="opt" type="button"><b>C</b><span>Ensembles guarantee zero prediction error</span></button><button class="opt" type="button"><b>D</b><span>Ensembles do not require training</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> MC Dropout perturbs weights around a single basin of attraction. Deep ensembles explore entirely different functional modes in the loss surface, capturing diverse hypotheses.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/conformal-prediction/"><small class="kicker">Concept</small><b>Conformal prediction</b></a><a href="../../concepts/bayesian-networks/"><small class="kicker">Concept</small><b>Bayesian networks</b></a><a href="../../concepts/the-pytorch-training-loop/"><small class="kicker">Concept</small><b>PyTorch training loop</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/scaling-laws/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>Scaling laws for LLMs</b></a>
+    <a class="pager-next" href="../../concepts/interpretability-saliency-grad-cam-probing/"><small>Next · Deep learning <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Saliency, Grad-CAM &amp; probing</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>ANOVA and Post-Hoc Tests · Learn · Yogesh Awate</title>
+<meta name="description" content="Compare means across three or more groups simultaneously with the F-test, and pinpoint specific differences using Tukey's HSD post-hoc procedure.">
+<meta property="og:title" content="ANOVA and Post-Hoc Tests · Learn · Yogesh Awate">
+<meta property="og:description" content="Compare means across three or more groups simultaneously with the F-test, and pinpoint specific differences using Tukey's HSD post-hoc procedure.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="anova-and-post-hoc-tests">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-statistics">Path 02 · Statistics</a> / Hypothesis testing / Lesson 16 of 51</span>
+    <h1 class="case-title">ANOVA and Post-Hoc Tests</h1>
+    <p class="lede rise" style="--d:3">Compare means across three or more groups simultaneously with the F-test, and pinpoint specific differences using Tukey's HSD post-hoc procedure.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/hypothesis-testing-and-p-values/">Hypothesis Tests &amp; p-Values</a> <a href="../../concepts/z-test-and-t-tests/">z-Test and Student's t-Tests</a> <a href="../../concepts/type-i-ii-errors-power-and-sample-size/">Errors, Power and Sample Size</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Statistics · Hypothesis testing</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>2 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Running repeated pair-wise t-tests across multiple groups rapidly inflates the false alarm rate to unacceptable levels. Analysis of Variance (ANOVA) solves this multi-group dilemma with a single omnibus F-test that partitions total variability into between-group signal and within-group noise. When the omnibus test reveals significant variance, post-hoc procedures like Tukey's Honest Significant Difference (HSD) safely isolate which specific pairs differ.</p>
+        <p>Imagine an e-commerce platform testing three landing page layouts: A, B, and C. They recruit 30 users per layout (90 users total) and measure session duration in seconds. Average engagement is 45.2 seconds for Layout A, 49.1 seconds for Layout B, and 54.0 seconds for Layout C.</p>
+        <p>A novice analyst might test Layout A vs B, A vs C, and B vs C with three separate two-sample $t$-tests. However, conducting three independent tests at a 5% false positive threshold gives a combined risk of at least one false alarm of $1 - (1 - 0.05)^3 \approx 14.3\%$. With 10 groups, there are 45 pairwise comparisons, pushing the chance of at least one false discovery over 90%!</p>
+        <p>ANOVA prevents this multiplicity trap by evaluating all groups at once. It asks a single question: is the variance between group averages substantially larger than the natural random variance among users within each group? For our landing page data, the ratio of between-group variance to within-group variance produces an $F$-statistic of 10.18, with an omnibus p-value of $0.0001$. This establishes that the layouts do not perform identically. Next, Tukey's HSD examines the pairs with family-wise error protection: it reveals that Layout C significantly outperforms Layout A ($p &lt; 0.0001$) and Layout B ($p = 0.0399$), while Layouts A and B do not significantly differ from each other ($p = 0.1114$).</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>ANOVA is like a stadium metal detector that first checks whether anyone in a crowd is carrying metal; only when the master alarm rings do guards search individuals one by one.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Define the omnibus hypotheses: $H_0: \mu_1 = \mu_2 = \dots = \mu_K$ versus $H_1$: at least one group mean differs.</li><li>Verify ANOVA assumptions: independent observations, approximately normal distributions within each group, and homogeneity of variances (homoscedasticity).</li><li>Calculate the sum of squares between groups ($SS_B$) and sum of squares within groups ($SS_W$).</li><li>Divide each sum of squares by its respective degrees of freedom to obtain Mean Square Between ($MS_B$) and Mean Square Within ($MS_W$).</li><li>Compute the variance ratio $F = MS_B / MS_W$ and obtain the omnibus p-value from the $F(K-1, N-K)$ distribution.</li><li>If the omnibus test rejects $H_0$, run Tukey's HSD to identify which pairwise differences are statistically significant while preserving family-wise error control.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Total Variance Partitioning</h3><div class="formula">$$SS_T = SS_B + SS_W \implies \sum_{i=1}^K \sum_{j=1}^{n_i} (X_{ij} - \bar{X}_{\cdot\cdot})^2 = \sum_{i=1}^K n_i (\bar{X}_{i\cdot} - \bar{X}_{\cdot\cdot})^2 + \sum_{i=1}^K \sum_{j=1}^{n_i} (X_{ij} - \bar{X}_{i\cdot})^2$$</div><p>Here $X_{ij}$ is observation $j$ in group $i$, $\bar{X}_{i\cdot}$ is the sample mean of group $i$, $\bar{X}_{\cdot\cdot}$ is the grand mean across all observations, and $n_i$ is group size. The total sum of squares $SS_T$ splits cleanly into between-group explained variation $SS_B$ and within-group residual variation $SS_W$.</p></li>
+          <li><h3>The ANOVA F-Statistic</h3><div class="formula">$$F = \frac{MS_B}{MS_W} = \frac{SS_B / (K - 1)}{SS_W / (N - K)} \sim F(K - 1, \, N - K)$$</div><p>Mean squares divide sums of squares by their degrees of freedom: $K - 1$ for groups and $N - K$ for residuals. Under the null hypothesis of equal means, both $MS_B$ and $MS_W$ provide independent, unbiased estimates of the common population variance $\sigma^2$, yielding $F \approx 1$. When true differences exist between group means, $MS_B$ inflates, pushing $F \gg 1$.</p></li>
+          <li><h3>Tukey's Honest Significant Difference (HSD)</h3><div class="formula">$$q = \frac{\bar{X}_i - \bar{X}_j}{\sqrt{MS_W / n}} \sim q(K, \, N - K) \implies \text{HSD} = q_{\alpha, K, N-K} \sqrt{\frac{MS_W}{n}}$$</div><p>Tukey's post-hoc procedure evaluates studentised range statistics $q$ across all group pairs. Comparing mean differences against the critical HSD threshold guarantees that the family-wise error rate across all $K(K-1)/2$ pairwise comparisons is strictly capped at $\alpha$.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>ANOVA prevents multiple-testing error inflation by evaluating group differences in a single omnibus test.</li><li>Rejecting the null hypothesis in ANOVA indicates that at least one group mean differs, but does not identify which specific groups drive the difference.</li><li>Tukey's HSD controls the family-wise error rate across all pairwise contrasts while providing greater statistical power than Bonferroni correction.</li><li>When group variances are substantially unequal, standard ANOVA breaks down; Welch's ANOVA should be used instead.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">import</span> scipy.stats <span class="k">as</span> stats
+
+rng = np.random.<span class="f">default_rng</span>(<span class="n">42</span>)
+n = <span class="n">30</span>
+
+<span class="c"># User engagement duration (seconds) across three landing page layouts</span>
+layout_a = rng.<span class="f">normal</span>(loc=<span class="n">45.0</span>, scale=<span class="n">10.0</span>, size=n)
+layout_b = rng.<span class="f">normal</span>(loc=<span class="n">48.0</span>, scale=<span class="n">10.0</span>, size=n)
+layout_c = rng.<span class="f">normal</span>(loc=<span class="n">55.0</span>, scale=<span class="n">10.0</span>, size=n)
+
+<span class="c"># 1. One-way ANOVA omnibus test</span>
+f_stat, p_anova = stats.<span class="f">f_oneway</span>(layout_a, layout_b, layout_c)
+
+<span class="c"># 2. Tukey's HSD post-hoc test</span>
+tukey = stats.<span class="f">tukey_hsd</span>(layout_a, layout_b, layout_c)
+
+<span class="k">print</span>(<span class="s">f&quot;ANOVA F-statistic: {f_stat:.3f}, p-value: {p_anova:.4e}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Layout A mean: {np.mean(layout_a):.1f}s, B: {np.mean(layout_b):.1f}s, C: {np.mean(layout_c):.1f}s&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Tukey p-values -&gt; A vs B: {tukey.pvalue[0, 1]:.4f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;                 A vs C: {tukey.pvalue[0, 2]:.4e}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;                 B vs C: {tukey.pvalue[1, 2]:.4f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Conducting multiple independent two-sample $t$-tests instead of ANOVA, drastically inflating false discovery rates.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Running post-hoc pairwise comparisons after a non-significant omnibus ANOVA $F$-test (data dredging).</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Ignoring severe heteroscedasticity: when group sample sizes are unequal and variances differ, standard ANOVA false positive rates become untrustworthy.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using standard one-way ANOVA on repeated-measures data, failing to remove between-subject variance.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>Why is conducting multiple independent two-sample $t$-tests problematic when comparing five experimental groups?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because degrees of freedom become negative</span></button><button class="opt" type="button"><b>B</b><span>Because Student's t-distribution cannot handle more than 20 observations</span></button><button class="opt" type="button"><b>C</b><span>Because two-sample t-tests cannot compute standard errors</span></button><button class="opt" type="button"><b>D</b><span>Because running 10 pairwise tests compounds the probability of making at least one Type I error to over 40%</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> With 5 groups there are $\binom{5}{2} = 10$ pairs. Testing each at $\alpha = 0.05$ produces an overall family-wise error rate of $1 - (1 - 0.05)^{10} \approx 40.1\%$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>Under the null hypothesis that all group means are identical ($\mu_1 = \mu_2 = \dots = \mu_K$), what value is the ANOVA $F$-statistic expected to take on average?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Equal to the number of groups $K$</span></button><button class="opt" type="button"><b>B</b><span>Approximately 1</span></button><button class="opt" type="button"><b>C</b><span>Approximately 0</span></button><button class="opt" type="button"><b>D</b><span>Equal to the sample size $N$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Under $H_0$, both between-group mean square $MS_B$ and within-group mean square $MS_W$ estimate the same population variance $\sigma^2$, so their ratio $F = MS_B / MS_W \approx 1$.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>What is the primary role of a post-hoc procedure like Tukey's HSD following a significant ANOVA test?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To recalculate the degrees of freedom for the F-statistic</span></button><button class="opt" type="button"><b>B</b><span>To transform skewed data into Gaussian distributions</span></button><button class="opt" type="button"><b>C</b><span>To identify exactly which specific pairs of group means differ while controlling the family-wise error rate</span></button><button class="opt" type="button"><b>D</b><span>To determine whether the data is normally distributed</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The omnibus ANOVA test only indicates that at least one group mean differs. Tukey's HSD isolates the specific differing pairs without inflating the false positive rate.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q4</span>An experiment compares 4 treatments with 25 participants per treatment (total $N = 100$). What are the numerator and denominator degrees of freedom for the ANOVA $F$-test?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>3 and 96</span></button><button class="opt" type="button"><b>B</b><span>4 and 25</span></button><button class="opt" type="button"><b>C</b><span>3 and 100</span></button><button class="opt" type="button"><b>D</b><span>4 and 96</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Numerator degrees of freedom are $K - 1 = 4 - 1 = 3$. Denominator degrees of freedom are $N - K = 100 - 4 = 96$.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/non-parametric-tests-mann-whitney-wilcoxon-kruskal-wallis/"><small class="kicker">Concept</small><b>Non-Parametric Rank Tests</b></a><a href="../../concepts/multiple-testing-bonferroni-holm-benjamini-hochberg/"><small class="kicker">Concept</small><b>Multiple Testing Corrections</b></a><a href="../../concepts/confidence-intervals/"><small class="kicker">Concept</small><b>Confidence intervals</b></a><a href="../../concepts/feature-selection/"><small class="kicker">Concept</small><b>Feature selection</b></a><a href="../../models/decision_tree_regressor/"><small class="kicker">Regression</small><b>Decision tree regressor</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/chi-square-tests/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Statistics</small><b>Chi-Square Tests</b></a>
+    <a class="pager-next" href="../../concepts/non-parametric-tests-mann-whitney-wilcoxon-kruskal-wallis/"><small>Next · Statistics <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Non-Parametric Rank Tests</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

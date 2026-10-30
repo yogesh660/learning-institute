@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Modern Object Detection: Anchor-Free Detectors (FCOS) and Detection Transformers (DETR) · Learn · Yogesh Awate</title>
+<meta name="description" content="Eliminating anchor box hyperparameters and Non-Maximum Suppression using centre-point regression (FCOS) and bipartite matching Transformers (DETR).">
+<meta property="og:title" content="Modern Object Detection: Anchor-Free Detectors (FCOS) and Detection Transformers (DETR) · Learn · Yogesh Awate">
+<meta property="og:description" content="Eliminating anchor box hyperparameters and Non-Maximum Suppression using centre-point regression (FCOS) and bipartite matching Transformers (DETR).">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="anchor-free-detection-and-detr">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-vision">Path 09 · Computer vision</a> / Detection and segmentation / Lesson 23 of 37</span>
+    <h1 class="case-title">Modern Object Detection: Anchor-Free Detectors (FCOS) and Detection Transformers (DETR)</h1>
+    <p class="lede rise" style="--d:3">Eliminating anchor box hyperparameters and Non-Maximum Suppression using centre-point regression (FCOS) and bipartite matching Transformers (DETR).</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="3"><i><b></b></i>Advanced</span></span>
+      <span class="tagline">18 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Computer vision · Detection and segmentation</dd>
+          <dt>Level</dt><dd>Advanced</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">For years, object detection was dominated by anchor boxes: practitioners had to manually tune dozens of hyperparameters (anchor scales, aspect ratios, IoU match thresholds), while complex hand-crafted post-processing like Non-Maximum Suppression (NMS) remained mandatory. Anchor-free architectures (FCOS) and Detection Transformers (DETR; Carion et al., 2020) redefined the paradigm, framing object detection as direct point regression or set prediction via bipartite matching.</p>
+        <p>Anchor-based detectors suffer from fundamental flaws: anchors require heavy heuristic tuning, introduce severe positive-negative sample imbalance, and require non-differentiable NMS post-processing.</p>
+        <p>FCOS (Fully Convolutional One-Stage Object Detection; Tian et al.) eliminates anchors entirely: it treats every location $(x, y)$ on the feature map inside a ground-truth box as a positive training sample, directly regressing the 4 distances to box edges $(l, t, r, b)$. A novel "Centerness" branch down-weights low-quality bounding boxes far from object centres without anchor boxes.</p>
+        <p>DETR (DEtection TRansformer; Carion et al.) completely eliminates both anchors and NMS, formulating detection as a direct Set Prediction problem. An image passes through a CNN backbone and a Transformer encoder-decoder. A fixed set of $N$ learned Object Queries interact with image tokens via cross-attention.</p>
+        <p>During training, DETR uses the Hungarian Algorithm to find a unique, optimal one-to-one Bipartite Matching between the $N$ predictions and ground-truth objects. This one-to-one assignment guarantees that each physical object is predicted by exactly one query, making NMS completely unnecessary.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine ordering food at a busy restaurant. An anchor-based system is like an over-cautious waiter guessing that you might want 9 possible predefined combinations (small salad, large burger, medium fries) and bringing 9 plates to the table, forcing you to throw away 8 duplicates with a spatula (NMS). DETR is like an intelligent chef who simply receives your table order, glances at the kitchen, and delivers exactly the dishes you requested with zero waste.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Extract multi-scale features: Pass image through CNN backbone (ResNet) and flatten spatial feature maps into sequence tokens.</li><li>Transformer Encoder self-attention: Model global context and pairwise feature dependencies across all spatial locations.</li><li>Pass learned Object Queries to Decoder: Provide $N$ fixed learned embedding vectors (e.g. $N=100$) that query image representations via cross-attention.</li><li>Predict independent box sets: Feed each of the $N$ output embeddings through shared feed-forward networks (FFNs) to predict category class and normalised box coordinates $(x, y, w, h)$.</li><li>Compute optimal Bipartite Matching (Training): Run the Hungarian matching algorithm to find permutation $\sigma \in \mathfrak{S}_N$ minimising matching cost with ground truth.</li><li>Direct inference (No NMS): Filter out predictions assigned to the background "no-object" class $\varnothing$; directly emit remaining bounding boxes with zero NMS post-processing.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Optimal Bipartite Matching Cost (Hungarian Algorithm)</h3><div class="formula">\hat{\sigma} = \operatorname*{arg\,min}_{\sigma \in \mathfrak{S}_N} \sum_{i=1}^N \mathcal{L}_{\mathrm{match}}\left( y_i, \; \hat{y}_{\sigma(i)} \right)</div><p>Finds the permutation $\sigma$ of predictions that minimises the global sum of pairwise classification and bounding box distances.</p></li>
+          <li><h3>Pairwise Matching Cost Function</h3><div class="formula">\mathcal{L}_{\mathrm{match}}(y_i, \hat{y}_\sigma) = -\mathbb{I}(c_i \ne \varnothing) \hat{p}_\sigma(c_i) + \mathbb{I}(c_i \ne \varnothing) \left[ \lambda_{\mathrm{L1}} \| b_i - \hat{b}_\sigma \|_1 + \lambda_{\mathrm{giou}} \mathcal{L}_{\mathrm{GIoU}}(b_i, \hat{b}_\sigma) \right]</div><p>Balances target class probability $\hat{p}(c_i)$ with $L_1$ coordinate error and Generalised IoU (GIoU) loss.</p></li>
+          <li><h3>FCOS Centerness Branch Target</h3><div class="formula">\operatorname{Centerness}^* = \sqrt{\frac{\min(l^*, r^*)}{\max(l^*, r^*)} \times \frac{\min(t^*, b^*)}{\max(t^*, b^*)}}</div><p>Measures how close feature cell $(x, y)$ is to the centre of the bounding box; down-weights peripheral low-quality detections.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Anchor-free architectures eliminate complex anchor scale/aspect ratio tuning.</li><li>FCOS regresses distances to box boundaries directly from positive grid cells.</li><li>DETR frames object detection as direct Set Prediction using Transformer cross-attention.</li><li>Hungarian bipartite matching enforces strict one-to-one matching, completely eliminating NMS.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> torch
+<span class="k">import</span> torch.nn <span class="k">as</span> nn
+<span class="k">from</span> scipy.optimise <span class="k">import</span> linear_sum_assignment
+
+<span class="k">def</span> <span class="f">toy_bipartite_matching</span>(pred_boxes: torch.Tensor, gt_boxes: torch.Tensor):
+    <span class="s">&quot;&quot;&quot;Educational demonstration of Hungarian bipartite matching used in DETR.&quot;&quot;&quot;</span>
+    <span class="c"># pred_boxes: [N, 4], gt_boxes: [M, 4] where N &gt;= M</span>
+    N, M = pred_boxes.<span class="f">size</span>(<span class="n">0</span>), gt_boxes.<span class="f">size</span>(<span class="n">0</span>)
+    
+    <span class="c"># Compute pairwise L1 cost matrix: [N, M]</span>
+    cost_matrix = torch.<span class="f">cdist</span>(pred_boxes, gt_boxes, p=<span class="n">1</span>).<span class="f">detach</span>().<span class="f">numpy</span>()
+    
+    <span class="c"># Solve optimal one-to-one assignment via Hungarian algorithm</span>
+    pred_indices, gt_indices = <span class="f">linear_sum_assignment</span>(cost_matrix)
+    
+    <span class="k">return</span> pred_indices, gt_indices
+
+<span class="c"># Simulate 5 DETR object queries predicting boxes against 2 ground-truth objects</span>
+torch.<span class="f">manual_seed</span>(<span class="n">42</span>)
+predictions = torch.<span class="f">tensor</span>([
+    [<span class="n">0.10</span>, <span class="n">0.10</span>, <span class="n">0.20</span>, <span class="n">0.20</span>],  <span class="c"># Query 0: Near GT 0</span>
+    [<span class="n">0.80</span>, <span class="n">0.80</span>, <span class="n">0.15</span>, <span class="n">0.15</span>],  <span class="c"># Query 1: Far away (background)</span>
+    [<span class="n">0.55</span>, <span class="n">0.50</span>, <span class="n">0.30</span>, <span class="n">0.30</span>],  <span class="c"># Query 2: Near GT 1</span>
+    [<span class="n">0.12</span>, <span class="n">0.09</span>, <span class="n">0.22</span>, <span class="n">0.21</span>],  <span class="c"># Query 3: Also near GT 0 (competing duplicate)</span>
+    [<span class="n">0.90</span>, <span class="n">0.10</span>, <span class="n">0.10</span>, <span class="n">0.10</span>]   <span class="c"># Query 4: Background</span>
+])
+
+ground_truth = torch.<span class="f">tensor</span>([
+    [<span class="n">0.11</span>, <span class="n">0.10</span>, <span class="n">0.21</span>, <span class="n">0.20</span>],  <span class="c"># GT 0</span>
+    [<span class="n">0.50</span>, <span class="n">0.50</span>, <span class="n">0.30</span>, <span class="n">0.30</span>]   <span class="c"># GT 1</span>
+])
+
+pred_idx, gt_idx = <span class="f">toy_bipartite_matching</span>(predictions, ground_truth)
+
+<span class="k">print</span>(<span class="s">&quot;Hungarian Bipartite Assignment:&quot;</span>)
+<span class="k">for</span> p, g <span class="k">in</span> <span class="f">zip</span>(pred_idx, gt_idx):
+    <span class="k">print</span>(<span class="s">f&quot;Query {p} strictly assigned to Ground Truth {g} (Distance: {torch.dist(predictions[p], ground_truth[g]):.4f})&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;Duplicate queries receive NO assignment, forcing them to predict background without NMS!&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Slow training convergence in original DETR: Original DETR required 500 epochs to converge because cross-attention looks everywhere; Deformable DETR solves this by focusing attention locally.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Small object detection in DETR: Standard DETR downsamples feature maps by $32\times$, losing fine spatial details of small objects; multi-scale feature pyramids are required.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>High Hungarian matching cost computation: While fast for small query counts ($N=100$), Hungarian matching scales as $O(N^3)$ on CPU if query counts balloon to thousands.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>Why does DETR (DEtection TRansformer) not require Non-Maximum Suppression (NMS) post-processing?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because Transformers cannot process overlapping boxes</span></button><button class="opt" type="button"><b>B</b><span>Because training uses bipartite Hungarian matching, which enforces a strict one-to-one assignment where each ground-truth object can be predicted by only one unique query</span></button><button class="opt" type="button"><b>C</b><span>Because DETR only detects one object per image</span></button><button class="opt" type="button"><b>D</b><span>Because DETR runs exclusively on CPUs</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Traditional models produce dozens of overlapping duplicate proposals for one object. DETR's bipartite loss penalizes duplicate predictions, forcing only one query to emit the box.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>What are "Object Queries" in the DETR architecture?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The ground truth bounding box labels</span></button><button class="opt" type="button"><b>B</b><span>The prompt instructions written by human users</span></button><button class="opt" type="button"><b>C</b><span>A fixed number of learned positional embedding vectors (e.g. 100) fed to the Transformer decoder, each tasked with querying and detecting one object in the scene</span></button><button class="opt" type="button"><b>D</b><span>SQL queries sent to a remote database</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Object queries are learned vectors that attend to image features via cross-attention, specializing in detecting objects at particular image regions or scales.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>What is the role of the "Centerness" branch in the anchor-free FCOS detector?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To centre the camera before taking a photograph</span></button><button class="opt" type="button"><b>B</b><span>To compute the mean colour of the image</span></button><button class="opt" type="button"><b>C</b><span>To predict how close a feature cell is to the centre of its object bounding box, down-weighting low-quality peripheral boundary detections during testing</span></button><button class="opt" type="button"><b>D</b><span>To ensure the loss function has zero gradient</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Locations near object edges produce noisy box predictions. FCOS down-weights these low-quality boxes by multiplying classification scores by predicted centerness.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/the-attention-mechanism/"><small class="kicker">Concept</small><b>The attention mechanism</b></a><a href="../../concepts/two-stage-detectors-the-r-cnn-family/"><small class="kicker">Concept</small><b>The R-CNN family</b></a><a href="../../concepts/one-stage-detectors-ssd-and-yolo/"><small class="kicker">Concept</small><b>SSD &amp; YOLO</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/two-stage-detectors-the-r-cnn-family/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Computer vision</small><b>The R-CNN family</b></a>
+    <a class="pager-next" href="../../concepts/instance-segmentation-mask-r-cnn/"><small>Next · Computer vision <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Mask R-CNN</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

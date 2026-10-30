@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Gradient Boosting Regression (GBM) · Learn · Yogesh Awate</title>
+<meta name="description" content="Builds shallow trees one at a time, each fitting the errors the ensemble still makes. The idea behind XGBoost, LightGBM and CatBoost.">
+<meta property="og:title" content="Gradient Boosting Regression (GBM) · Learn · Yogesh Awate">
+<meta property="og:description" content="Builds shallow trees one at a time, each fitting the errors the ensemble still makes. The idea behind XGBoost, LightGBM and CatBoost.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="gradient_boosting_regressor">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-regression">Path 03 · Regression</a> / Trees and ensembles / Lesson 13 of 23</span>
+    <h1 class="case-title">Gradient Boosting Regression (GBM)</h1>
+    <p class="lede rise" style="--d:3">Builds shallow trees one at a time, each fitting the errors the ensemble still makes. The idea behind XGBoost, LightGBM and CatBoost.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">20 min</span>
+      <span class="tagline lab">Live lab</span>
+      <span class="prereq">Before this: <a href="../../models/decision_tree_regressor/">Decision tree regressor</a> <a href="../../concepts/gradient-descent/">Gradient descent</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Task</dt><dd>Regression</dd>
+          <dt>Family</dt><dd>Boosting ensemble</dd>
+          <dt>What it learns</dt><dd>M small trees, added in sequence</dd>
+          <dt>Training cost</dt><dd>$O(M\,p\,n\log n)$</dd>
+          <dt>Prediction cost</dt><dd>$O(M \cdot \text{depth})$</dd>
+          <dt>In code</dt><dd><code class="no-math">sklearn.<wbr>ensemble.<wbr>GradientBoostingRegressor</code></dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>How it works</a></li><li><a href="#lab"><span>03</span>Try it</a></li><li><a href="#maths"><span>04</span>The maths</a></li><li><a href="#tuning"><span>05</span>Hyperparameters</a></li><li><a href="#when"><span>06</span>When to use it</a></li><li><a href="#code"><span>07</span>In code</a></li><li><a href="#results"><span>08</span>On real data</a></li><li><a href="#quiz"><span>09</span>Check yourself</a></li><li><a href="#related"><span>10</span>Related lessons</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Start with a constant prediction. Fit a small tree to the residuals, add a shrunken copy of it to the model, recompute the residuals, and repeat. Each tree fixes a bit of what the previous ones got wrong.</p>
+        <p>For squared error, the residuals $y - \hat y$ are exactly the negative gradient of the loss with respect to the prediction. So fitting a tree to residuals is gradient descent, not on weights, but in "function space". Swap the loss and you get boosting for absolute error, quantiles or classification, with the same algorithm.</p>
+        <p>The learning rate $\eta$ shrinks each tree’s contribution. Small $\eta$ with many trees almost always generalises better than large $\eta$ with few. Unlike a random forest, boosting can overfit if you add too many trees, so early stopping on a validation set is standard.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>A team of editors working in sequence, each one fixing only the mistakes the previous editors left behind.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> How it works</h2>
+        <ol class="steps"><li>Initialise $F_0(x) = \bar y$.</li><li>Compute pseudo-residuals $r_i = -\partial L/\partial F(x_i)$; for squared error that is $y_i - F(x_i)$.</li><li>Fit a shallow regression tree to the pseudo-residuals.</li><li>Update $F_m = F_{m-1} + \eta \cdot \text{tree}_m$.</li><li>Repeat; stop when validation error stops improving.</li></ol>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>03</span> Try it</h2>
+        <p>Boosting rounds play out one by one. The top plot shows the ensemble; the bottom shows the residuals the next tree will fit.</p>
+        <div class="lab" data-lab="gradient_boosting_regressor" data-kind="models" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>Press <em>Step</em> a few times: each tree targets what is left in the residual plot.</li><li>Set the learning rate to 1.0 and watch training error fall fast while the fit gets jagged.</li><li>Use depth 1 trees (stumps): many more rounds are needed, but the result is smooth.</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>04</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Stage-wise additive model</h3><div class="formula">$$F_M(x) = F_0(x) + \eta\sum_{m=1}^M h_m(x)$$</div><p>Each $h_m$ is a small tree. Nothing is ever refitted; the model only grows.</p></li>
+          <li><h3>Gradient in function space</h3><div class="formula">$$r_{im} = -\left.\frac{\partial L(y_i, F(x_i))}{\partial F(x_i)}\right|_{F = F_{m-1}}, \qquad L = \tfrac12(y - F)^2 \Rightarrow r_{im} = y_i - F_{m-1}(x_i)$$</div><p>Each tree approximates the direction of steepest descent of the loss, evaluated at the training points.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="tuning">
+        <h2 class="h3"><span>05</span> Hyperparameters</h2>
+        <div class="table-wrap"><table class="kv">
+          <thead><tr><th>Setting</th><th>What it does</th><th>Typical choice</th></tr></thead>
+          <tbody><tr><td><span class="hp">n_estimators</span></td><td>Number of boosting rounds.</td><td>Hundreds to thousands, with early stopping.</td></tr><tr><td><span class="hp">learning_rate</span></td><td>Shrinkage per tree.</td><td>0.01–0.1; lower needs more trees.</td></tr><tr><td><span class="hp">max_depth</span></td><td>Size of each tree.</td><td>3–6; controls interaction depth.</td></tr><tr><td><span class="hp">subsample</span></td><td>Row fraction per tree (stochastic GB).</td><td>0.5–0.8 regularises.</td></tr></tbody>
+        </table></div>
+      </section>
+      <section class="reveal" id="when">
+        <h2 class="h3"><span>06</span> When to use it</h2>
+        <div class="split2">
+          <div class="box good"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Strengths</h3><ul><li>State-of-the-art on tabular data.</li><li>Flexible loss functions.</li><li>Handles mixed features and interactions without scaling.</li></ul></div>
+          <div class="box bad"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg> Limitations</h3><ul><li>Sequential, so slower to train than a forest.</li><li>Several interacting hyperparameters.</li><li>Can overfit with too many rounds.</li></ul></div>
+          <div class="box use"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> Reach for it when</h3><p>Tabular problems where accuracy matters and you can afford some tuning.</p></div>
+          <div class="box avoid"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Think twice when</h3><p>Very small data where a simpler model is easier to trust, or when you need extrapolation.</p></div>
+        </div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>07</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">from</span> sklearn.ensemble <span class="k">import</span> GradientBoostingRegressor
+
+gbr = <span class="f">GradientBoostingRegressor</span>(n_estimators=<span class="n">2000</span>, learning_rate=<span class="n">0.05</span>, max_depth=<span class="n">3</span>,
+                                subsample=<span class="n">0.8</span>, validation_fraction=<span class="n">0.1</span>,
+                                n_iter_no_change=<span class="n">50</span>, random_state=<span class="n">0</span>).<span class="f">fit</span>(X_tr, y_tr)
+<span class="k">print</span>(<span class="s">&quot;trees actually used:&quot;</span>, gbr.n_estimators_, <span class="s">&quot;test R2:&quot;</span>, <span class="f">round</span>(gbr.<span class="f">score</span>(X_te, y_te), <span class="n">3</span>))</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using a large learning rate to save time; it usually costs accuracy.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Running without early stopping and over-fitting quietly.</span></li></ul>
+      </section>
+      <section class="reveal" id="results">
+        <h2 class="h3"><span>08</span> On real data</h2>
+        <p>Gradient boosting trained on 80% of the California housing sample (MedHouseVal as target), scored on a held-out 20%. The baseline always predicts the training mean.</p>
+        <div class="table-wrap" style="margin-top:18px"><table class="kv results-table">
+          <thead><tr><th>Metric</th><th>Gradient boosting</th><th>Predict the mean</th></tr></thead>
+          <tbody><tr><td>RMSE</td><td>0.331</td><td>0.957</td></tr><tr><td>MAE</td><td>0.252</td><td>0.815</td></tr><tr><td>R²</td><td>0.880</td><td>-0.000</td></tr></tbody>
+        </table></div>
+        <p class="note">Produced by <a href="https://github.com/yogesh660/ml-model-zoo/blob/main/models/gradient_boosting_regressor/train.py" target="_blank" rel="noopener">models/gradient_boosting_regressor/train.py</a> · generated 2026-10-28. Run it yourself: <code class="no-math">python models/gradient_boosting_regressor/train.py</code></p>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>09</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>For squared-error loss, each new tree in gradient boosting is fitted to:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The original targets</span></button><button class="opt" type="button"><b>B</b><span>The residuals of the current ensemble</span></button><button class="opt" type="button"><b>C</b><span>A bootstrap sample</span></button><button class="opt" type="button"><b>D</b><span>The previous tree’s predictions</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Residuals are the negative gradient of squared error with respect to the predictions.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>Lower learning rate, same number of trees: what typically happens?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Overfits</span></button><button class="opt" type="button"><b>B</b><span>Trees get deeper</span></button><button class="opt" type="button"><b>C</b><span>No change</span></button><button class="opt" type="button"><b>D</b><span>Underfits; you need more trees</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Each tree contributes less, so more rounds are needed to reach the same fit, though the final model usually generalises better.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>What is the standard initial prediction $F_0(x)$ in Gradient Boosting for regression under squared-error loss?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Zero for all observations: $F_0(x) = 0$</span></button><button class="opt" type="button"><b>B</b><span>A single linear regression line fitted with OLS</span></button><button class="opt" type="button"><b>C</b><span>A random vector drawn from a standard normal distribution</span></button><button class="opt" type="button"><b>D</b><span>The mean of the target values in the training set: $F_0(x) = \bar{y}$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Gradient boosting begins with the best constant prediction that minimises the chosen loss function. For squared-error loss, the constant that minimises $\sum (y_i - c)^2$ is the sample mean $\bar{y}$.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q4</span>Why is Gradient Boosting called gradient descent in "function space"?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It inverts the Hessian matrix of functional derivatives in $O(n)$ time</span></button><button class="opt" type="button"><b>B</b><span>It only works on continuous differentiable polynomial functions</span></button><button class="opt" type="button"><b>C</b><span>It converts non-linear functions into trigonometric Fourier bases</span></button><button class="opt" type="button"><b>D</b><span>Instead of updating scalar parameter weights by their loss gradient, it updates the model function $F(x)$ by adding a new decision tree trained to match the negative gradient of the loss at every training point</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In parametric gradient descent, $\theta_{m} = \theta_{m-1} - \eta \nabla_\theta L$. In boosting, $F_m(x) = F_{m-1}(x) + \eta h_m(x)$, where $h_m(x)$ is a tree approximating the negative gradient vector $-\nabla_F L$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q5</span>Unlike Random Forests, why does Gradient Boosting require early stopping or careful tuning of n_estimators?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because gradient boosting memory usage increases exponentially with each round</span></button><button class="opt" type="button"><b>B</b><span>Because each successive tree explicitly targets the remaining errors of previous trees, allowing the model to eventually memorise noise and severe outliers if run for too many iterations</span></button><button class="opt" type="button"><b>C</b><span>Because the learning rate $\eta$ automatically doubles after 100 rounds</span></button><button class="opt" type="button"><b>D</b><span>Because tree depth automatically increases by 1 at every iteration</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Random forest trees are trained independently on bootstrap samples, so adding trees simply averages variance. Gradient boosting sequentially chases residuals; with enough iterations, it can overfit training noise down to zero error.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q6</span>What is "shrinkage" (learning rate $\eta$) in gradient boosting, and why is setting $\eta \le 0.1$ standard best practice?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$\eta$ reduces the depth of each decision tree by a constant factor</span></button><button class="opt" type="button"><b>B</b><span>$\eta$ scales the contribution of each newly added tree ($F_m = F_{m-1} + \eta h_m$); smaller steps prevent individual trees from overreacting to residuals, leaving room for future trees to improve generalisation</span></button><button class="opt" type="button"><b>C</b><span>$\eta$ scales down the target labels before computing residuals</span></button><button class="opt" type="button"><b>D</b><span>$\eta$ drops the learning rate to zero if validation error fails to improve</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Friedman showed that shrinking each tree by $\eta \in [0.01, 0.1]$ significantly improves out-of-sample performance. Smaller steps require more trees, but the additive path explores the parameter space much more smoothly.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q7</span>When training GradientBoostingRegressor with loss='absolute_error' (MAE), what are the pseudo-residuals $r_i$ fitted by each tree?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Zero for all observations with error less than 1.0</span></button><button class="opt" type="button"><b>B</b><span>The raw squared residuals $(y_i - F_{m-1}(x_i))^2$</span></button><button class="opt" type="button"><b>C</b><span>The percentage errors $(y_i - F_{m-1}(x_i)) / y_i$</span></button><button class="opt" type="button"><b>D</b><span>The signs of the errors: $r_i = \operatorname{sign}(y_i - F_{m-1}(x_i))$ (taking values $+1$ or $-1$)</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The loss is $L = |y - F|$. Its negative derivative with respect to $F$ is $-\frac{\partial |y - F|}{\partial F} = \operatorname{sign}(y - F)$. Thus each tree is trained to predict whether the current model under- or over-estimates each sample.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q8</span>What is "Stochastic Gradient Boosting" (setting subsample < 1.0 in GradientBoostingRegressor)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Adding Gaussian noise to the target labels at every step</span></button><button class="opt" type="button"><b>B</b><span>Training each tree on a random subset of 10 rows</span></button><button class="opt" type="button"><b>C</b><span>Using stochastic gradient descent instead of decision trees</span></button><button class="opt" type="button"><b>D</b><span>Drawing a random sub-sample of rows without replacement at each iteration to train the next tree, which introduces randomness that reduces correlation between trees and speeds up training</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Friedman's stochastic gradient boosting samples a fraction of rows (e.g. 0.8) without replacement for each round. This injects beneficial variance into tree generation and prevents the ensemble from over-relying on influential training rows.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q9</span>Why do practitioners typically use shallow trees (e.g. max_depth=3 to 5) as base learners in gradient boosting, rather than deep trees (depth 15+)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Gradient boosting algorithms crash if tree depth exceeds 6</span></button><button class="opt" type="button"><b>B</b><span>Shallow trees act as weak learners with high bias and low variance; boosting excels at sequentially reducing bias while keeping the overall model variance well-controlled</span></button><button class="opt" type="button"><b>C</b><span>Shallow trees require zero regularisation parameters</span></button><button class="opt" type="button"><b>D</b><span>Deep trees cannot compute pseudo-residuals</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A depth-3 tree captures up to 3-way feature interactions with low variance. Combining hundreds of low-variance weak learners allows boosting to build a flexible composite model without the explosive overfitting risk of deep trees.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q10</span>An observation has true target $y = 25.0$. The initial model prediction is $F_0 = 15.0$. In round 1, a regression tree is fitted to the residuals and predicts $h_1(x) = 8.0$. If the learning rate is $\eta = 0.20$, what are the updated prediction $F_1(x)$ and the new residual $r_2$ for round 2 under squared error?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$F_1(x) = 16.60$ and $r_2 = 8.40$</span></button><button class="opt" type="button"><b>B</b><span>$F_1(x) = 16.60$ and $r_2 = 1.60$</span></button><button class="opt" type="button"><b>C</b><span>$F_1(x) = 23.00$ and $r_2 = 2.00$</span></button><button class="opt" type="button"><b>D</b><span>$F_1(x) = 19.80$ and $r_2 = 5.20$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Round 1 residual: $r_1 = y - F_0 = 25.0 - 15.0 = 10.0$. Model update: $F_1(x) = F_0(x) + \eta h_1(x) = 15.0 + 0.20(8.0) = 15.0 + 1.60 = 16.60$. Round 2 residual: $r_2 = y - F_1(x) = 25.0 - 16.60 = 8.40$.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q11</span>Under Huber loss with threshold $\delta = 3.0$, the negative gradient pseudo-residual is $r_i = y_i - F(x_i)$ when $|y_i - F(x_i)| \le \delta$, and $r_i = \delta \operatorname{sign}(y_i - F(x_i))$ when $|y_i - F(x_i)| &gt; \delta$. For two points with errors $e_1 = +2.0$ and $e_2 = -10.0$, what are their pseudo-residuals?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$r_1 = +0.5$ and $r_2 = -2.5$</span></button><button class="opt" type="button"><b>B</b><span>$r_1 = +3.0$ and $r_2 = -3.0$</span></button><button class="opt" type="button"><b>C</b><span>$r_1 = +2.0$ and $r_2 = -10.0$</span></button><button class="opt" type="button"><b>D</b><span>$r_1 = +2.0$ and $r_2 = -3.0$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> For $e_1 = +2.0$: $|e_1| = 2.0 \le \delta = 3.0$, so $r_1 = e_1 = +2.0$. For $e_2 = -10.0$: $|e_2| = 10.0 &gt; 3.0$, so $r_2 = \delta \operatorname{sign}(-10.0) = 3.0 \times (-1) = -3.0$. Huber loss clips the pseudo-residual of the outlier at $-3.0$, protecting subsequent trees from extreme gradient swings.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q12</span>A gradient boosting model uses learning rate $\eta = 0.10$ and squared error loss. After initialising at $F_0 = 20.0$, three consecutive trees predict $h_1(x) = 10.0$, $h_2(x) = 8.0$, and $h_3(x) = 6.0$ for a test point $x$. What is the final prediction $F_3(x)$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$F_3(x) = 22.40$</span></button><button class="opt" type="button"><b>B</b><span>$F_3(x) = 20.24$</span></button><button class="opt" type="button"><b>C</b><span>$F_3(x) = 24.00$</span></button><button class="opt" type="button"><b>D</b><span>$F_3(x) = 44.00$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Additive update: $F_3(x) = F_0(x) + \eta(h_1(x) + h_2(x) + h_3(x)) = 20.0 + 0.10(10.0 + 8.0 + 6.0) = 20.0 + 0.10(24.0) = 20.0 + 2.40 = 22.40$.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>10</span> Related lessons</h2>
+        <div class="related"><a href="../../models/xgboost_regressor/"><small class="kicker">Regression</small><b>XGBoost</b></a><a href="../../models/lightgbm_regressor/"><small class="kicker">Regression</small><b>LightGBM</b></a><a href="../../models/catboost_regressor/"><small class="kicker">Regression</small><b>CatBoost</b></a><a href="../../concepts/gradient-descent/"><small class="kicker">Concept</small><b>Gradient descent</b></a><a href="../../concepts/loss-functions/"><small class="kicker">Concept</small><b>Loss functions</b></a><a href="../../concepts/bias-variance-tradeoff/"><small class="kicker">Concept</small><b>Bias–variance trade-off</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../models/random_forest_regressor/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Regression</small><b>Random forest regressor</b></a>
+    <a class="pager-next" href="../../models/xgboost_regressor/"><small>Next · Regression <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>XGBoost</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/sequences.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

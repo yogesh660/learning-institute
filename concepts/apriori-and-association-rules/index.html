@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Association Rule Mining and the Apriori Algorithm · Learn · Yogesh Awate</title>
+<meta name="description" content="Uncover frequent co-occurring itemsets in transaction databases: master Support, Confidence, Lift, and the downward-closure Apriori property.">
+<meta property="og:title" content="Association Rule Mining and the Apriori Algorithm · Learn · Yogesh Awate">
+<meta property="og:description" content="Uncover frequent co-occurring itemsets in transaction databases: master Support, Confidence, Lift, and the downward-closure Apriori property.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="apriori-and-association-rules">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ml-toolbox">Path 06 · Machine learning toolbox</a> / Pattern mining / Lesson 49 of 50</span>
+    <h1 class="case-title">Association Rule Mining and the Apriori Algorithm</h1>
+    <p class="lede rise" style="--d:3">Uncover frequent co-occurring itemsets in transaction databases: master Support, Confidence, Lift, and the downward-closure Apriori property.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/probability-rules-and-bayes-theorem/">Probability and Bayes</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Machine learning toolbox · Pattern mining</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Market basket analysis discovers customer purchasing patterns: "Customers who buy beer also buy nappies." The Apriori algorithm prunes exponential search spaces using downward closure to find high-lift association rules.</p>
+        <p>In retail, e-commerce, and transaction processing, businesses analysee market baskets to discover which products are purchased together: "Customers who purchase pasta and olive oil also buy garlic 78% of the time." These insights drive supermarket shelf placement, bundle pricing, and web cross-selling.</p>
+        <p>Formally, an Association Rule takes the form $X \implies Y$, where $X$ (antecedent) and $Y$ (consequent) are disjoint itemsets. However, in a supermarket with 10,000 distinct items, searching through all possible item combinations requires exploring $2^{10,000}$ candidate itemsets—a number vastly greater than the number of atoms in the observable universe.</p>
+        <p>In 1994, Rakesh Agrawal and Ramakrishnan Srikant revolutionized pattern mining by introducing the Apriori Algorithm. The algorithm is powered by the Apriori Principle (the Downward Closure Property of Support): if an itemset is frequent, all of its subsets must also be frequent. Conversely, if any itemset ${A, B}$ is infrequent, any superset ${A, B, C}$ is guaranteed to be infrequent and can be immediately pruned from the search tree.</p>
+        <p>Apriori proceeds level by level: generating 1-itemsets, pruning those below minimum support, joining surviving items to form candidate 2-itemsets, and repeating until no larger frequent itemsets exist. Discovered rules are evaluated using three core metrics: Support (frequency), Confidence (conditional probability), and Lift (strength of association above random independence).</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine scouting a sports tournament with 1,000 athletes to find trios of athletes who can lift a 500kg boulder together. Before testing all 166 million possible three-person combinations, the coach tests every single athlete individually. If Athlete 14 cannot even lift a 20kg pebble alone, the coach instantly eliminates every single pair and trio that includes Athlete 14. The downward closure property prunes the tournament search tree to a manageable fraction.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Support, Confidence, and Lift Metrics</h3><div class="formula">\operatorname{supp}(X) = \frac{\sigma(X)}{N}, \quad \operatorname{conf}(X \implies Y) = \frac{\operatorname{supp}(X \cup Y)}{\operatorname{supp}(X)}, \quad \operatorname{lift}(X \implies Y) = \frac{\operatorname{conf}(X \implies Y)}{\operatorname{supp}(Y)}</div><p>Support measures how frequently the itemset appears in the database. Confidence measures conditional probability P(Y|X). Lift measures how much more often X and Y co-occur than expected if they were statistically independent.</p></li>
+          <li><h3>The Apriori Downward-Closure Property</h3><div class="formula">\forall X, Y: \; X \subseteq Y \implies \operatorname{supp}(Y) \le \operatorname{supp}(X)</div><p>Support is monotonically decreasing with itemset size. If subset X is infrequent (supp(X) < minsup), then superset Y is guaranteed to be infrequent.</p></li>
+          <li><h3>Rule Lift Interpretation</h3><div class="formula">\operatorname{lift}(X \implies Y) = \frac{P(X, Y)}{P(X) P(Y)} \; \begin{cases} > 1 & \text{Positive correlation (complimentary)} \\ = 1 & \text{Statistical independence} \\ < 1 & \text{Negative correlation (substitutes)} \end{cases}</div><p>Lift > 1 indicates that purchasing X actively increases the probability of purchasing Y; lift < 1 indicates mutual exclusivity.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Classic market basket analysis algorithm for uncovering frequent co-occurring itemsets in transactional databases.</li><li>Apriori principle: if an itemset is frequent, all of its subsets must also be frequent; if any subset is infrequent, all supersets are infrequent.</li><li>Prunes exponential search spaces ($2^{|I|}$) level by level without scanning entire databases repeatedly.</li><li>Evaluated via Support (frequency), Confidence (conditional probability), and Lift (statistical association above independence).</li><li>Lift > 1 indicates positive correlation; lift < 1 indicates substitute items; lift = 1 indicates statistical independence.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">from</span> itertools <span class="k">import</span> combinations
+
+<span class="c"># The Apriori Algorithm for Frequent Itemset Mining from scratch</span>
+<span class="k">def</span> <span class="f">get_frequent_itemsets</span>(transactions, min_support=<span class="n">0.3</span>):
+    n_trans = <span class="k">len</span>(transactions)
+    <span class="c"># 1. Count frequent 1-itemsets (L1)</span>
+    item_counts = {}
+    <span class="k">for</span> t <span class="k">in</span> transactions:
+        <span class="k">for</span> item <span class="k">in</span> t:
+            item_counts[item] = item_counts.<span class="f">get</span>(item, <span class="n">0</span>) + <span class="n">1</span>
+            
+    L1 = {<span class="f">frozenset</span>([item]): count / n_trans <span class="k">for</span> item, count <span class="k">in</span> item_counts.<span class="f">items</span>() <span class="k">if</span> count / n_trans &gt;= min_support}
+    
+    all_frequent = <span class="f">dict</span>(L1)
+    current_L = L1
+    k = <span class="n">2</span>
+    
+    <span class="k">while</span> current_L:
+        <span class="c"># Candidate generation: join step</span>
+        candidates = <span class="f">set</span>()
+        itemsets = <span class="f">list</span>(current_L.<span class="f">keys</span>())
+        <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(<span class="k">len</span>(itemsets)):
+            <span class="k">for</span> j <span class="k">in</span> <span class="k">range</span>(i + <span class="n">1</span>, <span class="k">len</span>(itemsets)):
+                union = itemsets[i] | itemsets[j]
+                <span class="k">if</span> <span class="k">len</span>(union) == k:
+                    <span class="c"># Prune step: all subsets of size k-1 must be in current_L</span>
+                    subsets_valid = <span class="f">all</span>(<span class="f">frozenset</span>(s) <span class="k">in</span> current_L <span class="k">for</span> s <span class="k">in</span> <span class="f">combinations</span>(union, k - <span class="n">1</span>))
+                    <span class="k">if</span> subsets_valid:
+                        candidates.<span class="f">add</span>(union)
+                        
+        <span class="c"># Count support for candidates</span>
+        cand_counts = {c: <span class="n">0</span> <span class="k">for</span> c <span class="k">in</span> candidates}
+        <span class="k">for</span> t <span class="k">in</span> transactions:
+            t_set = <span class="f">set</span>(t)
+            <span class="k">for</span> c <span class="k">in</span> candidates:
+                <span class="k">if</span> c.<span class="f">issubset</span>(t_set):
+                    cand_counts[c] += <span class="n">1</span>
+                    
+        current_L = {c: count / n_trans <span class="k">for</span> c, count <span class="k">in</span> cand_counts.<span class="f">items</span>() <span class="k">if</span> count / n_trans &gt;= min_support}
+        all_frequent.<span class="f">update</span>(current_L)
+        k += <span class="n">1</span>
+        
+    <span class="k">return</span> all_frequent
+
+<span class="k">def</span> <span class="f">generate_rules</span>(frequent_itemsets, min_confidence=<span class="n">0.6</span>):
+    rules = []
+    <span class="k">for</span> itemset, supp_both <span class="k">in</span> frequent_itemsets.<span class="f">items</span>():
+        <span class="k">if</span> <span class="k">len</span>(itemset) &gt;= <span class="n">2</span>:
+            <span class="c"># Test all non-empty subsets as antecedents</span>
+            <span class="k">for</span> r <span class="k">in</span> <span class="k">range</span>(<span class="n">1</span>, <span class="k">len</span>(itemset)):
+                <span class="k">for</span> antecedent <span class="k">in</span> <span class="f">combinations</span>(itemset, r):
+                    antecedent = <span class="f">frozenset</span>(antecedent)
+                    consequent = itemset - antecedent
+                    supp_ant = frequent_itemsets.<span class="f">get</span>(antecedent, <span class="n">0</span>)
+                    <span class="k">if</span> supp_ant &gt; <span class="n">0</span>:
+                        conf = supp_both / supp_ant
+                        supp_cons = frequent_itemsets.<span class="f">get</span>(consequent, <span class="n">0</span>)
+                        lift = conf / supp_cons <span class="k">if</span> supp_cons &gt; <span class="n">0</span> <span class="k">else</span> <span class="n">0</span>
+                        <span class="k">if</span> conf &gt;= min_confidence:
+                            rules.<span class="f">append</span>((<span class="f">list</span>(antecedent), <span class="f">list</span>(consequent), supp_both, conf, lift))
+    <span class="k">return</span> rules
+
+<span class="c"># Synthetic supermarket transaction dataset (10 transactions)</span>
+transactions = [
+    [<span class="s">'milk'</span>, <span class="s">'bread'</span>, <span class="s">'butter'</span>],
+    [<span class="s">'bread'</span>, <span class="s">'butter'</span>],
+    [<span class="s">'milk'</span>, <span class="s">'bread'</span>],
+    [<span class="s">'beer'</span>, <span class="s">'nappies'</span>, <span class="s">'crisps'</span>],
+    [<span class="s">'beer'</span>, <span class="s">'nappies'</span>],
+    [<span class="s">'beer'</span>, <span class="s">'crisps'</span>],
+    [<span class="s">'milk'</span>, <span class="s">'bread'</span>, <span class="s">'butter'</span>, <span class="s">'jam'</span>],
+    [<span class="s">'bread'</span>, <span class="s">'jam'</span>],
+    [<span class="s">'beer'</span>, <span class="s">'nappies'</span>, <span class="s">'bread'</span>],
+    [<span class="s">'milk'</span>, <span class="s">'butter'</span>]
+]
+
+freq_itemsets = <span class="f">get_frequent_itemsets</span>(transactions, min_support=<span class="n">0.30</span>)
+rules = <span class="f">generate_rules</span>(freq_itemsets, min_confidence=<span class="n">0.60</span>)
+
+<span class="k">print</span>(<span class="s">f&quot;Total Transactions: {len(transactions)}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Discovered Frequent Itemsets (Support &gt;= 30%): {len(freq_itemsets)}&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;\n--- Discovered High-Confidence Association Rules ---&quot;</span>)
+<span class="k">for</span> ant, cons, supp, conf, lift <span class="k">in</span> rules:
+    <span class="k">print</span>(<span class="s">f&quot;  {ant} =&gt; {cons}&quot;</span>)
+    <span class="k">print</span>(<span class="s">f&quot;    Support: {supp*100:.1f}% | Confidence: {conf*100:.1f}% | Lift: {lift:.2f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Multiple database scans: Standard Apriori requires $K$ full sequential database scans for itemsets of maximum size $K$; FP-growth solves this with a single pass using trie structures.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Spurious rules from high-support items: If an item (like milk or bread) appears in 95% of baskets, almost any rule predicting milk has high confidence, but lift is near 1.0 (zero true association).</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Low minimum support combinatorial explosion: Setting minsup too low generates millions of candidate itemsets, overwhelming CPU memory and compute.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>According to the Apriori principle (downward closure), what can be safely inferred if the itemset {Beer, Diapers} is found to have support below minimum support?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The lift must be negative</span></button><button class="opt" type="button"><b>B</b><span>The confidence of the rule is exactly 1.0</span></button><button class="opt" type="button"><b>C</b><span>Any larger superset containing {Beer, Diapers} (such as {Beer, Diapers, Chips}) is guaranteed to also be below minimum support and can be immediately pruned</span></button><button class="opt" type="button"><b>D</b><span>Both Beer and Diapers must be deleted from the database</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because support is monotonically non-increasing as items are added, no superset can ever appear more frequently than its constituent subsets.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>What does an association rule with Lift = 1.0 indicate?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The antecedent and consequent occur together exactly as often as expected by random chance under statistical independence</span></button><button class="opt" type="button"><b>B</b><span>The support of the rule is zero</span></button><button class="opt" type="button"><b>C</b><span>The items are perfect compliments that are always bought together</span></button><button class="opt" type="button"><b>D</b><span>The rule has 100% confidence</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Lift is defined as P(X, Y) / (P(X)P(Y)). When lift equals 1.0, the joint occurrence matches the product of marginals, indicating zero association.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/probability-rules-and-bayes-theorem/"><small class="kicker">Concept</small><b>Probability and Bayes</b></a><a href="../../concepts/content-based-and-hybrid-recommenders/"><small class="kicker">Concept</small><b>Content-based &amp; hybrid</b></a><a href="../../concepts/collaborative-filtering/"><small class="kicker">Concept</small><b>Collaborative filtering</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/two-tower-retrieval/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Machine learning toolbox</small><b>Two-tower retrieval</b></a>
+    <a class="pager-next" href="../../concepts/fp-growth/"><small>Next · Machine learning toolbox <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>FP-growth</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

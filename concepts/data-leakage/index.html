@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Data Leakage · Learn · Yogesh Awate</title>
+<meta name="description" content="Diagnosing and preventing the insidious contamination of training data with information available only at inference or in the future.">
+<meta property="og:title" content="Data Leakage · Learn · Yogesh Awate">
+<meta property="og:description" content="Diagnosing and preventing the insidious contamination of training data with information available only at inference or in the future.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="data-leakage">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-data-science">Path 07 · Data science</a> / Pipelines and validation / Lesson 15 of 47</span>
+    <h1 class="case-title">Data Leakage</h1>
+    <p class="lede rise" style="--d:3">Diagnosing and preventing the insidious contamination of training data with information available only at inference or in the future.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">15 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/train-validation-test-splits-group-and-time-based/">Splits: group and time-based</a> <a href="../../concepts/cross-validation/">Cross-validation</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Data science · Pipelines and validation</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Data leakage occurs when information from outside the training partition—or information unavailable at the real-time moment of prediction—inadvertently contaminates model training. Leakage produces deceptively flawless cross-validation scores that abruptly collapse into catastrophic failures in production. Recognizing target leakage, feature leakage, and preprocessing leakage is essential for reliable machine learning.</p>
+        <p>Imagine training a machine learning model to predict whether a hospital patient will develop severe pneumonia. During feature engineering, you include a column called "Antibiotic IV Dosage Administered". In offline validation, the model achieves a miraculous 99.8% ROC-AUC. But in clinical practice, doctors only prescribe high-dose IV antibiotics after pneumonia has already been diagnosed! The model did not predict pneumonia; it merely detected the physician's reaction to pneumonia. This is classic target leakage—including a feature that is a downstream consequence of the target rather than a genuine antecedent predictor.</p>
+        <p>A subtler, pervasive trap is preprocessing leakage. Suppose you standardise a dataset by subtracting the mean and dividing by the standard deviation. If you compute the mean and variance across the entire table before splitting into training and test sets, the training data has absorbed statistical parameters derived from the test set. If you perform feature selection or target encoding across the entire table, test labels directly influence the features selected for training, manufacturing artificial predictive power out of pure noise.</p>
+        <p>The diagnostic hallmark of data leakage is performance that appears "too good to be true". Whenever a model achieves near-perfect metrics on a notoriously noisy or uncertain task, the cause is almost never an algorithmic breakthrough—it is almost always data leakage. Building strict isolation firewalls around the point of prediction ensures models rely solely on information that genuinely exists at decision time.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Studying for a medical licensing exam with a stolen copy of the answer key: you score 100% on practice exams, but fail in the clinic when answers are no longer provided.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Define the point of prediction: fix the exact real-world timestamp $T_{\text{pred}}$ when inference executes in production.</li><li>Audit feature timelines: systematically eliminate any feature created, updated, or recorded after $T_{\text{pred}}$ (downstream consequence of the target).</li><li>Fit all transformers inside cross-validation: enforce that scalers, imputers, and encoders call fit strictly on training folds and transform on validation folds.</li><li>Isolate target encoding out-of-fold: ensure target-based categorical encodings exclude the current record's label to prevent self-referential leakage.</li><li>Stress-test with temporal holdouts: validate models on a strictly future time block; a dramatic divergence between cross-validation and holdout exposes leakage.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Mutual information target leakage condition</h3><div class="formula">I(X_{\text{leaked}}; Y \mid T_{\text{pred}}) \gg I(X_{\text{valid}}; Y \mid T_{\text{pred}})</div><p>Where $X_{\text{leaked}}$ represents information generated chronologically after decision timestamp $T_{\text{pred}}$. Such features exhibit spurious high mutual information with target $Y$ during backtesting that disappears under true live inference.</p></li>
+          <li><h3>Global preprocessing parameter mismatch</h3><div class="formula">\hat{\mu}_{\text{leaked}} = \frac{1}{n_{\text{tr}} + n_{\text{val}}} \sum_{i \in \mathcal{D}_{\text{tr}} \cup \mathcal{D}_{\text{val}}} x_i \ne \hat{\mu}_{\text{train}} = \frac{1}{n_{\text{tr}}} \sum_{i \in \mathcal{D}_{\text{tr}}} x_i</div><p>Estimating transformation parameters (such as mean $\hat{\mu}$ or variance $\hat{\sigma}^2$) across the pooled dataset introduces an out-of-fold bias of order $\mathcal{O}(n_{\text{val}} / n)$, breaking the statistical independence assumption between training and validation partitions.</p></li>
+          <li><h3>Out-of-fold target encoding formulation</h3><div class="formula">\hat{S}_{i, c} = \frac{\sum_{j \in \mathcal{D}_{\text{tr}} \setminus \{i\}, X_j = c} y_j + m \bar{y}_{\text{tr}}}{n_{c, \text{tr},-i} + m}</div><p>Target encoding must be computed by explicitly excluding sample $i$ (or via out-of-fold cross-fitting), preventing observation $i$'s own target label $y_i$ from leaking directly into its feature representation.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Target leakage introduces features that are downstream effects or proxies of the outcome rather than causes.</li><li>Preprocessing leakage occurs whenever transformation parameters (means, medians, vocabularies) are learned on pooled train and test data.</li><li>Feature selection leakage across the entire dataset can make pure noise appear 80%+ accurate in cross-validation.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Simulate feature selection leakage on pure noise (100 samples, 500 noise features)</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+n_samples, n_features = <span class="n">100</span>, <span class="n">500</span>
+X = np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">1</span>, size=(n_samples, n_features))
+y = np.random.<span class="f">binomial</span>(<span class="n">1</span>, <span class="n">0.5</span>, size=n_samples)  <span class="c"># independent random binary targets</span>
+
+<span class="c"># 1. LEAKED: Select top 5 correlated features using the FULL dataset before splitting</span>
+corrs = np.<span class="f">array</span>([np.<span class="f">abs</span>(np.<span class="f">corrcoef</span>(X[:, j], y)[<span class="n">0</span>, <span class="n">1</span>]) <span class="k">for</span> j <span class="k">in</span> <span class="k">range</span>(n_features)])
+top_leaked = np.<span class="f">argsort</span>(corrs)[-<span class="n">5</span>:]
+
+<span class="c"># Nearest centroid classification on test set using leaked features</span>
+train_idx, test_idx = np.<span class="f">arange</span>(<span class="n">70</span>), np.<span class="f">arange</span>(<span class="n">70</span>, <span class="n">100</span>)
+c1_leak = np.<span class="f">mean</span>(X[train_idx][y[train_idx] == <span class="n">1</span>][:, top_leaked], axis=<span class="n">0</span>)
+c0_leak = np.<span class="f">mean</span>(X[train_idx][y[train_idx] == <span class="n">0</span>][:, top_leaked], axis=<span class="n">0</span>)
+preds_leak = (np.linalg.<span class="f">norm</span>(X[test_idx][:, top_leaked] - c1_leak, axis=<span class="n">1</span>) &lt;
+              np.linalg.<span class="f">norm</span>(X[test_idx][:, top_leaked] - c0_leak, axis=<span class="n">1</span>)).<span class="f">astype</span>(int)
+acc_leak = np.<span class="f">mean</span>(preds_leak == y[test_idx])
+
+<span class="c"># 2. CLEAN: Select features using ONLY training partition</span>
+corrs_clean = np.<span class="f">array</span>([np.<span class="f">abs</span>(np.<span class="f">corrcoef</span>(X[train_idx, j], y[train_idx])[<span class="n">0</span>, <span class="n">1</span>]) <span class="k">for</span> j <span class="k">in</span> <span class="k">range</span>(n_features)])
+top_clean = np.<span class="f">argsort</span>(corrs_clean)[-<span class="n">5</span>:]
+c1_clean = np.<span class="f">mean</span>(X[train_idx][y[train_idx] == <span class="n">1</span>][:, top_clean], axis=<span class="n">0</span>)
+c0_clean = np.<span class="f">mean</span>(X[train_idx][y[train_idx] == <span class="n">0</span>][:, top_clean], axis=<span class="n">0</span>)
+preds_clean = (np.linalg.<span class="f">norm</span>(X[test_idx][:, top_clean] - c1_clean, axis=<span class="n">1</span>) &lt;
+               np.linalg.<span class="f">norm</span>(X[test_idx][:, top_clean] - c0_clean, axis=<span class="n">1</span>)).<span class="f">astype</span>(int)
+acc_clean = np.<span class="f">mean</span>(preds_clean == y[test_idx])
+
+<span class="k">print</span>(<span class="s">f&quot;Test accuracy with feature selection leakage: {acc_leak:.2f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Test accuracy with clean in-fold selection:   {acc_clean:.2f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Calling fit_transform on the full dataset before splitting into train, validation, and test partitions.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Performing unsupervised or supervised feature selection on the entire dataset prior to cross-validation.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Including database record update timestamps, transaction IDs, or account closure dates that are logged concurrently with the target event.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>A machine learning engineer achieves 99.5% accuracy predicting loan defaults, but in production the model performs no better than random guessing. What is the most probable cause?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The learning rate in gradient descent was set too low</span></button><button class="opt" type="button"><b>B</b><span>A feature such as 'Collection Agency Referral Date' was included, which is only populated after a borrower defaults (target leakage)</span></button><button class="opt" type="button"><b>C</b><span>The model had too few tree estimators</span></button><button class="opt" type="button"><b>D</b><span>The dataset was scaled using RobustScaler instead of StandardScaler</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Features that are populated or updated as a consequence of the target event (like referral to collections) leak future outcome knowledge into training, creating deceptive offline performance that fails live.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>Why is computing StandardScaler mean and standard deviation across an entire dataset prior to cross-validation considered data leakage?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It forces continuous features to become discrete integers</span></button><button class="opt" type="button"><b>B</b><span>It converts the target variable into a normal distribution</span></button><button class="opt" type="button"><b>C</b><span>It inflates the training set with test distribution statistics, violating the assumption that test data is unseen</span></button><button class="opt" type="button"><b>D</b><span>It causes the matrix inverse to become singular during regression</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Fitting transformers on the full dataset allows test set statistical information to seep into the training set, causing optimistic validation scores.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>How does out-of-fold target encoding prevent target leakage in high-cardinality categorical variables?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By converting categorical columns into one-hot binary columns</span></button><button class="opt" type="button"><b>B</b><span>By ensuring each observation's target encoding is calculated exclusively from other rows, excluding its own target value</span></button><button class="opt" type="button"><b>C</b><span>By replacing all categorical strings with random Gaussian noise</span></button><button class="opt" type="button"><b>D</b><span>By calculating category means only on the test partition</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> If a row's own target label is included when calculating its category's mean target value, the feature directly leaks the label, especially for rare categories with sample count 1.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/scikit-learn-pipelines-and-columntransformer/"><small class="kicker">Concept</small><b>Pipelines and ColumnTransformer</b></a><a href="../../concepts/missing-data-mcar-mar-mnar-and-imputation/"><small class="kicker">Concept</small><b>Missing data: MCAR, MAR, MNAR</b></a><a href="../../concepts/encoding-categoricals-one-hot-ordinal-target-woe/"><small class="kicker">Concept</small><b>Encoding categoricals</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/train-validation-test-splits-group-and-time-based/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Data science</small><b>Splits: group and time-based</b></a>
+    <a class="pager-next" href="../../concepts/scikit-learn-pipelines-and-columntransformer/"><small>Next · Data science <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Pipelines and ColumnTransformer</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

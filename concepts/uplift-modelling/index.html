@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Uplift Modelling and Causal Machine Learning: Persuasion and Treatment Effects · Learn · Yogesh Awate</title>
+<meta name="description" content="Estimating Individual Treatment Effects (ITE) and Conditional Average Treatment Effects (CATE) using meta-learners (S-learner, T-learner, X-learner).">
+<meta property="og:title" content="Uplift Modelling and Causal Machine Learning: Persuasion and Treatment Effects · Learn · Yogesh Awate">
+<meta property="og:description" content="Estimating Individual Treatment Effects (ITE) and Conditional Average Treatment Effects (CATE) using meta-learners (S-learner, T-learner, X-learner).">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="uplift-modelling">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-data-science">Path 07 · Data science</a> / Product analytics / Lesson 35 of 47</span>
+    <h1 class="case-title">Uplift Modelling and Causal Machine Learning: Persuasion and Treatment Effects</h1>
+    <p class="lede rise" style="--d:3">Estimating Individual Treatment Effects (ITE) and Conditional Average Treatment Effects (CATE) using meta-learners (S-learner, T-learner, X-learner).</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="3"><i><b></b></i>Advanced</span></span>
+      <span class="tagline">17 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Data science · Product analytics</dd>
+          <dt>Level</dt><dd>Advanced</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Standard predictive models predict customer outcomes: who will renew their subscription or who will buy a product. However, targeting customers with the highest propensity to buy often wastes marketing budget on "Sure Things" who would have purchased anyway, while bothering "Sleeping Dogs" who cancel when contacted. Uplift modelling estimates the incremental causal impact of an intervention, identifying the persuadable segment where treatment changes behaviour.</p>
+        <p>In causal inference, each individual $i$ has two potential outcomes: $Y_i(1)$ under treatment $W=1$ (e.g. receiving a marketing discount) and $Y_i(0)$ under control $W=0$. The Individual Treatment Effect is $\tau_i = Y_i(1) - Y_i(0)$.</p>
+        <p>Because an individual cannot simultaneously be treated and untreated (the Fundamental Problem of Causal Inference), we cannot observe both outcomes for the same person. Uplift modelling estimates the Conditional Average Treatment Effect (CATE) $\tau(x) = \mathbb{E}[Y(1) - Y(0) \mid X = x]$.</p>
+        <p>Meta-learners frame CATE estimation using standard supervised regression algorithms: The S-Learner (Single learner) includes the treatment indicator $W$ as a feature alongside $X$. However, if $X$ is high-dimensional, regularisation often shrinks the treatment effect towards zero.</p>
+        <p>The T-Learner (Two learners) trains two independent models: $\mu_1(x)$ on treated units and $\mu_0(x)$ on control units, computing $\hat{\tau}(x) = \hat{\mu}_1(x) - \hat{\mu}_0(x)$. The X-Learner (Künzel et al.) uses imputed counterfactual residuals to dramatically outperform T-learners when treatment and control sample sizes are severely imbalanced.</p>
+        <p>Uplift models are evaluated using Qini curves and Cumulative Gain charts, measuring the area under the incremental uplift curve (AUUC).</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine a medical triage team administering a vaccine during an epidemic. Some patients will recover naturally on their own (Sure Things), some patients are unfortunately incurable regardless of treatment (Lost Causes), and some will experience dangerous allergic reactions if vaccinated (Sleeping Dogs). The vaccine should be reserved strictly for the Persuadables—the group whose recovery depends directly on receiving the medication.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Collect randomised experiment data: Ensure training data derives from an A/B test where treatment assignment $W \in \{0, 1\}$ is completely unconfounded ($W \perp \{Y(1), Y(0)\} \mid X$).</li><li>Segment customers conceptually: Identify the four archetypes: Persuadables (uplift $&gt; 0$), Sure Things (outcome $1$ regardless), Lost Causes (outcome $0$ regardless), and Sleeping Dogs (uplift $&lt; 0$).</li><li>Select meta-learner architecture: Use S-Learner for tiny datasets, T-Learner for balanced sample sizes, or X-Learner / Causal Forests for complex heterogeneous treatment effects.</li><li>Estimate individual uplift scores: Compute $\hat{\tau}(x_i)$ for every candidate customer.</li><li>Evaluate via Qini / Cumulative Gain curves: Rank holdout customers descending by uplift score and compute the cumulative incremental uplift over a random targeting baseline.</li><li>Target positive uplift threshold: Deploy interventions exclusively to customers with $\hat{\tau}(x) &gt; \text{cost of treatment}$.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Conditional Average Treatment Effect (CATE)</h3><div class="formula">\tau(x) = \mathbb{E}[Y(1) - Y(0) \mid X = x] = \mathbb{E}[Y \mid X = x, W = 1] - \mathbb{E}[Y \mid X = x, W = 0]</div><p>Under unconfoundedness, CATE is identified as the difference between conditional regression surfaces in the treated and control populations.</p></li>
+          <li><h3>T-Learner Uplift Estimator</h3><div class="formula">\hat{\tau}_{T}(x) = \hat{\mu}_1(x) - \hat{\mu}_0(x), \quad \hat{\mu}_1 = \operatorname{Fit}(X_{\mathrm{treat}}, Y_{\mathrm{treat}}), \; \hat{\mu}_0 = \operatorname{Fit}(X_{\mathrm{ctrl}}, Y_{\mathrm{ctrl}})</div><p>Fits two independent supervised models and evaluates their difference, eliminating the risk of treatment feature shrinkage.</p></li>
+          <li><h3>Qini Metric for Causal Evaluation</h3><div class="formula">Q(n) = Y_1(n) - Y_0(n) \cdot \frac{N_1(n)}{N_0(n)}</div><p>Measures cumulative incremental conversions among the top $n$ ranked customers, scaling control responses by the treatment-to-control ratio.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Uplift modelling estimates the incremental causal effect of an intervention rather than baseline response propensity.</li><li>Separates customers into Persuadables, Sure Things, Lost Causes, and Sleeping Dogs.</li><li>T-learners fit independent models on treated and control cohorts to avoid regularising away treatment effects.</li><li>Models are evaluated using Qini curves and Area Under the Uplift Curve (AUUC).</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">from</span> sklearn.ensemble <span class="k">import</span> GradientBoostingRegressor
+
+<span class="c"># Simulate A/B test data with heterogeneous treatment effects</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+N = <span class="n">1000</span>
+<span class="c"># Features: x0 (baseline loyalty), x1 (price sensitivity)</span>
+X = np.random.<span class="f">uniform</span>(<span class="n">0</span>, <span class="n">1</span>, size=(N, <span class="n">2</span>))
+<span class="c"># Randomised treatment assignment (50% treated)</span>
+W = np.random.<span class="f">binomial</span>(<span class="n">1</span>, <span class="n">0.5</span>, size=N)
+
+<span class="c"># Baseline conversion without discount: high loyalty x0 buys naturally</span>
+y0 = (X[:, <span class="n">0</span>] &gt; <span class="n">0.6</span>).<span class="f">astype</span>(float)
+<span class="c"># True treatment effect: discount only persuades price-sensitive users with high x1</span>
+true_tau = <span class="n">0.4</span> * X[:, <span class="n">1</span>] - <span class="n">0.1</span> * X[:, <span class="n">0</span>]
+<span class="c"># Observed outcome</span>
+y = np.<span class="f">clip</span>(y0 + W * true_tau + np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">0.05</span>, N), <span class="n">0</span>, <span class="n">1</span>)
+
+<span class="c"># Fit T-Learner: two independent models</span>
+idx_treat = (W == <span class="n">1</span>)
+idx_ctrl = (W == <span class="n">0</span>)
+
+model_treat = <span class="f">GradientBoostingRegressor</span>(max_depth=<span class="n">3</span>, random_state=<span class="n">42</span>).<span class="f">fit</span>(X[idx_treat], y[idx_treat])
+model_ctrl = <span class="f">GradientBoostingRegressor</span>(max_depth=<span class="n">3</span>, random_state=<span class="n">42</span>).<span class="f">fit</span>(X[idx_ctrl], y[idx_ctrl])
+
+<span class="c"># Predict Conditional Average Treatment Effect (CATE)</span>
+X_test = np.<span class="f">array</span>([
+    [<span class="n">0.9</span>, <span class="n">0.1</span>],  <span class="c"># Sure Thing (high loyalty, low price sensitivity): tau ~ -0.05</span>
+    [<span class="n">0.2</span>, <span class="n">0.9</span>]   <span class="c"># Persuadable (low loyalty, high price sensitivity): tau ~ +0.34</span>
+])
+cate_pred = model_treat.<span class="f">predict</span>(X_test) - model_ctrl.<span class="f">predict</span>(X_test)
+
+<span class="k">print</span>(<span class="s">f&quot;Customer 1 (Sure Thing) predicted uplift:   {cate_pred[0]:+.3f} (Do not send promo!)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Customer 2 (Persuadable) predicted uplift:  {cate_pred[1]:+.3f} (Send promo!)&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Training on observational data with unmeasured confounders: If discounts were given only to high-spending users historically, models learn confounding bias rather than true causal uplift.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Targeting high-propensity users: Relying on standard churn/conversion propensity scores causes companies to subsidise customers who would have converted anyway.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>S-Learner bias: In high-dimensional settings, an S-Learner tree model may never split on the treatment indicator $W$, predicting zero treatment effect everywhere.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>Why is targeting customers based on standard response propensity (propensity to buy) often suboptimal compared to uplift modelling?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Propensity models cannot be evaluated with cross-validation</span></button><button class="opt" type="button"><b>B</b><span>Propensity models require non-linear neural networks</span></button><button class="opt" type="button"><b>C</b><span>Uplift models run ten times faster than propensity models</span></button><button class="opt" type="button"><b>D</b><span>High propensity customers are often "Sure Things" who would have purchased without any expensive promotional discount</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Propensity models identify who will buy, not who was caused to buy by the intervention. Marketing to Sure Things wastes budget with zero incremental revenue.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>In uplift segmentation terminology, who are the "Sleeping Dogs"?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Inactive accounts with zero transactions</span></button><button class="opt" type="button"><b>B</b><span>Customers who would remain positive or active if left alone, but react negatively (e.g. unsubscribe or cancel) when contacted</span></button><button class="opt" type="button"><b>C</b><span>Bots and scrapers crawling the website</span></button><button class="opt" type="button"><b>D</b><span>Customers who churn immediately after signup</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Sleeping Dogs have negative treatment effects: reminding them of a subscription reminds them to cancel, making the intervention actively destructive.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>What is the primary vulnerability of the single-model S-Learner when estimating treatment effects?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Regularisation algorithms (like Lasso or tree depth penalties) can easily shrink or ignore the single treatment indicator column, falsely estimating zero uplift</span></button><button class="opt" type="button"><b>B</b><span>It cannot process continuous outcomes</span></button><button class="opt" type="button"><b>C</b><span>It divides by zero on unlabelled data</span></button><button class="opt" type="button"><b>D</b><span>It requires two separate databases to run</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because the treatment flag is just one feature among many, decision trees and regularised models frequently drop it, causing treatment effect estimates to vanish.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/churn-and-retention-modelling/"><small class="kicker">Concept</small><b>Churn &amp; retention modelling</b></a><a href="../../concepts/cohort-and-funnel-analysis/"><small class="kicker">Concept</small><b>Cohort and funnel analysis</b></a><a href="../../concepts/a-b-testing-end-to-end/"><small class="kicker">Concept</small><b>A/B Testing End-to-End</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/customer-lifetime-value/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Data science</small><b>Customer lifetime value</b></a>
+    <a class="pager-next" href="../../concepts/data-visualisation-principles/"><small>Next · Data science <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Data visualisation principles</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

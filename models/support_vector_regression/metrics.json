@@ -1,0 +1,17 @@
+{
+  "dataset": "California housing sample",
+  "summary": "RBF SVR trained on 80% of the California housing sample (MedHouseVal as target), scored on a held-out 20%. The baseline always predicts the training mean.",
+  "model_label": "RBF SVR",
+  "baseline_label": "Predict the mean",
+  "metrics": {
+    "RMSE": 0.4487,
+    "MAE": 0.3635,
+    "R²": 0.7801
+  },
+  "baseline": {
+    "RMSE": 0.9568,
+    "MAE": 0.8149,
+    "R²": -0.0001
+  },
+  "generated": "generated 2026-10-28"
+}

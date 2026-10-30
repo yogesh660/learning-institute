@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Pixels, channels and colour spaces · Learn · Yogesh Awate</title>
+<meta name="description" content="Digital images are discrete multidimensional arrays of sampled spatial irradiance measurements. Understanding coordinate conventions, intensity quantisation across bit depths, memory layout differences (H W C vs C H W), and mathematical conversions between colour spaces (RGB, Grayscale, HSV, and CIE L*a*b*) forms the essential foundation for computer vision algorithms and convolutional neural network architectures.">
+<meta property="og:title" content="Pixels, channels and colour spaces · Learn · Yogesh Awate">
+<meta property="og:description" content="Digital images are discrete multidimensional arrays of sampled spatial irradiance measurements. Understanding coordinate conventions, intensity quantisation across bit depths, memory layout differences (H W C vs C H W), and mathematical conversions between colour spaces (RGB, Grayscale, HSV, and CIE L*a*b*) forms the essential foundation for computer vision algorithms and convolutional neural network architectures.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="pixels-channels-and-colour-spaces">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-vision">Path 09 · Computer vision</a> / Image basics / Lesson 1 of 37</span>
+    <h1 class="case-title">Pixels, channels and colour spaces</h1>
+    <p class="lede rise" style="--d:3">Digital images are discrete multidimensional arrays of sampled spatial irradiance measurements. Understanding coordinate conventions, intensity quantisation across bit depths, memory layout differences ($H \times W \times C$ vs $C \times H \times W$), and mathematical conversions between colour spaces (RGB, Grayscale, HSV, and CIE $L^*a^*b^*$) forms the essential foundation for computer vision algorithms and convolutional neural network architectures.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="1"><i><b></b></i>Beginner</span></span>
+      <span class="tagline">14 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/exploratory-data-analysis/">Exploratory data analysis</a> <a href="../../models/convolutional_neural_networks/">CNNs</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Computer vision · Image basics</dd>
+          <dt>Level</dt><dd>Beginner</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Every digital photograph or video frame begins life as photons striking a silicon sensor grid, converted into an array of electrical voltages and discretised into numerical matrices. Before a machine learning algorithm can recognise an object, segment a medical scan, or guide an autonomous drone, it must interpret these raw numeric tensors. How an image is represented—whether as raw primary additive colour intensities, decoupled luminance and chrominance, or perceptually uniform coordinates—directly determines how effectively downstream filters and neural layers learn invariant visual representations.</p>
+        <p>Spatial sampling and radiometric quantisation: A continuous visual scene is sampled on a rectangular lattice of discrete picture elements ("pixels") over a grid of height $H$ and width $W$. Each pixel's brightness is quantised into a discrete integer value governed by bit depth. In standard 8-bit imaging, intensities range over $2^8 = 256$ discrete levels from $0$ (absence of light, pure black) to $255$ (sensor saturation, pure white). Higher bit depths, such as 12-bit or 16-bit used in medical imaging and astronomy, offer expanded dynamic range to prevent clipping in intense highlights or deep shadows.</p>
+        <p>Additive trichromacy and the Bayer mosaic: Human colour perception is trichromatic, mediated by retinal cone cells sensitive to short (blue), medium (green), and long (red) optical wavelengths. Digital camera sensors capture this trichromatic signal using an overlaid mosaic filter (most commonly the Bayer colour filter array). Because human photopic vision possesses peak spatial and luminance acuity in the green spectral band, Bayer arrays allocate twice as many green sensor elements as red or blue (a $2 \times 2$ repeating pattern of $R, G, G, B$). Demosaicing algorithms then interpolate these sensor readings into three co-registered channel grids: Red, Green, and Blue.</p>
+        <p>Tensor layouts and channel ordering: In spatial matrix coordinates, the origin $(0, 0)$ is situated at the top-left corner of the image, with row indices $y \in [0, H-1]$ pointing vertically downwards and column indices $x \in [0, W-1]$ pointing horizontally to the right. Numerical libraries differ in how colour channels are arranged in memory. Image processing toolkits like OpenCV and NumPy store arrays in channel-last layout ($H \times W \times C$), whereas deep learning frameworks like PyTorch standardise on channel-first tensors ($C \times H \times W$ or batch-first $N \times C \times H \times W$) to optimise parallel matrix multiplications on GPU tensor cores.</p>
+        <p>The limitation of RGB and the power of decoupled colour spaces: RGB entangles illumination intensity (luminance) directly with chromatic hue. If an illuminant dims or a shadow falls across a surface, all three RGB colour values drop simultaneously, frustrating simple colour segmentation. Transforming to colour spaces like HSV (Hue, Saturation, Value) or CIE $L^*a^*b^*$ decouples perceived lightness from chromaticity. This allows computer vision systems to achieve lighting invariance by operating purely on the chrominance coordinates while remaining robust to harsh lighting shifts.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Think of colour spaces as different vocabularies for mixing paint. RGB is like ordering paint by specifying the exact millilitres of red, green, and blue base pigments poured from three mechanical dispensers. This formulation tells the dispensing machine exactly what to mix, but it makes intuitive adjustments difficult: if an artist asks for "the same paint shade, but lit by bright sunshine rather than twilight," you would have to calculate complex proportional changes across all three pigment valves simultaneously. HSV, by contrast, describes paint the way an artist thinks: "Which pure pigment angle on the colour wheel (Hue)? How saturated is it, or is it muted with white (Saturation)? And how much light is shining on the canvas (Value)?" Both vocabularies specify identical colours, but HSV lets you adjust lighting without altering the hue.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Perceptual grayscale luminance (ITU-R BT.601)</h3><div class="formula">Y = 0.299\,R + 0.587\,G + 0.114\,B</div><p>The weights reflect the human eye's spectral sensitivity curve: green light contributes approximately $58.7\%$ of perceived luminance, red contributes $29.9\%$, and blue contributes only $11.4\%$. In high-definition video standards (ITU-R BT.709), updated coefficients $Y = 0.2126\,R + 0.7152\,G + 0.0722\,B$ are used.</p></li>
+          <li><h3>HSV colour transformation</h3><div class="formula">V = \max(R, G, B), \quad S = \begin{cases} 0 & \text{if } V = 0 \\ \frac{V - \min(R, G, B)}{V} & \text{otherwise} \end{cases}</div><p>Value $V \in [0, 1]$ measures brightness. Saturation $S \in [0, 1]$ quantifies colour purity (with $S=0$ representing neutral greyscale). Hue $H \in [0^\circ, 360^\circ)$ represents angular colour tone computed piecewise depending on whether $R$, $G$, or $B$ is maximal.</p></li>
+          <li><h3>Perceptual colour difference in CIE L*a*b* space</h3><div class="formula">\Delta E^*_{ab} = \sqrt{(\Delta L^*)^2 + (\Delta a^*)^2 + (\Delta b^*)^2}</div><p>In non-linear colour spaces like RGB, Euclidean distance does not align with human perceptual colour difference: two RGB vectors with distance 20 might appear indistinguishable, while another pair with distance 20 appears starkly different. CIE $L^*a^*b^*$ is designed to be perceptually uniform, such that Euclidean metric distance $\Delta E^*$ directly mirrors human perceptual difference.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Digital images are 3D numeric tensors: Height $\times$ Width $\times$ Channels, typically quantised as 8-bit unsigned integers ($[0, 255]$).</li><li>Grayscale luminance conversion requires perceptual weighting ($0.299 R + 0.587 G + 0.114 B$) rather than a simple unweighted arithmetic mean.</li><li>RGB entangles lighting with chromaticity; HSV and CIE $L^*a^*b^*$ separate luminance from chrominance, enabling illumination-invariant feature extraction.</li><li>OpenCV reads images in BGR channel order by default, whereas PIL, matplotlib, and PyTorch expect standard RGB order.</li><li>Deep neural networks expect channel-first memory layout ($C \times H \times W$), requiring transposition from channel-last ($H \times W \times C$) numpy arrays.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Create a synthetic 4x4 RGB image with distinct primary and secondary colours</span>
+<span class="c"># Shape: Height=4, Width=4, Channels=3 (uint8)</span>
+img_rgb = np.<span class="f">zeros</span>((<span class="n">4</span>, <span class="n">4</span>, <span class="n">3</span>), dtype=np.uint8)
+img_rgb[<span class="n">0</span>, <span class="n">0</span>] = [<span class="n">255</span>, <span class="n">0</span>, <span class="n">0</span>]     <span class="c"># Pure Red</span>
+img_rgb[<span class="n">0</span>, <span class="n">1</span>] = [<span class="n">0</span>, <span class="n">255</span>, <span class="n">0</span>]     <span class="c"># Pure Green</span>
+img_rgb[<span class="n">0</span>, <span class="n">2</span>] = [<span class="n">0</span>, <span class="n">0</span>, <span class="n">255</span>]     <span class="c"># Pure Blue</span>
+img_rgb[<span class="n">0</span>, <span class="n">3</span>] = [<span class="n">255</span>, <span class="n">255</span>, <span class="n">0</span>]   <span class="c"># Yellow (Red + Green)</span>
+img_rgb[<span class="n">1</span>, <span class="n">0</span>] = [<span class="n">0</span>, <span class="n">255</span>, <span class="n">255</span>]   <span class="c"># Cyan (Green + Blue)</span>
+img_rgb[<span class="n">1</span>, <span class="n">1</span>] = [<span class="n">255</span>, <span class="n">0</span>, <span class="n">255</span>]   <span class="c"># Magenta (Red + Blue)</span>
+img_rgb[<span class="n">1</span>, <span class="n">2</span>] = [<span class="n">255</span>, <span class="n">255</span>, <span class="n">255</span>] <span class="c"># White</span>
+img_rgb[<span class="n">1</span>, <span class="n">3</span>] = [<span class="n">128</span>, <span class="n">128</span>, <span class="n">128</span>] <span class="c"># Mid Grey</span>
+
+<span class="c"># 1. Grayscale conversion: ITU-R BT.601 perceptual luminance weights</span>
+<span class="c"># Y = 0.299 * R + 0.587 * G + 0.114 * B</span>
+rgb_norm = img_rgb.<span class="f">astype</span>(np.float32) / <span class="n">255.0</span>
+r = rgb_norm[..., <span class="n">0</span>]
+g = rgb_norm[..., <span class="n">1</span>]
+b = rgb_norm[..., <span class="n">2</span>]
+gray_bt601 = <span class="n">0.299</span> * r + <span class="n">0.587</span> * g + <span class="n">0.114</span> * b
+
+<span class="k">print</span>(<span class="s">&quot;RGB top-left 2x2 patch (R, G, B):&quot;</span>)
+<span class="k">print</span>(img_rgb[:<span class="n">2</span>, :<span class="n">2</span>])
+
+<span class="k">print</span>(<span class="s">&quot;\nPerceptual Grayscale (BT.601, [0.0, 1.0]):&quot;</span>)
+<span class="k">print</span>(np.<span class="f">round</span>(gray_bt601[:<span class="n">2</span>, :<span class="n">2</span>], <span class="n">3</span>))
+<span class="k">print</span>(<span class="s">f&quot;Pure Red luminance:   {gray_bt601[0, 0]:.3f} (matches 0.299)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Pure Green luminance: {gray_bt601[0, 1]:.3f} (matches 0.587 - human eyes are most sensitive to green)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Pure Blue luminance:  {gray_bt601[0, 2]:.3f} (matches 0.114)&quot;</span>)
+
+<span class="c"># 2. RGB to HSV conversion from scratch</span>
+v = np.<span class="f">max</span>(rgb_norm, axis=-<span class="n">1</span>)
+c_min = np.<span class="f">min</span>(rgb_norm, axis=-<span class="n">1</span>)
+delta = v - c_min
+
+<span class="c"># Saturation: delta / v (0 if v == 0)</span>
+s = np.<span class="f">zeros_like</span>(v)
+non_zero = v &gt; <span class="n">0</span>
+s[non_zero] = delta[non_zero] / v[non_zero]
+
+<span class="c"># Hue: piecewise angle [0, 360)</span>
+h = np.<span class="f">zeros_like</span>(v)
+mask_r = (delta &gt; <span class="n">0</span>) &amp; (v == r)
+mask_g = (delta &gt; <span class="n">0</span>) &amp; (v == g) &amp; (~mask_r)
+mask_b = (delta &gt; <span class="n">0</span>) &amp; (v == b) &amp; (~mask_r) &amp; (~mask_g)
+
+h[mask_r] = <span class="n">60.0</span> * (((g[mask_r] - b[mask_r]) / delta[mask_r]) % <span class="n">6</span>)
+h[mask_g] = <span class="n">60.0</span> * (((b[mask_g] - r[mask_g]) / delta[mask_g]) + <span class="n">2</span>)
+h[mask_b] = <span class="n">60.0</span> * (((r[mask_b] - g[mask_b]) / delta[mask_b]) + <span class="n">4</span>)
+
+<span class="k">print</span>(<span class="s">&quot;\nHSV Channels (Hue in degrees, Saturation [0,1], Value [0,1]):&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Red:    H={h[0,0]:5.1f} deg, S={s[0,0]:.2f}, V={v[0,0]:.2f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Green:  H={h[0,1]:5.1f} deg, S={s[0,1]:.2f}, V={v[0,1]:.2f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Blue:   H={h[0,2]:5.1f} deg, S={s[0,2]:.2f}, V={v[0,2]:.2f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Yellow: H={h[0,3]:5.1f} deg, S={s[0,3]:.2f}, V={v[0,3]:.2f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Cyan:   H={h[1,0]:5.1f} deg, S={s[1,0]:.2f}, V={v[1,0]:.2f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Grey:   H={h[1,3]:5.1f} deg, S={s[1,3]:.2f}, V={v[1,3]:.2f} (Saturation is zero)&quot;</span>)
+
+<span class="c"># 3. Layout transposition: HWC to CHW for PyTorch</span>
+tensor_chw = np.<span class="f">transpose</span>(rgb_norm, (<span class="n">2</span>, <span class="n">0</span>, <span class="n">1</span>))
+<span class="k">print</span>(<span class="s">f&quot;\nNumPy layout shape (HWC):   {rgb_norm.shape}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;PyTorch layout shape (CHW): {tensor_chw.shape}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>OpenCV BGR versus RGB confusion: Forgetting that cv2.imread loads images in BGR format leads to reversed colour channels when passed to PyTorch or matplotlib, causing dramatic drops in inference accuracy.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Unintended integer overflow in uint8 arithmetic: In 8-bit unsigned integer arithmetic, $250 + 10 = 4$ due to modulo 256 wrap-around; always cast arrays to float32 before performing additions, subtractions, or filtering.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Calculating Euclidean distance across the angular Hue seam: In HSV space, pure red lies at both $0^\circ$ and $360^\circ$. A naive Euclidean distance between $5^\circ$ and $355^\circ$ yields $350^\circ$ rather than the true angular distance of $10^\circ$.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Feeding unnormalised $[0, 255]$ integers into neural networks: Passing raw uint8 integers into neural layers causes exploding activations and saturated non-linearities; always scale to $[0.0, 1.0]$ and standardise channel statistics.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming equal perceptual sensitivity across channels: Performing image processing tasks (such as edge filtering or thresholding) on unweighted channel averages ignores human luminous sensitivity, losing critical contrast detail in green and red regions.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>Why does standard grayscale conversion weight green light much higher ($0.587$) than red ($0.299$) and blue ($0.114$)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because digital camera sensors physically lack red and blue photoreceptors</span></button><button class="opt" type="button"><b>B</b><span>To prevent integer overflow when adding 8-bit channel intensities</span></button><button class="opt" type="button"><b>C</b><span>To match the photopic luminous sensitivity of the human visual system, which has peak cone acuity in the green spectrum</span></button><button class="opt" type="button"><b>D</b><span>Because green light travels faster through optical glass lenses</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Human eyes possess far more green-sensitive cones (M-cones) than blue (S-cones) or red (L-cones). The ITU-R BT.601 weights reflect this biological luminous efficiency, producing natural perceived brightness.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>What unintended visual defect occurs if an image loaded with OpenCV is displayed directly using a library expecting standard RGB order?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The image is rotated 90 degrees counter-clockwise</span></button><button class="opt" type="button"><b>B</b><span>The resolution of the image is downscaled by a factor of two</span></button><button class="opt" type="button"><b>C</b><span>Red and blue colour channels are swapped, making red objects appear blue and blue objects appear red</span></button><button class="opt" type="button"><b>D</b><span>The image becomes completely inverted into a photographic negative</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> OpenCV loads images in BGR format by default. If read without converting to RGB, channel 0 (blue) is interpreted as red, and channel 2 (red) is interpreted as blue.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>What primary advantage does the HSV colour space offer over RGB for computer vision tasks like colour-based object tracking?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>HSV guarantees that all pixel coordinates sum to a constant value</span></button><button class="opt" type="button"><b>B</b><span>HSV reduces image memory footprint from 3 bytes per pixel down to 1 byte per pixel</span></button><button class="opt" type="button"><b>C</b><span>HSV allows non-linear convolution operations without using floating-point arithmetic</span></button><button class="opt" type="button"><b>D</b><span>HSV decouples chromatic colour tone (Hue) from illumination intensity (Value), making colour tracking resilient to shadows and lighting changes</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In RGB, changing illumination shifts all three channel values simultaneously. In HSV, illumination variations primarily alter Value, while Hue remains invariant, simplifying colour-based segmentation under variable lighting.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q4</span>What happens when two uint8 pixel values 200 and 70 are added together in standard C-style or NumPy unsigned 8-bit arithmetic?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The result is automatically clamped to the maximum value of 255</span></button><button class="opt" type="button"><b>B</b><span>The value overflows modulo 256, resulting in 14 ($270 \pmod{256}$)</span></button><button class="opt" type="button"><b>C</b><span>The system raises an unhandled ZeroDivisionError exception</span></button><button class="opt" type="button"><b>D</b><span>The array automatically promotes to float64 without data loss</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Unsigned 8-bit integers (uint8) span $0$ to $255$. Arithmetic overflow wraps around modulo 256: $(200 + 70) \pmod{256} = 14$, causing severe visual artifacts unless arrays are explicitly cast to floating-point types first.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/edge-detection-sobel-and-canny/"><small class="kicker">Concept</small><b>Sobel &amp; Canny</b></a><a href="../../concepts/thresholding-histograms-and-morphology/"><small class="kicker">Concept</small><b>Thresholds &amp; Morphology</b></a><a href="../../concepts/normalisation-batch-layer-rms/"><small class="kicker">Concept</small><b>Normalisation: Batch, Layer, RMS</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/adversarial-examples/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>Adversarial examples &amp; attacks</b></a>
+    <a class="pager-next" href="../../concepts/edge-detection-sobel-and-canny/"><small>Next · Computer vision <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Sobel &amp; Canny</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

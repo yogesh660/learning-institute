@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Sequential testing and the peeking problem · Learn · Yogesh Awate</title>
+<meta name="description" content="Continuous monitoring (&quot;peeking&quot;) at incoming experimental data in classical fixed-horizon A/B testing inflates False Positive Rates (Type I error) from a nominal 5% to over 30–40%. Because the test statistic performs a random walk across time, repeatedly evaluating whether p &lt; 0.05 creates multiple testing across time, virtually guaranteeing that chance fluctuations will trigger a false rejection. Sequential testing frameworks—including Group Sequential Designs (O'Brien-Fleming alpha spending), Wald's Sequential Probability Ratio Test (SPRT), and Always-Valid p-values via martingales (mSPRT)—allow continuous experiment evaluation and early stopping while strictly controlling overall Type I error.">
+<meta property="og:title" content="Sequential testing and the peeking problem · Learn · Yogesh Awate">
+<meta property="og:description" content="Continuous monitoring (&quot;peeking&quot;) at incoming experimental data in classical fixed-horizon A/B testing inflates False Positive Rates (Type I error) from a nominal 5% to over 30–40%. Because the test statistic performs a random walk across time, repeatedly evaluating whether p &lt; 0.05 creates multiple testing across time, virtually guaranteeing that chance fluctuations will trigger a false rejection. Sequential testing frameworks—including Group Sequential Designs (O'Brien-Fleming alpha spending), Wald's Sequential Probability Ratio Test (SPRT), and Always-Valid p-values via martingales (mSPRT)—allow continuous experiment evaluation and early stopping while strictly controlling overall Type I error.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="sequential-testing-and-the-peeking-problem">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-statistics">Path 02 · Statistics</a> / Experiments and causality / Lesson 37 of 51</span>
+    <h1 class="case-title">Sequential testing and the peeking problem</h1>
+    <p class="lede rise" style="--d:3">Continuous monitoring ("peeking") at incoming experimental data in classical fixed-horizon A/B testing inflates False Positive Rates (Type I error) from a nominal 5% to over 30–40%. Because the test statistic performs a random walk across time, repeatedly evaluating whether p < 0.05 creates multiple testing across time, virtually guaranteeing that chance fluctuations will trigger a false rejection. Sequential testing frameworks—including Group Sequential Designs (O'Brien-Fleming alpha spending), Wald's Sequential Probability Ratio Test (SPRT), and Always-Valid p-values via martingales (mSPRT)—allow continuous experiment evaluation and early stopping while strictly controlling overall Type I error.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">20 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/a-b-testing-end-to-end/">A/B Testing End-to-End</a> <a href="../../concepts/hypothesis-testing-and-p-values/">Hypothesis Tests &amp; p-Values</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Statistics · Experiments and causality</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">In digital product experimentation, product managers cannot resist checking experiment dashboards every morning. If the dashboard flashes "Statistically Significant (p < 0.05)" on Day 3, the temptation to declare victory and stop the experiment immediately is overwhelming. What happens if you stop an A/B test early the moment p < 0.05? You have committed the "peeking problem", drastically corrupting your statistical guarantees. How can data teams safely monitor live experiments and stop early for massive wins without destroying statistical validity?</p>
+        <p>The Random Walk of the p-Value: Under the null hypothesis (two identical variants), the difference in sample means is a stochastic Wiener process (Brownian motion). Even though the true effect is zero, random noise causes the difference to occasionally spike into the "rejection zone" before reverting to zero. If you only look once at sample size N, the chance of being in the rejection zone is 5%. But if you look every single day, you are giving random noise 30 chances to breach the threshold! Over a 30-day experiment, the true false alarm rate exceeds 35%.</p>
+        <p>Alpha Spending Functions: You have a total budget of \alpha = 0.05 to spend across the lifetime of the experiment. If you want to peek at multiple interim milestones, you must "spend" a tiny fraction of alpha early on and reserve the bulk for the end. The O'Brien-Fleming boundary sets extremely conservative early thresholds (e.g. requiring z > 4.5, p < 0.0001 on Day 1), ensuring that only colossal effects stop the test prematurely.</p>
+        <p>Always-Valid p-Values and Martingales (mSPRT): Developed by Robbins and modernised by tech platforms (Netflix, experimentation platforms), mixture Sequential Probability Ratio Tests (mSPRT) construct test statistics that are mathematical martingales. By applying Ville's inequality, an always-valid p-value can be checked continuously after every single user with an ironclad mathematical guarantee: P(exists t : p_t <= \alpha) <= \alpha.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine flipping a fair coin 10,000 times. By the law of large numbers, the percentage of heads will be close to 50% at the end. However, early on (e.g. at flip 5), you might see 4 heads and 1 tail (80% heads). If you allow yourself to stop the game whenever heads leads by 3 flips and declare "the coin is biased toward heads!", you will always find a moment to stop and "prove" the coin is biased. Fixed-horizon testing requires waiting until all 10,000 flips conclude. Sequential testing allows stopping early only if the coin produces a run of heads so astronomical that no fair coin could ever produce it.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Type I Error Rate Inflation Under Repeated Peeking</h3><div class="formula">\alpha_{\text{inflated}} = P_{H_0}\left( \bigcup_{k=1}^K \big\{ |Z_k| \ge z_{\alpha/2} \big\} \right) \approx 1 - (1 - \alpha)^K \quad \text{(upper bound)}, \qquad \lim_{K \to \infty} \alpha_{\text{inflated}} = 1.0</div><p>Because the sequence of test statistics Z_1, Z_2, \dots, Z_K forms a correlated stochastic process, repeated evaluations against an unadjusted threshold cause Type I error to inflate rapidly with the number of looks K.</p></li>
+          <li><h3>O'Brien-Fleming Alpha Spending Boundary</h3><div class="formula">c(t) = \frac{z_{\alpha/2}}{\sqrt{t}}, \qquad \alpha^*(t) = 2 \left( 1 - \Phi\left(\frac{z_{\alpha/2}}{\sqrt{t}}\right) \right), \quad t = \frac{n}{N_{\max}} \in (0, 1]</div><p>The O'Brien-Fleming boundary scales inversely with the square root of the information fraction t. Early in the experiment (small t), the required critical z-score is very high, guarding against premature false rejections while spending minimal alpha.</p></li>
+          <li><h3>Mixture Sequential Probability Ratio Test (mSPRT)</h3><div class="formula">\Lambda_n = \int_{-\infty}^\infty \prod_{i=1}^n \frac{f(x_i; \theta)}{f(x_i; 0)} \, dH(\theta), \qquad P_{H_0}\left( \exists n \ge 1 : \Lambda_n \ge \frac{1}{\alpha} \right) \le \alpha</div><p>By mixing likelihood ratios over a prior distribution H(\theta) (typically Gaussian), \Lambda_n is a non-negative martingale under H_0 with expectation 1. Ville's inequality guarantees that the probability of ever exceeding 1/\alpha at ANY stopping time is bounded by \alpha.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Repeatedly checking p-values on accumulating data inflates Type I error rates from 5% to 30% or more.</li><li>The peeking problem occurs because the difference in sample means executes a random walk that frequently touches significance thresholds by chance.</li><li>Group Sequential Designs (O'Brien-Fleming) adjust critical boundaries across looks, requiring extreme evidence early on to preserve overall alpha.</li><li>Martingale-based tests (mSPRT) provide always-valid p-values, allowing continuous real-time monitoring and stopping with strict mathematical guarantees.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="s">&quot;&quot;&quot;
+The Peeking Problem in A/B Testing vs O'Brien-Fleming Sequential Testing
+Demonstrates false positive rate inflation under naive monitoring
+and how sequential boundaries restore nominal alpha = 0.05.
+&quot;&quot;&quot;</span>
+
+<span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">from</span> scipy <span class="k">import</span> stats
+
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+num_simulations = <span class="n">2000</span>
+sample_size_max = <span class="n">500</span>
+num_looks = <span class="n">10</span>  <span class="c"># Peek every 50 observations</span>
+look_points = np.<span class="f">linspace</span>(<span class="n">50</span>, sample_size_max, num_looks, dtype=int)
+
+<span class="c"># Simulate A/A tests (True effect = 0.0, both groups N(0, 1))</span>
+naive_false_positives = <span class="n">0</span>
+fixed_horizon_false_positives = <span class="n">0</span>
+obrien_fleming_false_positives = <span class="n">0</span>
+
+z_alpha_fixed = stats.norm.<span class="f">ppf</span>(<span class="n">0.975</span>)  <span class="c"># 1.96</span>
+
+<span class="k">for</span> _ <span class="k">in</span> <span class="k">range</span>(num_simulations):
+    <span class="c"># Generate A and B observations</span>
+    a = np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">1</span>, sample_size_max)
+    b = np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">1</span>, sample_size_max)
+    
+    <span class="c"># 1. Fixed Horizon Test (Only evaluate at the very end n = sample_size_max)</span>
+    z_final = (np.<span class="f">mean</span>(b) - np.<span class="f">mean</span>(a)) / np.<span class="f">sqrt</span>(<span class="n">2.0</span> / sample_size_max)
+    <span class="k">if</span> <span class="f">abs</span>(z_final) &gt;= z_alpha_fixed:
+        fixed_horizon_false_positives += <span class="n">1</span>
+        
+    <span class="c"># 2. Naive Peeking (Check at every look using unadjusted z &gt;= 1.96)</span>
+    naive_stopped = <span class="k">False</span>
+    of_stopped = <span class="k">False</span>
+    
+    <span class="k">for</span> look_idx, n <span class="k">in</span> <span class="f">enumerate</span>(look_points):
+        <span class="c"># Current z-statistic</span>
+        sub_a = a[:n]
+        sub_b = b[:n]
+        z_k = (np.<span class="f">mean</span>(sub_b) - np.<span class="f">mean</span>(sub_a)) / np.<span class="f">sqrt</span>(<span class="n">2.0</span> / n)
+        
+        <span class="c"># Check Naive Threshold</span>
+        <span class="k">if</span> <span class="k">not</span> naive_stopped <span class="k">and</span> <span class="f">abs</span>(z_k) &gt;= z_alpha_fixed:
+            naive_false_positives += <span class="n">1</span>
+            naive_stopped = <span class="k">True</span>
+            
+        <span class="c"># Check O'Brien-Fleming Threshold</span>
+        <span class="c"># t = information fraction n / N_max</span>
+        t_frac = n / sample_size_max
+        c_t = z_alpha_fixed / np.<span class="f">sqrt</span>(t_frac)
+        
+        <span class="k">if</span> <span class="k">not</span> of_stopped <span class="k">and</span> <span class="f">abs</span>(z_k) &gt;= c_t:
+            obrien_fleming_false_positives += <span class="n">1</span>
+            of_stopped = <span class="k">True</span>
+
+rate_fixed = (fixed_horizon_false_positives / num_simulations) * <span class="n">100</span>
+rate_naive = (naive_false_positives / num_simulations) * <span class="n">100</span>
+rate_of = (obrien_fleming_false_positives / num_simulations) * <span class="n">100</span>
+
+<span class="k">print</span>(<span class="s">f&quot;=== A/A Simulation Results ({num_simulations} simulated experiments, Nominal Alpha = 5.0%) ===&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;1. Fixed Horizon (Check once at end):      {rate_fixed:5.2f}% False Positives (Controlled!)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;2. Naive Daily Peeking (Check every look): {rate_naive:5.2f}% False Positives (Dramatically Inflated!)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;3. O'Brien-Fleming Sequential Boundary:    {rate_of:5.2f}% False Positives (Controlled at ~5%!)&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;\nO'Brien-Fleming Critical Z-Score Trajectory:&quot;</span>)
+<span class="k">for</span> n <span class="k">in</span> look_points:
+    t = n / sample_size_max
+    c = z_alpha_fixed / np.<span class="f">sqrt</span>(t)
+    p_thresh = <span class="n">2</span> * (<span class="n">1</span> - stats.norm.<span class="f">cdf</span>(c))
+    <span class="k">print</span>(<span class="s">f&quot;  n = {n:3d} (t={t:.2f}) -&gt; Required z &gt;= {c:.2f} (p &lt; {p_thresh:.5f})&quot;</span>)
+</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Stopping an experiment early for significance while using fixed-horizon p-values: This guarantees an elevated false positive rate and inflates estimated effect sizes (the winner's curse).</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Extending an experiment because it was 'almost significant': Post-hoc sample extension is peeking in reverse; it also severely inflates false positive rates.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Failing to define N_max upfront in sequential testing: Group sequential boundaries depend on the maximum planned sample size N_max; without it, information fractions cannot be calculated.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>Why does checking an A/B test daily and stopping as soon as p < 0.05 inflate the False Positive Rate?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because sample variance decreases over time</span></button><button class="opt" type="button"><b>B</b><span>Because computers round floating-point numbers differently each day</span></button><button class="opt" type="button"><b>C</b><span>Because test statistics fluctuate like a random walk over time, giving random chance multiple opportunities to breach the significance threshold</span></button><button class="opt" type="button"><b>D</b><span>Because users become tired of seeing variant B</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Continuous peeking creates multiple testing across time. Even when the null hypothesis is true, random Brownian fluctuations will cross the unadjusted z=1.96 boundary at some point with high probability.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>How does the O'Brien-Fleming boundary prevent false positive inflation during early looks?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By requiring extremely conservative significance thresholds early in the test (e.g. z > 4.0, p < 0.0001) and gradually relaxing the threshold toward 1.96 as sample size approaches N_max</span></button><button class="opt" type="button"><b>B</b><span>By forcing the sample sizes of A and B to be odd numbers</span></button><button class="opt" type="button"><b>C</b><span>By discarding all data collected during the first week</span></button><button class="opt" type="button"><b>D</b><span>By multiplying all p-values by 100</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> O'Brien-Fleming sets critical threshold c(t) = z_{\alpha/2} / \sqrt{t}, spending negligible alpha during early looks and preserving the majority of the alpha budget for the final evaluation.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>What mathematical tool allows mSPRT to compute 'always-valid' p-values for continuous monitoring?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Fourier transforms</span></button><button class="opt" type="button"><b>B</b><span>K-means clustering</span></button><button class="opt" type="button"><b>C</b><span>Polynomial regression</span></button><button class="opt" type="button"><b>D</b><span>Non-negative martingales and Ville's maximal inequality</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The likelihood ratio in mSPRT is a non-negative martingale under H_0. Ville's inequality bounds the probability of the supremum over all time steps, guaranteeing strict Type I error control regardless of when peeking occurs.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/a-b-testing-end-to-end/"><small class="kicker">Concept</small><b>A/B Testing End-to-End</b></a><a href="../../concepts/bayesian-a-b-testing/"><small class="kicker">Concept</small><b>Bayesian A/B Testing</b></a><a href="../../concepts/multiple-testing-bonferroni-holm-benjamini-hochberg/"><small class="kicker">Concept</small><b>Multiple Testing Corrections</b></a><a href="../../concepts/type-i-ii-errors-power-and-sample-size/"><small class="kicker">Concept</small><b>Errors, Power and Sample Size</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/simpsons-paradox-and-confounding/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Statistics</small><b>Simpson's Paradox &amp; Confounding</b></a>
+    <a class="pager-next" href="../../concepts/bayesian-a-b-testing/"><small>Next · Statistics <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Bayesian A/B Testing</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

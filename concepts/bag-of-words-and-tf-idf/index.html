@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Bag of words and TF-IDF · Learn · Yogesh Awate</title>
+<meta name="description" content="The Bag of Words (BoW) model represents text documents as fixed-length numeric vectors of token counts, discarding grammatical syntax and word order while preserving vocabulary frequency statistics. Term Frequency-Inverse Document Frequency (TF-IDF, Karen Spärck Jones, 1972) refines raw counts by multiplying local Term Frequency (tf(t, d)) by the global Inverse Document Frequency (idf(t, D) = N|d D : t d|), systematically damping ubiquitous generic words while elevating informative, domain-specific keywords. Evaluated with cosine similarity over L2-normalised sparse vectors, TF-IDF powers classical document retrieval, topic clustering, and linear text classification.">
+<meta property="og:title" content="Bag of words and TF-IDF · Learn · Yogesh Awate">
+<meta property="og:description" content="The Bag of Words (BoW) model represents text documents as fixed-length numeric vectors of token counts, discarding grammatical syntax and word order while preserving vocabulary frequency statistics. Term Frequency-Inverse Document Frequency (TF-IDF, Karen Spärck Jones, 1972) refines raw counts by multiplying local Term Frequency (tf(t, d)) by the global Inverse Document Frequency (idf(t, D) = N|d D : t d|), systematically damping ubiquitous generic words while elevating informative, domain-specific keywords. Evaluated with cosine similarity over L2-normalised sparse vectors, TF-IDF powers classical document retrieval, topic clustering, and linear text classification.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="bag-of-words-and-tf-idf">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-nlp">Path 10 · Natural language processing</a> / Words and text / Lesson 7 of 52</span>
+    <h1 class="case-title">Bag of words and TF-IDF</h1>
+    <p class="lede rise" style="--d:3">The Bag of Words (BoW) model represents text documents as fixed-length numeric vectors of token counts, discarding grammatical syntax and word order while preserving vocabulary frequency statistics. Term Frequency-Inverse Document Frequency (TF-IDF, Karen Spärck Jones, 1972) refines raw counts by multiplying local Term Frequency ($\text{tf}(t, d)$) by the global Inverse Document Frequency ($\text{idf}(t, D) = \log\frac{N}{|\{d \in D : t \in d\}|}$), systematically damping ubiquitous generic words while elevating informative, domain-specific keywords. Evaluated with cosine similarity over $L_2$-normalised sparse vectors, TF-IDF powers classical document retrieval, topic clustering, and linear text classification.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="1"><i><b></b></i>Beginner</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/word-and-sentence-tokenization/">Word &amp; Sentence Tokenization</a> <a href="../../concepts/stop-words-and-n-grams/">Stop Words &amp; N-Grams</a> <a href="../../concepts/text-normalisation-unicode-and-regex/">Normalisation &amp; Regex</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Natural language processing · Words and text</dd>
+          <dt>Level</dt><dd>Beginner</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">How can an algorithm determine whether a news article discusses astrophysics, international diplomacy, or organic chemistry when computers process only numbers? The simplest representation is to treat a document as a literal bag of words: toss all the words into a sack, shake away grammatical word order, and tally how many times each dictionary term appears. Yet raw word counts deceive: the word "the" might appear fifty times in every document, while the critical distinguishing word "supernova" appears only three times. TF-IDF resolves this disparity mathematically, weighting words by how uniquely informative they are across the entire document corpus.</p>
+        <p>The Bag of Words vector space model: Given a vocabulary $\mathcal{V}$ of $V$ unique words, any document $d$ can be mapped to a $V$-dimensional vector $\mathbf{x} = [c_1, c_2, \dots, c_V]$, where $c_i$ is the count of occurrences of word $w_i$ in document $d$. This representation possesses two profound properties: (1) it transforms arbitrary-length text into fixed-length mathematical vectors that can be fed directly to linear classifiers, support vector machines, or clustering algorithms; and (2) it discards word order completely ("dog bites man" and "man bites dog" yield identical vectors). Despite this radical simplification, word frequencies capture strong topical semantics.</p>
+        <p>The limitation of raw term frequencies: If you compute Euclidean distance or dot products between raw count vectors, two flaws arise: (1) Longer documents have larger counts simply because they contain more words, creating artificial bias; and (2) Common words that appear everywhere ("said", "year", "people") dominate the dot product, drowning out rare, highly specific keywords ("mitochondria", "amortisation").</p>
+        <p>Inverse Document Frequency as information content: In 1972, British computer scientist Karen Spärck Jones introduced Inverse Document Frequency (IDF) based on information theory. If a word $t$ appears in every single document across a corpus ($|\{d : t \in d\}| = N$), it carries zero discriminative information: $\log(N / N) = \log(1) = 0$. Conversely, if a word appears in only two documents out of ten thousand, it is a rare, highly specialized topic descriptor, producing a large positive IDF score. Multiplying Term Frequency by Inverse Document Frequency ($\text{TF} \times \text{IDF}$) scales each word's weight by its uniqueness.</p>
+        <p>Cosine similarity over normalised sparse vectors: Because document vocabularies span tens of thousands of words, TF-IDF vectors are extremely sparse (over 99% of entries are zeros). Normalising each vector to unit Euclidean norm ($L_2$ normalisation) eliminates document length bias: dividing by vector magnitude ensures that a short 100-word essay and a 1,000-word technical report on the same topic map to identical directions in vector space. The inner dot product between two $L_2$-normalised vectors equals their cosine similarity $\cos(\theta) = \frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\| \|\mathbf{v}\|} \in [0, 1]$, providing a fast, scale-invariant metric for search engine document ranking.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine you are an investigator trying to identify which international culinary cuisine a mystery recipe belongs to. If you simply count raw ingredient quantities (Bag of Words), the recipe lists "4 cups water, 2 tablespoons salt, 1 tablespoon oil". These high-frequency ingredients make up 90% of the bowl, but water and salt appear in nearly every kitchen on Earth: they tell you nothing about whether the dish is French, Indian, or Mexican. Term Frequency is how much of an ingredient is in the bowl. Inverse Document Frequency is like consulting a global culinary spice pantry: salt is in 100% of pantries (IDF near zero); olive oil is in 40% (modest IDF); but "garam masala" is found in only 3% of pantries, and "fenugreek" in only 1%. Multiplying quantity by spice rarity immediately highlights the teaspoon of fenugreek as the true signature of the dish, correctly identifying the cuisine in seconds.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Smooth Inverse Document Frequency (scikit-learn standard)</h3><div class="formula">\operatorname{idf}(t, D) = \log\left(\frac{1 + N}{1 + \operatorname{df}(t)}\right) + 1</div><p>Here $N = |D|$ is the total number of documents in the corpus, and $\operatorname{df}(t) = |\{d \in D : t \in d\}|$ is the number of documents containing term $t$. The additive smoothing $+1$ ensures that words present in all documents do not receive a weight of zero.</p></li>
+          <li><h3>TF-IDF term weight calculation</h3><div class="formula">\operatorname{tfidf}(t, d, D) = \operatorname{tf}(t, d) \cdot \operatorname{idf}(t, D)</div><p>Term frequency $\operatorname{tf}(t, d)$ rewards words that appear frequently within document $d$, while $\operatorname{idf}(t, D)$ penalises words that appear commonly across the entire collection $D$, maximising the weight of domain-specific keywords.</p></li>
+          <li><h3>Cosine similarity over L2-normalised vectors</h3><div class="formula">\cos(\theta) = \frac{\mathbf{x} \cdot \mathbf{y}}{\|\mathbf{x}\|_2 \|\mathbf{y}\|_2} = \sum_{t \in \mathcal{V}} \tilde{x}_t \cdot \tilde{y}_t \in [0, 1]</div><p>Because TF-IDF entries are strictly non-negative ($x_t \ge 0$), the cosine of the angle between two document vectors is bounded in $[0, 1]$. An angle of $0^\circ$ ($\cos=1$) denotes identical relative term distributions, while an angle of $90^\circ$ ($\cos=0$) indicates completely disjoint vocabularies.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>The Bag of Words model represents text as fixed-length vectors of token counts, discarding grammatical syntax and word order.</li><li>TF-IDF multiplies local Term Frequency by global Inverse Document Frequency to elevate uniquely informative keywords.</li><li>Inverse Document Frequency (IDF) penalises ubiquitous terms, automatically dampening function words like "the" and "is".</li><li>$L_2$ vector normalisation eliminates document length bias, allowing fair comparison between short abstracts and long treatises.</li><li>Cosine similarity over normalised sparse TF-IDF vectors powers classical search ranking, document clustering, and text classification.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">import</span> re
+
+<span class="c"># Small corpus of 4 documents across two distinct topics (machine learning vs cooking)</span>
+corpus = [
+    <span class="s">&quot;Machine learning models require training data and algorithms.&quot;</span>,
+    <span class="s">&quot;Deep neural networks learn representations from training data.&quot;</span>,
+    <span class="s">&quot;The chef prepared a delicious pasta recipe with garlic sauce.&quot;</span>,
+    <span class="s">&quot;Italian pasta dishes require garlic, olive oil, and fresh herbs.&quot;</span>
+]
+
+<span class="c"># 1. Build Vocabulary</span>
+<span class="k">def</span> <span class="f">tokenize</span>(text):
+    <span class="k">return</span> [w <span class="k">for</span> w <span class="k">in</span> re.<span class="f">split</span>(r<span class="s">'\W+'</span>, text.<span class="f">lower</span>()) <span class="k">if</span> <span class="k">len</span>(w) &gt; <span class="n">2</span>]
+
+tokenized_corpus = [<span class="f">tokenize</span>(doc) <span class="k">for</span> doc <span class="k">in</span> corpus]
+vocab = <span class="f">sorted</span>(<span class="f">list</span>(<span class="f">set</span>(w <span class="k">for</span> doc <span class="k">in</span> tokenized_corpus <span class="k">for</span> w <span class="k">in</span> doc)))
+word_to_idx = {w: i <span class="k">for</span> i, w <span class="k">in</span> <span class="f">enumerate</span>(vocab)}
+N = <span class="k">len</span>(corpus)
+V = <span class="k">len</span>(vocab)
+
+<span class="k">print</span>(<span class="s">f&quot;Corpus size: {N} documents&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Vocabulary size: {V} unique terms&quot;</span>)
+
+<span class="c"># 2. Compute Count Matrix (Bag of Words)</span>
+count_matrix = np.<span class="f">zeros</span>((N, V), dtype=np.float32)
+<span class="k">for</span> doc_idx, tokens <span class="k">in</span> <span class="f">enumerate</span>(tokenized_corpus):
+    <span class="k">for</span> tok <span class="k">in</span> tokens:
+        <span class="k">if</span> tok <span class="k">in</span> word_to_idx:
+            count_matrix[doc_idx, word_to_idx[tok]] += <span class="n">1.0</span>
+
+<span class="c"># 3. Compute Smooth Inverse Document Frequency (IDF)</span>
+<span class="c"># idf(t) = log((1 + N) / (1 + df(t))) + 1</span>
+doc_freq = np.<span class="f">sum</span>(count_matrix &gt; <span class="n">0</span>, axis=<span class="n">0</span>)  <span class="c"># number of documents containing term</span>
+smooth_idf = np.<span class="f">log</span>((<span class="n">1.0</span> + N) / (<span class="n">1.0</span> + doc_freq)) + <span class="n">1.0</span>
+
+<span class="c"># 4. Compute TF-IDF Matrix and L2 Normalisation</span>
+tf_matrix = count_matrix  <span class="c"># using raw count TF</span>
+tfidf = tf_matrix * smooth_idf
+
+<span class="c"># L2 vector normalisation per document row</span>
+row_norms = np.linalg.<span class="f">norm</span>(tfidf, axis=<span class="n">1</span>, keepdims=<span class="k">True</span>)
+tfidf_norm = tfidf / np.<span class="f">maximum</span>(row_norms, <span class="n">1e-8</span>)
+
+<span class="k">print</span>(<span class="s">&quot;\nSample IDF weights:&quot;</span>)
+<span class="k">for</span> sample_word <span class="k">in</span> [<span class="s">&quot;training&quot;</span>, <span class="s">&quot;garlic&quot;</span>, <span class="s">&quot;pasta&quot;</span>, <span class="s">&quot;data&quot;</span>]:
+    w_idx = word_to_idx[sample_word]
+    <span class="k">print</span>(<span class="s">f&quot;  '{sample_word:&lt;10}': df={doc_freq[w_idx]:.0f}/{N}, IDF={smooth_idf[w_idx]:.4f}&quot;</span>)
+
+<span class="c"># 5. Information Retrieval Query Matching via Cosine Similarity</span>
+query = <span class="s">&quot;pasta recipe garlic&quot;</span>
+q_tokens = <span class="f">tokenize</span>(query)
+q_counts = np.<span class="f">zeros</span>(V, dtype=np.float32)
+<span class="k">for</span> tok <span class="k">in</span> q_tokens:
+    <span class="k">if</span> tok <span class="k">in</span> word_to_idx:
+        q_counts[word_to_idx[tok]] += <span class="n">1.0</span>
+
+q_tfidf = q_counts * smooth_idf
+q_norm = q_tfidf / np.<span class="f">maximum</span>(np.linalg.<span class="f">norm</span>(q_tfidf), <span class="n">1e-8</span>)
+
+<span class="c"># Cosine similarity: dot product of normalized vectors</span>
+similarities = tfidf_norm @ q_norm
+
+<span class="k">print</span>(<span class="s">f&quot;\nQuery: '{query}'&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;Document relevance rankings (Cosine Similarity):&quot;</span>)
+ranked_indices = np.<span class="f">argsort</span>(similarities)[::-<span class="n">1</span>]
+<span class="k">for</span> rank, idx <span class="k">in</span> <span class="f">enumerate</span>(ranked_indices):
+    <span class="k">print</span>(<span class="s">f&quot;  Rank {rank+1} (Score: {similarities[idx]:.4f}): \&quot;{corpus[idx]}\&quot;&quot;</span>)
+
+assert ranked_indices[<span class="n">0</span>] == <span class="n">2</span>, <span class="s">&quot;Top ranked document should be doc 3 (pasta recipe)!&quot;</span>
+<span class="k">print</span>(<span class="s">&quot;\nVerified: TF-IDF vectorisation and cosine similarity ranking executed successfully!&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Ignoring vocabulary out-of-vocabulary (OOV) terms at test time: Words in test documents that never appeared in the training corpus have undefined IDF weights and must be ignored or mapped to an unknown token.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Fitting TF-IDF on test data (data leakage): Computing IDF on the combination of training and test sets leaks global corpus statistics; always fit the TfidfVectorizer strictly on training data and transform test data.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Failing to apply sub-linear TF scaling: Raw count TF assumes that twenty mentions of a word imply twenty times more importance than a single mention; sub-linear scaling ($1 + \log(\text{tf})$) mitigates this distortion.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Dense array conversion memory blowup: Storing TF-IDF matrices as dense NumPy arrays ($N \times V$) consumes tens of gigabytes of RAM; always maintain representations as scipy.sparse CSR matrices.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Polysemy and synonymy blindness: TF-IDF treats "sofa" and "couch" as completely orthogonal dimensions (synonymy), and cannot distinguish between "bank" of a river and financial "bank" (polysemy); dense neural embeddings resolve these semantic gaps.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>Why does Inverse Document Frequency (IDF) take the logarithm of inverse document frequency ($\log\frac{N}{\operatorname{df}(t)}$)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To convert negative counts into positive numbers</span></button><button class="opt" type="button"><b>B</b><span>To prevent words with odd numbers of letters from being indexed</span></button><button class="opt" type="button"><b>C</b><span>To dampen the effect of extreme rarity; without the logarithm, a term appearing in 1 document out of 1,000,000 would receive an overwhelmingly massive weight of 1,000,000</span></button><button class="opt" type="button"><b>D</b><span>Because computers can only multiply numbers that have been logged</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Linear inverse document frequency ($N / \operatorname{df}$) would scale by millions for rare typos or hapax legomena, swamping all other words. The logarithmic damping scales rarity gracefully according to information theory.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>What is the primary purpose of applying $L_2$ normalisation to document TF-IDF vectors?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To convert all vector coefficients into integer values</span></button><button class="opt" type="button"><b>B</b><span>To compress the sparse matrix into a single byte</span></button><button class="opt" type="button"><b>C</b><span>To eliminate document length bias, ensuring that a 200-word summary and a 2,000-word detailed report on the identical topic map to the same directional vector</span></button><button class="opt" type="button"><b>D</b><span>To invert the polarity of negative sentiment words</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Long documents naturally contain higher word counts purely by virtue of length. $L_2$ normalisation projects each vector onto the unit hypersphere, making cosine similarity sensitive purely to relative word distributions rather than absolute volume.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>What classic semantic limitation does the Bag of Words model suffer from due to discarding word sequence order?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It fails when processing text with more than 100 sentences</span></button><button class="opt" type="button"><b>B</b><span>It cannot be trained using scikit-learn</span></button><button class="opt" type="button"><b>C</b><span>It cannot represent words longer than eight characters</span></button><button class="opt" type="button"><b>D</b><span>It cannot distinguish between phrases with identical words but opposite meanings, such as "man bites dog" versus "dog bites man"</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because the Bag of Words representation pools all word counts into a single histogram, all syntactic order, grammatical roles, and phrase compositions are discarded, making permutations of the same words indistinguishable.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q4</span>Why is it critical to compute IDF weights strictly on the training set and avoid fitting on test data?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Fitting IDF on test documents causes data leakage by exposing global corpus frequency statistics from the test set to the feature extraction pipeline</span></button><button class="opt" type="button"><b>B</b><span>Because scikit-learn throws an unhandled exception when transforming test data</span></button><button class="opt" type="button"><b>C</b><span>Because computing test IDF causes division by zero</span></button><button class="opt" type="button"><b>D</b><span>Because test documents cannot be tokenised using regular expressions</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> IDF reflects global corpus statistics. If test documents are included when calculating document frequencies, the model gains illicit foresight into the test distribution (data leakage). Preprocessors must be fit exclusively on training data.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/stop-words-and-n-grams/"><small class="kicker">Concept</small><b>Stop Words &amp; N-Grams</b></a><a href="../../concepts/word-and-sentence-tokenization/"><small class="kicker">Concept</small><b>Word &amp; Sentence Tokenization</b></a><a href="../../concepts/text-normalisation-unicode-and-regex/"><small class="kicker">Concept</small><b>Normalisation &amp; Regex</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/stemming-vs-lemmatisation/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Natural language processing</small><b>Stemming vs Lemmatisation</b></a>
+    <a class="pager-next" href="../../concepts/bm25-and-search-ranking/"><small>Next · Natural language processing <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>BM25 &amp; Search Ranking</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

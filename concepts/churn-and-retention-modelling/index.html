@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Customer Churn and Retention Modelling: Survival Analysis and Hazard Functions · Learn · Yogesh Awate</title>
+<meta name="description" content="Predicting customer attrition, right-censored lifespans, and intervention timing using Kaplan-Meier, Cox Proportional Hazards, and uplift classification.">
+<meta property="og:title" content="Customer Churn and Retention Modelling: Survival Analysis and Hazard Functions · Learn · Yogesh Awate">
+<meta property="og:description" content="Predicting customer attrition, right-censored lifespans, and intervention timing using Kaplan-Meier, Cox Proportional Hazards, and uplift classification.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="churn-and-retention-modelling">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-data-science">Path 07 · Data science</a> / Product analytics / Lesson 33 of 47</span>
+    <h1 class="case-title">Customer Churn and Retention Modelling: Survival Analysis and Hazard Functions</h1>
+    <p class="lede rise" style="--d:3">Predicting customer attrition, right-censored lifespans, and intervention timing using Kaplan-Meier, Cox Proportional Hazards, and uplift classification.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">17 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Data science · Product analytics</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">In subscription businesses and customer platforms, retaining existing customers is dramatically cheaper than acquiring new ones. However, framing churn simply as binary classification (churned vs not churned) discards the critical temporal dimension: when will the customer churn, and what is their survival probability over time? Survival analysis accounts for right-censoring to model the complete tenure curve and hazard dynamics.</p>
+        <p>In customer databases, active customers have not yet churned; their true eventual churn date lies in the future. This is classic right-censoring: we know their tenure is at least $T$ days, but we cannot observe their final lifespan.</p>
+        <p>Standard binary classification models trained on a fixed time window (e.g. "did the user churn in month 3?") suffer from survivorship bias, window length sensitivity, and inability to predict expected remaining customer lifetime.</p>
+        <p>Survival analysis models two core mathematical functions: the Survival function $S(t) = P(T &gt; t)$ (the probability that a customer remains active past time $t$) and the Hazard function $\lambda(t)$ (the instantaneous churn risk rate at time $t$ given survival up to $t$).</p>
+        <p>The Kaplan-Meier estimator non-parametrically estimates the baseline survival curve across cohorts. The Cox Proportional Hazards semi-parametric model then evaluates how customer covariates (login frequency, support tickets, monthly spend) multiply the baseline hazard rate, allowing proactive retention interventions.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine clinical researchers studying patient recovery from a rare illness. When the clinical trial concludes after two years, some patients have fully recovered, while others are still undergoing treatment. The researchers cannot classify surviving patients as "never recovering" or discard them as missing data. Survival analysis mathematically incorporates the fact that ongoing patients survived at least two years without assuming they will never recover.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Define churn event and observation window: Establish rigorous operational churn definitions (e.g. cancellation confirmation or 60 days of zero activity).</li><li>Construct survival dataset: For each customer, record elapsed tenure $T_i$ and event indicator $E_i \in \{0, 1\}$ ($1$ if churn was observed, $0$ if right-censored / still active).</li><li>Fit non-parametric Kaplan-Meier curves: Estimate baseline retention trajectories across customer acquisition channels or subscription tiers.</li><li>Fit Cox Proportional Hazards model: Estimate covariate hazard ratios $e^{\beta_j}$ to quantify which behavioural features multiply or diminish churn risk.</li><li>Validate proportional hazards assumption: Test Schoenfeld residuals to ensure covariate effects remain proportional across customer tenure.</li><li>Deploy proactive retention triggers: Score active customers on cumulative churn hazard over the upcoming 30 days to trigger targeted customer success interventions.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Survival Function and Cumulative Hazard</h3><div class="formula">S(t) = P(T > t) = \exp\left( -\int_0^t \lambda(u) \, du \right) = \exp\left( -\Lambda(t) \right)</div><p>The survival probability $S(t)$ decays as the cumulative hazard function $\Lambda(t)$ accumulates over tenure $t$.</p></li>
+          <li><h3>Kaplan-Meier Non-Parametric Estimator</h3><div class="formula">\hat{S}(t) = \prod_{t_i \le t} \left( 1 - \frac{d_i}{n_i} \right)</div><p>Estimates survival curve step-by-step at event times $t_i$, where $d_i$ is the number of churn events and $n_i$ is the number of customers at risk immediately prior to $t_i$.</p></li>
+          <li><h3>Cox Proportional Hazards Formulation</h3><div class="formula">\lambda(t \mid \mathbf{x}) = \lambda_0(t) \cdot \exp\left( \boldsymbol{\beta}^T \mathbf{x} \right)</div><p>Decomposes churn risk into an arbitrary baseline hazard $\lambda_0(t)$ multiplied by an exponential linear combination of customer covariates $\mathbf{x}$.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Survival analysis properly handles right-censored active customers without introducing survivorship bias.</li><li>The survival function $S(t)$ gives the probability of a customer remaining past tenure $t$.</li><li>The Cox model estimates hazard ratios: a feature with $\exp(\beta) = 1.40$ increases churn risk by 40% at any point in time.</li><li>Enables proactive, time-aware interventions by predicting when churn probability spikes.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">import</span> pandas <span class="k">as</span> pd
+
+<span class="k">def</span> <span class="f">kaplan_meier_estimator</span>(durations: np.ndarray, events: np.ndarray):
+    <span class="s">&quot;&quot;&quot;Compute non-parametric Kaplan-Meier survival curve.&quot;&quot;&quot;</span>
+    <span class="c"># Sort chronologically by duration</span>
+    order = np.<span class="f">argsort</span>(durations)
+    d_sorted = durations[order]
+    e_sorted = events[order]
+    
+    unique_times = np.<span class="f">unique</span>(d_sorted[e_sorted == <span class="n">1</span>])
+    n_at_risk = <span class="k">len</span>(durations)
+    survival_prob = <span class="n">1.0</span>
+    km_curve = [(<span class="n">0.0</span>, <span class="n">1.0</span>)]
+    
+    <span class="k">for</span> t <span class="k">in</span> unique_times:
+        <span class="c"># Count at risk and events at time t</span>
+        at_risk = np.<span class="f">sum</span>(d_sorted &gt;= t)
+        deaths = np.<span class="f">sum</span>((d_sorted == t) &amp; (e_sorted == <span class="n">1</span>))
+        survival_prob *= (<span class="n">1.0</span> - deaths / at_risk)
+        km_curve.<span class="f">append</span>((t, survival_prob))
+        
+    <span class="k">return</span> km_curve
+
+<span class="c"># Sample customer tenure data: (tenure_months, churned: 1=churn, 0=active/censored)</span>
+durations = np.<span class="f">array</span>([<span class="n">3</span>, <span class="n">5</span>, <span class="n">6</span>, <span class="n">8</span>, <span class="n">12</span>, <span class="n">12</span>, <span class="n">15</span>, <span class="n">18</span>, <span class="n">24</span>, <span class="n">24</span>, <span class="n">30</span>, <span class="n">36</span>])
+events = np.<span class="f">array</span>([<span class="n">1</span>, <span class="n">1</span>, <span class="n">0</span>, <span class="n">1</span>, <span class="n">1</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">1</span>, <span class="n">0</span>, <span class="n">0</span>, <span class="n">1</span>, <span class="n">0</span>])  <span class="c"># Several active customers</span>
+
+km = <span class="f">kaplan_meier_estimator</span>(durations, events)
+<span class="k">print</span>(<span class="s">&quot;Customer Survival Curve (Kaplan-Meier):&quot;</span>)
+<span class="k">for</span> t, s <span class="k">in</span> km:
+    <span class="k">print</span>(<span class="s">f&quot;Month {t:2.0f} -&gt; Survival Probability: {s * 100:.1f}%&quot;</span>)
+<span class="c"># Observe probability accounts for right-censored users who have not churned yet</span></code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Discarding active customers: Throwing away active customers because their eventual outcome is unobserved biases the model heavily towards short-tenure churners.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Treating active customers as non-churners: Coding active customers as $y=0$ in binary classification assumes they will stay forever, underestimating long-term churn.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Violating proportional hazards: If a feature's effect changes drastically over time (e.g. onboarding discounts having large impact in month 1 but zero in month 12), standard Cox models must use time-varying covariates.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>What is "right-censoring" in customer churn modelling?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>When customers leave bad reviews on external websites</span></button><button class="opt" type="button"><b>B</b><span>When a customer is still active at the end of the observation window, so their eventual churn time is unobserved but known to exceed their current tenure</span></button><button class="opt" type="button"><b>C</b><span>When a model overfits to the most recent training batch</span></button><button class="opt" type="button"><b>D</b><span>When data is stored on right-aligned database columns</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Right-censoring occurs because active customers have not churned yet; we know their survival time is at least their current tenure, but not when they will eventually leave.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>In a Cox Proportional Hazards model, what does a hazard ratio of $\exp(\beta_j) = 1.35$ for a feature indicate?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The customer will churn in exactly 1.35 months</span></button><button class="opt" type="button"><b>B</b><span>A one-unit increase in that feature increases the instantaneous churn rate by 35% at any given tenure point</span></button><button class="opt" type="button"><b>C</b><span>The feature is uncorrelated with customer retention</span></button><button class="opt" type="button"><b>D</b><span>The customer has a 35% probability of never churning</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The hazard ratio multiplies the baseline hazard $\lambda_0(t)$. A ratio of 1.35 corresponds to a 35% relative increase in instantaneous attrition risk.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>Why does standard binary classification (predicting churn yes/no over the next 90 days) fall short compared to survival analysis?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It collapses the continuous time-to-event dimension into an arbitrary binary window and cannot distinguish between a customer churning tomorrow versus on day 89</span></button><button class="opt" type="button"><b>B</b><span>It requires calculating the inverse Fisher information matrix on GPUs</span></button><button class="opt" type="button"><b>C</b><span>Binary classification cannot handle numerical numbers</span></button><button class="opt" type="button"><b>D</b><span>Binary models cannot be evaluated with ROC curves</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Binary classification loses temporal granularity and cannot estimate expected remaining customer lifespan or dynamic hazard curves over tenure.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/customer-segmentation-with-rfm/"><small class="kicker">Concept</small><b>Customer segmentation: RFM</b></a><a href="../../concepts/cohort-and-funnel-analysis/"><small class="kicker">Concept</small><b>Cohort and funnel analysis</b></a><a href="../../concepts/customer-lifetime-value/"><small class="kicker">Concept</small><b>Customer lifetime value</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/customer-segmentation-with-rfm/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Data science</small><b>Customer segmentation: RFM</b></a>
+    <a class="pager-next" href="../../concepts/customer-lifetime-value/"><small>Next · Data science <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Customer lifetime value</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

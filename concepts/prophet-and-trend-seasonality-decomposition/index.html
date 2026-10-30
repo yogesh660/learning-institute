@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Prophet and Trend-Seasonality Decomposition: Generalised Additive Models for Time Series · Learn · Yogesh Awate</title>
+<meta name="description" content="Decomposing business time series into piecewise linear trends, Fourier seasonality, and holiday regressors using modular Bayesian GAMs.">
+<meta property="og:title" content="Prophet and Trend-Seasonality Decomposition: Generalised Additive Models for Time Series · Learn · Yogesh Awate">
+<meta property="og:description" content="Decomposing business time series into piecewise linear trends, Fourier seasonality, and holiday regressors using modular Bayesian GAMs.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="prophet-and-trend-seasonality-decomposition">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-data-science">Path 07 · Data science</a> / Forecasting at scale / Lesson 24 of 47</span>
+    <h1 class="case-title">Prophet and Trend-Seasonality Decomposition: Generalised Additive Models for Time Series</h1>
+    <p class="lede rise" style="--d:3">Decomposing business time series into piecewise linear trends, Fourier seasonality, and holiday regressors using modular Bayesian GAMs.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Data science · Forecasting at scale</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Classical ARIMA models require stationary transformations, differencing, and strict uniform temporal intervals. In contrast, real-world business time series exhibit multiple nested seasonal patterns (day of week, month of year), structural trend changepoints, missing observations, and dramatic holiday shifts. Prophet frames forecasting as a curve-fitting problem using a generalised additive model (GAM), providing robust automated decomposition with intuitive parameters.</p>
+        <p>Prophet (developed by Taylor and Letham at Meta) models a time series as an additive decomposition: $y(t) = g(t) + s(t) + h(t) + \epsilon_t$, where $g(t)$ is trend, $s(t)$ is periodic seasonality, $h(t)$ models holiday effects, and $\epsilon_t$ is normally distributed error.</p>
+        <p>The trend $g(t)$ is modelled as a continuous piecewise linear or logistic growth curve with automatic changepoints. A sparse Laplace prior on changepoint rate adjustments $\delta_j$ acts like L1 regularisation, allowing the model to fit flexible curves while avoiding overfitting to short-term noise.</p>
+        <p>Seasonality $s(t)$ is modelled using truncated Fourier series: $\sum [a_n \cos(2\pi n t / P) + b_n \sin(2\pi n t / P)]$. Using Fourier series allows the model to handle multi-period seasonality (e.g. weekly $P=7$ and yearly $P=365.25$) simultaneously without requiring regular integer spacing or differencing.</p>
+        <p>Holiday effects $h(t)$ are modelled using indicator matrices that assign separate parameters to user-specified dates, accommodating windows around holidays (e.g. Christmas Eve through Boxing Day). Because it frames forecasting as regression rather than autoregression, Prophet handles missing data seamlessly without imputation.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine tuning a musical synthesizer. Rather than trying to describe the combined sound wave with a single complex recurrence equation, the synthesizer decomposes the sound into a low-frequency bassline (trend), repetitive harmonic oscillators (daily and weekly Fourier cycles), and occasional drum hits (holidays). Tuning the sound simply involves adjusting the volume and tempo of each independent track.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Format input data: Prepare a two-column dataframe with timestamp `ds` (ISO date) and target `y` (continuous metric).</li><li>Configure trend model: Select linear or logistic growth (defining capacity `cap` if upper saturation boundaries exist).</li><li>Tune changepoint flexibility: Adjust `changepoint_prior_scale` (higher values allow rapid trend shifts; lower values enforce stiff linear trends).</li><li>Configure multi-scale seasonality: Enable daily, weekly, or yearly seasonality and adjust Fourier order (higher orders capture sharper cyclical peaks).</li><li>Incorporate holiday calendars: Add predefined country holidays and custom event indicators with dedicated prior scales.</li><li>Generate future predictions: Extrapolate future timestamps and sample uncertainty intervals via Monte Carlo simulation of future trend changepoints.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Additive Time Series Decomposition Formulation</h3><div class="formula">y(t) = g(t) + s(t) + h(t) + \epsilon_t, \quad \epsilon_t \sim \mathcal{N}(0, \sigma^2)</div><p>The observed series is decomposed into trend $g(t)$, seasonal component $s(t)$, holiday effects $h(t)$, and Gaussian noise $\epsilon_t$.</p></li>
+          <li><h3>Piecewise Linear Trend with Changepoints</h3><div class="formula">g(t) = \left( k + \mathbf{a}(t)^T \boldsymbol{\delta} \right) t + \left( m + \mathbf{a}(t)^T \boldsymbol{\gamma} \right), \quad \delta_j \sim \mathrm{Laplace}(0, \tau)</div><p>Trend slope changes by $\delta_j$ at changepoints $s_j$, where vector $\mathbf{a}(t)$ indicates active changepoints and $\gamma_j = -s_j \delta_j$ ensures continuity.</p></li>
+          <li><h3>Fourier Series Seasonality Representation</h3><div class="formula">s(t) = \sum_{n=1}^N \left( a_n \cos\left(\frac{2\pi n t}{P}\right) + b_n \sin\left(\frac{2\pi n t}{P}\right) \right)</div><p>Captures arbitrary periodic seasonality with period $P$ using $2N$ Fourier basis coefficients estimated via linear regression.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Prophet models time series using a modular Generalised Additive Model (GAM) decomposed into trend, seasonality, and holidays.</li><li>Piecewise linear trends use automatic changepoints regularised by a sparse Laplace prior.</li><li>Seasonality is flexibly represented using Fourier series, allowing multiple overlapping cycles (weekly and yearly).</li><li>Robust against missing data, non-uniform timestamp intervals, and large holiday shifts without imputation.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">import</span> pandas <span class="k">as</span> pd
+
+<span class="c"># Minimal implementation of Prophet's Fourier seasonality regression</span>
+<span class="k">def</span> <span class="f">build_fourier_basis</span>(dates: pd.Series, period: float, order: int) -&gt; np.ndarray:
+    <span class="s">&quot;&quot;&quot;Construct Fourier sin/cos columns for arbitrary period P and order N.&quot;&quot;&quot;</span>
+    t = (dates - dates.<span class="f">min</span>()).dt.<span class="f">total_seconds</span>() / <span class="n">86400.0</span>  <span class="c"># Elapsed days</span>
+    basis = []
+    <span class="k">for</span> n <span class="k">in</span> <span class="k">range</span>(<span class="n">1</span>, order + <span class="n">1</span>):
+        basis.<span class="f">append</span>(np.<span class="f">sin</span>(<span class="n">2.0</span> * np.pi * n * t / period))
+        basis.<span class="f">append</span>(np.<span class="f">cos</span>(<span class="n">2.0</span> * np.pi * n * t / period))
+    <span class="k">return</span> np.<span class="f">column_stack</span>(basis)
+
+<span class="c"># Generate synthetic daily data with trend and weekly seasonality</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+date_range = pd.<span class="f">date_range</span>(<span class="s">'2026-01-01'</span>, periods=<span class="n">120</span>, freq=<span class="s">'D'</span>)
+t_days = np.<span class="f">arange</span>(<span class="k">len</span>(date_range))
+true_trend = <span class="n">100.0</span> + <span class="n">0.5</span> * t_days
+true_season = <span class="n">15.0</span> * np.<span class="f">sin</span>(<span class="n">2.0</span> * np.pi * t_days / <span class="n">7.0</span>)
+y = true_trend + true_season + np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">2.0</span>, <span class="k">len</span>(date_range))
+
+<span class="c"># Build design matrix: Intercept + Linear Trend + Fourier Order 3 Weekly (P=7)</span>
+X_fourier = <span class="f">build_fourier_basis</span>(pd.<span class="f">Series</span>(date_range), period=<span class="n">7.0</span>, order=<span class="n">3</span>)
+X = np.<span class="f">column_stack</span>([np.<span class="f">ones</span>(<span class="k">len</span>(t_days)), t_days, X_fourier])
+
+<span class="c"># Fit via Ridge regression</span>
+weights = np.linalg.<span class="f">solve</span>(X.T @ X + <span class="n">1e-3</span> * np.<span class="f">eye</span>(X.shape[<span class="n">1</span>]), X.T @ y)
+y_pred = X @ weights
+
+<span class="k">print</span>(<span class="s">&quot;Learned baseline intercept:&quot;</span>, <span class="f">round</span>(weights[<span class="n">0</span>], <span class="n">2</span>))
+<span class="k">print</span>(<span class="s">&quot;Learned linear trend slope:&quot;</span>, <span class="f">round</span>(weights[<span class="n">1</span>], <span class="n">2</span>))
+<span class="k">print</span>(<span class="s">&quot;Mean Absolute Error:       &quot;</span>, <span class="f">round</span>(<span class="f">float</span>(np.<span class="f">mean</span>(np.<span class="f">abs</span>(y - y_pred))), <span class="n">3</span>))</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Over-extrapolating recent trend shifts: If `changepoint_prior_scale` is set too high, the model overfits temporary dips, projecting unrealistic downward slopes into the future.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Ignoring multiplicative effects: For series where seasonal swings grow proportionally with revenue volume, using additive decomposition produces severe underestimation; set `seasonality_mode="multiplicative"`.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Autocorrelation neglect: Because Prophet treats observations as independent conditional on components, confidence intervals do not account for residual autocorrelation, often being narrower than reality.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>How does Prophet model complex periodic seasonality such as day-of-week and day-of-year cycles?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Using truncated Fourier series expansions with configurable orders</span></button><button class="opt" type="button"><b>B</b><span>Using recurrent LSTM neural network layers</span></button><button class="opt" type="button"><b>C</b><span>Using k-nearest neighbour spatial lookups</span></button><button class="opt" type="button"><b>D</b><span>Using recursive box-cox transformations</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Prophet approximates arbitrary periodic seasonal cycles using linear combinations of sine and cosine Fourier terms.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>What is the role of the Laplace prior on trend changepoints $\delta_j$ in Prophet?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It eliminates holiday anomalies automatically</span></button><button class="opt" type="button"><b>B</b><span>It forces the trend slope to remain strictly positive</span></button><button class="opt" type="button"><b>C</b><span>It ensures all predicted values are integers</span></button><button class="opt" type="button"><b>D</b><span>It acts like L1 regularisation (Lasso), encouraging most changepoints to be exactly zero while allowing a few significant shifts</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The Laplace prior places strong probability mass at zero, acting like L1 regularisation to keep the trend smooth and prevent overfitting to noise.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>When should an analyst configure `seasonality_mode="multiplicative"` instead of the default additive mode?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>When the time series contains only 5 observations</span></button><button class="opt" type="button"><b>B</b><span>When the dataset contains negative values</span></button><button class="opt" type="button"><b>C</b><span>When predicting binary classification probabilities</span></button><button class="opt" type="button"><b>D</b><span>When the magnitude of seasonal swings expands proportionally as the overall baseline trend grows</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In many businesses, seasonal spikes represent a percentage of baseline volume (e.g. +20% at Christmas). As sales grow from 1,000 to 10,000, seasonal swings expand from 200 to 2,000, which requires multiplicative decomposition.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/lag-and-rolling-window-features/"><small class="kicker">Concept</small><b>Lag and rolling-window features</b></a><a href="../../concepts/forecast-metrics-mae-mase-smape-wape/"><small class="kicker">Concept</small><b>Forecast metrics: MAE, MASE</b></a><a href="../../concepts/time-series-cross-validation/"><small class="kicker">Concept</small><b>Time-series cross-validation</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/intermittent-demand-croston-and-tsb/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Data science</small><b>Intermittent demand &amp; Croston</b></a>
+    <a class="pager-next" href="../../concepts/probabilistic-forecasts-and-quantile-loss/"><small>Next · Data science <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Probabilistic forecasts &amp; quantile</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "dataset": "mall customers sample",
+  "summary": "BIRCH (threshold 0.3) on standardised annual income and spending score of the mall customers sample. No labels exist, so the scores are internal: higher silhouette and lower Davies–Bouldin are better.",
+  "model_label": "BIRCH (threshold 0.3)",
+  "baseline_label": "k-means (k = 5)",
+  "metrics": {
+    "Clusters": 5,
+    "Noise points": 0,
+    "Silhouette": 0.3639,
+    "Davies–Bouldin": 0.8925,
+    "Calinski–Harabasz": 412.9,
+    "Leaf sub-clusters": 33
+  },
+  "baseline": {
+    "Clusters": 5,
+    "Noise points": 0,
+    "Silhouette": 0.4038,
+    "Davies–Bouldin": 0.8278,
+    "Calinski–Harabasz": 489.2
+  },
+  "generated": "generated 2026-10-28"
+}

@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Probability Calibration: Platt Scaling, Isotonic Regression and Reliability Curves · Learn · Yogesh Awate</title>
+<meta name="description" content="Probability calibration aligns raw classifier confidence scores with true empirical event rates, diagnosed using reliability curves and corrected via Platt scaling or isotonic regression.">
+<meta property="og:title" content="Probability Calibration: Platt Scaling, Isotonic Regression and Reliability Curves · Learn · Yogesh Awate">
+<meta property="og:description" content="Probability calibration aligns raw classifier confidence scores with true empirical event rates, diagnosed using reliability curves and corrected via Platt scaling or isotonic regression.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="probability-calibration-platt-scaling-isotonic-reliability-curves">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-classification">Path 04 · Classification</a> / Beyond the basics / Lesson 16 of 19</span>
+    <h1 class="case-title">Probability Calibration: Platt Scaling, Isotonic Regression and Reliability Curves</h1>
+    <p class="lede rise" style="--d:3">Probability calibration aligns raw classifier confidence scores with true empirical event rates, diagnosed using reliability curves and corrected via Platt scaling or isotonic regression.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../models/support_vector_classifier/">Support vector classifier</a> <a href="../../models/logistic_regression/">Logistic regression</a> <a href="../../concepts/confusion-matrix/">Confusion matrix</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Classification · Beyond the basics</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">A classification model can achieve high accuracy and strong AUC while outputting completely uncalibrated confidence scores: when it outputs 0.90 probability, the positive outcome may occur only 50% of the time. In clinical risk estimation, insurance underwriting, and automated fraud routing, numerical probabilities must be reliable. Reliability diagrams diagnose miscalibration, while Platt scaling and Isotonic regression map distorted margins into calibrated posterior probabilities.</p>
+        <p>Imagine a meteorology app that announces an 80% chance of rain. If you review all 100 days across the year where the app posted an 80% forecast, did it actually rain on approximately 80 of those days? If it only rained on 45 of those days, the forecast is severely overconfident. Conversely, if it rained on 98 of those days, the forecast is underconfident. A classifier is well-calibrated if a predicted probability of $p$ directly corresponds to an empirical positive frequency of $p$.</p>
+        <p>Different model architectures exhibit characteristic calibration flaws:
+- **Support Vector Machines (SVMs)** output uncalibrated signed distances to the separating hyperplane; standard margins have no probabilistic meaning.
+- **Naive Bayes** pushes probabilities toward 0.0 and 1.0 because multiplying correlated feature probabilities compounds evidence, producing a distinct sigmoidal distortion in reliability curves.
+- **Deep Neural Networks** with modern regularisation (dropout, weight decay, cross-entropy over-parameterisation) are systematically overconfident: they achieve high accuracy while assigning 99% confidence to borderline instances (Guo et al., 2017).
+- **Random Forests** struggle near 0 and 1 because tree leaf averaging pushes ensemble predictions inward toward the historical base rate.</p>
+        <p>To calibrate a model, we fit a monotonic post-processing function $g(s)$ on held-out validation data. **Platt scaling** fits a two-parameter logistic sigmoid $1 / (1 + e^{A s + B})$, making it ideal for sigmoidal distortions (such as SVM margins) or modest validation sets ($n &lt; 1,000$). **Isotonic regression** fits a non-parametric, piece-wise constant non-decreasing step function using the Pool Adjacent Violators Algorithm (PAVA). Isotonic regression can correct arbitrary monotonic distortions without parametric assumptions, but requires larger validation datasets to prevent step-fitting overfitting.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Calibration is like zeroing and aligning a bathroom scale: the scale might accurately tell you that you weigh more than your friend (ranking discrimination), but until it is calibrated against certified weights, you cannot trust the actual number on the display.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Generate uncalibrated decision scores or raw probabilities $s_i$ on a dedicated held-out validation set (never calibrate on training data).</li><li>Construct a **Reliability Diagram (Calibration Curve)**: bin predictions into $M$ equal intervals (e.g. $[0, 0.1), [0.1, 0.2), \dots$) and plot mean predicted confidence against observed fraction of positives.</li><li>Compute the **Expected Calibration Error (ECE)** and **Brier Score** to quantify baseline calibration error.</li><li>Select a calibrator: choose **Platt Scaling** if the miscalibration is sigmoidal or validation data is modest ($n &lt; 1,000$), or **Isotonic Regression** if the distortion is non-sigmoidal and validation data is plentiful.</li><li>Fit the post-processing calibration mapping $g(s)$ on validation scores using maximum likelihood or least squares.</li><li>Apply the fitted calibrator to test predictions, verifying that ECE and Brier score improve while ROC-AUC ranking discrimination remains preserved.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Definition of perfect calibration</h3><div class="formula">$$\mathbb{P}\big(Y = 1 \mid \hat{P} = p\big) = p \quad \forall p \in [0, 1]$$</div><p>$\hat{P}$ is the model's predicted probability, and $Y \in \\{0, 1\\}$ is the true binary label. Perfect calibration guarantees that among all instances assigned probability $p$, exactly a fraction $p$ are positive outcomes.</p></li>
+          <li><h3>Expected Calibration Error (ECE)</h3><div class="formula">$$\operatorname{ECE} = \sum_{m=1}^M \frac{|B_m|}{n} \Big| \operatorname{acc}(B_m) - \operatorname{conf}(B_m) \Big|$$</div><p>Predictions are grouped into $M$ bins $B_m$. $|B_m|/n$ is the bin sample weight, $\operatorname{acc}(B_m) = \frac{1}{|B_m|}\sum_{i \in B_m} y_i$ is empirical bin accuracy, and $\operatorname{conf}(B_m) = \frac{1}{|B_m|}\sum_{i \in B_m} \hat{p}_i$ is mean predicted confidence. ECE computes the weighted absolute divergence between confidence and reality.</p></li>
+          <li><h3>Platt scaling and Isotonic regression</h3><div class="formula">$$\hat{P}_{\text{Platt}} = \frac{1}{1 + \exp(A s + B)}, \quad \min_{g} \sum_{i=1}^n \big(y_i - g(s_i)\big)^2 \\;\\; \text{s.t.} \\;\\; g(s_i) \le g(s_j) \text{ for } s_i \le s_j$$</div><p>Platt scaling optimises parameters $A$ and $B$ via negative log-likelihood on validation margins $s_i$. Isotonic regression fits a non-parametric monotonic step function $g(s)$ via the Pool Adjacent Violators Algorithm (PAVA), preserving rank order while minimising mean squared error.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Discrimination vs Calibration: ROC-AUC evaluates ranking discrimination, whereas calibration evaluates whether probability magnitudes match empirical event frequencies.</li><li>Monotonicity preservation: monotonic calibrators (Platt scaling and Isotonic regression) do not alter prediction rank order, leaving ROC-AUC completely unchanged.</li><li>The Brier Score ($\frac{1}{n}\sum (y_i - \hat{p}_i)^2$) decomposes mathematically into uncertainty, reliability (calibration error), and resolution (discrimination).</li><li>Always calibrate on held-out data: fitting calibration transformations on training sets perpetuates model overconfidence.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+n = <span class="n">300</span>
+z = np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">1.2</span>, n)
+p_true = <span class="n">1.0</span> / (<span class="n">1.0</span> + np.<span class="f">exp</span>(-z))
+y = (np.random.<span class="f">uniform</span>(<span class="n">0</span>, <span class="n">1</span>, n) &lt; p_true).<span class="f">astype</span>(int)
+
+<span class="c"># Uncalibrated raw decision margins</span>
+raw_scores = <span class="n">2.5</span> * z + <span class="n">0.8</span>
+
+<span class="k">def</span> <span class="f">compute_ece</span>(probs, labels, M=<span class="n">5</span>):
+    bins = np.<span class="f">linspace</span>(<span class="n">0</span>, <span class="n">1</span>, M + <span class="n">1</span>)
+    ece = <span class="n">0.0</span>
+    <span class="k">for</span> m <span class="k">in</span> <span class="k">range</span>(M):
+        mask = (probs &gt;= bins[m]) &amp; (probs &lt; bins[m+<span class="n">1</span>] <span class="k">if</span> m &lt; M-<span class="n">1</span> <span class="k">else</span> probs &lt;= bins[m+<span class="n">1</span>])
+        <span class="k">if</span> np.<span class="f">sum</span>(mask) == <span class="n">0</span>: continue
+        bin_acc = np.<span class="f">mean</span>(labels[mask])
+        bin_conf = np.<span class="f">mean</span>(probs[mask])
+        ece += (np.<span class="f">sum</span>(mask) / <span class="k">len</span>(labels)) * <span class="f">abs</span>(bin_acc - bin_conf)
+    <span class="k">return</span> ece
+
+<span class="c"># Raw min-max scaled scores</span>
+p_raw = (raw_scores - raw_scores.<span class="f">min</span>()) / (raw_scores.<span class="f">max</span>() - raw_scores.<span class="f">min</span>())
+ece_raw = <span class="f">compute_ece</span>(p_raw, y)
+brier_raw = np.<span class="f">mean</span>((p_raw - y)**<span class="n">2</span>)
+
+<span class="c"># Platt scaling: fit A, B via gradient descent on validation log-loss</span>
+A, B = -<span class="n">1.0</span>, <span class="n">0.0</span>
+lr = <span class="n">0.05</span>
+<span class="k">for</span> _ <span class="k">in</span> <span class="k">range</span>(<span class="n">500</span>):
+    logits = A * raw_scores + B
+    p_platt = <span class="n">1.0</span> / (<span class="n">1.0</span> + np.<span class="f">exp</span>(-np.<span class="f">clip</span>(logits, -<span class="n">15</span>, <span class="n">15</span>)))
+    A -= lr * np.<span class="f">mean</span>((p_platt - y) * raw_scores)
+    B -= lr * np.<span class="f">mean</span>(p_platt - y)
+
+p_cal = <span class="n">1.0</span> / (<span class="n">1.0</span> + np.<span class="f">exp</span>(-np.<span class="f">clip</span>(A * raw_scores + B, -<span class="n">15</span>, <span class="n">15</span>)))
+ece_cal = <span class="f">compute_ece</span>(p_cal, y)
+brier_cal = np.<span class="f">mean</span>((p_cal - y)**<span class="n">2</span>)
+
+<span class="k">print</span>(<span class="s">&quot;Fitted Platt parameters: A =&quot;</span>, <span class="f">round</span>(<span class="f">float</span>(A), <span class="n">3</span>), <span class="s">&quot;B =&quot;</span>, <span class="f">round</span>(<span class="f">float</span>(B), <span class="n">3</span>))
+<span class="k">print</span>(<span class="s">&quot;Uncalibrated ECE:&quot;</span>, <span class="f">round</span>(<span class="f">float</span>(ece_raw), <span class="n">3</span>), <span class="s">&quot;Brier Score:&quot;</span>, <span class="f">round</span>(<span class="f">float</span>(brier_raw), <span class="n">3</span>))
+<span class="k">print</span>(<span class="s">&quot;Platt Calibrated ECE:&quot;</span>, <span class="f">round</span>(<span class="f">float</span>(ece_cal), <span class="n">3</span>), <span class="s">&quot;Brier Score:&quot;</span>, <span class="f">round</span>(<span class="f">float</span>(brier_cal), <span class="n">3</span>))</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Calibrating on the training set: training predictions are naturally overconfident; calibrating on them freezes this overconfidence into production.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Overfitting with Isotonic Regression on small samples ($n &lt; 500$): unconstrained step functions fit sample noise, producing flat, discontinuous probability steps.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming high ROC-AUC implies good calibration: modern deep neural networks with 95% AUC frequently exhibit severe calibration drift.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Class prevalence shifts: calibration parameters $A$ and $B$ are sensitive to the base rate of the calibration set; if test prevalence shifts, probabilities become biased.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>When is Platt scaling generally preferred over Isotonic regression for probability calibration?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>When training data contains missing values</span></button><button class="opt" type="button"><b>B</b><span>When the base classifier is a decision tree with more than 100 leaves</span></button><button class="opt" type="button"><b>C</b><span>When the validation sample size is relatively small ($n &lt; 1,000$) and the distortion is approximately sigmoidal</span></button><button class="opt" type="button"><b>D</b><span>When the target variable is continuous rather than binary</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Platt scaling fits only two parameters ($A$ and $B$), avoiding the step-function overfitting that Isotonic regression suffers from on small validation samples.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>What does it mean for a probabilistic classifier to be "well-calibrated"?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The decision boundary is strictly linear</span></button><button class="opt" type="button"><b>B</b><span>The classifier achieves 100% training accuracy</span></button><button class="opt" type="button"><b>C</b><span>When the model predicts probability $p$, the empirical relative frequency of the positive outcome is approximately $p$</span></button><button class="opt" type="button"><b>D</b><span>All false positives and false negatives have equal cost</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Calibration evaluates whether predicted probability values match true observed event rates: an 80% prediction should be correct roughly 80% of the time.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>What effect does monotonic calibration (such as Platt scaling or Isotonic regression) have on a classifier's ROC-AUC score?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It drastically increases the ROC-AUC score</span></button><button class="opt" type="button"><b>B</b><span>It inverts the ROC curve across the diagonal</span></button><button class="opt" type="button"><b>C</b><span>It leaves the ROC-AUC score completely unchanged because monotonic transformations preserve sample rank ordering</span></button><button class="opt" type="button"><b>D</b><span>It reduces the ROC-AUC score to exactly 0.5</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> ROC-AUC depends purely on the relative rank order of predicted scores. Monotonic transformations preserve rank ordering, leaving the ROC curve and its AUC invariant.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q4</span>Why are raw decision margins from Support Vector Machines (SVMs) uncalibrated?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>SVM margins measure geometric perpendicular distances to the separating hyperplane rather than probabilistic likelihoods</span></button><button class="opt" type="button"><b>B</b><span>SVM kernels eliminate variance across all data points</span></button><button class="opt" type="button"><b>C</b><span>SVMs can only predict discrete integer labels</span></button><button class="opt" type="button"><b>D</b><span>SVM decision margins are always negative numbers</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Standard SVMs optimise geometric margins, not likelihoods. The output $w^T x + b$ represents distance to the hyperplane, which carries no direct probabilistic meaning without post-hoc scaling.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/class-imbalance-weights-smote-threshold-moving/"><small class="kicker">Concept</small><b>Class imbalance strategies</b></a><a href="../../concepts/loss-functions/"><small class="kicker">Concept</small><b>Loss functions</b></a><a href="../../concepts/cross-validation/"><small class="kicker">Concept</small><b>Cross-validation</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/class-imbalance-weights-smote-threshold-moving/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Classification</small><b>Class imbalance strategies</b></a>
+    <a class="pager-next" href="../../concepts/ordinal-classification/"><small>Next · Classification <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Ordinal classification</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

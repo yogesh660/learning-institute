@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Random Forest Classification · Learn · Yogesh Awate</title>
+<meta name="description" content="Hundreds of decorrelated trees vote. Robust, accurate and hard to break: the default tabular classifier.">
+<meta property="og:title" content="Random Forest Classification · Learn · Yogesh Awate">
+<meta property="og:description" content="Hundreds of decorrelated trees vote. Robust, accurate and hard to break: the default tabular classifier.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="random_forest_classifier">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-classification">Path 04 · Classification</a> / Trees and ensembles / Lesson 9 of 19</span>
+    <h1 class="case-title">Random Forest Classification</h1>
+    <p class="lede rise" style="--d:3">Hundreds of decorrelated trees vote. Robust, accurate and hard to break: the default tabular classifier.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      <span class="tagline lab">Live lab</span>
+      <span class="prereq">Before this: <a href="../../models/decision_tree_classifier/">Decision tree classifier</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Task</dt><dd>Classification</dd>
+          <dt>Family</dt><dd>Bagging ensemble</dd>
+          <dt>What it learns</dt><dd>B deep trees</dd>
+          <dt>Training cost</dt><dd>$O(B\sqrt p\,n\log n)$</dd>
+          <dt>Prediction cost</dt><dd>$O(B\cdot\text{depth})$</dd>
+          <dt>In code</dt><dd><code class="no-math">sklearn.<wbr>ensemble.<wbr>RandomForestClassifier</code></dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>How it works</a></li><li><a href="#lab"><span>03</span>Try it</a></li><li><a href="#maths"><span>04</span>The maths</a></li><li><a href="#tuning"><span>05</span>Hyperparameters</a></li><li><a href="#when"><span>06</span>When to use it</a></li><li><a href="#code"><span>07</span>In code</a></li><li><a href="#results"><span>08</span>On real data</a></li><li><a href="#quiz"><span>09</span>Check yourself</a></li><li><a href="#related"><span>10</span>Related lessons</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Train many deep trees on bootstrap samples, each split considering only a random subset of features, and let them vote. The crowd is far more reliable than any single tree.</p>
+        <p>One deep tree overfits in its own particular way. A different tree trained on a slightly different sample overfits differently. Averaging their votes keeps the signal they share and cancels the noise they do not. Random feature selection at each split makes the trees disagree more, which makes the average better. See <a class="inline" href="../../models/random_forest_regressor/">Random forest regressor</a> for the variance maths.</p>
+        <p>The vote share is a probability-like score. Out-of-bag rows give a free validation estimate, and permutation importance shows which features the forest relies on.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>A committee of experts, each trained on different cases and told to focus on different symptoms.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> How it works</h2>
+        <ol class="steps"><li>Draw a bootstrap sample for each tree.</li><li>Grow each tree deep, sampling $\sqrt p$ features at each split.</li><li>Predict by majority vote, or average the trees’ class probabilities.</li><li>Check out-of-bag accuracy.</li></ol>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>03</span> Try it</h2>
+        <p>A forest grown in your browser. The background is the average vote; ragged single-tree boundaries smooth out as trees are added.</p>
+        <div class="lab" data-lab="random_forest_classifier" data-kind="models" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>Start with 1 tree and compare its jagged boundary with 50 trees.</li><li>Restrict depth to 2: the forest gets smoother but may underfit.</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>04</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Soft voting</h3><div class="formula">$$\hat P(c \mid x) = \frac1B\sum_{b=1}^B \hat P_b(c \mid x)$$</div><p>scikit-learn averages each tree’s leaf class proportions rather than counting hard votes.</p></li>
+          <li><h3>Default feature sampling</h3><div class="formula">$$m = \lfloor\sqrt p\rfloor \text{ features considered per split}$$</div><p>The classification default; fewer features means more decorrelated trees.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="tuning">
+        <h2 class="h3"><span>05</span> Hyperparameters</h2>
+        <div class="table-wrap"><table class="kv">
+          <thead><tr><th>Setting</th><th>What it does</th><th>Typical choice</th></tr></thead>
+          <tbody><tr><td><span class="hp">n_estimators</span></td><td>Number of trees.</td><td>300–1000.</td></tr><tr><td><span class="hp">max_features</span></td><td>Features tried per split.</td><td>"sqrt" default.</td></tr><tr><td><span class="hp">min_samples_leaf</span></td><td>Leaf size.</td><td>1–5.</td></tr><tr><td><span class="hp">class_weight</span></td><td>Handles imbalance.</td><td>"balanced_subsample".</td></tr></tbody>
+        </table></div>
+      </section>
+      <section class="reveal" id="when">
+        <h2 class="h3"><span>06</span> When to use it</h2>
+        <div class="split2">
+          <div class="box good"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Strengths</h3><ul><li>Excellent out-of-the-box accuracy.</li><li>Robust to noise, outliers and irrelevant features.</li><li>Parallel training; free OOB estimate.</li></ul></div>
+          <div class="box bad"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg> Limitations</h3><ul><li>Large models; slower prediction.</li><li>Probabilities can be poorly calibrated near 0 and 1.</li><li>Less interpretable than a single tree.</li></ul></div>
+          <div class="box use"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> Reach for it when</h3><p>Almost any tabular classification problem, as a first serious model.</p></div>
+          <div class="box avoid"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Think twice when</h3><p>Very high-dimensional sparse data like text (linear models do better).</p></div>
+        </div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>07</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">from</span> sklearn.ensemble <span class="k">import</span> RandomForestClassifier
+
+rf = <span class="f">RandomForestClassifier</span>(n_estimators=<span class="n">500</span>, min_samples_leaf=<span class="n">2</span>, oob_score=<span class="k">True</span>,
+                            class_weight=<span class="s">&quot;balanced_subsample&quot;</span>, n_jobs=-<span class="n">1</span>, random_state=<span class="n">0</span>)
+rf.<span class="f">fit</span>(X_tr, y_tr)
+<span class="k">print</span>(<span class="s">&quot;OOB accuracy:&quot;</span>, <span class="f">round</span>(rf.oob_score_, <span class="n">3</span>), <span class="s">&quot;test:&quot;</span>, <span class="f">round</span>(rf.<span class="f">score</span>(X_te, y_te), <span class="n">3</span>))</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Trusting impurity importances for high-cardinality features.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Calibrating nothing and treating vote shares as true probabilities.</span></li></ul>
+      </section>
+      <section class="reveal" id="results">
+        <h2 class="h3"><span>08</span> On real data</h2>
+        <p>Random forest trained on 80% of the Titanic sample and scored on a stratified 20% hold-out. The baseline always predicts the most common class.</p>
+        <div class="table-wrap" style="margin-top:18px"><table class="kv results-table">
+          <thead><tr><th>Metric</th><th>Random forest</th><th>Majority class</th></tr></thead>
+          <tbody><tr><td>Accuracy</td><td>0.960</td><td>0.630</td></tr><tr><td>F1 (survived)</td><td>0.946</td><td>0.000</td></tr><tr><td>ROC-AUC</td><td>0.988</td><td>0.500</td></tr></tbody>
+        </table></div>
+        <p class="note">Produced by <a href="https://github.com/yogesh660/ml-model-zoo/blob/main/models/random_forest_classifier/train.py" target="_blank" rel="noopener">models/random_forest_classifier/train.py</a> · generated 2026-10-28. Run it yourself: <code class="no-math">python models/random_forest_classifier/train.py</code></p>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>09</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>Why does a random forest generalise better than one deep tree?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It uses boosting</span></button><button class="opt" type="button"><b>B</b><span>Averaging decorrelated trees reduces variance</span></button><button class="opt" type="button"><b>C</b><span>It drops noisy rows</span></button><button class="opt" type="button"><b>D</b><span>Its trees are shallower</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Each tree overfits differently; averaging cancels the parts that are not shared.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>Out-of-bag accuracy is computed on:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The training set</span></button><button class="opt" type="button"><b>B</b><span>A random 10% split</span></button><button class="opt" type="button"><b>C</b><span>The test set</span></button><button class="opt" type="button"><b>D</b><span>For each row, only trees that did not see it in training</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> About 37% of rows are left out of each bootstrap sample.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>In scikit-learn's RandomForestClassifier, what is the default number of features considered at each split (max_features) for $p$ total features?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$p$ (all features, like standard bagging)</span></button><button class="opt" type="button"><b>B</b><span>$\log_2(p)$</span></button><button class="opt" type="button"><b>C</b><span>$\lfloor\sqrt{p}\rfloor$ (the square root of the number of features)</span></button><button class="opt" type="button"><b>D</b><span>$p / 2$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> By default, RandomForestClassifier sets max_features='sqrt', drawing a fresh random subset of $\sqrt{p}$ features at every node split to decorrelate individual trees.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q4</span>What is bagging (bootstrap aggregating) in the context of random forests?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Training trees on bootstrap samples (sampling with replacement) and aggregating their predictions by majority voting or average probabilities</span></button><button class="opt" type="button"><b>B</b><span>Training trees sequentially where each tree fixes errors from the previous one</span></button><button class="opt" type="button"><b>C</b><span>Dropping features with low mutual information before training</span></button><button class="opt" type="button"><b>D</b><span>Pruning leaves whose depth exceeds 5</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Bagging generates $B$ bootstrap datasets of size $n$ sampled with replacement from the training set, trains an independent tree on each, and aggregates their outputs to reduce model variance.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q5</span>Why does Random Forest randomly subset features at each split instead of using standard bagging where each tree can consider all features?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To force all decision trees to be strictly linear hyperplanes</span></button><button class="opt" type="button"><b>B</b><span>To reduce the memory needed to store the dataset in RAM</span></button><button class="opt" type="button"><b>C</b><span>If a few features are overwhelmingly predictive, every bagged tree will select them for the top splits, making the trees strongly correlated and limiting variance reduction</span></button><button class="opt" type="button"><b>D</b><span>To ensure that training accuracy is exactly 100%</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> If one or two dominant features exist, standard bagging trees all make the same initial splits, becoming structurally similar. Forcing each split to choose from a random feature subset decorrelates the trees, so their average achieves far lower ensemble variance.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q6</span>What mathematical property explains why approximately 36.8% of training rows are left out of each bootstrap sample in a Random Forest?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The Central Limit Theorem guarantees that 36.8% of rows are outliers</span></button><button class="opt" type="button"><b>B</b><span>Scikit-learn hardcodes an internal 63/37 train-validation split</span></button><button class="opt" type="button"><b>C</b><span>For a dataset of size $n$, the probability that a specific row is never picked in $n$ draws with replacement is $(1 - 1/n)^n \to 1/e \approx 0.368$ as $n \to \infty$</span></button><button class="opt" type="button"><b>D</b><span>Trees automatically prune the bottom 36.8% of leaf nodes</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In sampling with replacement of size $n$, the probability of not selecting row $i$ on any single draw is $1 - 1/n$. Over $n$ independent draws, the probability of never selecting it is $(1 - 1/n)^n \to e^{-1} \approx 0.3679$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q7</span>What happens as you increase n_estimators (the number of trees) in a Random Forest Classifier?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Training error increases monotonically towards 50%</span></button><button class="opt" type="button"><b>B</b><span>Test error stabilises to a limiting value; random forests do not overfit simply by adding more trees</span></button><button class="opt" type="button"><b>C</b><span>The trees become increasingly correlated</span></button><button class="opt" type="button"><b>D</b><span>The model begins to severely overfit the training data</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> By the Law of Large Numbers, averaging more independent, identically distributed random trees converges to the expected tree output without increasing generalisation variance; adding trees costs computation but does not cause overfitting.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q8</span>In Random Forest classification, what is the difference between hard voting and soft voting?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Hard voting uses deep trees; soft voting uses shallow stumps</span></button><button class="opt" type="button"><b>B</b><span>Hard voting only works for binary classification; soft voting is multiclass only</span></button><button class="opt" type="button"><b>C</b><span>Hard voting uses L1 regularisation; soft voting uses L2 regularisation</span></button><button class="opt" type="button"><b>D</b><span>Hard voting counts the discrete majority class predicted across all trees; soft voting averages the predicted class probability distributions across all trees</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Hard voting assigns the label selected by the majority of individual trees ($\text{mode}(\hat{y}_b)$). Soft voting computes $\hat{P}(c \mid x) = \frac{1}{B}\sum_{b=1}^B \hat{P}_b(c \mid x)$ and takes the argmax, giving greater weight to trees that are confident.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q9</span>Why can default impurity-based feature importance (feature_importances_) in a Random Forest be misleading for high-cardinality categorical features?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Features with many unique values provide many more candidate split thresholds, giving them artificial opportunities to reduce Gini impurity even if they contain pure noise</span></button><button class="opt" type="button"><b>B</b><span>High-cardinality features are automatically dropped by CART</span></button><button class="opt" type="button"><b>C</b><span>Impurity importance only measures negative correlations</span></button><button class="opt" type="button"><b>D</b><span>Scikit-learn converts all high-cardinality features into constants</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A categorical variable with many levels (like zip codes or IDs) offers exponentially many binary split combinations, allowing trees to overfit and artificially inflating their Gini impurity reduction score. Permutation importance on held-out data avoids this bias.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q10</span>Suppose individual trees in a Random Forest have variance $\sigma^2 = 1.0$ and pairwise correlation $\rho = 0.20$. What is the theoretical ensemble variance $\operatorname{Var}(\bar{T}) = \rho \sigma^2 + \frac{1 - \rho}{B}\sigma^2$ as the number of trees $B \to \infty$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$0.80$</span></button><button class="opt" type="button"><b>B</b><span>$1.00$</span></button><button class="opt" type="button"><b>C</b><span>$0.00$</span></button><button class="opt" type="button"><b>D</b><span>$0.20$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The variance of the average of $B$ correlated random variables is $\rho \sigma^2 + \frac{1-\rho}{B}\sigma^2$. As $B \to \infty$, the second term $\frac{1-\rho}{B}\sigma^2 \to 0$, leaving $\rho \sigma^2 = 0.20 \times 1.0 = 0.20$. This demonstrates that the minimum achievable variance is strictly bounded by the tree correlation $\rho$.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q11</span>An ensemble of 3 trees predicts class probabilities for Class 1 on a test sample: Tree 1 ($P_1 = 0.90$), Tree 2 ($P_2 = 0.40$), Tree 3 ($P_3 = 0.35$). What are the predictions of hard voting (threshold 0.5) and soft voting (threshold 0.5)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Both voting methods predict Class 0</span></button><button class="opt" type="button"><b>B</b><span>Hard voting predicts Class 1; soft voting predicts Class 0</span></button><button class="opt" type="button"><b>C</b><span>Hard voting predicts Class 0; soft voting predicts Class 1</span></button><button class="opt" type="button"><b>D</b><span>Both voting methods predict Class 1</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Hard voting: Tree 1 votes 1 ($0.90 \ge 0.5$), Trees 2 and 3 vote 0 ($0.40, 0.35 &lt; 0.5$). Majority is Class 0 (2 to 1). Soft voting: average probability is $(0.90 + 0.40 + 0.35) / 3 = 1.65 / 3 = 0.55 \ge 0.5$, predicting Class 1.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q12</span>In a small dataset of $n = 4$ observations $\{A, B, C, D\}$, what is the exact probability that observation $A$ is selected at least once in a bootstrap sample of size 4 drawn with replacement?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$50.00\%$</span></button><button class="opt" type="button"><b>B</b><span>$1 - (3/4)^4 = 175 / 256 \approx 68.36\%$</span></button><button class="opt" type="button"><b>C</b><span>$1/4 = 25.00\%$</span></button><button class="opt" type="button"><b>D</b><span>$(3/4)^4 = 81 / 256 \approx 31.64\%$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> On each draw, the probability of not selecting $A$ is $3/4$. Over 4 independent draws with replacement, the probability that $A$ is never selected is $(3/4)^4 = 81 / 256 \approx 31.64\%$. Therefore, the probability that $A$ is selected at least once is $1 - 81/256 = 175 / 256 \approx 68.36\%$.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>10</span> Related lessons</h2>
+        <div class="related"><a href="../../models/random_forest_regressor/"><small class="kicker">Regression</small><b>Random forest regressor</b></a><a href="../../models/decision_tree_classifier/"><small class="kicker">Classification</small><b>Decision tree classifier</b></a><a href="../../models/gradient_boosted_classifiers/"><small class="kicker">Classification</small><b>Gradient boosted classifiers</b></a><a href="../../concepts/bias-variance-tradeoff/"><small class="kicker">Concept</small><b>Bias–variance trade-off</b></a><a href="../../concepts/roc-auc/"><small class="kicker">Concept</small><b>ROC and AUC</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../models/decision_tree_classifier/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Classification</small><b>Decision tree classifier</b></a>
+    <a class="pager-next" href="../../models/adaboost_classifier/"><small>Next · Classification <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>AdaBoost</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/sequences.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Dashboards and Storytelling: Translating Analytical Insights into Executive Decisions · Learn · Yogesh Awate</title>
+<meta name="description" content="Structuring diagnostic dashboards, executive narrative hierarchies, cognitive load reduction, and action-oriented analytical storytelling.">
+<meta property="og:title" content="Dashboards and Storytelling: Translating Analytical Insights into Executive Decisions · Learn · Yogesh Awate">
+<meta property="og:description" content="Structuring diagnostic dashboards, executive narrative hierarchies, cognitive load reduction, and action-oriented analytical storytelling.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="dashboards-and-storytelling">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-data-science">Path 07 · Data science</a> / Communication / Lesson 37 of 47</span>
+    <h1 class="case-title">Dashboards and Storytelling: Translating Analytical Insights into Executive Decisions</h1>
+    <p class="lede rise" style="--d:3">Structuring diagnostic dashboards, executive narrative hierarchies, cognitive load reduction, and action-oriented analytical storytelling.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="1"><i><b></b></i>Beginner</span></span>
+      <span class="tagline">14 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Data science · Communication</dd>
+          <dt>Level</dt><dd>Beginner</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">The most technically sophisticated machine learning model or analytical model is worthless if stakeholders cannot understand its findings or trust its recommendations. Dashboards and data storytelling bridge the gap between technical data science and business leadership. Crafting clear visual hierarchies, minimising cognitive clutter, and structuring narratives around actionable business decisions transforms raw metrics into operational impact.</p>
+        <p>Data dashboards fail primarily due to three architectural errors: cognitive overload (stuffing every possible metric onto one screen), lack of narrative context (showing a number without showing whether it is good, bad, or expected), and lack of actionability (displaying metrics that business users cannot influence).</p>
+        <p>Effective dashboard design adheres to the Five-Second Rule: within five seconds of opening the view, an executive should understand the current state of business performance (red/amber/green) and know where attention is required.</p>
+        <p>Visual hierarchies follow the Inverted Pyramid narrative structure: high-level KPI scorecards at the top (What happened?), diagnostic breakdown charts in the middle (Why did it happen?), and granular tabular drill-downs at the bottom (What specific actions should be taken?).</p>
+        <p>Storytelling with data structures insights around the classic narrative arc: Context (baseline performance) $\to$ Conflict (an unexpected metric deviation or emerging bottleneck) $\to$ Resolution (data-backed recommendations for corrective action).</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine an airplane cockpit versus an automobile speedometer. An aeronautical engineer might desire 80 dials showing fuel pump temperatures and hydraulic pressures, but an airline pilot navigating turbulence needs immediate, unmistakable indicators: airspeed, altitude, and artificial horizon. A great executive dashboard is not a data junkyard—it is a clear heads-up display designed for fast, accurate decisions.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Define core audience and decision mandate: Determine whether the dashboard serves C-level executives (strategic KPI tracking), managers (operational diagnosis), or frontline analysts (granular drill-down).</li><li>Establish primary KPI scorecard: Place 3 to 5 core outcome metrics at the top with explicit baseline comparisons (vs prior week, vs budget, vs forecast).</li><li>Design diagnostic breakdowns: Use bar charts, waterfall charts, or cohort heatmaps to explain variance by geography, customer segment, or product line.</li><li>Minimise non-data ink: Strip away decorative 3D effects, heavy gridlines, dark borders, and saturated rainbow palettes (Edward Tufte's data-to-ink ratio).</li><li>Enforce visual consistency: Ensure colours carry uniform semantic meaning throughout (e.g. green strictly indicates positive performance, amber indicates warning, blue indicates neutral categories).</li><li>Frame insights as actionable recommendations: Accompany visual charts with concise narrative callouts summarising the primary takeaway and recommended next step.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Data-to-Ink Ratio (Tufte Formulation)</h3><div class="formula">\mathrm{DIR} = \frac{\text{Data-Ink}}{\text{Total Ink Used to Produce Graphic}} = 1.0 - \text{Proportion of Decorative Clutter}</div><p>Maximising the data-to-ink ratio eliminates non-informational visual noise, reducing viewer cognitive load.</p></li>
+          <li><h3>Period-over-Period Variance Attribution</h3><div class="formula">\Delta Y = Y_t - Y_{t-1} = \sum_{k=1}^K \left( w_{k,t} y_{k,t} - w_{k,t-1} y_{k,t-1} \right)</div><p>Decomposes aggregate KPI shifts into component volume effects ($w_k$) and rate effects ($y_k$) across business segments in waterfall charts.</p></li>
+          <li><h3>Cognitive Chunking Capacity (Miller's Law)</h3><div class="formula">N_{\mathrm{metrics}} \le 7 \pm 2 \implies \text{Target } 3 \text{ to } 5 \text{ Primary KPIs per Screen}</div><p>Human working memory processes at most 5–9 distinct visual elements simultaneously without experiencing comprehension degradation.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Effective dashboards focus on actionable decisions rather than exhaustive data dumps.</li><li>The inverted pyramid organizes views: top-level KPIs $\to$ diagnostic breakdowns $\to$ detailed records.</li><li>Maximise the data-to-ink ratio by stripping away non-essential gridlines, 3D effects, and decorative colours.</li><li>Analytical storytelling pairs visual charts with clear narrative context: Baseline $\to$ Deviation $\to$ Action.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> matplotlib.pyplot <span class="k">as</span> plt
+<span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Executive waterfall chart: Explaining revenue variance from Budget to Actual</span>
+categories = [<span class="s">'Budget'</span>, <span class="s">'Volume (+)'</span>, <span class="s">'Price (+)'</span>, <span class="s">'Churn (-)'</span>, <span class="s">'FX Drift (-)'</span>, <span class="s">'Actual'</span>]
+deltas = [<span class="n">100.0</span>, <span class="n">15.0</span>, <span class="n">8.0</span>, -<span class="n">12.0</span>, -<span class="n">5.0</span>, <span class="n">0.0</span>]  <span class="c"># Final value calculated as sum</span>
+
+<span class="c"># Calculate cumulative waterfall positions</span>
+bottoms = [<span class="n">0.0</span>]
+running = <span class="n">100.0</span>
+<span class="k">for</span> d <span class="k">in</span> deltas[<span class="n">1</span>:-<span class="n">1</span>]:
+    <span class="k">if</span> d &gt; <span class="n">0</span>:
+        bottoms.<span class="f">append</span>(running)
+        running += d
+    <span class="k">else</span>:
+        running += d
+        bottoms.<span class="f">append</span>(running)
+bottoms.<span class="f">append</span>(<span class="n">0.0</span>)  <span class="c"># Actual starts from ground</span>
+deltas[-<span class="n">1</span>] = running  <span class="c"># Actual total</span>
+
+colours = [<span class="s">'#334155'</span>, <span class="s">'#10B981'</span>, <span class="s">'#10B981'</span>, <span class="s">'#EF4444'</span>, <span class="s">'#EF4444'</span>, <span class="s">'#1E40AF'</span>]
+
+fig, ax = plt.<span class="f">subplots</span>(figsize=(<span class="n">8</span>, <span class="n">4.5</span>))
+bars = ax.<span class="f">bar</span>(categories, [<span class="f">abs</span>(d) <span class="k">for</span> d <span class="k">in</span> deltas], bottom=bottoms, colour=colours, width=<span class="n">0.55</span>)
+
+<span class="c"># Formatting: Clean typography, high data-to-ink ratio</span>
+ax.spines[<span class="s">'top'</span>].<span class="f">set_visible</span>(<span class="k">False</span>)
+ax.spines[<span class="s">'right'</span>].<span class="f">set_visible</span>(<span class="k">False</span>)
+ax.yaxis.<span class="f">grid</span>(<span class="k">True</span>, linestyle=<span class="s">'--'</span>, alpha=<span class="n">0.3</span>)
+ax.<span class="f">set_ylabel</span>(<span class="s">'Revenue (£M)'</span>, fontsize=<span class="n">11</span>, fontweight=<span class="s">'bold'</span>)
+ax.<span class="f">set_title</span>(<span class="s">'Executive Revenue Walk: Budget vs Actuals (£106M vs £100M)'</span>, fontsize=<span class="n">12</span>, pad=<span class="n">15</span>)
+
+<span class="k">print</span>(<span class="s">&quot;Executive Story: Revenue exceeded budget by £6M due to strong enterprise volume, despite £12M churn.&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Rainbow colour schemes: Using distinct bright colours for 15 categories forces users to constantly refer back and forth to legends, overwhelming working memory.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Metrics without baselines: Displaying "Weekly Revenue: £450,000" provides zero value unless accompanied by context (e.g. "-12% vs target").</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Overloading a single dashboard: Attempting to build one monolithic dashboard that satisfies executives, engineers, and financial auditors simultaneously pleases nobody.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>What does Edward Tufte's "Data-to-Ink Ratio" advocate in dashboard and chart design?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Maximising the proportion of ink devoted strictly to communicating actual data while eliminating decorative clutter and non-informative borders</span></button><button class="opt" type="button"><b>B</b><span>Using as much colourful ink as possible to make reports vibrant</span></button><button class="opt" type="button"><b>C</b><span>Using dark mode themes exclusively</span></button><button class="opt" type="button"><b>D</b><span>Printing physical paper reports rather than viewing dashboards on monitors</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The data-to-ink ratio states that the majority of ink should represent data. Non-data ink (heavy gridlines, borders, decorative ornaments) should be pruned.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>What is the "Five-Second Rule" in executive dashboard design?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Dashboards must automatically refresh their database connections every five seconds</span></button><button class="opt" type="button"><b>B</b><span>Visual animations must last at least five seconds to engage users</span></button><button class="opt" type="button"><b>C</b><span>Dashboards should be permanently deleted if not visited every five seconds</span></button><button class="opt" type="button"><b>D</b><span>A user should be able to discern the overall status of performance and identify primary problem areas within five seconds of viewing</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Executive dashboards must provide instant clarity. If an executive cannot grasp current status and anomalies within five seconds, the dashboard is overly complex.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>Which chart type is most effective for explaining how several positive and negative factors caused an outcome to deviate from its target budget?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>A waterfall chart (bridge chart) showing sequential positive and negative step contributions</span></button><button class="opt" type="button"><b>B</b><span>A radar chart with overlapping polygons</span></button><button class="opt" type="button"><b>C</b><span>A 3D pie chart with 20 slices</span></button><button class="opt" type="button"><b>D</b><span>A word cloud</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Waterfall charts illustrate how an initial value increases or decreases through a series of intermediate steps to reach a final total, making variance attribution immediately obvious.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/data-visualisation-principles/"><small class="kicker">Concept</small><b>Data visualisation principles</b></a><a href="../../concepts/metric-design-and-north-star-metrics/"><small class="kicker">Concept</small><b>Metric design and north-star</b></a><a href="../../concepts/communicating-uncertainty/"><small class="kicker">Concept</small><b>Communicating uncertainty</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/data-visualisation-principles/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Data science</small><b>Data visualisation principles</b></a>
+    <a class="pager-next" href="../../concepts/communicating-uncertainty/"><small>Next · Data science <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Communicating uncertainty</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

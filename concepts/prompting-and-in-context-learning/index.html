@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Prompting and in-context learning · Learn · Yogesh Awate</title>
+<meta name="description" content="Prompting and In-Context Learning (ICL) are the defining operational paradigms of modern Large Language Models (LLMs). Rather than updating neural network parameters via gradient descent, in-context learning enables models to infer novel tasks, adapt outputs, and execute complex reasoning purely by conditioning on natural language instructions and demonstration exemplars supplied in the input context window. Methods like Chain-of-Thought (CoT) and Self-Consistency unlock multi-step cognitive reasoning without parameter modifications.">
+<meta property="og:title" content="Prompting and in-context learning · Learn · Yogesh Awate">
+<meta property="og:description" content="Prompting and In-Context Learning (ICL) are the defining operational paradigms of modern Large Language Models (LLMs). Rather than updating neural network parameters via gradient descent, in-context learning enables models to infer novel tasks, adapt outputs, and execute complex reasoning purely by conditioning on natural language instructions and demonstration exemplars supplied in the input context window. Methods like Chain-of-Thought (CoT) and Self-Consistency unlock multi-step cognitive reasoning without parameter modifications.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="prompting-and-in-context-learning">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ai">Path 11 · AI</a> / LLM foundations / Lesson 16 of 42</span>
+    <h1 class="case-title">Prompting and in-context learning</h1>
+    <p class="lede rise" style="--d:3">Prompting and In-Context Learning (ICL) are the defining operational paradigms of modern Large Language Models (LLMs). Rather than updating neural network parameters via gradient descent, in-context learning enables models to infer novel tasks, adapt outputs, and execute complex reasoning purely by conditioning on natural language instructions and demonstration exemplars supplied in the input context window. Methods like Chain-of-Thought (CoT) and Self-Consistency unlock multi-step cognitive reasoning without parameter modifications.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/gpt-and-decoder-only-models/">GPT &amp; Decoder-Only Models</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>AI · LLM foundations</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">To teach a machine learning model to classify legal contracts in 2018, you needed to annotate thousands of documents and execute hours of backpropagation on a GPU cluster. Today, you simply prepend three example contracts and their corresponding classifications into the prompt of a Large Language Model. The model immediately mimics the pattern, generalising to unseen contracts on the fly. How does an autoregressive next-token predictor perform task adaptation without updating a single weight?</p>
+        <p>The Prompting Continuum: From Zero-Shot to Few-Shot:
+- Zero-Shot Prompting: Providing explicit task instructions directly ("Classify the sentiment of the following review: ..."). Relies entirely on pre-trained semantic knowledge.
+- Few-Shot Prompting: Prepending k demonstration pairs (Input: X, Output: Y) before the test query. Demonstrations communicate expected formatting, stylistic tone, edge cases, and output schema.
+- Chain-of-Thought (CoT): Encouraging the model to generate intermediate reasoning steps ("Let's think step by step") before outputting the final answer. This decomposes complex multi-hop problems into simple linear steps.</p>
+        <p>Mechanisms of In-Context Learning: Why does ICL work? Mechanistic interpretability research (such as Anthropic's induction heads) reveals that Transformer attention layers form specialized circuits that perform pattern completion:
+1. Induction Heads: Detect previous occurrences of tokens and copy subsequent tokens, effectively performing algorithmic copying and associative retrieval.
+2. Implicit Meta-Gradients: Mathematical analysis shows that forward passes through self-attention layers implement an implicit form of meta-gradient descent, optimising temporary internal representation states within the context window without updating persistent weights.</p>
+        <p>Prompt Sensitivity and Biases: ICL is notoriously sensitive to superficial prompt variations:
+- Recency Bias: Models disproportionately favor repeating classes or patterns demonstrated in the final few-shot example.
+- Format Bias: Inconsistent delimiters or whitespace significantly alter output quality.
+- Hallucinated Reasoning: Models may produce fluent rationales that sound convincing but contain factual errors (rationalization rather than reasoning).</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Think of an experienced human actor preparing for an audition. Traditional fine-tuning is like sending the actor to drama school for four years to permanently rewire their personality. In-context learning is handing the actor a three-page script backstage and saying: "You are playing a 19th-century British detective; here are two lines of dialogue to show your accent and cadence; now walk onto stage and deliver the scene." The actor does not permanently change who they are; they temporarily inhabit the persona defined by the prompt script.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>In-Context Learning conditional probability formulation</h3><div class="formula">P(y \mid x, \mathcal{D}_{\text{prompt}}) = \prod_{i=1}^{|y|} P(y_i \mid x_1, \dots, x_{|x|}, y_1, \dots, y_{i-1}, \, \mathcal{D}_{\text{prompt}})</div><p>Here $\mathcal{D}_{\text{prompt}} = \{(x_1, y_1), (x_2, y_2), \dots, (x_k, y_k)\}$ represents the set of $k$ few-shot demonstration exemplars provided in the prompt context window. The model generates output $y$ by conditioning on both the query $x$ and demonstration history $\mathcal{D}_{\text{prompt}}$.</p></li>
+          <li><h3>Self-Consistency majority voting consensus</h3><div class="formula">\hat{y} = \arg\max_{c \in \mathcal{C}} \sum_{i=1}^N \mathbb{I}\left( \operatorname{extract}(r_i) = c \right)</div><p>Here $r_1, \dots, r_N$ are independent stochastic reasoning chains sampled from the model at non-zero temperature, and $\operatorname{extract}(r_i)$ extracts the final categorical answer from reasoning chain $r_i$. The consensus answer $\hat{y}$ is selected via modal majority vote.</p></li>
+          <li><h3>Attention-based induction head operation</h3><div class="formula">\operatorname{Attn}(A \dots B \dots A \to B): \quad Q_i \approx K_{j+1} \implies \text{Copy token } B</div><p>Induction heads detect recurring prefix patterns ($A$) and shift attention to attend to the token that followed $A$ in previous occurrences ($B$), enabling autoregressive copying and sequence continuation in-context.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>In-Context Learning (ICL) enables Large Language Models to adapt to new tasks purely by conditioning on prompt context without weight updates.</li><li>Few-shot prompting provides input-output demonstration pairs that establish task formatting, tone, and decision boundaries.</li><li>Chain-of-Thought (CoT) prompting elicits step-by-step reasoning tokens, dramatically boosting performance on arithmetic and logic tasks.</li><li>Self-consistency aggregates multiple sampled reasoning paths via majority voting to filter out isolated reasoning errors.</li><li>ICL is governed by specialized attention circuits (such as induction heads) that perform algorithmic copying and implicit gradient descent.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">from</span> collections <span class="k">import</span> Counter
+
+<span class="k">class</span> FewShotPromptBuilder:
+    <span class="s">&quot;&quot;&quot;
+    Structured prompt builder supporting zero-shot, few-shot,
+    and Chain-of-Thought (CoT) prompt construction.
+    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, system_instruction):
+        <span class="k">self</span>.system = system_instruction
+        <span class="k">self</span>.examples = []
+
+    <span class="k">def</span> <span class="f">add_example</span>(<span class="k">self</span>, input_text, output_text, reasoning=<span class="k">None</span>):
+        <span class="k">self</span>.examples.<span class="f">append</span>({
+            <span class="s">&quot;input&quot;</span>: input_text,
+            <span class="s">&quot;output&quot;</span>: output_text,
+            <span class="s">&quot;reasoning&quot;</span>: reasoning
+        })
+
+    <span class="k">def</span> <span class="f">build_prompt</span>(<span class="k">self</span>, test_input, cot=<span class="k">False</span>):
+        prompt_parts = [<span class="s">f&quot;System: {self.system}\n&quot;</span>]
+        
+        <span class="c"># Add few-shot exemplars</span>
+        <span class="k">for</span> i, ex <span class="k">in</span> <span class="f">enumerate</span>(<span class="k">self</span>.examples, <span class="n">1</span>):
+            prompt_parts.<span class="f">append</span>(<span class="s">f&quot;Example {i}:&quot;</span>)
+            prompt_parts.<span class="f">append</span>(<span class="s">f&quot;Input: {ex['input']}&quot;</span>)
+            <span class="k">if</span> cot <span class="k">and</span> ex[<span class="s">'reasoning'</span>]:
+                prompt_parts.<span class="f">append</span>(<span class="s">f&quot;Reasoning: {ex['reasoning']}&quot;</span>)
+            prompt_parts.<span class="f">append</span>(<span class="s">f&quot;Output: {ex['output']}\n&quot;</span>)
+            
+        <span class="c"># Add test query</span>
+        prompt_parts.<span class="f">append</span>(<span class="s">&quot;Test Query:&quot;</span>)
+        prompt_parts.<span class="f">append</span>(<span class="s">f&quot;Input: {test_input}&quot;</span>)
+        <span class="k">if</span> cot:
+            prompt_parts.<span class="f">append</span>(<span class="s">&quot;Reasoning: Let's think step by step.&quot;</span>)
+        prompt_parts.<span class="f">append</span>(<span class="s">&quot;Output:&quot;</span>)
+        
+        <span class="k">return</span> <span class="s">&quot;\n&quot;</span>.<span class="f">join</span>(prompt_parts)
+
+<span class="k">def</span> <span class="f">self_consistency_vote</span>(sampled_answers):
+    <span class="s">&quot;&quot;&quot;Aggregate multiple sampled outputs via majority voting.&quot;&quot;&quot;</span>
+    counts = <span class="f">Counter</span>(sampled_answers)
+    winner, top_votes = counts.<span class="f">most_common</span>(<span class="n">1</span>)[<span class="n">0</span>]
+    confidence = top_votes / <span class="k">len</span>(sampled_answers)
+    <span class="k">return</span> winner, confidence, counts
+
+<span class="c"># Build Math Word Problem Few-Shot Chain-of-Thought Prompt</span>
+system_msg = <span class="s">&quot;You are an expert mathematical assistant. Solve word problems with clear reasoning.&quot;</span>
+builder = <span class="f">FewShotPromptBuilder</span>(system_msg)
+
+builder.<span class="f">add_example</span>(
+    input_text=<span class="s">&quot;A bakery had 24 cupcakes. They sold 3/4 of them, then baked 10 more. How many cupcakes do they have now?&quot;</span>,
+    reasoning=<span class="s">&quot;They started with 24 cupcakes. Sold 3/4 of 24 = 18 cupcakes. Remaining: 24 - 18 = 6. Then baked 10 more: 6 + 10 = 16.&quot;</span>,
+    output=<span class="s">&quot;16&quot;</span>
+)
+
+test_problem = <span class="s">&quot;A farmer has 40 sheep. 1/4 of them run away, and then 5 sheep are returned. How many sheep are there now?&quot;</span>
+formatted_prompt = builder.<span class="f">build_prompt</span>(test_problem, cot=<span class="k">True</span>)
+
+<span class="k">print</span>(<span class="s">&quot;Generated Few-Shot Chain-of-Thought Prompt:&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;-&quot;</span> * <span class="n">65</span>)
+<span class="k">print</span>(formatted_prompt)
+<span class="k">print</span>(<span class="s">&quot;-&quot;</span> * <span class="n">65</span>)
+
+<span class="c"># Simulate Self-Consistency Voting across 5 sampled reasoning paths</span>
+mock_sampled_outputs = [<span class="s">&quot;35&quot;</span>, <span class="s">&quot;35&quot;</span>, <span class="s">&quot;30&quot;</span>, <span class="s">&quot;35&quot;</span>, <span class="s">&quot;35&quot;</span>]
+winner, conf, vote_breakdown = <span class="f">self_consistency_vote</span>(mock_sampled_outputs)
+
+<span class="k">print</span>(<span class="s">f&quot;\nSelf-Consistency Aggregation across {len(mock_sampled_outputs)} sampled paths:&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;  Vote Breakdown: {dict(vote_breakdown)}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;  Consensus Answer: '{winner}' (Confidence: {conf * 100:.1f}%)&quot;</span>)
+</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Class imbalance in few-shot demonstrations: If your five-shot prompt contains four positive examples and one negative example, the model exhibits strong majority class bias, predicting positive regardless of input text. Maintain balanced demonstration distributions.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Recency bias in exemplar ordering: The final example in a prompt exerts disproportionate influence on the generated output format and classification decision. Permute example orders to check stability.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming Chain-of-Thought guarantees factual correctness: A model can produce a beautifully structured, logically coherent chain of reasoning that is based on a completely fabricated premise. Always ground reasoning in verifiable retrieval context.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Exceeding context token limits: Stuffing too many long demonstrations into the prompt degrades attention resolution and risks truncation; 3 to 5 concise, well-chosen exemplars consistently outperform 20 verbose examples.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>How does In-Context Learning (ICL) in Large Language Models achieve task adaptation without updating model parameters?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The model conditions on task descriptions and few-shot exemplars provided in the context window, using attention mechanisms (like induction heads) to complete the demonstrated pattern</span></button><button class="opt" type="button"><b>B</b><span>The model automatically updates its bias vectors using backpropagation at test time</span></button><button class="opt" type="button"><b>C</b><span>The model loads specialized weights from a remote server for each prompt</span></button><button class="opt" type="button"><b>D</b><span>The model converts all tokens into ASCII numbers and executes Python scripts internally</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In-context learning is entirely gradient-free at inference time. The model relies on internal attention circuits developed during pre-training to recognize the structure of input-output demonstrations and continue the pattern.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>Why does Chain-of-Thought (CoT) prompting substantially improve performance on complex multi-step reasoning tasks?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because CoT increases the learning rate of the model during inference</span></button><button class="opt" type="button"><b>B</b><span>Because CoT disables the softmax function</span></button><button class="opt" type="button"><b>C</b><span>Because generating intermediate reasoning steps allocates additional computational tokens for the model to decompose complex problems, rather than forcing a direct jump to the final answer</span></button><button class="opt" type="button"><b>D</b><span>Because CoT compresses the prompt to zero tokens</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In autoregressive Transformers, each output token represents a fixed budget of computation. Forcing an immediate final answer requires solving complex math in a single forward pass. CoT spreads the calculation over intermediate reasoning tokens.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>What is the purpose of the Self-Consistency decoding strategy in prompt engineering?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To guarantee that output tokens are alphabetically sorted</span></button><button class="opt" type="button"><b>B</b><span>To force the model to generate the exact same sentence twenty times</span></button><button class="opt" type="button"><b>C</b><span>To reduce GPU memory usage to zero</span></button><button class="opt" type="button"><b>D</b><span>To sample multiple independent reasoning paths at non-zero temperature and take the majority vote of the final answers, filtering out isolated reasoning errors</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Wang et al. showed that correct reasoning paths tend to converge on the same correct answer even if the intermediate wording differs, whereas erroneous reasoning produces divergent answers. Majority voting across diverse paths boosts accuracy.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/gpt-and-decoder-only-models/"><small class="kicker">Concept</small><b>GPT &amp; Decoder-Only Models</b></a><a href="../../concepts/bert-and-masked-language-models/"><small class="kicker">Concept</small><b>BERT &amp; Masked LMs</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/model-based-rl-and-alphazero/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · AI</small><b>Model-Based RL &amp; AlphaZero</b></a>
+    <a class="pager-next" href="../../concepts/tool-use-and-function-calling/"><small>Next · AI <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Tool Use &amp; Function Calling</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

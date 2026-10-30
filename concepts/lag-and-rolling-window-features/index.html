@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Lag and Rolling-Window Features · Learn · Yogesh Awate</title>
+<meta name="description" content="Constructing historical lag shifts, rolling summary statistics, and exponentially weighted moving averages for tabular time-series forecasting.">
+<meta property="og:title" content="Lag and Rolling-Window Features · Learn · Yogesh Awate">
+<meta property="og:description" content="Constructing historical lag shifts, rolling summary statistics, and exponentially weighted moving averages for tabular time-series forecasting.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="lag-and-rolling-window-features">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-data-science">Path 07 · Data science</a> / Feature engineering / Lesson 9 of 47</span>
+    <h1 class="case-title">Lag and Rolling-Window Features</h1>
+    <p class="lede rise" style="--d:3">Constructing historical lag shifts, rolling summary statistics, and exponentially weighted moving averages for tabular time-series forecasting.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/stationarity-acf-and-pacf/">Stationarity, ACF and PACF</a> <a href="../../concepts/scaling-and-transforms-standard-robust-box-cox-yeo-johnson/">Scaling and transforms</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Data science · Feature engineering</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Tabular models like XGBoost and LightGBM cannot inherently process sequential dependencies without explicit temporal feature engineering. Lag features and rolling-window aggregations convert sequential time-series into standard supervised learning matrices, capturing momentum, seasonality, and volatility. Rigorous window construction prevents lookahead leakage and ensures predictive features reflect strictly historical information.</p>
+        <p>Imagine predicting tomorrow's electricity consumption for a large city. If you provide a gradient boosted tree only with the date "Thursday, 12th November", the model has no way of knowing whether the city is currently experiencing a sudden cold snap or how much power was consumed yesterday. However, if you provide the electricity consumption from 24 hours ago (lag 1 day), from 7 days ago (lag 7 days, capturing weekly seasonality), and the average consumption over the past 3 days (rolling mean), the model instantly grasps current demand momentum and baseline expectations.</p>
+        <p>Constructing temporal tabular features relies on two primary primitives: lags and rolling windows. A lag feature shifts the time series backward by $k$ time steps ($y_{t-k}$), allowing standard tabular regression models to condition on previous state values. Rolling-window features pass a sliding aggregation frame over past observations, computing summary statistics such as rolling mean (trend), rolling standard deviation (volatility), rolling min/max (envelope range), and exponentially weighted moving averages (EWMA), which weight recent observations more heavily than distant history.</p>
+        <p>The single most catastrophic error in time-series feature engineering is lookahead leakage (future leakage). If you calculate a rolling 7-day average using a centred window that includes $t-3$ to $t+3$, your model is trained using information from three days in the future. In offline cross-validation, the model appears to predict the future with supernatural precision. When deployed into production, tomorrow's data does not exist, causing model accuracy to collapse completely. Every rolling feature must be strictly left-aligned or shifted by at least the forecast horizon.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Driving a car forward while glancing at the rear-view mirror to observe how fast traffic behind you is moving, rather than attempting to look through a crystal ball.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Establish regular time index: verify uniform sampling frequency (hourly, daily) and resolve missing temporal timestamps via forward-filling or interpolation.</li><li>Generate lag features: shift the target series backward by $k$ discrete steps ($y_{t-1}, y_{t-7}, y_{t-365}$) corresponding to domain seasonality cycles.</li><li>Compute rolling window aggregates: slide fixed-length historical frames ($W \in \{7, 14, 30\}$) to compute rolling means, standard deviations, and quantiles.</li><li>Enforce strict causal alignment: shift rolling calculations by at least the forecast horizon ($h \ge 1$) to eliminate lookahead leakage.</li><li>Calculate momentum and divergence ratios: compute relative velocity features such as $(y_{t-1} - \text{mean}_{7}) / \text{std}_{7}$ to measure deviation from recent baseline trends.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Discrete lag operator and difference transformations</h3><div class="formula">$$L^k y_t = y_{t-k}, \qquad \Delta^k y_t = (1 - L)^k y_t = y_t - y_{t-k}$$</div><p>Here $L$ is the backshift lag operator. The term $y_{t-k}$ captures the historical value $k$ steps prior. First-order differences $\Delta y_t = y_t - y_{t-1}$ remove linear trends, while seasonal differences $y_t - y_{t-s}$ remove recurring periodicities (such as $s = 7$ for weekly patterns).</p></li>
+          <li><h3>Causal rolling window mean and variance</h3><div class="formula">$$\mu_{t, W} = \frac{1}{W} \sum_{i=1}^W y_{t-i}, \qquad \sigma_{t, W}^2 = \frac{1}{W - 1} \sum_{i=1}^W \big(y_{t-i} - \mu_{t, W}\big)^2$$</div><p>Historical window $W$ is summed strictly over historical indices $i \in \{1, \dots, W\}$. The upper index is $t-1$, which strictly excludes the concurrent observation $y_t$ to prevent target leakage when training models to predict $y_t$.</p></li>
+          <li><h3>Exponentially Weighted Moving Average (EWMA)</h3><div class="formula">$$\hat{y}_t^{(\alpha)} = \alpha y_{t-1} + (1 - \alpha) \hat{y}_{t-1}^{(\alpha)} = \alpha \sum_{i=1}^\infty (1 - \alpha)^{i-1} y_{t-i}$$</div><p>The smoothing parameter $\alpha \in (0, 1]$ dictates the geometric decay rate. Recent observations receive exponentially decaying weights $(1 - \alpha)^{i-1}$, adapting rapidly to structural trend shifts without requiring a sharp rectangular cut-off window.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Tabularizing sequential data: lag and window features allow non-recurrent algorithms (like LightGBM) to capture temporal dependencies with exceptional speed.</li><li>Strict causal lagging: rolling statistics must exclude the current time step $t$ when predicting $y_t$, strictly bounding historical inputs to $\{t-1, t-2, \dots\}$.</li><li>Domain seasonal lags: alignment with natural cycles (e.g. 24 hours, 7 days, 52 weeks) captures periodic autocorrelation structures.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+series = <span class="n">10.0</span> + np.<span class="f">sin</span>(np.<span class="f">linspace</span>(<span class="n">0</span>, <span class="n">10</span>, <span class="n">50</span>)) + np.random.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">0.5</span>, <span class="n">50</span>)
+T = <span class="k">len</span>(series)
+
+<span class="c"># Lags: t-1 and t-3</span>
+lag1 = series[<span class="n">2</span>:-<span class="n">1</span>]
+lag3 = series[<span class="n">0</span>:-<span class="n">3</span>]
+<span class="c"># Causal rolling mean (window=3)</span>
+rolling_mean = np.<span class="f">array</span>([np.<span class="f">mean</span>(series[i-<span class="n">3</span>:i]) <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(<span class="n">3</span>, T)])
+y_target = series[<span class="n">3</span>:]
+
+<span class="k">print</span>(<span class="s">f&quot;Constructed supervised samples: {len(y_target)}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Sample 0 -&gt; Target: {y_target[0]:.2f}, Lag-1: {series[2]:.2f}, 3-step Rolling Mean: {rolling_mean[0]:.2f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Centred window lookahead leakage: using default centred rolling windows incorporates future time points $t+1, \dots, t+k$, invalidating the model for live deployment.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Multi-step forecast horizon mismatch: when forecasting $h$ steps ahead (e.g. predicting day $t+7$), lag features like $y_{t-1}$ are unobserved at prediction time, demanding recursive or direct forecasting strategies.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Inadvertent training set NaN leakage: shifting by $k$ produces $k$ leading NaNs; dropping NaNs carelessly can truncate early training cohorts or cause row misalignment across multi-entity panels.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>Why is calculating a rolling mean using a centred window (e.g. including $t-2$ through $t+2$) considered fatal when building time-series features?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It converts daily time series into monthly data</span></button><button class="opt" type="button"><b>B</b><span>It introduces lookahead leakage by using future values ($t+1, t+2$) that are unobserved at inference time, rendering the model useless in production</span></button><button class="opt" type="button"><b>C</b><span>It forces the model to use linear regression</span></button><button class="opt" type="button"><b>D</b><span>It causes the rolling standard deviation to become negative</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> At test time, the model must forecast $y_t$ using only data available prior to $t$. A centred window incorporates future values that cannot exist at prediction time, producing deceptively high backtest scores that collapse in production.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>When building a multi-step forecasting model to predict sales 7 days into the future ($y_{t+7}$), which of the following lag features is valid without recursive chaining?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$y_t$ or earlier lags like $y_{t-1}, y_{t-7}$</span></button><button class="opt" type="button"><b>B</b><span>$y_{t+1}$</span></button><button class="opt" type="button"><b>C</b><span>A centred 3-day average around $y_{t+7}$</span></button><button class="opt" type="button"><b>D</b><span>$y_{t+6}$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> When forecasting 7 steps ahead from origin $t$, only observations at or before time $t$ ($y_t, y_{t-1}, \dots$) are known. Features like $y_{t+1}$ or $y_{t+6}$ are in the future and cannot be observed directly without multi-step recursive forecasting.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>What structural role do lag differences ($\Delta y_t = y_t - y_{t-1}$) serve in time-series feature engineering?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>They eliminate all missing values automatically</span></button><button class="opt" type="button"><b>B</b><span>They transform non-stationary trending series into stationary mean-reverting increments, highlighting short-term acceleration and momentum</span></button><button class="opt" type="button"><b>C</b><span>They double the number of rows in the dataset</span></button><button class="opt" type="button"><b>D</b><span>They ensure all target values are integers</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Differencing removes secular non-stationary trends ($y_t - y_{t-1}$), capturing whether the process is accelerating or decelerating relative to its recent level.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/stationarity-acf-and-pacf/"><small class="kicker">Concept</small><b>Stationarity, ACF and PACF</b></a><a href="../../concepts/exponential-smoothing-ets/"><small class="kicker">Concept</small><b>Exponential smoothing (ETS)</b></a><a href="../../models/gradient_boosting_regressor/"><small class="kicker">Regression</small><b>Gradient boosting regressor</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/scaling-and-transforms-standard-robust-box-cox-yeo-johnson/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Data science</small><b>Scaling and transforms</b></a>
+    <a class="pager-next" href="../../concepts/binning-and-discretisation/"><small>Next · Data science <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Binning &amp; discretisation</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Data Visualisation Principles · Learn · Yogesh Awate</title>
+<meta name="description" content="Designing truthful, perceptually effective charts that exploit human visual encoding channels, minimise chartjunk, and prevent statistical distortion.">
+<meta property="og:title" content="Data Visualisation Principles · Learn · Yogesh Awate">
+<meta property="og:description" content="Designing truthful, perceptually effective charts that exploit human visual encoding channels, minimise chartjunk, and prevent statistical distortion.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="data-visualisation-principles">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-data-science">Path 07 · Data science</a> / Communication / Lesson 36 of 47</span>
+    <h1 class="case-title">Data Visualisation Principles</h1>
+    <p class="lede rise" style="--d:3">Designing truthful, perceptually effective charts that exploit human visual encoding channels, minimise chartjunk, and prevent statistical distortion.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/exploratory-data-analysis/">Exploratory data analysis</a> <a href="../../concepts/metric-design-and-north-star-metrics/">Metric design and north-star</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Data science · Communication</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">The most sophisticated machine learning model or analytical insight is useless if stakeholders misunderstand or distrust the visual communication. Data visualisation is not decorative graphic design; it is the science of mapping statistical numbers onto human visual perceptual channels in accordance with cognitive processing limits. Grounded in Edward Tufte's data-ink ratio and Cleveland and McGill's graphical perception hierarchy, disciplined visualisation ensures visual signals communicate truth with clarity and efficiency.</p>
+        <p>Imagine a corporate dashboard presenting quarterly sales. In Q1, revenue was £100M; in Q2, it rose to £105M—a modest 5% increase. The designer creates a bar chart with the vertical axis truncated to start at £95M rather than £0. On screen, the Q2 bar appears exactly twice as tall as the Q1 bar! Stakeholders glancing at the slide perceive an explosive 100% boom rather than a subtle 5% uptick. Truncating the baseline on length-encoded charts violates visual proportionality, misleading decision-makers and permanently eroding the data team's credibility.</p>
+        <p>Humans do not decode all visual attributes with equal precision. Psychophysical experiments by William Cleveland and Robert McGill proved that human perception ranks visual encodings in a strict hierarchy of quantitative accuracy: (1) Position along a common aligned scale (scatter plots, dot plots) is decoded with the highest accuracy; (2) Length along a common scale (bar charts); (3) Angle and slope (line charts, pie charts); (4) 2D Area (bubble charts); and (5) Colour saturation and hue (heatmaps). Pie charts force human eyes to compare angles and 2D areas—a perceptual task humans perform notoriously poorly compared to evaluating aligned bar lengths.</p>
+        <p>Edward Tufte formulated the central guideline of analytical design: maximise the data-ink ratio. Every pixel of ink or colour on the screen must serve an informative purpose. Non-data ink—decorative 3D shadowing, gratuitous dark gridlines, redundant legends, and rainbow colour palettes—creates visual clutter (chartjunk) that exhausts viewer working memory. Ruthlessly eliminating non-essential ink allows patterns, anomalies, and relationships to stand out effortlessly.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>An aircraft cockpit display: every altimeter, artificial horizon, and airspeed indicator uses high-contrast position encoding to deliver instant, unambiguous comprehension without decorative distraction.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Map data types to appropriate perceptual channels: use position along an aligned scale for primary quantitative metrics, and distinct spatial clusters or restrained hue palettes for categories.</li><li>Enforce zero baselines on bar charts: always anchor bar chart quantitative axes at zero to preserve physical length-to-magnitude proportionality.</li><li>Maximise the Data-Ink Ratio: remove non-data borders, heavy background fills, dark gridlines, and redundant legends.</li><li>Employ accessible, perceptually uniform colour maps: use monotonic luminance palettes (e.g. Viridis, Cividis) for ordered data, avoiding uncalibrated red-green contrasts that hinder colour-blind viewers.</li><li>Provide direct inline annotation: label trend lines and data series directly at their endpoints rather than forcing viewers to cross-reference distant legends.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Tufte data-ink ratio</h3><div class="formula">\text{Data-Ink Ratio} = \frac{\text{Data-Ink}}{\text{Total Ink Used to Print the Graphic}} = 1 - \frac{\text{Non-Data-Ink}}{\text{Total Ink}}</div><p>Where Data-Ink is the non-redundant visual ink dedicated directly to displaying statistical data. Designing graphics to approach a ratio of $1.0$ minimises cognitive load and visual distraction.</p></li>
+          <li><h3>Lie factor (visual proportionality metric)</h3><div class="formula">\text{Lie Factor} = \frac{\text{Size of Effect Shown in Graphic}}{\text{Size of Effect in Data}} = \frac{\frac{\Delta \text{Graphic}}{\text{Graphic}_{\text{initial}}}}{\frac{\Delta \text{Data}}{\text{Data}_{\text{initial}}}}</div><p>A truthful graphic exhibits a $\text{Lie Factor} = 1.0$. Values substantially greater than $1.0$ (such as truncating bar axes or scaling 2D areas as radii) exaggerate statistical differences; values less than $1.0$ understate effects.</p></li>
+          <li><h3>Stevens psychophysical power law of perceptual scaling</h3><div class="formula">S = k \cdot I^{\alpha}</div><p>Where perceived subjective sensation $S$ scales with physical stimulus intensity $I$ raised to exponent $\alpha$. For line length $\alpha \approx 1.0$ (accurate linear perception), whereas for 2D area $\alpha \approx 0.7$ and 3D volume $\alpha \approx 0.5$ (severe perceptual compression), explaining why humans systematically misjudge area and volume encodings.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Position along an aligned scale is decoded with the highest perceptual accuracy; area, angle, and colour saturation are significantly less precise.</li><li>Bar charts must always start at zero because human vision decodes bar magnitude as proportional to bar length.</li><li>Maximising the data-ink ratio strips non-essential chartjunk, reducing cognitive burden and clarifying core analytical signals.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Lie Factor demonstration: Truthful bar baseline vs Deceptive truncated axis</span>
+data_v1, data_v2 = <span class="n">100.0</span>, <span class="n">105.0</span>  <span class="c"># True 5% increase</span>
+delta_data_pct = (data_v2 - data_v1) / data_v1
+
+<span class="c"># 1. Truthful graphic: axis starts at 0</span>
+graphic_truth_v1, graphic_truth_v2 = data_v1, data_v2
+lie_factor_truth = ((graphic_truth_v2 - graphic_truth_v1) / graphic_truth_v1) / delta_data_pct
+
+<span class="c"># 2. Deceptive graphic: y-axis truncated to start at 95</span>
+y_min = <span class="n">95.0</span>
+graphic_trunc_v1 = data_v1 - y_min  <span class="c"># bar height = 5</span>
+graphic_trunc_v2 = data_v2 - y_min  <span class="c"># bar height = 10 (2x taller on screen)</span>
+delta_graphic_pct = (graphic_trunc_v2 - graphic_trunc_v1) / graphic_trunc_v1
+lie_factor_deceptive = delta_graphic_pct / delta_data_pct
+
+<span class="k">print</span>(<span class="s">f&quot;True statistical increase: {delta_data_pct:.1%}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Truthful axis Lie Factor:  {lie_factor_truth:.2f} (1.0 = perfectly truthful)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Truncated axis Lie Factor: {lie_factor_deceptive:.2f} (20.0 = 20x visual exaggeration)&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Truncating the baseline on bar charts, producing Lie Factors far greater than 1.0 that mislead stakeholders.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using pseudo-3D bar or pie charts: 3D perspective adds artificial occlusion and distorts angle and area perception.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using rainbow colour palettes (e.g. Jet) where non-uniform perceptual luminance creates artificial boundaries in smooth continuous data.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>According to the Cleveland and McGill perceptual hierarchy, which visual encoding channel allows humans to compare quantitative numbers with the highest accuracy?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Angle and slope (e.g. pie charts)</span></button><button class="opt" type="button"><b>B</b><span>Position along a common aligned scale (e.g. scatter plots, dot plots)</span></button><button class="opt" type="button"><b>C</b><span>Colour saturation and hue</span></button><button class="opt" type="button"><b>D</b><span>2D bubble area</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Cleveland and McGill proved that position along a common aligned scale is decoded with the lowest perceptual error, whereas area, angle, and colour saturation suffer significantly higher cognitive error.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>Why is truncating the quantitative axis to a non-zero baseline considered acceptable on line charts but strictly unacceptable on bar charts?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Bar charts can only display negative numbers</span></button><button class="opt" type="button"><b>B</b><span>There is no difference; line charts must also always start at zero</span></button><button class="opt" type="button"><b>C</b><span>Line charts encode values via position in 2D space, whereas bar charts encode values via physical bar length, which must be proportional to magnitude</span></button><button class="opt" type="button"><b>D</b><span>Line charts cannot be printed in black and white</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Bar charts use length as the visual encoding, so human perception compares the physical length of bars. Truncating the axis distorts the length-to-value ratio. Line charts encode position, where displaying fine fluctuations around a high baseline is valid.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>What does a Lie Factor of 5.0 indicate about a data visualisation?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The chart took 5 hours to design</span></button><button class="opt" type="button"><b>B</b><span>The chart contains five distinct data series</span></button><button class="opt" type="button"><b>C</b><span>The data is five times more accurate than normal</span></button><button class="opt" type="button"><b>D</b><span>The visual effect displayed on screen exaggerates the true statistical difference in the data by a factor of 5</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Tufte's Lie Factor is the ratio of the visual percentage change shown in the graphic to the true statistical percentage change in the data. A value of 5.0 means the graphic magnifies the effect fivefold.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/cohort-and-funnel-analysis/"><small class="kicker">Concept</small><b>Cohort and funnel analysis</b></a><a href="../../concepts/customer-segmentation-with-rfm/"><small class="kicker">Concept</small><b>Customer segmentation: RFM</b></a><a href="../../concepts/data-cleaning-and-validation/"><small class="kicker">Concept</small><b>Data cleaning &amp; validation</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/uplift-modelling/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Data science</small><b>Uplift modelling</b></a>
+    <a class="pager-next" href="../../concepts/dashboards-and-storytelling/"><small>Next · Data science <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Dashboards &amp; storytelling</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

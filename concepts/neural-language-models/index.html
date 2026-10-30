@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Neural Language Models: From Bengio's N-gram NNLM to Recurrent Language Models · Learn · Yogesh Awate</title>
+<meta name="description" content="Classical n-gram models struggle with zero-probability counts on unseen test sequences, necessitating complex backoff and smoothing (Kneser-Ney). The Bengio NNLM (2003) maps preceding context words to distributed continuous vectors, concatenating them into a hidden feedforward layer. Distributed representations enable automatic generalisation: learning about &quot;cat walks on a mat&quot; naturally transfers predictive probability to &quot;dog walks on a rug&quot;. Computational bottlenecks in computing full vocabulary softmaxes prompted historical innovations like hierarchical softmax and negative sampling.">
+<meta property="og:title" content="Neural Language Models: From Bengio's N-gram NNLM to Recurrent Language Models · Learn · Yogesh Awate">
+<meta property="og:description" content="Classical n-gram models struggle with zero-probability counts on unseen test sequences, necessitating complex backoff and smoothing (Kneser-Ney). The Bengio NNLM (2003) maps preceding context words to distributed continuous vectors, concatenating them into a hidden feedforward layer. Distributed representations enable automatic generalisation: learning about &quot;cat walks on a mat&quot; naturally transfers predictive probability to &quot;dog walks on a rug&quot;. Computational bottlenecks in computing full vocabulary softmaxes prompted historical innovations like hierarchical softmax and negative sampling.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="neural-language-models">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-nlp">Path 10 · Natural language processing</a> / Language models / Lesson 36 of 52</span>
+    <h1 class="case-title">Neural Language Models: From Bengio's N-gram NNLM to Recurrent Language Models</h1>
+    <p class="lede rise" style="--d:3">Classical n-gram models struggle with zero-probability counts on unseen test sequences, necessitating complex backoff and smoothing (Kneser-Ney). The Bengio NNLM (2003) maps preceding context words to distributed continuous vectors, concatenating them into a hidden feedforward layer. Distributed representations enable automatic generalisation: learning about "cat walks on a mat" naturally transfers predictive probability to "dog walks on a rug". Computational bottlenecks in computing full vocabulary softmaxes prompted historical innovations like hierarchical softmax and negative sampling.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Natural language processing · Language models</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Classical n-gram language models suffer from severe curse of dimensionality and sparsity, unable to share statistical strength across semantically similar words. Bengio's 2003 Neural Network Language Model (NNLM) introduced distributed word embeddings and continuous hidden layers, revolutionizing statistical language modelling and laying the groundwork for recurrent and transformer architectures.</p>
+        <p>In classical statistical NLP, an n-gram model predicts the next word by looking up how many times that exact sequence of $n-1$ words appeared in the training library. If the training corpus contains "The cat sat on the rug", but never contains "The dog sat on the carpet", an n-gram model has zero probability for "carpet" following "The dog sat on the". It treats "cat" and "dog", and "rug" and "carpet", as completely unrelated discrete symbols. Bengio's breakthrough was to represent every word as a continuous coordinate in a dense embedding space. In this continuous space, "dog" is near "cat", and "carpet" is near "rug". When the neural network learns parameters that assign high probability to "rug" following "cat", that smooth mathematical function automatically assigns high probability to "carpet" following "dog". This continuous representation conquered the curse of dimensionality.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine a library catalogue that files every book in completely isolated, unindexed steel lockers. If you find a recipe for chocolate cake in Locker #104, you have no way to find a recipe for vanilla cake except by rummaging through every other locker at random. A neural language model organizes the library along a continuous thematic map where all dessert cookbooks sit on adjacent shelves.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Extract sliding n-gram windows: construct fixed-length historical context tuples $(w_{t-n+1}, \dots, w_{t-1})$ and target token $w_t$.</li><li>Look up distributed embeddings: project discrete token indices into continuous $d$-dimensional embedding vectors.</li><li>Concatenate context representations: flatten individual word vectors into a single contiguous context vector.</li><li>Compute hidden layer activations: apply linear transformation and non-linear activation (tanh) to model non-linear word interactions.</li><li>Project to vocabulary logits: transform hidden representations into $|V|$-dimensional output scores.</li><li>Normalise via softmax and optimise: compute cross-entropy loss against the true token and backpropagate gradients into both weights and embeddings.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Neural Language Models: From Bengio's N-gram NNLM to Recurrent Language Models formulation (Part 1)</h3><div class="formula">\mathbf{x} = [\mathbf{c}(w_{t-n+1}) \,;\, \dots \,;\, \mathbf{c}(w_{t-1})] \in \mathbb{R}^{(n-1)d}</div><p>The concatenated context vector passes through a non-linear hidden layer with weight matrix $\mathbf{H}$ and bias $\mathbf{d}$:</p></li>
+          <li><h3>Neural Language Models: From Bengio's N-gram NNLM to Recurrent Language Models formulation (Part 2)</h3><div class="formula">\mathbf{a} = \tanh(\mathbf{d} + \mathbf{H}\mathbf{x})</div><p>Output unnormalised logits $\mathbf{y} \in \mathbb{R}^{|V|}$ combine hidden activations with direct skip connections:</p></li>
+          <li><h3>Neural Language Models: From Bengio's N-gram NNLM to Recurrent Language Models formulation (Part 3)</h3><div class="formula">\mathbf{y} = \mathbf{b} + \mathbf{W}\mathbf{x} + \mathbf{U}\mathbf{a}</div><p>Predictive probability distribution over the vocabulary is calculated using the softmax function:</p></li>
+          <li><h3>Neural Language Models: From Bengio's N-gram NNLM to Recurrent Language Models formulation (Part 4)</h3><div class="formula">P(w_t = i \mid w_{t-n+1}, \dots, w_{t-1}) = \frac{\exp(y_i)}{\sum_{j=1}^{|V|} \exp(y_j)}</div><p>Cross-entropy loss for true next token $w_t^*$ is formulated as:</p></li>
+          <li><h3>Neural Language Models: From Bengio's N-gram NNLM to Recurrent Language Models formulation (Part 5)</h3><div class="formula">\mathcal{L} = -\log P(w_t^* \mid w_{t-n+1}, \dots, w_{t-1})</div><p>Cross-entropy loss for true next token $w_t^*$ is formulated as:</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Bengio's NNLM pioneered continuous distributed word embeddings to conquer the combinatorial sparsity of classical n-grams.</li><li>Projecting discrete words into continuous vector space allows models to generalise seamlessly across synonymous expressions.</li><li>Softmax vocabulary bottlenecks motivated historical innovations including hierarchical softmax, noise-contrastive estimation, and modern subword tokenisation.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">def</span> <span class="f">softmax</span>(z):
+    <span class="s">&quot;&quot;&quot;Numerically stable softmax.&quot;&quot;&quot;</span>
+    shift_z = z - np.<span class="f">max</span>(z)
+    exp_z = np.<span class="f">exp</span>(shift_z)
+    <span class="k">return</span> exp_z / np.<span class="f">sum</span>(exp_z)
+
+<span class="k">class</span> BengioNNLM:
+    <span class="s">&quot;&quot;&quot;Simplified 3-gram Neural Network Language Model.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, vocab_size, embedding_dim, hidden_dim):
+        np.random.<span class="f">seed</span>(<span class="n">42</span>)
+        <span class="c"># Word embedding matrix C</span>
+        <span class="k">self</span>.C = np.random.<span class="f">randn</span>(vocab_size, embedding_dim) * <span class="n">0.1</span>
+        <span class="c"># Hidden layer weights (context size = 2 for 3-gram)</span>
+        <span class="k">self</span>.H = np.random.<span class="f">randn</span>(hidden_dim, <span class="n">2</span> * embedding_dim) * <span class="n">0.1</span>
+        <span class="k">self</span>.d = np.<span class="f">zeros</span>(hidden_dim)
+        <span class="c"># Output vocabulary projection</span>
+        <span class="k">self</span>.U = np.random.<span class="f">randn</span>(vocab_size, hidden_dim) * <span class="n">0.1</span>
+        <span class="k">self</span>.b = np.<span class="f">zeros</span>(vocab_size)
+        
+    <span class="k">def</span> <span class="f">forward</span>(<span class="k">self</span>, w1_idx, w2_idx):
+        <span class="c"># 1. Lookup and concatenate embeddings</span>
+        c1 = <span class="k">self</span>.C[w1_idx]
+        c2 = <span class="k">self</span>.C[w2_idx]
+        x = np.<span class="f">concatenate</span>([c1, c2])
+        
+        <span class="c"># 2. Hidden layer with tanh activation</span>
+        a = np.<span class="f">tanh</span>(<span class="k">self</span>.d + np.<span class="f">dot</span>(<span class="k">self</span>.H, x))
+        
+        <span class="c"># 3. Logits and softmax</span>
+        logits = <span class="k">self</span>.b + np.<span class="f">dot</span>(<span class="k">self</span>.U, a)
+        probs = <span class="f">softmax</span>(logits)
+        <span class="k">return</span> probs
+
+<span class="c"># Vocabulary setup</span>
+vocab = {<span class="s">&quot;the&quot;</span>: <span class="n">0</span>, <span class="s">&quot;cat&quot;</span>: <span class="n">1</span>, <span class="s">&quot;dog&quot;</span>: <span class="n">2</span>, <span class="s">&quot;sat&quot;</span>: <span class="n">3</span>, <span class="s">&quot;on&quot;</span>: <span class="n">4</span>, <span class="s">&quot;rug&quot;</span>: <span class="n">5</span>, <span class="s">&quot;mat&quot;</span>: <span class="n">6</span>}
+inv_vocab = {v: k <span class="k">for</span> k, v <span class="k">in</span> vocab.<span class="f">items</span>()}
+
+model = <span class="f">BengioNNLM</span>(vocab_size=<span class="k">len</span>(vocab), embedding_dim=<span class="n">4</span>, hidden_dim=<span class="n">8</span>)
+
+<span class="c"># Predict next word after context (&quot;the&quot;, &quot;cat&quot;)</span>
+w1, w2 = vocab[<span class="s">&quot;the&quot;</span>], vocab[<span class="s">&quot;cat&quot;</span>]
+probs = model.<span class="f">forward</span>(w1, w2)
+
+<span class="k">print</span>(<span class="s">&quot;Predicted Next Word Probabilities for context: ['the', 'cat'] -&gt; ?&quot;</span>)
+<span class="k">for</span> idx, p <span class="k">in</span> <span class="f">enumerate</span>(probs):
+    <span class="k">print</span>(<span class="s">f&quot;  {inv_vocab[idx]:5} -&gt; {p:.4f}&quot;</span>)
+
+top_token = inv_vocab[np.<span class="f">argmax</span>(probs)]
+<span class="k">print</span>(<span class="s">f&quot;\nMost likely continuation: '{top_token}'&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Suffering extreme training latency due to full vocabulary softmax computation; when $|V| &gt; 100,000$, standard softmax backpropagation becomes prohibitively slow.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Treating context as a fixed window; like n-gram models, early NNLMs cannot access dependencies beyond their predetermined input window size $n-1$.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Over-parameterising output projection matrix $\mathbf{U}$, causing models to overfit rapidly on small text corpora.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>What fundamental limitation of classical n-gram models did Bengio's NNLM solve?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The inability to calculate cross-entropy loss</span></button><button class="opt" type="button"><b>B</b><span>The inability to parse punctuation marks in Latin scripts</span></button><button class="opt" type="button"><b>C</b><span>The inability to share statistical strength across semantically similar words due to discrete symbol representations</span></button><button class="opt" type="button"><b>D</b><span>The inability to compute token probabilities on GPUs</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Classical n-grams treat words as discrete, independent symbols. Bengio's continuous word embeddings allow statistical learning from one phrase to generalise smoothly to synonymous phrases.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>Where did the primary computational bottleneck lie in Bengio's original 2003 NNLM architecture?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Calculating the hyperbolic tangent tanh activation</span></button><button class="opt" type="button"><b>B</b><span>Inverting the Hessian matrix during gradient updates</span></button><button class="opt" type="button"><b>C</b><span>Looking up vectors in the embedding matrix</span></button><button class="opt" type="button"><b>D</b><span>Computing the normalising denominator of the softmax function across the full vocabulary size $|V|$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Evaluating the softmax denominator requires computing dot products across all $|V|$ words in the vocabulary for every single token prediction, scaling linearly with dictionary size.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>How did Bengio's NNLM handle a context of $n-1$ words in its input layer?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By sorting the words into alphabetical order</span></button><button class="opt" type="button"><b>B</b><span>By looking up each word's embedding vector and concatenating them into a single continuous vector</span></button><button class="opt" type="button"><b>C</b><span>By averaging all sentence words using bag-of-words</span></button><button class="opt" type="button"><b>D</b><span>By running an autoregressive transformer with causal masking</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The NNLM looked up the continuous embedding for each context word and concatenated them into a fixed-length vector $\mathbf{x} \in \mathbb{R}^{(n-1)d}$.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../models/lstm_networks/"><small class="kicker">Deep learning</small><b>LSTMs</b></a><a href="../../models/transformer_networks/"><small class="kicker">Natural language processing</small><b>Transformers</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/gpt-and-decoder-only-models/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Natural language processing</small><b>GPT &amp; Decoder-Only Models</b></a>
+    <a class="pager-next" href="../../concepts/instruction-tuning-rlhf-and-dpo/"><small>Next · Natural language processing <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Instruction Tuning, RLHF &amp; DPO</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

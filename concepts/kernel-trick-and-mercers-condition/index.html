@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Kernel Trick and Mercer's Condition · Learn · Yogesh Awate</title>
+<meta name="description" content="Implicitly mapping data into high- or infinite-dimensional Hilbert spaces using positive semidefinite kernel functions without explicit coordinate transformations.">
+<meta property="og:title" content="Kernel Trick and Mercer's Condition · Learn · Yogesh Awate">
+<meta property="og:description" content="Implicitly mapping data into high- or infinite-dimensional Hilbert spaces using positive semidefinite kernel functions without explicit coordinate transformations.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="kernel-trick-and-mercers-condition">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ml-toolbox">Path 06 · Machine learning toolbox</a> / Learning theory / Lesson 35 of 50</span>
+    <h1 class="case-title">Kernel Trick and Mercer's Condition</h1>
+    <p class="lede rise" style="--d:3">Implicitly mapping data into high- or infinite-dimensional Hilbert spaces using positive semidefinite kernel functions without explicit coordinate transformations.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../models/support_vector_classifier/">Support vector classifier</a> <a href="../../concepts/convex-optimisation-and-duality/">Convex Optimisation &amp; Duality</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Machine learning toolbox · Learning theory</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>1 model lesson</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Linear algorithms like Support Vector Machines, ridge regression, and PCA are computationally efficient but fail when data is separated by non-linear decision boundaries. Explicitly mapping features into higher-dimensional polynomial or exponential spaces incurs prohibitive memory and computational costs. The kernel trick replaces explicit transformations with pairwise inner-product evaluations, while Mercer's theorem provides the definitive mathematical condition guaranteeing that a symmetric kernel corresponds to a valid Hilbert feature space.</p>
+        <p>Imagine looking at a flat sheet of rubber where blue pebbles are arranged in a tight inner circle surrounded by a ring of red pebbles. No matter where you draw a straight line with a ruler across the sheet, you cannot separate the blue circle from the surrounding red ring (it is non-linearly separable in 2D). However, if you poke your finger upward beneath the centre of the rubber sheet, the blue pebbles rise into a 3D dome while the red ring remains on the table. You can now slide a flat sheet of cardboard horizontally underneath the dome, cleanly separating the two colours with a flat 2D plane.</p>
+        <p>This is the core insight of non-linear machine learning: data that is hopelessly entangled in low dimensions often becomes cleanly linearly separable when mapped into a higher-dimensional feature space. But mapping every point into a 10,000-dimensional or infinite-dimensional coordinate space is computationally impossible. You would run out of computer memory before computing the coordinates for a single vector.</p>
+        <p>The kernel trick performs mathematical sleight of hand. Many linear algorithms depend exclusively on the dot product between data points $\langle x, z \rangle$, never on individual coordinates in isolation. The kernel trick replaces that simple dot product with a kernel function $K(x, z) = \langle \phi(x), \phi(z) \rangle$ that directly evaluates the inner product in the high-dimensional space without ever calculating or storing the high-dimensional coordinates $\phi(x)$. Mercer's condition ensures that as long as the kernel function produces a positive semidefinite Gram matrix, a valid underlying Hilbert geometry is guaranteed to exist.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Calculating the distance between two ships over the curvature of the Earth using latitude and longitude coordinates, without needing to excavate a physical 3D tunnel through the Earth's mantle.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Identify the inner-product dependency: verify that the learning algorithm (e.g. SVM dual, Ridge regression, PCA) can be expressed purely in terms of pairwise dot products $\langle x_i, x_j \rangle$.</li><li>Select a kernel function $K(x, z)$ suited to the problem structure (e.g. polynomial, Radial Basis Function (RBF), or sigmoid).</li><li>Verify Mercer's condition: confirm that the candidate kernel is continuous, symmetric ($K(x, z) = K(z, x)$), and positive semidefinite (all Gram matrix eigenvalues $\lambda_i \ge 0$).</li><li>Compute the kernel Gram matrix $K \in \mathbb{R}^{n \times n}$ across training instances: $K_{ij} = K(x_i, x_j)$.</li><li>Solve the dual optimisation problem (e.g. dual ridge weights $\alpha = (K + \lambda I)^{-1} y$ or SVM dual multipliers).</li><li>Evaluate test instances using kernel evaluations against training support instances: $f(x) = \sum_{i=1}^n \alpha_i K(x_i, x) + b$.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Mercer's Theorem and positive semidefiniteness</h3><div class="formula">$$\iint K(x, z) \, g(x) \, g(z) \, dx \, dz \ge 0 \quad \forall \, g \in L_2, \qquad K(x, z) = \sum_{i=1}^\infty \lambda_i \, \psi_i(x) \, \psi_i(z)$$</div><p>Mercer's theorem (1909) states that a continuous, symmetric kernel $K(x, z)$ corresponds to an inner product in a Reproducing Kernel Hilbert Space (RKHS) if and only if it is positive semidefinite. The eigenfunctions $\psi_i(x)$ and non-negative eigenvalues $\lambda_i \ge 0$ define the implicit mapping $\phi(x) = \big[\sqrt{\lambda_1}\psi_1(x), \sqrt{\lambda_2}\psi_2(x), \dots\big]^T$.</p></li>
+          <li><h3>Finite-sample Gram matrix condition</h3><div class="formula">$$c^T K c = \sum_{i=1}^n \sum_{j=1}^n c_i c_j K(x_i, x_j) \ge 0 \quad \forall \, c \in \mathbb{R}^n$$</div><p>For any finite dataset $\{x_1, \dots, x_n\}$, the kernel Gram matrix $K \in \mathbb{R}^{n \times n}$ with entries $K_{ij} = K(x_i, x_j)$ must be positive semidefinite. All eigenvalues of $K$ must be non-negative, ensuring that the quadratic optimisation problem remains convex.</p></li>
+          <li><h3>Radial Basis Function (RBF) infinite-dimensional expansion</h3><div class="formula">$$K_{\text{RBF}}(x, z) = \exp\left(-\gamma \|x - z\|^2\right) = \exp(-\gamma \|x\|^2) \exp(-\gamma \|z\|^2) \sum_{k=0}^\infty \frac{(2\gamma)^k}{k!} (x^T z)^k$$</div><p>Applying Taylor series expansion to the cross-term $\exp(2\gamma x^T z)$ demonstrates that the RBF (Gaussian) kernel corresponds to an inner product in an infinite-dimensional feature space. The kernel trick computes this infinite dot product in a single closed-form scalar evaluation.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Enables linear algorithms to learn non-linear boundaries by substituting dot products with kernel functions.</li><li>Avoids the computational bottleneck of explicitly constructing high- or infinite-dimensional feature spaces.</li><li>Mercer's condition requires the kernel Gram matrix to be positive semidefinite, guaranteeing a valid Hilbert space.</li><li>The RBF Gaussian kernel implicitly projects data into an infinite-dimensional feature space via its Taylor expansion.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Non-linear 1D function: y = sin(x) + noise</span>
+rng = np.random.<span class="f">default_rng</span>(<span class="n">42</span>)
+x_train = np.<span class="f">linspace</span>(-<span class="n">3</span>, <span class="n">3</span>, <span class="n">25</span>)[:, <span class="k">None</span>]
+y_train = np.<span class="f">sin</span>(x_train[:, <span class="n">0</span>]) + rng.<span class="f">normal</span>(<span class="n">0</span>, <span class="n">0.1</span>, <span class="n">25</span>)
+
+<span class="c"># RBF kernel function: K(x, z) = exp(-gamma * ||x - z||^2)</span>
+gamma, lam = <span class="n">1.0</span>, <span class="n">0.01</span>
+D2_tr = (x_train - x_train.T) ** <span class="n">2</span>
+K_tr = np.<span class="f">exp</span>(-gamma * D2_tr)
+
+<span class="c"># Verify Mercer's condition: Gram matrix eigenvalues must be &gt;= 0</span>
+eigvals = np.linalg.<span class="f">eigvalsh</span>(K_tr)
+is_psd = np.<span class="f">all</span>(eigvals &gt;= -<span class="n">1e-10</span>)
+
+<span class="c"># Dual solve for Kernel Ridge Regression: alpha = (K + lambda * I)^{-1} y</span>
+alpha = np.linalg.<span class="f">solve</span>(K_tr + lam * np.<span class="f">eye</span>(<span class="k">len</span>(x_train)), y_train)
+
+<span class="c"># Test evaluation via kernel trick: f(x_test) = sum alpha_i * K(x_i, x_test)</span>
+x_test = np.<span class="f">array</span>([[-<span class="n">1.5</span>], [<span class="n">0.0</span>], [<span class="n">1.5</span>]])
+D2_te = (x_train - x_test.T) ** <span class="n">2</span>
+K_te = np.<span class="f">exp</span>(-gamma * D2_te)
+y_pred = K_te.T @ alpha
+
+<span class="k">print</span>(<span class="s">f&quot;Gram matrix min eigenvalue: {np.min(eigvals):.6f} (Mercer PSD: {is_psd})&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;True sin(x_test):  {[round(float(v), 3) for v in np.sin(x_test[:, 0])]}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Kernel prediction: {[round(float(v), 3) for v in y_pred]}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Quadratic memory and cubic computation: Storing the Gram matrix requires $O(n^2)$ memory, and inverting it requires $O(n^3)$ compute, making exact kernel methods unscalable to millions of samples without Nyström or random Fourier approximations.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Overfitting via excessive kernel bandwidth: In RBF kernels, setting $\gamma$ too high narrows the Gaussian bell curve into sharp isolated spikes around individual training points, collapsing generalisation.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using non-Mercer kernels in convex solvers: Functions that do not produce positive semidefinite matrices (such as certain hyperbolic tangents) violate Mercer's theorem, destroying convexity and causing dual solvers to diverge.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Curse of dimensionality in kernel space: High-dimensional input spaces cause pairwise Euclidean distances in RBF kernels to concentrate, making all off-diagonal kernel entries decay to near-zero.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>What is the core mathematical premise of the "kernel trick"?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It removes all outliers from the training distribution</span></button><button class="opt" type="button"><b>B</b><span>It computes inner products in a high-dimensional feature space using a function evaluated directly on low-dimensional inputs, without explicitly computing feature coordinates</span></button><button class="opt" type="button"><b>C</b><span>It converts continuous variables into discrete binary flags</span></button><button class="opt" type="button"><b>D</b><span>It inverts matrices using gradient descent instead of LU decomposition</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The kernel trick evaluates $K(x, z) = \langle \phi(x), \phi(z) \rangle$ directly on raw coordinates, bypassing the immense (or infinite) computational cost of computing the transformed feature vectors $\phi(x)$ and $\phi(z)$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>What does Mercer's theorem establish about a continuous, symmetric function $K(x, z)$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It proves the function corresponds to an inner product in a valid Hilbert space if and only if its Gram matrix is positive semidefinite</span></button><button class="opt" type="button"><b>B</b><span>It ensures that all classification errors are strictly zero</span></button><button class="opt" type="button"><b>C</b><span>It forces all eigenvalues of the feature matrix to equal 1.0</span></button><button class="opt" type="button"><b>D</b><span>It guarantees the function can be evaluated in $O(1)$ constant time</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Mercer's theorem proves that positive semidefiniteness ($\iint K(x, z) g(x) g(z) dx dz \ge 0$) is the necessary and sufficient condition for a continuous symmetric kernel to represent an inner product in a Reproducing Kernel Hilbert Space.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>Into what dimensionality does the Radial Basis Function (RBF / Gaussian) kernel implicitly map input data?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Exactly twice the input dimension ($2d$)</span></button><button class="opt" type="button"><b>B</b><span>One-dimensional scalar space</span></button><button class="opt" type="button"><b>C</b><span>A finite quadratic polynomial space ($d^2 / 2$)</span></button><button class="opt" type="button"><b>D</b><span>An infinite-dimensional Hilbert space</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The Taylor series expansion of $\exp(2\gamma x^T z)$ contains an infinite series of polynomial terms $(x^T z)^k / k!$, corresponding to an inner product in an infinite-dimensional feature space.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q4</span>What is a primary computational limitation of exact kernel methods when scaling to very large datasets ($n &gt; 100{,}000$)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Kernels cannot process floating-point numbers</span></button><button class="opt" type="button"><b>B</b><span>The Gram matrix requires $O(n^2)$ memory to store and $O(n^3)$ operations to invert</span></button><button class="opt" type="button"><b>C</b><span>Mercer's theorem fails when $n$ is an even number</span></button><button class="opt" type="button"><b>D</b><span>The kernel trick only works when the number of features exceeds the number of samples ($d &gt; n$)</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because the Gram matrix $K$ scales with the square of the sample size ($n \times n$), computing and storing it for large $n$ rapidly exceeds memory limits, requiring approximate methods like Random Fourier Features or Nyström sampling.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../models/support_vector_classifier/"><small class="kicker">Classification</small><b>Support vector classifier</b></a><a href="../../concepts/pca/"><small class="kicker">Concept</small><b>PCA</b></a><a href="../../concepts/convex-optimisation-and-duality/"><small class="kicker">Concept</small><b>Convex Optimisation &amp; Duality</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/fairness-metrics-and-mitigation/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Machine learning toolbox</small><b>Fairness metrics</b></a>
+    <a class="pager-next" href="../../concepts/svm-dual-formulation/"><small>Next · Machine learning toolbox <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>SVM dual formulation</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

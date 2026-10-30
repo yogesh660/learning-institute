@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>scikit-learn Pipelines and ColumnTransformer · Learn · Yogesh Awate</title>
+<meta name="description" content="Composing heterogeneous feature transformations and estimators into unified, leakage-free workflows that adhere to the standard fit/transform contract.">
+<meta property="og:title" content="scikit-learn Pipelines and ColumnTransformer · Learn · Yogesh Awate">
+<meta property="og:description" content="Composing heterogeneous feature transformations and estimators into unified, leakage-free workflows that adhere to the standard fit/transform contract.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="scikit-learn-pipelines-and-columntransformer">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-data-science">Path 07 · Data science</a> / Pipelines and validation / Lesson 16 of 47</span>
+    <h1 class="case-title">scikit-learn Pipelines and ColumnTransformer</h1>
+    <p class="lede rise" style="--d:3">Composing heterogeneous feature transformations and estimators into unified, leakage-free workflows that adhere to the standard fit/transform contract.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/data-leakage/">Data leakage</a> <a href="../../concepts/train-validation-test-splits-group-and-time-based/">Splits: group and time-based</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Data science · Pipelines and validation</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Real-world datasets mix numeric measurements, categorical identifiers, and text fields that each require distinct preprocessing pipelines. Manually transforming columns across loose scripts invariably induces subtle data leakage and deployment friction. scikit-learn Pipeline chains sequential transformations with estimators, while ColumnTransformer routes heterogeneous columns through dedicated preprocessing branches under an atomic fit/transform contract.</p>
+        <p>Imagine an automobile manufacturing assembly line. Raw steel and chassis components enter at station 1, doors and windows are attached at station 2, the engine is mounted at station 3, and final safety inspection occurs at station 4. If a mechanic at station 2 tries to install doors using measurements from a vehicle that has not yet entered the factory, the entire process breaks down. In messy data science workflows, analysts often run loose pandas scripts that fill missing values with the global median and scale columns across the whole table before splitting. This silently leaks test data into training.</p>
+        <p>The scikit-learn Pipeline solves this by encapsulating the entire chain into a single composite estimator. When you call pipeline.fit(X_train, y_train), every intermediate step learns its parameters (e.g. imputation medians, scaling means and standard deviations) exclusively on X_train. When you subsequently call pipeline.predict(X_test), those exact learned parameters are applied to X_test without re-fitting. The test set remains completely pristine and unobserved until the prediction step.</p>
+        <p>ColumnTransformer extends this principle to multi-type tabular data. Instead of forcing you to manually slice and re-glue numpy matrices, ColumnTransformer acts as a declarative routing switchboard: continuous numerical columns are routed to median imputers and standard scalers; categorical columns are routed to frequent imputers and one-hot encoders; and non-informative IDs are dropped. The transformed branches are automatically concatenated horizontally into a dense or sparse design matrix ready for the final model.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>A parcel sorting facility where letters, fragile boxes, and oversized packages are routed to dedicated conveyor belts and reassembled into a single delivery truck.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Partition feature columns by type: identify continuous numerical features, low-cardinality categoricals, and high-cardinality identifiers.</li><li>Construct modular sub-pipelines: build dedicated Pipeline objects for each data type (e.g. median imputer + robust scaler for numeric columns).</li><li>Assemble ColumnTransformer: bind sub-pipelines to column lists, specifying remainder='drop' or remainder='passthrough'.</li><li>Append final estimator: package the ColumnTransformer and the downstream classifier or regressor into a unified root Pipeline.</li><li>Execute atomic validation: pass the root Pipeline directly into cross-validation functions; all preprocessing steps re-fit cleanly within each training fold.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Sequential transformation composition</h3><div class="formula">\hat{y} = f_{\theta} \left( T_k \left( T_{k-1} \left( \dots T_1(X) \dots \right) \right) \right)</div><p>Where each transformation $T_j(X) = \phi_j(X; \hat{\Theta}_j)$ is parametrised by parameters $\hat{\Theta}_j$ learned strictly during the fitting phase of the training partition $\mathcal{D}_{\text{train}}$, ensuring complete encapsulation.</p></li>
+          <li><h3>ColumnTransformer partitioned dispatch</h3><div class="formula">T_{\text{column}}(X) = \bigoplus_{m=1}^M T_m\left(X_{[:, \mathcal{J}_m]}\right)</div><p>Where $\mathcal{J}_1, \dots, \mathcal{J}_M$ partition the feature column indices, $X_{[:, \mathcal{J}_m]}$ is the submatrix of selected features, and $\bigoplus$ represents horizontal matrix concatenation along the feature axis.</p></li>
+          <li><h3>Out-of-sample inference invariance</h3><div class="formula">T_m\left(X_{\text{test}}; \hat{\Theta}_{m, \text{train}}\right) = \phi_m\left(X_{\text{test}}; \hat{\Theta}_{m, \text{train}}\right)</div><p>Crucially, the learned transformation parameters $\hat{\Theta}_{m, \text{train}}$ remain fixed and immutable when transforming $X_{\text{test}}$, guaranteeing that test set distribution shifts never feed backward into model parameters.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Pipelines enforce atomic execution of preprocessing and modelling, completely eliminating preprocessing leakage across cross-validation folds.</li><li>ColumnTransformer dispatches distinct feature subsets to specialised sub-pipelines, eliminating fragile manual matrix slicing.</li><li>Hyperparameter search can simultaneously optimise preprocessing choices (e.g. imputer strategy) and estimator hyperparameters (e.g. regularisation strength) in a single grid search.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Pure NumPy implementation of Pipeline and ColumnTransformer pattern</span>
+<span class="k">class</span> ColumnTransformer:
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, transformers):
+        <span class="k">self</span>.transformers = transformers  <span class="c"># list of (name, transformer, cols)</span>
+    <span class="k">def</span> <span class="f">fit</span>(<span class="k">self</span>, X):
+        <span class="k">for</span> _, t, cols <span class="k">in</span> <span class="k">self</span>.transformers:
+            t.<span class="f">fit</span>(X[:, cols])
+        <span class="k">return</span> <span class="k">self</span>
+    <span class="k">def</span> <span class="f">transform</span>(<span class="k">self</span>, X):
+        transformed = [t.<span class="f">transform</span>(X[:, cols]) <span class="k">for</span> _, t, cols <span class="k">in</span> <span class="k">self</span>.transformers]
+        <span class="k">return</span> np.<span class="f">hstack</span>(transformed)
+
+<span class="k">class</span> ImputeAndScale:
+    <span class="k">def</span> <span class="f">fit</span>(<span class="k">self</span>, X):
+        <span class="k">self</span>.mean_ = np.<span class="f">nanmean</span>(X, axis=<span class="n">0</span>)
+        X_imp = np.<span class="f">where</span>(np.<span class="f">isnan</span>(X), <span class="k">self</span>.mean_, X)
+        <span class="k">self</span>.std_ = np.<span class="f">std</span>(X_imp, axis=<span class="n">0</span>) + <span class="n">1e-8</span>
+        <span class="k">return</span> <span class="k">self</span>
+    <span class="k">def</span> <span class="f">transform</span>(<span class="k">self</span>, X):
+        X_imp = np.<span class="f">where</span>(np.<span class="f">isnan</span>(X), <span class="k">self</span>.mean_, X)
+        <span class="k">return</span> (X_imp - <span class="k">self</span>.mean_) / <span class="k">self</span>.std_
+
+<span class="c"># Simulated dataset: cols 0-1 continuous with NaNs, col 2 binary indicator</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+X_train = np.<span class="f">array</span>([[<span class="n">25.0</span>, <span class="n">50000.0</span>, <span class="n">1</span>], [np.nan, <span class="n">80000.0</span>, <span class="n">0</span>], [<span class="n">45.0</span>, <span class="n">120000.0</span>, <span class="n">1</span>], [<span class="n">30.0</span>, np.nan, <span class="n">0</span>]])
+X_test = np.<span class="f">array</span>([[np.nan, <span class="n">60000.0</span>, <span class="n">1</span>], [<span class="n">50.0</span>, <span class="n">95000.0</span>, <span class="n">0</span>]])
+
+ct = <span class="f">ColumnTransformer</span>([
+    (<span class="s">'num'</span>, <span class="f">ImputeAndScale</span>(), [<span class="n">0</span>, <span class="n">1</span>]),
+    (<span class="s">'pass'</span>, <span class="f">type</span>(<span class="s">'Pass'</span>, (), {<span class="s">'fit'</span>: <span class="k">lambda</span> s, x: s, <span class="s">'transform'</span>: <span class="k">lambda</span> s, x: x})(), [<span class="n">2</span>])
+])
+ct.<span class="f">fit</span>(X_train)
+X_test_trans = ct.<span class="f">transform</span>(X_test)
+
+<span class="k">print</span>(<span class="s">f&quot;Fitted train means: age={ct.transformers[0][1].mean_[0]:.1f}, salary={ct.transformers[0][1].mean_[1]:.1f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Transformed test shape: {X_test_trans.shape}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Test sample 0 transformed: {np.round(X_test_trans[0], 2)}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Calling fit_transform on validation or test datasets instead of transform, which overwrites learned training statistics with test statistics.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Relying on column integer indices in ColumnTransformer when input dataframes can have columns reordered between development and deployment.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Writing custom transformers that do not adhere to the scikit-learn API contract: missing fit returning self, or transform returning a 2D array.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>When evaluating a composite scikit-learn Pipeline with cross-validation, how does it prevent preprocessing data leakage?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By doubling the number of cross-validation iterations automatically</span></button><button class="opt" type="button"><b>B</b><span>By fitting intermediate transformers strictly on the training fold and applying transform to the validation fold</span></button><button class="opt" type="button"><b>C</b><span>By removing all non-numeric columns from the dataset before splitting</span></button><button class="opt" type="button"><b>D</b><span>By converting all estimators into linear regressions</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because the Pipeline encapsulates transformers and estimators together, cross-validation re-fits the transformers from scratch on each training fold, preventing test fold contamination.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>What critical scikit-learn convention must custom transformer classes adhere to so they integrate smoothly into a Pipeline?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>They must implement backpropagation gradients manually</span></button><button class="opt" type="button"><b>B</b><span>They must inherit from torch.nn.Module</span></button><button class="opt" type="button"><b>C</b><span>They must define fit(X, y) returning self and transform(X) returning a 2D array or dataframe</span></button><button class="opt" type="button"><b>D</b><span>They must run asynchronously using Python threading</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The standard scikit-learn transformer protocol requires a fit method that estimates parameters and returns self, and a transform method that applies those parameters to transform input arrays.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>What happens if you accidentally call fit_transform instead of transform on a test dataset during production inference?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The pipeline re-estimates transformation parameters (e.g. mean, variance) from the test batch, discarding learned training baselines and creating distribution shift</span></button><button class="opt" type="button"><b>B</b><span>The predictions become exactly zero for all inputs</span></button><button class="opt" type="button"><b>C</b><span>The code throws an immediate syntax error</span></button><button class="opt" type="button"><b>D</b><span>The pipeline permanently deletes the trained model weights</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Calling fit_transform on test or production data recalculates statistics from the incoming batch, which corrupts inference if test batch sizes are small or unrepresentative.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/scaling-and-transforms-standard-robust-box-cox-yeo-johnson/"><small class="kicker">Concept</small><b>Scaling and transforms</b></a><a href="../../concepts/missing-data-mcar-mar-mnar-and-imputation/"><small class="kicker">Concept</small><b>Missing data: MCAR, MAR, MNAR</b></a><a href="../../concepts/encoding-categoricals-one-hot-ordinal-target-woe/"><small class="kicker">Concept</small><b>Encoding categoricals</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/data-leakage/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Data science</small><b>Data leakage</b></a>
+    <a class="pager-next" href="../../concepts/experiment-tracking/"><small>Next · Data science <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Experiment tracking</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

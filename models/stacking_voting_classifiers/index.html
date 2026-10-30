@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Stacking and Voting Ensembles · Learn · Yogesh Awate</title>
+<meta name="description" content="Combine different kinds of model. Voting averages them; stacking trains a model to learn how to combine them.">
+<meta property="og:title" content="Stacking and Voting Ensembles · Learn · Yogesh Awate">
+<meta property="og:description" content="Combine different kinds of model. Voting averages them; stacking trains a model to learn how to combine them.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="stacking_voting_classifiers">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-classification">Path 04 · Classification</a> / Trees and ensembles / Lesson 12 of 19</span>
+    <h1 class="case-title">Stacking and Voting Ensembles</h1>
+    <p class="lede rise" style="--d:3">Combine different kinds of model. Voting averages them; stacking trains a model to learn how to combine them.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="3"><i><b></b></i>Advanced</span></span>
+      <span class="tagline">16 min</span>
+      <span class="tagline lab">Live lab</span>
+      <span class="prereq">Before this: <a href="../../concepts/cross-validation/">Cross-validation</a> <a href="../../models/random_forest_classifier/">Random forest classifier</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Task</dt><dd>Classification</dd>
+          <dt>Family</dt><dd>Heterogeneous ensemble</dd>
+          <dt>What it learns</dt><dd>Base models + combiner</dd>
+          <dt>Training cost</dt><dd>$\sum$ base costs $\times$ (cv + 1)</dd>
+          <dt>Prediction cost</dt><dd>$\sum$ base prediction costs</dd>
+          <dt>In code</dt><dd><code class="no-math">sklearn.<wbr>ensemble.<wbr>StackingClassifier</code></dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>How it works</a></li><li><a href="#lab"><span>03</span>Try it</a></li><li><a href="#maths"><span>04</span>The maths</a></li><li><a href="#tuning"><span>05</span>Hyperparameters</a></li><li><a href="#when"><span>06</span>When to use it</a></li><li><a href="#code"><span>07</span>In code</a></li><li><a href="#results"><span>08</span>On real data</a></li><li><a href="#quiz"><span>09</span>Check yourself</a></li><li><a href="#related"><span>10</span>Related lessons</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Different model families make different mistakes. A voting ensemble averages their predictions; a stacking ensemble trains a small "meta-model" on their out-of-fold predictions to learn whom to trust, and when.</p>
+        <p>A linear model, a k-NN and a tree see the problem differently. Where one is confidently wrong the others may be right. <strong>Hard voting</strong> takes the majority label; <strong>soft voting</strong> averages probabilities, which usually works better because confidence counts.</p>
+        <p><strong>Stacking</strong> goes further: it generates each base model’s predictions with cross-validation (so they are honest), then fits a meta-learner, usually logistic regression, on those predictions. Using in-sample predictions instead would leak, because the base models have already seen those labels.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>A panel of specialists. Voting counts their opinions; stacking hires a chair who has learned which specialist to believe on which kind of case.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> How it works</h2>
+        <ol class="steps"><li>Pick diverse base models.</li><li>Voting: average their probabilities (soft) or labels (hard).</li><li>Stacking: get out-of-fold predictions for each base model with K-fold CV.</li><li>Fit the meta-model on those predictions; refit base models on all data for inference.</li></ol>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>03</span> Try it</h2>
+        <p>Three base models (logistic regression, k-NN, a shallow tree) and the ensemble you choose, all trained live.</p>
+        <div class="lab" data-lab="stacking_voting_classifiers" data-kind="models" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>Compare each base model’s test accuracy with the soft-voting ensemble.</li><li>Switch to stacking and look at the meta-model weights: which model does it trust most on this dataset?</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>04</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Soft voting</h3><div class="formula">$$\hat P(c \mid x) = \sum_m w_m\,\hat P_m(c \mid x), \quad \sum_m w_m = 1$$</div><p>Equal weights by default.</p></li>
+          <li><h3>Stacking</h3><div class="formula">$$\hat y = g\big(\hat f_1^{(-k)}(x), \dots, \hat f_M^{(-k)}(x)\big)$$</div><p>$\hat f_m^{(-k)}$ is base model $m$ trained without the fold containing $x$; $g$ is the meta-learner.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="tuning">
+        <h2 class="h3"><span>05</span> Hyperparameters</h2>
+        <div class="table-wrap"><table class="kv">
+          <thead><tr><th>Setting</th><th>What it does</th><th>Typical choice</th></tr></thead>
+          <tbody><tr><td><span class="hp">estimators</span></td><td>The base models.</td><td>Diversity matters more than individual strength.</td></tr><tr><td><span class="hp">voting</span></td><td>hard or soft.</td><td>soft when models give probabilities.</td></tr><tr><td><span class="hp">final_estimator, cv</span></td><td>Meta-model and folds for stacking.</td><td>LogisticRegression, cv=5.</td></tr></tbody>
+        </table></div>
+      </section>
+      <section class="reveal" id="when">
+        <h2 class="h3"><span>06</span> When to use it</h2>
+        <div class="split2">
+          <div class="box good"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Strengths</h3><ul><li>Often squeezes out extra accuracy.</li><li>Combines strengths of different families.</li><li>Voting is trivial to set up.</li></ul></div>
+          <div class="box bad"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg> Limitations</h3><ul><li>More models to train, store and serve.</li><li>Gains are often small over one strong booster.</li><li>Stacking is easy to leak if done by hand.</li></ul></div>
+          <div class="box use"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> Reach for it when</h3><p>Competitions, or when you already have several decent, different models.</p></div>
+          <div class="box avoid"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Think twice when</h3><p>Latency- or maintenance-constrained production systems where the gain is marginal.</p></div>
+        </div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>07</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">from</span> sklearn.ensemble <span class="k">import</span> StackingClassifier, VotingClassifier, RandomForestClassifier
+<span class="k">from</span> sklearn.linear_model <span class="k">import</span> LogisticRegression
+<span class="k">from</span> sklearn.neighbors <span class="k">import</span> KNeighborsClassifier
+<span class="k">from</span> sklearn.pipeline <span class="k">import</span> make_pipeline
+<span class="k">from</span> sklearn.preprocessing <span class="k">import</span> StandardScaler
+
+base = [(<span class="s">&quot;lr&quot;</span>, <span class="f">make_pipeline</span>(<span class="f">StandardScaler</span>(), <span class="f">LogisticRegression</span>(max_iter=<span class="n">1000</span>))),
+        (<span class="s">&quot;knn&quot;</span>, <span class="f">make_pipeline</span>(<span class="f">StandardScaler</span>(), <span class="f">KNeighborsClassifier</span>(<span class="n">15</span>))),
+        (<span class="s">&quot;rf&quot;</span>, <span class="f">RandomForestClassifier</span>(<span class="n">300</span>, random_state=<span class="n">0</span>))]
+vote = <span class="f">VotingClassifier</span>(base, voting=<span class="s">&quot;soft&quot;</span>).<span class="f">fit</span>(X_tr, y_tr)
+stack = <span class="f">StackingClassifier</span>(base, final_estimator=<span class="f">LogisticRegression</span>(), cv=<span class="n">5</span>).<span class="f">fit</span>(X_tr, y_tr)
+<span class="k">print</span>(<span class="s">&quot;vote&quot;</span>, vote.<span class="f">score</span>(X_te, y_te), <span class="s">&quot;stack&quot;</span>, stack.<span class="f">score</span>(X_te, y_te))</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Training the meta-model on in-sample base predictions: classic leakage.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Stacking three near-identical models; without diversity there is nothing to gain.</span></li></ul>
+      </section>
+      <section class="reveal" id="results">
+        <h2 class="h3"><span>08</span> On real data</h2>
+        <p>Stacking (LR + k-NN + RF) trained on 80% of the Titanic sample and scored on a stratified 20% hold-out. The baseline always predicts the most common class.</p>
+        <div class="table-wrap" style="margin-top:18px"><table class="kv results-table">
+          <thead><tr><th>Metric</th><th>Stacking (LR + k-NN + RF)</th><th>Majority class</th></tr></thead>
+          <tbody><tr><td>Accuracy</td><td>0.960</td><td>0.630</td></tr><tr><td>F1 (survived)</td><td>0.946</td><td>0.000</td></tr><tr><td>ROC-AUC</td><td>0.991</td><td>0.500</td></tr></tbody>
+        </table></div>
+        <p class="note">Produced by <a href="https://github.com/yogesh660/ml-model-zoo/blob/main/models/stacking_voting_classifiers/train.py" target="_blank" rel="noopener">models/stacking_voting_classifiers/train.py</a> · generated 2026-10-28. Run it yourself: <code class="no-math">python models/stacking_voting_classifiers/train.py</code></p>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>09</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>Why does stacking use out-of-fold predictions?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To save time</span></button><button class="opt" type="button"><b>B</b><span>To balance classes</span></button><button class="opt" type="button"><b>C</b><span>It does not need them</span></button><button class="opt" type="button"><b>D</b><span>In-sample predictions are overconfident and leak labels into the meta-model</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Base models have memorised their training labels; the meta-model would learn to trust them too much.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>Soft voting averages:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Predicted probabilities</span></button><button class="opt" type="button"><b>B</b><span>Class labels</span></button><button class="opt" type="button"><b>C</b><span>Model weights</span></button><button class="opt" type="button"><b>D</b><span>Feature importances</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Averaging probabilities lets confident models outweigh uncertain ones.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>What is a meta-model (or blender) in a Stacking Classifier?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>A heuristic rule that selects a model at random</span></button><button class="opt" type="button"><b>B</b><span>The base classifier that achieved the highest individual test accuracy</span></button><button class="opt" type="button"><b>C</b><span>A model trained on the out-of-fold predictions of the base estimators to produce the final classification</span></button><button class="opt" type="button"><b>D</b><span>A neural network that generates synthetic features</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Stacking uses a two-level hierarchy: Level 0 consists of several diverse base models, and Level 1 is the meta-model (often a simple Logistic Regression) trained on the base models' out-of-fold predictions.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q4</span>Why are simple linear models (like Logistic Regression) preferred as the meta-learner in stacking?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Complex non-linear meta-models easily overfit the small set of base model predictions</span></button><button class="opt" type="button"><b>B</b><span>Linear models guarantee 100% training accuracy</span></button><button class="opt" type="button"><b>C</b><span>Non-linear models cannot process probability inputs</span></button><button class="opt" type="button"><b>D</b><span>Scikit-learn does not support non-linear meta-learners</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The input features to the meta-model are already strong, low-dimensional predictions. A simple, regularised linear meta-model learns an effective weighted combination without overfitting.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q5</span>In scikit-learn's VotingClassifier, what does the voting='hard' setting do?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It averages the predicted class probabilities and takes the argmax</span></button><button class="opt" type="button"><b>B</b><span>It assigns double weight to tree-based models</span></button><button class="opt" type="button"><b>C</b><span>It predicts the class label that received the majority of votes across the individual base classifiers</span></button><button class="opt" type="button"><b>D</b><span>It trains each model for twice as many epochs</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> voting='hard' uses majority rule: each base classifier casts a vote for its predicted class label, and the class with the most votes wins.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q6</span>Why does combining three identical Random Forests in a Voting Classifier provide virtually no benefit, whereas combining a Random Forest, an SVM, and Logistic Regression often works well?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Scikit-learn raises an exception if base models are of the same class</span></button><button class="opt" type="button"><b>B</b><span>Voting classifiers require features to be re-engineered for each tree</span></button><button class="opt" type="button"><b>C</b><span>Models from the same algorithm family share identical inductive biases and make the same errors; ensembling only reduces error when base models make uncorrelated, complementary mistakes</span></button><button class="opt" type="button"><b>D</b><span>Three identical models triple the training loss</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> An ensemble succeeds when the errors of individual models are uncorrelated. If model A makes a mistake, diverse models B and C can outvote it; identical models make identical mistakes and reinforce each other's errors.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q7</span>What goes wrong if you train the meta-model on the base models' in-sample training predictions instead of out-of-fold predictions?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The base models may have memorised the training data (e.g. 1-NN or deep trees achieving 100% accuracy), causing the meta-model to over-rely on overfitted models and fail on test data</span></button><button class="opt" type="button"><b>B</b><span>In-sample predictions take ten times longer to compute</span></button><button class="opt" type="button"><b>C</b><span>Training predictions cannot be converted to floats</span></button><button class="opt" type="button"><b>D</b><span>The meta-model produces negative probabilities</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In-sample predictions leak labels because flexible base models have near-zero training error. The meta-model learns that base model predictions are infallible, failing to learn which models generalise best on unseen data.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q8</span>In scikit-learn's StackingClassifier, what does setting passthrough=True do?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It ignores all training errors</span></button><button class="opt" type="button"><b>B</b><span>It passes the original input features $X$ directly to the meta-model alongside the base model predictions</span></button><button class="opt" type="button"><b>C</b><span>It skips cross-validation to speed up fitting</span></button><button class="opt" type="button"><b>D</b><span>It bypasses base model training and trains only the meta-model</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> By default, the meta-model only sees the base model predictions. Setting passthrough=True concatenates the original features with the base predictions, allowing the meta-model to learn context-dependent routing.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q9</span>Why is probability calibration important when using voting='soft' across heterogeneous base models (e.g. Naive Bayes and SVM)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because SVM probabilities are always zero without calibration</span></button><button class="opt" type="button"><b>B</b><span>Because soft voting cannot average uncalibrated numbers</span></button><button class="opt" type="button"><b>C</b><span>Because an uncalibrated model that outputs extreme, overconfident probabilities (like Naive Bayes) will hijack the average and dominate the ensemble decision</span></button><button class="opt" type="button"><b>D</b><span>Because calibration reduces test set inference latency</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Soft voting calculates an unweighted or weighted mean of probabilities. If one model's probabilities are pushed to $0.99$ while another's are well-calibrated around $0.65$, the overconfident model will dominate the vote regardless of whether it is more accurate.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q10</span>A weighted soft-voting ensemble combines three models with weights $w = [2, 1, 1]$ (normalised weights 0.50, 0.25, 0.25). For a test sample, their predicted probabilities for Class 1 are: Model 1 ($0.30$), Model 2 ($0.80$), Model 3 ($0.70$). What is the ensemble predicted probability for Class 1, and what class is predicted at threshold 0.50?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Probability $= 0.450$, predicted Class 0</span></button><button class="opt" type="button"><b>B</b><span>Probability $= 0.400$, predicted Class 0</span></button><button class="opt" type="button"><b>C</b><span>Probability $= 0.525$, predicted Class 1</span></button><button class="opt" type="button"><b>D</b><span>Probability $= 0.600$, predicted Class 1</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Weighted average is $\frac{2(0.30) + 1(0.80) + 1(0.70)}{4} = \frac{0.60 + 0.80 + 0.70}{4} = \frac{2.10}{4} = 0.525$, which is above the $0.50$ threshold, so the ensemble predicts Class 1. (Unweighted soft voting would give $1.80 / 3 = 0.600$; counting Model 1 twice pulls the result down.)</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q11</span>Three models vote on a binary classification problem: Model 1 ($P=0.49$, votes Class 0), Model 2 ($P=0.49$, votes Class 0), Model 3 ($P=0.98$, votes Class 1). What are the predictions of unweighted hard voting and unweighted soft voting?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Hard voting predicts Class 1; soft voting predicts Class 0</span></button><button class="opt" type="button"><b>B</b><span>Both predict Class 0</span></button><button class="opt" type="button"><b>C</b><span>Hard voting predicts Class 0; soft voting predicts Class 1</span></button><button class="opt" type="button"><b>D</b><span>Both predict Class 1</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Hard voting: Models 1 and 2 vote Class 0, Model 3 votes Class 1. Class 0 wins (2 to 1). Soft voting: average probability is $(0.49 + 0.49 + 0.98) / 3 = 1.96 / 3 \approx 0.653 &gt; 0.50$, predicting Class 1.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q12</span>By the Condorcet Jury Theorem, suppose 3 independent classifiers each have an accuracy of $p = 0.70$. What is the probability that a majority vote of these 3 classifiers is correct?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$78.4\%$</span></button><button class="opt" type="button"><b>B</b><span>$70.0\%$</span></button><button class="opt" type="button"><b>C</b><span>$90.0\%$</span></button><button class="opt" type="button"><b>D</b><span>$84.0\%$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A 3-voter majority is correct if all 3 are correct ($0.70^3 = 0.343$) or exactly 2 are correct ($3 \times 0.70^2 \times 0.30 = 0.441$). Total probability $= 0.343 + 0.441 = 0.784$ (78.4%). Ensembling improves accuracy from 70% to 78.4%.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>10</span> Related lessons</h2>
+        <div class="related"><a href="../../models/random_forest_classifier/"><small class="kicker">Classification</small><b>Random forest classifier</b></a><a href="../../models/gradient_boosted_classifiers/"><small class="kicker">Classification</small><b>Gradient boosted classifiers</b></a><a href="../../models/logistic_regression/"><small class="kicker">Classification</small><b>Logistic regression</b></a><a href="../../concepts/cross-validation/"><small class="kicker">Concept</small><b>Cross-validation</b></a><a href="../../concepts/bias-variance-tradeoff/"><small class="kicker">Concept</small><b>Bias–variance trade-off</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../models/gradient_boosted_classifiers/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Classification</small><b>Gradient boosted classifiers</b></a>
+    <a class="pager-next" href="../../concepts/bagging-and-extra-trees/"><small>Next · Classification <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Bagging and Extra-Trees</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/sequences.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Ordinary Least Squares Linear Regression · Learn · Yogesh Awate</title>
+<meta name="description" content="The baseline every regression model is measured against: a straight-line fit chosen to minimise squared error.">
+<meta property="og:title" content="Ordinary Least Squares Linear Regression · Learn · Yogesh Awate">
+<meta property="og:description" content="The baseline every regression model is measured against: a straight-line fit chosen to minimise squared error.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="ols_linear_regression">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-regression">Path 03 · Regression</a> / Linear models / Lesson 1 of 23</span>
+    <h1 class="case-title">Ordinary Least Squares Linear Regression</h1>
+    <p class="lede rise" style="--d:3">The baseline every regression model is measured against: a straight-line fit chosen to minimise squared error.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="1"><i><b></b></i>Beginner</span></span>
+      <span class="tagline">18 min</span>
+      <span class="tagline lab">Live lab</span>
+      <span class="prereq">Before this: <a href="../../concepts/cost-vs-loss-vs-error/">Cost vs loss vs error</a> <a href="../../concepts/loss-functions/">Loss functions</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Task</dt><dd>Regression</dd>
+          <dt>Family</dt><dd>Linear, closed form</dd>
+          <dt>What it learns</dt><dd>One weight per feature + intercept</dd>
+          <dt>Training cost</dt><dd>$O(np^2 + p^3)$</dd>
+          <dt>Prediction cost</dt><dd>$O(p)$ per row</dd>
+          <dt>In code</dt><dd><code class="no-math">sklearn.<wbr>linear_model.<wbr>LinearRegression</code></dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>How it works</a></li><li><a href="#arch"><span>03</span>The architecture</a></li><li><a href="#watch"><span>04</span>Watch it work</a></li><li><a href="#lab"><span>05</span>Try it</a></li><li><a href="#maths"><span>06</span>The maths</a></li><li><a href="#tuning"><span>07</span>Hyperparameters</a></li><li><a href="#when"><span>08</span>When to use it</a></li><li><a href="#code"><span>09</span>In code</a></li><li><a href="#results"><span>10</span>On real data</a></li><li><a href="#quiz"><span>11</span>Check yourself</a></li><li><a href="#related"><span>12</span>Related lessons</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Draw the line (or hyperplane) that makes the sum of squared vertical distances to the data as small as possible. That is the whole idea, and it has a closed-form answer.</p>
+        <p>Imagine every data point is tied to a rigid rod by a spring that only stretches vertically. The rod settles where the total spring energy is smallest. Because spring energy grows with the <em>square</em> of the stretch, a point twice as far away pulls four times as hard. That is why OLS is sensitive to outliers, and why it has such clean maths.</p>
+        <p>With $p$ features the prediction is $\hat y = \beta_0 + \beta_1 x_1 + \dots + \beta_p x_p$. Each coefficient reads as "how much $\hat y$ moves when this feature moves by one unit and every other feature stays put". That reading is the main reason linear regression is still the first model people reach for: it explains itself.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Fitting a ruler to a scatter of pins, where every pin is attached to the ruler by a spring.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> How it works</h2>
+        <ol class="steps"><li>Stack the features into a design matrix $X$ (one row per example) and add a column of ones for the intercept.</li><li>Write the loss as the residual sum of squares: $\lVert y - X\beta \rVert^2$.</li><li>Take the gradient with respect to $\beta$ and set it to zero. This gives the normal equations $X^\top X\beta = X^\top y$.</li><li>Solve them, in practice with a QR or SVD decomposition rather than an explicit matrix inverse, because that is numerically safer.</li><li>Check the residuals: they should look like structureless noise. A pattern in the residuals means the model is missing something.</li></ol>
+      </section>
+      <section class="reveal" id="arch">
+        <h2 class="h3"><span>03</span> The architecture</h2>
+        <p>The full workflow of a linear regression, from raw table to a model you can trust, fitted on this repository’s California housing sample. Hover over any stage or tag (or tap it on a phone) for what it does, its shape and the real numbers from the fit.</p>
+        <div class="arch" data-architecture="linreg" style="margin-top:18px"><noscript><p class="lab-noscript">The diagram needs JavaScript.</p></noscript></div>
+      </section>
+      <section class="reveal" id="watch">
+        <h2 class="h3"><span>04</span> Watch it work</h2>
+        <p>Press play, or step through at your own pace. Each step adds one idea.</p>
+        <div class="explainer" data-explainer="ols" style="margin-top:18px"><noscript><p class="lab-noscript">The animation needs JavaScript.</p></noscript></div>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>05</span> Try it</h2>
+        <p>Click on the plot to add points and drag them around. The line is refitted instantly with the closed-form solution; dashed lines are the residuals being squared.</p>
+        <div class="lab" data-lab="ols_linear_regression" data-kind="models" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>Add one point far above the others and watch how far the line tilts toward it.</li><li>Press <em>Run gradient descent</em> to watch the same answer being found iteratively.</li><li>Make the cloud vertical: $R^2$ falls even though the line still minimises squared error.</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>06</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>The objective</h3><div class="formula">$$\hat\beta = \arg\min_\beta \; \lVert y - X\beta\rVert_2^2 = \arg\min_\beta \sum_{i=1}^n \big(y_i - x_i^\top \beta\big)^2$$</div><p>Squared error is smooth and convex, so there is exactly one minimum when the columns of $X$ are linearly independent.</p></li>
+          <li><h3>Setting the gradient to zero</h3><div class="formula">$$\nabla_\beta = -2X^\top(y - X\beta) = 0 \;\;\Longrightarrow\;\; \hat\beta = (X^\top X)^{-1}X^\top y$$</div><p>Geometrically, $\hat y = X\hat\beta$ is the orthogonal projection of $y$ onto the space spanned by the columns of $X$. The residual vector is perpendicular to every feature.</p></li>
+          <li><h3>How good is the fit?</h3><div class="formula">$$R^2 = 1 - \frac{\sum_i (y_i - \hat y_i)^2}{\sum_i (y_i - \bar y)^2}$$</div><p>$R^2$ is the share of the variance in $y$ that the model explains. 0 means "no better than predicting the mean", 1 means a perfect fit. See <a class="inline" href="../../concepts/regression-metrics/">Regression metrics</a> for when it misleads.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="tuning">
+        <h2 class="h3"><span>07</span> Hyperparameters</h2>
+        <div class="table-wrap"><table class="kv">
+          <thead><tr><th>Setting</th><th>What it does</th><th>Typical choice</th></tr></thead>
+          <tbody><tr><td><span class="hp">fit_intercept</span></td><td>Whether to learn $\beta_0$.</td><td>Keep it on unless the data is already centred.</td></tr><tr><td><span class="hp">Feature scaling</span></td><td>Does not change predictions for plain OLS.</td><td>Still useful for reading coefficient sizes side by side, and required once you add a penalty.</td></tr></tbody>
+        </table></div>
+      </section>
+      <section class="reveal" id="when">
+        <h2 class="h3"><span>08</span> When to use it</h2>
+        <div class="split2">
+          <div class="box good"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Strengths</h3><ul><li>Closed-form, fast and deterministic.</li><li>Coefficients are directly interpretable.</li><li>Comes with standard errors and confidence intervals under its assumptions.</li><li>A strong, honest baseline for any regression problem.</li></ul></div>
+          <div class="box bad"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg> Limitations</h3><ul><li>Only captures linear relationships unless you engineer features.</li><li>Squared loss lets a few outliers drag the line.</li><li>Coefficients become unstable when features are highly correlated (multicollinearity).</li><li>Breaks down when there are more features than rows.</li></ul></div>
+          <div class="box use"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> Reach for it when</h3><p>You need an interpretable baseline, the relationship is roughly linear, or stakeholders need to read the coefficients.</p></div>
+          <div class="box avoid"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Think twice when</h3><p>The signal is clearly non-linear, there are strong outliers, or features far outnumber examples. Reach for <a class="inline" href="../../models/ridge_regression/">Ridge regression</a>, <a class="inline" href="../../models/robust_regression/">Robust regression</a> or a tree model instead.</p></div>
+        </div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>09</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> pandas <span class="k">as</span> pd
+<span class="k">from</span> sklearn.linear_model <span class="k">import</span> LinearRegression
+<span class="k">from</span> sklearn.model_selection <span class="k">import</span> train_test_split
+<span class="k">from</span> sklearn.metrics <span class="k">import</span> mean_squared_error, r2_score
+
+df = pd.<span class="f">read_csv</span>(<span class="s">&quot;datasets/raw/california_housing.csv&quot;</span>)
+X, y = df.<span class="f">drop</span>(columns=<span class="s">&quot;MedHouseVal&quot;</span>), df[<span class="s">&quot;MedHouseVal&quot;</span>]
+X_tr, X_te, y_tr, y_te = <span class="f">train_test_split</span>(X, y, test_size=<span class="n">0.2</span>, random_state=<span class="n">42</span>)
+
+model = <span class="f">LinearRegression</span>().<span class="f">fit</span>(X_tr, y_tr)
+pred = model.<span class="f">predict</span>(X_te)
+<span class="k">print</span>(<span class="s">&quot;RMSE&quot;</span>, <span class="f">mean_squared_error</span>(y_te, pred) ** <span class="n">0.5</span>, <span class="s">&quot;R2&quot;</span>, <span class="f">r2_score</span>(y_te, pred))
+<span class="k">print</span>(<span class="f">dict</span>(<span class="f">zip</span>(X.columns, model.coef_.<span class="f">round</span>(<span class="n">3</span>))))</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Reading coefficients as causal effects. A coefficient tells you about association with everything else held fixed in <em>this</em> data, nothing more.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Comparing raw coefficient sizes across features measured in different units. Standardise first if you want to compare them.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Ignoring correlated features. Two near-duplicate columns can get huge coefficients with opposite signs; check the variance inflation factor (VIF).</span></li></ul>
+      </section>
+      <section class="reveal" id="results">
+        <h2 class="h3"><span>10</span> On real data</h2>
+        <p>OLS trained on 80% of the California housing sample (MedHouseVal as target), scored on a held-out 20%. The baseline always predicts the training mean.</p>
+        <div class="table-wrap" style="margin-top:18px"><table class="kv results-table">
+          <thead><tr><th>Metric</th><th>OLS</th><th>Predict the mean</th></tr></thead>
+          <tbody><tr><td>RMSE</td><td>0.436</td><td>0.957</td></tr><tr><td>MAE</td><td>0.337</td><td>0.815</td></tr><tr><td>R²</td><td>0.792</td><td>-0.000</td></tr></tbody>
+        </table></div>
+        <p class="note">Produced by <a href="https://github.com/yogesh660/ml-model-zoo/blob/main/models/ols_linear_regression/train.py" target="_blank" rel="noopener">models/ols_linear_regression/train.py</a> · generated 2026-10-28. Run it yourself: <code class="no-math">python models/ols_linear_regression/train.py</code></p>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>11</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>Why does one far-away outlier move an OLS line so much?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because OLS uses gradient descent with a large learning rate</span></button><button class="opt" type="button"><b>B</b><span>Because OLS ignores points far from the mean</span></button><button class="opt" type="button"><b>C</b><span>Because the intercept is fixed at zero</span></button><button class="opt" type="button"><b>D</b><span>Because the loss squares each residual, so large errors dominate</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A residual of 10 contributes 100 to the loss while ten residuals of 1 contribute 10 in total. The fit bends toward the outlier to shrink that one huge term.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>In the normal equation $\hat\beta = (X^\top X)^{-1}X^\top y$, what makes $X^\top X$ hard to invert?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Too many rows</span></button><button class="opt" type="button"><b>B</b><span>Features that are (nearly) linear combinations of each other</span></button><button class="opt" type="button"><b>C</b><span>A target with a large variance</span></button><button class="opt" type="button"><b>D</b><span>Using an intercept</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Collinear columns make $X^\top X$ (nearly) singular. Small changes in the data then produce wild swings in $\hat\beta$. Ridge regression fixes this by adding $\lambda I$.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>An $R^2$ of 0 on the test set means:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The model predicts the exact opposite of the target</span></button><button class="opt" type="button"><b>B</b><span>The model is perfect</span></button><button class="opt" type="button"><b>C</b><span>The model does no better than always predicting the mean</span></button><button class="opt" type="button"><b>D</b><span>The features are uncorrelated with each other</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> $R^2$ compares your errors with the errors of the constant mean prediction. It can even go negative on test data when the model is worse than that.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>12</span> Related lessons</h2>
+        <div class="related"><a href="../../models/polynomial_regression/"><small class="kicker">Regression</small><b>Polynomial regression</b></a><a href="../../models/ridge_regression/"><small class="kicker">Regression</small><b>Ridge regression</b></a><a href="../../models/robust_regression/"><small class="kicker">Regression</small><b>Robust regression</b></a><a href="../../concepts/regression-metrics/"><small class="kicker">Concept</small><b>Regression metrics</b></a><a href="../../concepts/bias-variance-tradeoff/"><small class="kicker">Concept</small><b>Bias–variance trade-off</b></a><a href="../../concepts/gradient-descent/"><small class="kicker">Concept</small><b>Gradient descent</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/survival-analysis-kaplan-meier-and-cox/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Statistics</small><b>Survival analysis</b></a>
+    <a class="pager-next" href="../../models/polynomial_regression/"><small>Next · Regression <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Polynomial regression</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/sequences.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/explainers.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/architecture.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

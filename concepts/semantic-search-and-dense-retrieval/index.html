@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Semantic search and dense retrieval · Learn · Yogesh Awate</title>
+<meta name="description" content="Semantic search and dense retrieval transcend lexical keyword matching by projecting queries and documents into a shared continuous vector space. While traditional inverted indexes rely on exact token overlaps (failing on synonyms and paraphrases), dense retrieval uses dual-encoder neural networks to encode passages and queries into dense embeddings. Matched via inner products or cosine similarity and accelerated by Approximate Nearest Neighbour (ANN) indexing, dense retrieval retrieves conceptually relevant documents even when zero exact keywords match.">
+<meta property="og:title" content="Semantic search and dense retrieval · Learn · Yogesh Awate">
+<meta property="og:description" content="Semantic search and dense retrieval transcend lexical keyword matching by projecting queries and documents into a shared continuous vector space. While traditional inverted indexes rely on exact token overlaps (failing on synonyms and paraphrases), dense retrieval uses dual-encoder neural networks to encode passages and queries into dense embeddings. Matched via inner products or cosine similarity and accelerated by Approximate Nearest Neighbour (ANN) indexing, dense retrieval retrieves conceptually relevant documents even when zero exact keywords match.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="semantic-search-and-dense-retrieval">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-nlp">Path 10 · Natural language processing</a> / Tasks and evaluation / Lesson 42 of 52</span>
+    <h1 class="case-title">Semantic search and dense retrieval</h1>
+    <p class="lede rise" style="--d:3">Semantic search and dense retrieval transcend lexical keyword matching by projecting queries and documents into a shared continuous vector space. While traditional inverted indexes rely on exact token overlaps (failing on synonyms and paraphrases), dense retrieval uses dual-encoder neural networks to encode passages and queries into dense embeddings. Matched via inner products or cosine similarity and accelerated by Approximate Nearest Neighbour (ANN) indexing, dense retrieval retrieves conceptually relevant documents even when zero exact keywords match.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/sentence-embeddings-and-sbert/">Sentence Embeddings &amp; SBERT</a> <a href="../../concepts/bm25-and-search-ranking/">BM25 &amp; Search Ranking</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Natural language processing · Tasks and evaluation</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">If you search an enterprise knowledge base for "how to fix a flickering monitor", a classical BM25 keyword index returns nothing if the internal engineering documentation is titled "resolving display panel refresh instability". The vocabulary mismatch problem cripples lexical search because humans express the same concept in myriad linguistic forms. Semantic search solves this: by mapping queries and passages into dense continuous representations, "flickering monitor" and "display panel refresh instability" map to neighboring points in semantic space.</p>
+        <p>The dual-encoder (two-tower) architecture: Rather than evaluating queries and documents through a heavy cross-encoder, dense retrieval uses two independent encoder networks: a Query Tower E_Q(q) and a Passage Tower E_D(d). Because document representations are independent of the query, an entire multi-million document corpus can be encoded once offline and indexed into high-performance vector databases (such as FAISS or HNSW). Query evaluation reduces to a single forward pass through the query tower followed by an inner product search.</p>
+        <p>Contrastive learning and in-batch negative sampling: Training a dual-encoder requires teaching the model to pull relevant query-document pairs close together while pushing irrelevant pairs apart. Computing negative pairs across the whole corpus is computationally intractable. Dense retrieval models employ in-batch negative sampling: for a batch of B query-passage pairs, the other B-1 passages in the batch serve as negative distractors for each query, providing B^2 - B training pairs for the price of B forward passes.</p>
+        <p>Hard negative mining: If training only uses random in-batch negatives, the model quickly learns trivial heuristics (e.g. separating medical text from sports text) but fails to discriminate between closely related passages within the same domain. Hard negative mining deliberately exposes the model to deceptive distractors—such as passages retrieved by BM25 that share query keywords but fail to answer the question—forcing the encoder to learn deep semantic nuances.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Think of locating a book in an enormous university library. Lexical search is like a strict catalog clerk who will only direct you to a book if your search query matches words printed verbatim on the book's cover title. If you ask for "curing canine fever" and the book is titled "Veterinary Canine Therapeutics", the clerk insists the library has no such book. Dense retrieval is like a knowledgeable professor who has read every book in the building: they understand the conceptual essence of your inquiry and immediately guide you to the exact shelf containing the relevant canine medical treatise, regardless of the words on the cover.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Dual-encoder similarity scoring function</h3><div class="formula">\operatorname{Score}(q, d) = \langle E_Q(q), \, E_D(d) \rangle = \frac{E_Q(q) \cdot E_D(d)}{\|E_Q(q)\|_2 \|E_D(d)\|_2}</div><p>Here $E_Q$ and $E_D$ are deep neural encoders mapping text strings to $d$-dimensional continuous vectors. When vectors are $L_2$-normalised, inner product search is mathematically identical to cosine similarity.</p></li>
+          <li><h3>InfoNCE contrastive loss with in-batch negatives</h3><div class="formula">\mathcal{L}(q_i, d_i^+) = -\log \frac{\exp\left( \operatorname{Score}(q_i, d_i^+) / \tau \right)}{\exp\left( \operatorname{Score}(q_i, d_i^+) / \tau \right) + \sum_{j \ne i} \exp\left( \operatorname{Score}(q_i, d_j^+) / \tau \right)}</div><p>Here $d_i^+$ is the true relevant document for query $q_i$, $d_j^+$ (for $j \ne i$) are negative passages borrowed from other queries in the minibatch, and $\tau &gt; 0$ is the softmax temperature hyperparameter.</p></li>
+          <li><h3>Reciprocal Rank Fusion (RRF) for hybrid retrieval</h3><div class="formula">\operatorname{RRF}(d) = \sum_{m \in \{\text{dense}, \text{sparse}\}} \frac{1}{k + r_m(d)}</div><p>Hybrid search combines BM25 lexical rank $r_{\text{sparse}}(d)$ and dense retrieval rank $r_{\text{dense}}(d)$ using a smoothing constant $k \approx 60$, delivering robust performance across exact keywords and abstract semantics.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Dense retrieval maps queries and documents into a shared continuous embedding space to resolve vocabulary mismatch.</li><li>The dual-encoder architecture allows offline pre-computation of document embeddings for sub-millisecond retrieval.</li><li>In-batch negative contrastive training provides quadratic negative pairs without additional forward-pass compute overhead.</li><li>Hard negative mining exposes the encoder to challenging lexical distractors, driving fine-grained semantic discrimination.</li><li>Hybrid retrieval combining BM25 and dense retrieval via Reciprocal Rank Fusion provides the industry standard for production search.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">class</span> DenseRetrievalSimulator:
+    <span class="s">&quot;&quot;&quot;
+    Simulation of two-tower dense semantic retrieval,
+    in-batch negative contrastive loss, and top-k search.
+    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, dim=<span class="n">4</span>, temperature=<span class="n">0.07</span>):
+        <span class="k">self</span>.dim = dim
+        <span class="k">self</span>.tau = temperature
+        <span class="k">self</span>.doc_index = []
+        <span class="k">self</span>.doc_texts = []
+
+    <span class="k">def</span> <span class="f">normalize</span>(<span class="k">self</span>, v):
+        norm = np.linalg.<span class="f">norm</span>(v, axis=-<span class="n">1</span>, keepdims=<span class="k">True</span>)
+        <span class="k">return</span> v / np.<span class="f">clip</span>(norm, <span class="n">1e-9</span>, <span class="k">None</span>)
+
+    <span class="k">def</span> <span class="f">index_documents</span>(<span class="k">self</span>, documents, mock_vectors):
+        <span class="s">&quot;&quot;&quot;Index precomputed normalized document vectors.&quot;&quot;&quot;</span>
+        <span class="k">self</span>.doc_texts = <span class="f">list</span>(documents)
+        <span class="k">self</span>.doc_index = <span class="k">self</span>.<span class="f">normalize</span>(mock_vectors)
+
+    <span class="k">def</span> <span class="f">contrastive_loss</span>(<span class="k">self</span>, query_embs, pos_doc_embs):
+        <span class="s">&quot;&quot;&quot;
+        Compute InfoNCE loss with in-batch negatives.
+        query_embs: (B, dim)
+        pos_doc_embs: (B, dim)
+        &quot;&quot;&quot;</span>
+        q = <span class="k">self</span>.<span class="f">normalize</span>(query_embs)
+        d = <span class="k">self</span>.<span class="f">normalize</span>(pos_doc_embs)
+        
+        <span class="c"># Similarity matrix: (B x B)</span>
+        sim_matrix = np.<span class="f">dot</span>(q, d.T) / <span class="k">self</span>.tau
+        
+        <span class="c"># Diagonal elements are true positives</span>
+        B = q.shape[<span class="n">0</span>]
+        labels = np.<span class="f">arange</span>(B)
+        
+        <span class="c"># Softmax cross entropy</span>
+        exp_sim = np.<span class="f">exp</span>(sim_matrix - np.<span class="f">max</span>(sim_matrix, axis=<span class="n">1</span>, keepdims=<span class="k">True</span>))
+        probs = exp_sim / np.<span class="f">sum</span>(exp_sim, axis=<span class="n">1</span>, keepdims=<span class="k">True</span>)
+        
+        loss = -np.<span class="f">mean</span>(np.<span class="f">log</span>(np.<span class="f">clip</span>([probs[i, labels[i]] <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(B)], <span class="n">1e-9</span>, <span class="k">None</span>)))
+        <span class="k">return</span> loss
+
+    <span class="k">def</span> <span class="f">search</span>(<span class="k">self</span>, query_vector, top_k=<span class="n">2</span>):
+        q = <span class="k">self</span>.<span class="f">normalize</span>(query_vector)
+        <span class="c"># Inner products equal cosine similarity for normalized vectors</span>
+        scores = np.<span class="f">dot</span>(<span class="k">self</span>.doc_index, q)
+        ranked_indices = np.<span class="f">argsort</span>(-scores)[:top_k]
+        <span class="k">return</span> [(idx, <span class="k">self</span>.doc_texts[idx], scores[idx]) <span class="k">for</span> idx <span class="k">in</span> ranked_indices]
+
+<span class="c"># Documents illustrating semantic matching without exact keyword overlap</span>
+docs = [
+    <span class="s">&quot;Troubleshooting computer display panel refresh instability and screen flickering.&quot;</span>,
+    <span class="s">&quot;Baking artisan sourdough bread using wild yeast fermentation cultures.&quot;</span>,
+    <span class="s">&quot;Cardiovascular endurance training through high intensity interval intervals.&quot;</span>
+]
+
+<span class="c"># Simulated 4-dimensional normalized embeddings for documents</span>
+doc_vectors = np.<span class="f">array</span>([
+    [<span class="n">0.90</span>, <span class="n">0.40</span>, <span class="n">0.10</span>, <span class="n">0.05</span>],  <span class="c"># Tech/Hardware</span>
+    [<span class="n">0.05</span>, <span class="n">0.10</span>, <span class="n">0.95</span>, <span class="n">0.25</span>],  <span class="c"># Culinary/Baking</span>
+    [<span class="n">0.10</span>, <span class="n">0.85</span>, <span class="n">0.20</span>, <span class="n">0.45</span>]   <span class="c"># Fitness/Cardio</span>
+])
+
+searcher = <span class="f">DenseRetrievalSimulator</span>(dim=<span class="n">4</span>)
+searcher.<span class="f">index_documents</span>(docs, doc_vectors)
+
+<span class="c"># Query: &quot;how to fix a flickering computer monitor&quot; (Shares semantic direction with Doc 0)</span>
+query_vec = np.<span class="f">array</span>([<span class="n">0.88</span>, <span class="n">0.35</span>, <span class="n">0.08</span>, <span class="n">0.02</span>])
+
+<span class="k">print</span>(<span class="s">f&quot;Indexed {len(docs)} documents into dense index.&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;\nQuery: 'how to fix a flickering computer monitor'&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;Notice: Document 0 shares almost zero exact keywords, but matches semantically!&quot;</span>)
+
+results = searcher.<span class="f">search</span>(query_vec, top_k=<span class="n">3</span>)
+<span class="k">for</span> rank, (idx, text, score) <span class="k">in</span> <span class="f">enumerate</span>(results, <span class="n">1</span>):
+    <span class="k">print</span>(<span class="s">f&quot;\nRank {rank} [Cosine Similarity: {score:.4f}]:&quot;</span>)
+    <span class="k">print</span>(<span class="s">f&quot;  Doc {idx}: '{text}'&quot;</span>)
+
+<span class="c"># Compute sample In-Batch Negative Contrastive Loss</span>
+loss = searcher.<span class="f">contrastive_loss</span>(doc_vectors, doc_vectors)
+<span class="k">print</span>(<span class="s">f&quot;\nIn-Batch Negative Contrastive Loss for batch size {len(docs)}: {loss:.4f}&quot;</span>)
+</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Neglecting exact keyword search in dense-only setups: Pure dense retrieval models frequently fail on rare part numbers, acronyms, or proper names with little pre-training frequency. Always pair dense retrieval with sparse BM25 in hybrid configurations.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Unnormalised vector dot products: If query and document embeddings are not L2-normalised, vector magnitude dominates dot products, causing long or generic passages with large norms to dominate search results.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Document chunking boundary truncation: Splitting a document in the middle of a vital sentence separates questions from their answers. Use overlapping sliding chunks (e.g. 300 tokens with 50-token stride) to preserve context.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Evaluating on unrepresentative synthetic queries: Evaluating dense retrieval purely on questions identical to training text creates false confidence; validate on real user search logs containing typos, shorthand, and varied query lengths.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>Why does dense semantic retrieval resolve the vocabulary mismatch problem that limits classical keyword search engines?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It deletes all non-vowel characters from the corpus</span></button><button class="opt" type="button"><b>B</b><span>It automatically translates all queries into Latin before searching</span></button><button class="opt" type="button"><b>C</b><span>It expands the index by adding all words from the Oxford English Dictionary</span></button><button class="opt" type="button"><b>D</b><span>It maps queries and passages into a continuous embedding space where semantically related concepts occupy proximate geometric coordinates even with zero exact word overlap</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Dense retrieval maps text to dense continuous vectors where proximity reflects semantic meaning. Synonyms and paraphrases (e.g. "flickering monitor" and "display panel refresh instability") map to adjacent vectors, overcoming lexical vocabulary gaps.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>What is the primary architectural difference between a dual-encoder (bi-encoder) and a cross-encoder in search pipelines?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>A dual-encoder can only run on CPU while a cross-encoder runs on GPU</span></button><button class="opt" type="button"><b>B</b><span>A dual-encoder requires supervised labels while a cross-encoder is strictly unsupervised</span></button><button class="opt" type="button"><b>C</b><span>A dual-encoder encodes queries and documents independently allowing offline document pre-computation, whereas a cross-encoder evaluates queries and documents jointly with full cross-attention</span></button><button class="opt" type="button"><b>D</b><span>A dual-encoder requires identical text length for query and document</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because dual-encoders encode documents independently of queries, millions of document vectors can be pre-computed, indexed, and searched in milliseconds. Cross-encoders require computing multi-head cross-attention over query-document pairs on the fly.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>Why is hard negative mining crucial when training dual-encoders for dense retrieval?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It forces the model to discriminate between subtle semantic differences by training on challenging distractors (like passages sharing lexical keywords but lacking the answer)</span></button><button class="opt" type="button"><b>B</b><span>It reduces the memory required for gradient backpropagation to zero</span></button><button class="opt" type="button"><b>C</b><span>It prevents the learning rate from decaying</span></button><button class="opt" type="button"><b>D</b><span>It ensures that all document vectors have integer values</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Random in-batch negatives are too easy to differentiate (e.g. distinguishing medicine from music). Hard negatives—such as high-scoring BM25 passages that do not answer the query—train the encoder to capture deep semantic relevance rather than superficial topical overlap.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/sentence-embeddings-and-sbert/"><small class="kicker">Concept</small><b>Sentence Embeddings &amp; SBERT</b></a><a href="../../concepts/bm25-and-search-ranking/"><small class="kicker">Concept</small><b>BM25 &amp; Search Ranking</b></a><a href="../../concepts/bag-of-words-and-tf-idf/"><small class="kicker">Concept</small><b>BoW &amp; TF-IDF</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/machine-translation/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Natural language processing</small><b>Machine Translation</b></a>
+    <a class="pager-next" href="../../concepts/evaluation-bleu-rouge-bertscore-llm-as-judge/"><small>Next · Natural language processing <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>NLP Eval: BLEU to LLM Judges</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

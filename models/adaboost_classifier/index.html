@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>AdaBoost Classification · Learn · Yogesh Awate</title>
+<meta name="description" content="The original boosting algorithm: weak learners trained in sequence, each focusing on the examples the last ones got wrong.">
+<meta property="og:title" content="AdaBoost Classification · Learn · Yogesh Awate">
+<meta property="og:description" content="The original boosting algorithm: weak learners trained in sequence, each focusing on the examples the last ones got wrong.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="adaboost_classifier">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-classification">Path 04 · Classification</a> / Trees and ensembles / Lesson 10 of 19</span>
+    <h1 class="case-title">AdaBoost Classification</h1>
+    <p class="lede rise" style="--d:3">The original boosting algorithm: weak learners trained in sequence, each focusing on the examples the last ones got wrong.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      <span class="tagline lab">Live lab</span>
+      <span class="prereq">Before this: <a href="../../models/decision_tree_classifier/">Decision tree classifier</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Task</dt><dd>Classification</dd>
+          <dt>Family</dt><dd>Boosting (exponential loss)</dd>
+          <dt>What it learns</dt><dd>M weighted stumps</dd>
+          <dt>Training cost</dt><dd>$O(M\,p\,n\log n)$ with stumps</dd>
+          <dt>Prediction cost</dt><dd>$O(M)$</dd>
+          <dt>In code</dt><dd><code class="no-math">sklearn.<wbr>ensemble.<wbr>AdaBoostClassifier</code></dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>How it works</a></li><li><a href="#lab"><span>03</span>Try it</a></li><li><a href="#maths"><span>04</span>The maths</a></li><li><a href="#tuning"><span>05</span>Hyperparameters</a></li><li><a href="#when"><span>06</span>When to use it</a></li><li><a href="#code"><span>07</span>In code</a></li><li><a href="#results"><span>08</span>On real data</a></li><li><a href="#quiz"><span>09</span>Check yourself</a></li><li><a href="#related"><span>10</span>Related lessons</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">AdaBoost trains a sequence of weak classifiers, usually one-split trees. After each round it increases the weight of misclassified examples, so the next learner pays more attention to them.</p>
+        <p>A decision stump on its own is barely better than guessing. AdaBoost combines many of them with weights: stumps that did well get a bigger say. Because each new stump is trained on re-weighted data, the ensemble gradually carves out a complex boundary from simple pieces.</p>
+        <p>It turns out AdaBoost is gradient boosting with an exponential loss. That loss punishes confident mistakes very hard, which makes AdaBoost sensitive to mislabelled examples and outliers.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>A tutor who notes which questions you got wrong and makes sure the next lesson focuses on them.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> How it works</h2>
+        <ol class="steps"><li>Start with equal weights $w_i = 1/n$.</li><li>Fit a weak learner on the weighted data; compute its weighted error $\varepsilon_m$.</li><li>Give it a say $\alpha_m = \tfrac12\log\frac{1 - \varepsilon_m}{\varepsilon_m}$.</li><li>Multiply the weights of misclassified rows by $e^{\alpha_m}$ and renormalise.</li><li>Final prediction: the sign of $\sum_m \alpha_m h_m(x)$.</li></ol>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>03</span> Try it</h2>
+        <p>Each round adds one stump. Point size shows the current weight: big points are the ones the ensemble keeps getting wrong.</p>
+        <div class="lab" data-lab="adaboost_classifier" data-kind="models" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>Step through rounds and watch the misclassified points grow.</li><li>Turn on label noise: a few flipped points end up with huge weights.</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>04</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Learner weight</h3><div class="formula">$$\alpha_m = \frac12\log\frac{1 - \varepsilon_m}{\varepsilon_m}$$</div><p>A learner with 50% error gets zero weight; a perfect one gets infinite weight.</p></li>
+          <li><h3>Re-weighting</h3><div class="formula">$$w_i \leftarrow w_i\,e^{-\alpha_m y_i h_m(x_i)}$$</div><p>Correct points ($y_ih_m = 1$) are down-weighted, mistakes up-weighted. This is the exponential loss $e^{-yF(x)}$ in action.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="tuning">
+        <h2 class="h3"><span>05</span> Hyperparameters</h2>
+        <div class="table-wrap"><table class="kv">
+          <thead><tr><th>Setting</th><th>What it does</th><th>Typical choice</th></tr></thead>
+          <tbody><tr><td><span class="hp">n_estimators</span></td><td>Number of weak learners.</td><td>50–500.</td></tr><tr><td><span class="hp">learning_rate</span></td><td>Shrinks each $\alpha_m$.</td><td>0.1–1; trade-off with n_estimators.</td></tr><tr><td><span class="hp">estimator</span></td><td>The weak learner.</td><td>Depth-1 or depth-2 trees.</td></tr></tbody>
+        </table></div>
+      </section>
+      <section class="reveal" id="when">
+        <h2 class="h3"><span>06</span> When to use it</h2>
+        <div class="split2">
+          <div class="box good"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Strengths</h3><ul><li>Simple, few hyperparameters.</li><li>Turns very weak learners into a strong model.</li><li>Weight history shows which examples are hard.</li></ul></div>
+          <div class="box bad"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg> Limitations</h3><ul><li>Sensitive to label noise and outliers (exponential loss).</li><li>Sequential training.</li><li>Usually beaten by modern gradient boosting.</li></ul></div>
+          <div class="box use"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> Reach for it when</h3><p>Clean data and a desire to understand boosting from its roots.</p></div>
+          <div class="box avoid"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Think twice when</h3><p>Noisy labels; prefer gradient boosting with log-loss.</p></div>
+        </div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>07</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">from</span> sklearn.ensemble <span class="k">import</span> AdaBoostClassifier
+<span class="k">from</span> sklearn.tree <span class="k">import</span> DecisionTreeClassifier
+
+ada = <span class="f">AdaBoostClassifier</span>(estimator=<span class="f">DecisionTreeClassifier</span>(max_depth=<span class="n">1</span>),
+                         n_estimators=<span class="n">300</span>, learning_rate=<span class="n">0.5</span>, random_state=<span class="n">0</span>).<span class="f">fit</span>(X_tr, y_tr)
+<span class="k">print</span>(<span class="s">&quot;test accuracy:&quot;</span>, <span class="f">round</span>(ada.<span class="f">score</span>(X_te, y_te), <span class="n">3</span>))</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Running it on noisy labels and watching it chase the mislabelled points.</span></li></ul>
+      </section>
+      <section class="reveal" id="results">
+        <h2 class="h3"><span>08</span> On real data</h2>
+        <p>AdaBoost (300 stumps) trained on 80% of the Titanic sample and scored on a stratified 20% hold-out. The baseline always predicts the most common class.</p>
+        <div class="table-wrap" style="margin-top:18px"><table class="kv results-table">
+          <thead><tr><th>Metric</th><th>AdaBoost (300 stumps)</th><th>Majority class</th></tr></thead>
+          <tbody><tr><td>Accuracy</td><td>0.950</td><td>0.630</td></tr><tr><td>F1 (survived)</td><td>0.933</td><td>0.000</td></tr><tr><td>ROC-AUC</td><td>0.991</td><td>0.500</td></tr></tbody>
+        </table></div>
+        <p class="note">Produced by <a href="https://github.com/yogesh660/ml-model-zoo/blob/main/models/adaboost_classifier/train.py" target="_blank" rel="noopener">models/adaboost_classifier/train.py</a> · generated 2026-10-28. Run it yourself: <code class="no-math">python models/adaboost_classifier/train.py</code></p>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>09</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>What happens to the weight of a misclassified training example after a round?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It goes down</span></button><button class="opt" type="button"><b>B</b><span>It is removed</span></button><button class="opt" type="button"><b>C</b><span>Nothing</span></button><button class="opt" type="button"><b>D</b><span>It goes up, so the next learner focuses on it</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> It is multiplied by $e^{\alpha_m} &gt; 1$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>AdaBoost is gradient boosting with which loss?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Exponential loss</span></button><button class="opt" type="button"><b>B</b><span>Squared error</span></button><button class="opt" type="button"><b>C</b><span>Log-loss</span></button><button class="opt" type="button"><b>D</b><span>Hinge loss</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Its weight update follows from minimising $\sum_i e^{-y_iF(x_i)}$ stage by stage.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>What base learner is most commonly used in discrete AdaBoost (SAMME)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>A high-degree polynomial Support Vector Machine</span></button><button class="opt" type="button"><b>B</b><span>A deep 20-layer neural network</span></button><button class="opt" type="button"><b>C</b><span>A decision stump (a decision tree with max_depth=1)</span></button><button class="opt" type="button"><b>D</b><span>A Gaussian Naive Bayes model</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> AdaBoost is specifically designed to combine very simple weak learners (classifiers slightly better than random guessing), typically one-split decision stumps (DecisionTreeClassifier(max_depth=1)).</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q4</span>In AdaBoost, what is the weight $\alpha_m$ assigned to a base learner that has a weighted training error rate $\varepsilon_m = 0.5$ (random guess in binary classification)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$\alpha_m = 1.0$</span></button><button class="opt" type="button"><b>B</b><span>$\alpha_m = 0.5$</span></button><button class="opt" type="button"><b>C</b><span>$\alpha_m = 0.0$ (it receives zero voting weight in the final ensemble)</span></button><button class="opt" type="button"><b>D</b><span>$\alpha_m = +\infty$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The learner weight is $\alpha_m = \frac{1}{2}\log(\frac{1 - \varepsilon_m}{\varepsilon_m})$. When $\varepsilon_m = 0.5$, $\frac{1 - 0.5}{0.5} = 1$, and $\frac{1}{2}\log(1) = 0.0$, giving a random learner zero influence.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q5</span>Why is AdaBoost notoriously sensitive to mislabelled data and severe outliers?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because AdaBoost uses exponential loss, misclassified outliers have their sample weights multiplied exponentially round after round, forcing later learners to waste capacity chasing unclassifiable noise</span></button><button class="opt" type="button"><b>B</b><span>Outliers cause coordinate descent to divide by zero</span></button><button class="opt" type="button"><b>C</b><span>AdaBoost can only operate on strictly convex feature spaces</span></button><button class="opt" type="button"><b>D</b><span>AdaBoost deletes all data points that have high residual errors</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In AdaBoost, an outlier that is consistently misclassified receives weight $w_i \propto e^{\sum \alpha_m}$. This exponential weight explosion dominates the sample distribution, causing the algorithm to overfit heavily to corrupted labels.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q6</span>What is the role of the learning_rate parameter in scikit-learn's AdaBoostClassifier?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It controls the step size of stochastic gradient descent on the input features</span></button><button class="opt" type="button"><b>B</b><span>It specifies the proportion of samples used for training</span></button><button class="opt" type="button"><b>C</b><span>It sets the threshold for early stopping</span></button><button class="opt" type="button"><b>D</b><span>It scales the contribution of each base learner: $F_m(x) = F_{m-1}(x) + \eta \alpha_m h_m(x)$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The learning rate $\eta \in (0, 1]$ shrinks each tree's stage contribution $\alpha_m$. Smaller learning rates act as regularisation, requiring more estimators (n_estimators) but improving generalisation.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q7</span>Why are sample weights normalised to sum to 1 ($\sum_{i=1}^n w_i = 1$) after every boosting round in AdaBoost?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To prevent weights from exceeding the maximum floating-point representation and to maintain a valid probability distribution over training instances</span></button><button class="opt" type="button"><b>B</b><span>Because scikit-learn only accepts integer weights</span></button><button class="opt" type="button"><b>C</b><span>To enforce zero training error on the subsequent round</span></button><button class="opt" type="button"><b>D</b><span>To ensure the base learner training time remains constant</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Normalising weights by the partition function $Z_m = \sum_i w_i \exp(-\alpha_m y_i h_m(x_i))$ ensures weights form a proper probability distribution that can be passed to base learners without numerical overflow.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q8</span>Why does AdaBoost sometimes continue to decrease test set error even after training classification error reaches 0%?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because it begins training on the test set automatically</span></button><button class="opt" type="button"><b>B</b><span>Because the learning rate automatically doubles when training error hits zero</span></button><button class="opt" type="button"><b>C</b><span>Because it starts deleting redundant trees from the ensemble</span></button><button class="opt" type="button"><b>D</b><span>Because it increases the classification margins $y_i F(x_i)$ of training examples, pushing decision boundaries further away from data points and improving robustness</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> As shown by Schapire et al. (1998), subsequent boosting rounds continue to increase the margins of easy points (the distance from the boundary), creating a wider margin separator similar to SVMs.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q9</span>What is the main difference between SAMME and SAMME.R in scikit-learn's AdaBoostClassifier?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>SAMME uses discrete class predictions ($h_m(x) \in \{-1, +1\}$), while SAMME.R uses real-valued predicted class probabilities to update sample weights, typically converging faster</span></button><button class="opt" type="button"><b>B</b><span>SAMME is for regression; SAMME.R is for classification</span></button><button class="opt" type="button"><b>C</b><span>SAMME uses decision trees; SAMME.R uses neural networks</span></button><button class="opt" type="button"><b>D</b><span>SAMME requires feature scaling; SAMME.R does not</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> SAMME.R (Real AdaBoost) utilises probability estimates $P(y=c \mid x)$ produced by base estimators rather than hard categorical decisions, providing continuous confidence updates that converge with fewer iterations.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q10</span>A decision stump achieves a weighted training error rate of $\varepsilon_m = 0.20$ on a binary classification problem ($y \in \{-1, +1\}$). What is its exact learner weight $\alpha_m = \frac{1}{2}\log(\frac{1 - \varepsilon_m}{\varepsilon_m})$? (Given $\log(4) \approx 1.3863$).</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$\alpha_m = 0.6931$</span></button><button class="opt" type="button"><b>B</b><span>$\alpha_m = 1.3863$</span></button><button class="opt" type="button"><b>C</b><span>$\alpha_m = 0.8000$</span></button><button class="opt" type="button"><b>D</b><span>$\alpha_m = 0.4000$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> With $\varepsilon_m = 0.20$: $\frac{1 - \varepsilon_m}{\varepsilon_m} = \frac{0.80}{0.20} = 4.0$. Then $\alpha_m = \frac{1}{2}\log(4.0) = \frac{1}{2}(1.38629) \approx 0.6931$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q11</span>An observation has initial weight $w_i = 0.10$. A weak learner with weight $\alpha_m = 0.6931$ (so $e^{\alpha_m} = 2.0$ and $e^{-\alpha_m} = 0.5$) misclassifies this observation ($y_i h_m(x_i) = -1$). Before global normalisation, what is the unnormalised updated weight $w_i'$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$w_i' = 0.05$</span></button><button class="opt" type="button"><b>B</b><span>$w_i' = 0.20$</span></button><button class="opt" type="button"><b>C</b><span>$w_i' = 0.10$</span></button><button class="opt" type="button"><b>D</b><span>$w_i' = 0.40$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The unnormalised weight update is $w_i \leftarrow w_i \exp(-\alpha_m y_i h_m(x_i))$. Since the example is misclassified, $y_i h_m(x_i) = -1$, giving $w_i' = w_i \exp(+\alpha_m) = 0.10 \times 2.0 = 0.20$.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q12</span>An AdaBoost ensemble consists of 3 base learners with weights $\alpha_1 = 0.8, \alpha_2 = 0.5, \alpha_3 = 0.6$. For a test sample, their predictions are $h_1(x) = -1, h_2(x) = +1, h_3(x) = -1$. What is the raw score $F(x) = \sum_{m=1}^3 \alpha_m h_m(x)$ and the final predicted label $\operatorname{sign}(F(x))$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$F(x) = 0.0$, predicting tie</span></button><button class="opt" type="button"><b>B</b><span>$F(x) = +0.3$, predicting $+1$</span></button><button class="opt" type="button"><b>C</b><span>$F(x) = -0.9$, predicting $-1$</span></button><button class="opt" type="button"><b>D</b><span>$F(x) = -1.9$, predicting $-1$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> $F(x) = 0.8(-1) + 0.5(+1) + 0.6(-1) = -0.8 + 0.5 - 0.6 = -0.9$. Since $F(x) = -0.9 &lt; 0$, $\operatorname{sign}(F(x)) = -1$.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>10</span> Related lessons</h2>
+        <div class="related"><a href="../../models/gradient_boosted_classifiers/"><small class="kicker">Classification</small><b>Gradient boosted classifiers</b></a><a href="../../models/decision_tree_classifier/"><small class="kicker">Classification</small><b>Decision tree classifier</b></a><a href="../../models/random_forest_classifier/"><small class="kicker">Classification</small><b>Random forest classifier</b></a><a href="../../concepts/loss-functions/"><small class="kicker">Concept</small><b>Loss functions</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../models/random_forest_classifier/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Classification</small><b>Random forest classifier</b></a>
+    <a class="pager-next" href="../../models/gradient_boosted_classifiers/"><small>Next · Classification <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Gradient boosted classifiers</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/sequences.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Recurrent Neural Networks (RNNs) · Learn · Yogesh Awate</title>
+<meta name="description" content="A network with a memory: it reads a sequence one step at a time and carries a hidden state forward. Simple, and forgetful.">
+<meta property="og:title" content="Recurrent Neural Networks (RNNs) · Learn · Yogesh Awate">
+<meta property="og:description" content="A network with a memory: it reads a sequence one step at a time and carries a hidden state forward. Simple, and forgetful.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="recurrent_neural_networks">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-neural">Path 08 · Deep learning</a> / Sequences / Lesson 18 of 42</span>
+    <h1 class="case-title">Recurrent Neural Networks (RNNs)</h1>
+    <p class="lede rise" style="--d:3">A network with a memory: it reads a sequence one step at a time and carries a hidden state forward. Simple, and forgetful.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      <span class="tagline lab">Live lab</span>
+      <span class="prereq">Before this: <a href="../../models/mlp_classifier/">MLP classifier</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Task</dt><dd>Classification</dd>
+          <dt>Family</dt><dd>Recurrent network</dd>
+          <dt>What it learns</dt><dd>Shared input, recurrent and output weights</dd>
+          <dt>Training cost</dt><dd>$O(T\,d^2)$ per sequence, sequential in $T$</dd>
+          <dt>Prediction cost</dt><dd>$O(d^2)$ per step</dd>
+          <dt>In code</dt><dd><code class="no-math">torch.<wbr>nn.<wbr>RNN</code></dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>How it works</a></li><li><a href="#watch"><span>03</span>Watch it work</a></li><li><a href="#lab"><span>04</span>Try it</a></li><li><a href="#maths"><span>05</span>The maths</a></li><li><a href="#tuning"><span>06</span>Hyperparameters</a></li><li><a href="#when"><span>07</span>When to use it</a></li><li><a href="#code"><span>08</span>In code</a></li><li><a href="#quiz"><span>09</span>Check yourself</a></li><li><a href="#related"><span>10</span>Related lessons</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">An RNN reads a sequence one item at a time. At every step it mixes the new input with a running summary of everything so far, the <strong>hidden state</strong> $h_t$, and passes that summary on to the next step.</p>
+        <p>Feed-forward networks see a fixed-size input all at once. Text, speech, sensor readings and prices arrive as sequences of any length, where order matters. An RNN handles this with one small trick: the same cell is applied at every step, and its output at step $t$ becomes part of its input at step $t+1$.</p>
+        <p>Think of $h_t$ as a short note the network keeps updating as it reads. With one hidden unit, $h_t = \tanh(w\,h_{t-1} + u\,x_t)$. If the recurrent weight $|w| &lt; 1$, an input from 10 steps ago has been multiplied by $w$ ten times, so it fades: $0.8^{10} \approx 0.1$. If $|w| &gt; 1$ things blow up (and tanh saturates). Training has the same problem in reverse: gradients flowing back through time shrink or explode, so vanilla RNNs struggle to learn anything that spans more than a handful of steps. That is the problem <a class="inline" href="../../models/gru_networks/">GRUs</a> and <a class="inline" href="../../models/lstm_networks/">LSTMs</a> were built to solve.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Reading a book while only allowed to keep a single sticky note: every page you overwrite a little of it, so early chapters slowly blur away.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> How it works</h2>
+        <ol class="steps"><li>Start with $h_0 = 0$.</li><li>At each step, combine the previous state and the new input: $h_t = \tanh(W_h h_{t-1} + W_x x_t + b)$. The same weights are reused at every step.</li><li>Read out what you need: the last state $h_T$ for classifying a whole sequence, or every $h_t$ for tagging each step.</li><li>Train with backpropagation through time (BPTT): unroll the loop into a deep network with shared weights and backpropagate through it.</li><li>Clip gradients to stop explosions; use a GRU or LSTM when you need longer memory.</li></ol>
+      </section>
+      <section class="reveal" id="watch">
+        <h2 class="h3"><span>03</span> Watch it work</h2>
+        <p>Press play, or step through at your own pace. Each step adds one idea.</p>
+        <div class="explainer" data-explainer="rnn" style="margin-top:18px"><noscript><p class="lab-noscript">The animation needs JavaScript.</p></noscript></div>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>04</span> Try it</h2>
+        <p>A one-unit RNN, unrolled over 24 time steps. Each box is the same cell at a different time; its colour is the hidden state $h_t$. Press <em>Play</em> to watch an input travel through the sequence, then change the recurrent weight $w$.</p>
+        <div class="lab" data-lab="recurrent_neural_networks" data-kind="models" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>With $w = 0.8$, watch the first pulse fade: how much of it is left at the last step?</li><li>Raise $w$ to 1.3: the state saturates near ±1 and stops responding to new inputs.</li><li>Look at the bottom chart: the influence of step 1 on the final state is the vanishing gradient, plotted directly.</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>05</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>The recurrence</h3><div class="formula">$$h_t = \tanh(W_h\,h_{t-1} + W_x\,x_t + b), \qquad \hat y = \operatorname{softmax}(W_o\,h_T + c)$$</div><p>$W_h$, $W_x$ and $b$ are shared across all time steps, so the parameter count does not grow with sequence length.</p></li>
+          <li><h3>Why memory fades (and gradients vanish)</h3><div class="formula">$$\frac{\partial h_T}{\partial h_k} = \prod_{t=k+1}^{T} \operatorname{diag}\!\big(1 - h_t^2\big)\,W_h$$</div><p>A product of $T - k$ matrices. If their size is below 1 the product shrinks exponentially with distance (vanishing); above 1 it grows (exploding). The lab shows exactly this product for a one-unit RNN.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="tuning">
+        <h2 class="h3"><span>06</span> Hyperparameters</h2>
+        <div class="table-wrap"><table class="kv">
+          <thead><tr><th>Setting</th><th>What it does</th><th>Typical choice</th></tr></thead>
+          <tbody><tr><td><span class="hp">hidden_size</span></td><td>Size of the memory vector $h_t$.</td><td>32–256.</td></tr><tr><td><span class="hp">num_layers</span></td><td>Stacked recurrent layers.</td><td>1–2.</td></tr><tr><td><span class="hp">nonlinearity</span></td><td>tanh or relu.</td><td>tanh (relu explodes more easily).</td></tr><tr><td><span class="hp">gradient clipping</span></td><td>Caps gradient norm during BPTT.</td><td>clip_grad_norm_ at 1.0.</td></tr></tbody>
+        </table></div>
+      </section>
+      <section class="reveal" id="when">
+        <h2 class="h3"><span>07</span> When to use it</h2>
+        <div class="split2">
+          <div class="box good"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Strengths</h3><ul><li>Handles sequences of any length with a fixed number of parameters.</li><li>Small, simple and fast per step; natural for streaming data.</li><li>The conceptual base for GRUs and LSTMs.</li></ul></div>
+          <div class="box bad"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg> Limitations</h3><ul><li>Short memory: vanishing gradients after roughly 10–20 steps.</li><li>Exploding gradients without clipping.</li><li>Sequential: each step waits for the previous one, so training does not parallelise over time.</li></ul></div>
+          <div class="box use"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> Reach for it when</h3><p>Short sequences, streaming or on-device settings where a tiny model matters, or to understand the ideas behind gated RNNs.</p></div>
+          <div class="box avoid"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Think twice when</h3><p>Anything that needs long-range memory; use a <a class="inline" href="../../models/lstm_networks/">LSTM</a>, <a class="inline" href="../../models/gru_networks/">GRU</a> or <a class="inline" href="../../models/transformer_networks/">Transformer</a>.</p></div>
+        </div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>08</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> torch, torch.nn <span class="k">as</span> nn
+<span class="k">from</span> sklearn.datasets <span class="k">import</span> load_digits
+
+<span class="c"># read each 8x8 digit image as a sequence: 8 time steps, 8 pixels per step</span>
+digits = <span class="f">load_digits</span>()
+X = torch.<span class="f">tensor</span>(digits.images / <span class="n">16.0</span>, dtype=torch.float32)    <span class="c"># (n, 8, 8)</span>
+y = torch.<span class="f">tensor</span>(digits.target)
+
+<span class="k">class</span> <span class="f">RNNClassifier</span>(nn.Module):
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, hidden=<span class="n">64</span>):
+        <span class="k">super</span>().<span class="f">__init__</span>()
+        <span class="k">self</span>.rnn = nn.<span class="f">RNN</span>(input_size=<span class="n">8</span>, hidden_size=hidden, batch_first=<span class="k">True</span>)
+        <span class="k">self</span>.out = nn.<span class="f">Linear</span>(hidden, <span class="n">10</span>)
+
+    <span class="k">def</span> <span class="f">forward</span>(<span class="k">self</span>, x):
+        states, h_last = <span class="k">self</span>.<span class="f">rnn</span>(x)        <span class="c"># states: every h_t, h_last: final h_T</span>
+        <span class="k">return</span> <span class="k">self</span>.<span class="f">out</span>(h_last[-<span class="n">1</span>])
+
+model = <span class="f">RNNClassifier</span>()
+opt = torch.optim.<span class="f">Adam</span>(model.<span class="f">parameters</span>(), lr=<span class="n">2e-3</span>)
+<span class="k">for</span> epoch <span class="k">in</span> <span class="k">range</span>(<span class="n">30</span>):
+    opt.<span class="f">zero_grad</span>()
+    loss = nn.functional.<span class="f">cross_entropy</span>(<span class="f">model</span>(X), y)
+    loss.<span class="f">backward</span>()
+    nn.utils.<span class="f">clip_grad_norm_</span>(model.<span class="f">parameters</span>(), <span class="n">1.0</span>)     <span class="c"># tame exploding gradients</span>
+    opt.<span class="f">step</span>()</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Forgetting gradient clipping and watching the loss jump to NaN.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Expecting a vanilla RNN to remember something from 50 steps ago.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Padding variable-length sequences and letting the padding flow into $h_T$; use packed sequences or masks.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>09</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>What makes an RNN "recurrent"?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It has many layers</span></button><button class="opt" type="button"><b>B</b><span>Its hidden state from the previous step is fed back in at the next step</span></button><button class="opt" type="button"><b>C</b><span>It uses convolutions over time</span></button><button class="opt" type="button"><b>D</b><span>It reads the sequence backwards</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The loop $h_{t-1} \to h_t$ with shared weights is the defining feature.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>With a recurrent weight of 0.5, roughly how much of an input survives 5 steps later (ignoring tanh)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>10%</span></button><button class="opt" type="button"><b>B</b><span>About 3%</span></button><button class="opt" type="button"><b>C</b><span>All of it</span></button><button class="opt" type="button"><b>D</b><span>50%</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> $0.5^5 = 0.03$. Memory fades geometrically.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>Why does a vanilla RNN struggle with long-range dependencies?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It has too few parameters</span></button><button class="opt" type="button"><b>B</b><span>Gradients are multiplied by the recurrent Jacobian at every step and shrink or explode</span></button><button class="opt" type="button"><b>C</b><span>It cannot process long inputs</span></button><button class="opt" type="button"><b>D</b><span>It has no output layer</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Backpropagation through time multiplies many Jacobians together.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q4</span>Why does the number of learnable parameters in a vanilla RNN remain constant even when processing sequences of widely varying lengths?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The hidden state size expands proportionally with sequence length $T$</span></button><button class="opt" type="button"><b>B</b><span>The exact same weight matrices $W_h$, $W_x$ and bias vector $b$ are reused at every time step</span></button><button class="opt" type="button"><b>C</b><span>The network dynamically prunes zero weights at longer sequences</span></button><button class="opt" type="button"><b>D</b><span>The inputs are always downsampled to a fixed length of 10 tokens</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In an RNN, recurrence shares the parameter tensors across time: step 1 and step 100 use identical weights $W_h$ and $W_x$. Sequence length affects run time, not parameter count.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q5</span>Why is gradient clipping (such as clip_grad_norm_) commonly applied when training vanilla RNNs with Backpropagation Through Time (BPTT)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To automatically tune the learning rate per parameter like Adam</span></button><button class="opt" type="button"><b>B</b><span>To enforce sparsity in the recurrent transition matrix</span></button><button class="opt" type="button"><b>C</b><span>To prevent gradient explosion, where large Jacobian products cause catastrophic numerical overflows and NaN losses</span></button><button class="opt" type="button"><b>D</b><span>To prevent vanishing gradients across early sequence positions</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> When eigenvalues of the recurrent weight matrix exceed 1, repeated multiplication over time steps causes gradients to explode exponentially. Clipping scales down the gradient vector whenever its norm exceeds a threshold, keeping optimisation stable.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q6</span>A single-unit RNN cell computes $h_t = \tanh(W_h h_{t-1} + W_x x_t + b)$. Given $W_h = 0.6$, $W_x = 0.4$, and bias $b = -0.1$, if the hidden state at step 1 was $h_1 = 0.50$ and the new input at step 2 is $x_2 = 1.5$, what is the pre-activation value before applying $\tanh$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$1.10$</span></button><button class="opt" type="button"><b>B</b><span>$0.90$</span></button><button class="opt" type="button"><b>C</b><span>$0.80$</span></button><button class="opt" type="button"><b>D</b><span>$0.50$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The pre-activation is $W_h h_1 + W_x x_2 + b = (0.6 \times 0.50) + (0.4 \times 1.5) - 0.1 = 0.30 + 0.60 - 0.10 = 0.80$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q7</span>Why cannot the forward training pass of an RNN over a sequence of length $T$ be parallelised across the time dimension on a GPU, unlike a Transformer?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Each time step $t$ strictly requires the hidden state $h_{t-1}$ from the immediately preceding step, creating an inherently sequential dependency chain</span></button><button class="opt" type="button"><b>B</b><span>RNNs use $\tanh$ activations which are not supported by GPU hardware</span></button><button class="opt" type="button"><b>C</b><span>GPU memory cannot store more than one set of weight matrices simultaneously</span></button><button class="opt" type="button"><b>D</b><span>Backpropagation through time requires sequences to be padded to powers of two</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because $h_t = f(h_{t-1}, x_t)$, step $t$ cannot begin until step $t-1$ has finished. This recurrence forces sequential computation along $T$, making vanilla RNNs and gated RNNs difficult to scale horizontally during training compared with non-recurrent attention architectures.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q8</span>In PyTorch's nn.RNN, calling states, h_last = rnn(x) on an input tensor with batch_first=True yields two outputs. For whole-sequence classification, which tensor is typically passed to the linear output classifier head?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>h_last[-1] (the hidden state from the final time step of the top recurrent layer)</span></button><button class="opt" type="button"><b>B</b><span>The elementwise product of states and x</span></button><button class="opt" type="button"><b>C</b><span>The transposed input embedding table</span></button><button class="opt" type="button"><b>D</b><span>states[:, 0, :] (the initial hidden state from step 1)</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> h_last[-1] contains the summary vector produced after consuming the entire sequence up to step $T$. For whole-sequence classification, this final state vector is projected through a linear layer to produce class logits.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q9</span>Under the standard recurrence equation $h_t = \tanh(W_h h_{t-1} + W_x x_t + b)$, an RNN cell processes an input vector $x_t \in \mathbb{R}^8$ with a hidden state vector $h_t \in \mathbb{R}^{16}$. How many total learnable scalar parameters are contained in $W_h$, $W_x$, and $b$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>272</span></button><button class="opt" type="button"><b>B</b><span>384</span></button><button class="opt" type="button"><b>C</b><span>400</span></button><button class="opt" type="button"><b>D</b><span>512</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> $W_x$ maps 8 inputs to 16 hidden units ($16 \times 8 = 128$ weights). $W_h$ maps 16 recurrent units to 16 units ($16 \times 16 = 256$ weights). The bias vector $b$ has 16 parameters. Total $= 128 + 256 + 16 = 400$ parameters.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q10</span>In a scalar RNN $h_t = \tanh(w h_{t-1} + u x_t)$ with recurrent weight $w = 1.0$, suppose the hidden unit reaches activation $h_t = 0.80$. What is the local gradient factor $\frac{\partial h_t}{\partial h_{t-1}} = (1 - h_t^2) w$ at this step?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$0.80$</span></button><button class="opt" type="button"><b>B</b><span>$0.20$</span></button><button class="opt" type="button"><b>C</b><span>$0.36$</span></button><button class="opt" type="button"><b>D</b><span>$0.64$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The derivative of $\tanh(z)$ with respect to its pre-activation is $1 - \tanh^2(z) = 1 - h_t^2$. With $h_t = 0.80$, this gives $1 - 0.80^2 = 1 - 0.64 = 0.36$. Multiplying by $w = 1.0$ yields $\frac{\partial h_t}{\partial h_{t-1}} = 0.36$, demonstrating how even non-decaying weights ($w=1$) suffer severe gradient vanishing when activations saturate.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q11</span>Consider a linearised 1-unit RNN where $\frac{\partial h_t}{\partial h_{t-1}} = 1.5$. Over a sequence of $T = 8$ backward steps, by what factor does the gradient grow before clipping is applied?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$64.0$</span></button><button class="opt" type="button"><b>B</b><span>Approximately $18.5$</span></button><button class="opt" type="button"><b>C</b><span>$12.0$</span></button><button class="opt" type="button"><b>D</b><span>Approximately $25.6$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> By the chain rule across 8 unrolled steps, the backward gradient is multiplied by the transition factor at each step: $\prod_{t=1}^8 1.5 = 1.5^8 \approx 25.63$. A learner who mistakenly multiplies $1.5 \times 8 = 12.0$ overlooks the exponential nature of backpropagation through time.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q12</span>Why is the vanishing gradient problem in RNNs fundamentally harder to resolve during optimisation than the exploding gradient problem?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Exploding gradients cannot occur when using double-precision floating point numbers</span></button><button class="opt" type="button"><b>B</b><span>Exploding gradients produce a clear geometric direction that can simply be truncated by norm clipping, whereas vanishing gradients leave virtually zero signal, giving gradient descent no information about which direction to update distant weights</span></button><button class="opt" type="button"><b>C</b><span>Vanishing gradients only affect the bias terms, leaving weight matrices completely unaffected</span></button><button class="opt" type="button"><b>D</b><span>Modern GPUs automatically inject artificial noise that eliminates exploding gradients</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Exploding gradients point in the correct descent direction, so renormalising them via gradient clipping preserves the update trajectory and prevents overflow. Vanishing gradients, however, decay exponentially toward machine precision ($\approx 0$), depriving the optimiser of any directional signal for long-range dependencies.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>10</span> Related lessons</h2>
+        <div class="related"><a href="../../models/gru_networks/"><small class="kicker">Deep learning</small><b>GRUs</b></a><a href="../../models/lstm_networks/"><small class="kicker">Deep learning</small><b>LSTMs</b></a><a href="../../models/mlp_classifier/"><small class="kicker">Deep learning</small><b>MLP classifier</b></a><a href="../../concepts/gradient-descent/"><small class="kicker">Concept</small><b>Gradient descent</b></a><a href="../../concepts/sigmoid-and-link-functions/"><small class="kicker">Concept</small><b>Sigmoid &amp; link functions</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../models/convolutional_neural_networks/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>CNNs</b></a>
+    <a class="pager-next" href="../../models/gru_networks/"><small>Next · Deep learning <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>GRUs</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/sequences.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/explainers.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

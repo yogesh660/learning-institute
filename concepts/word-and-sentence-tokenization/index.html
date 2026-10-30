@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Word and sentence tokenization · Learn · Yogesh Awate</title>
+<meta name="description" content="Tokenization partitions continuous streams of natural language characters into discrete linguistic units: sentences and words. While splitting on whitespace serves as a naive first approximation for English, authentic prose is rife with boundary ambiguities: sentence segmenters must distinguish between abbreviation markers (&quot;Dr.&quot;, &quot;Inc.&quot;, &quot;U.S.&quot;) and true sentence-terminal full stops, while word tokenisers must split clitics and contractions (&quot;don't&quot; &quot;do&quot;, &quot;n't&quot;), isolate punctuation, and preserve hyphenated technical terms. Standard rule-based finite-state tokenisers (such as the Penn Treebank standard) and unsupervised sentence boundary detectors (such as Kiss and Strunk's Punkt algorithm) provide the structured foundation for syntactic parsing and feature extraction.">
+<meta property="og:title" content="Word and sentence tokenization · Learn · Yogesh Awate">
+<meta property="og:description" content="Tokenization partitions continuous streams of natural language characters into discrete linguistic units: sentences and words. While splitting on whitespace serves as a naive first approximation for English, authentic prose is rife with boundary ambiguities: sentence segmenters must distinguish between abbreviation markers (&quot;Dr.&quot;, &quot;Inc.&quot;, &quot;U.S.&quot;) and true sentence-terminal full stops, while word tokenisers must split clitics and contractions (&quot;don't&quot; &quot;do&quot;, &quot;n't&quot;), isolate punctuation, and preserve hyphenated technical terms. Standard rule-based finite-state tokenisers (such as the Penn Treebank standard) and unsupervised sentence boundary detectors (such as Kiss and Strunk's Punkt algorithm) provide the structured foundation for syntactic parsing and feature extraction.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="word-and-sentence-tokenization">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-nlp">Path 10 · Natural language processing</a> / Words and text / Lesson 2 of 52</span>
+    <h1 class="case-title">Word and sentence tokenization</h1>
+    <p class="lede rise" style="--d:3">Tokenization partitions continuous streams of natural language characters into discrete linguistic units: sentences and words. While splitting on whitespace serves as a naive first approximation for English, authentic prose is rife with boundary ambiguities: sentence segmenters must distinguish between abbreviation markers ("Dr.", "Inc.", "U.S.") and true sentence-terminal full stops, while word tokenisers must split clitics and contractions ("don't" $\to$ "do", "n't"), isolate punctuation, and preserve hyphenated technical terms. Standard rule-based finite-state tokenisers (such as the Penn Treebank standard) and unsupervised sentence boundary detectors (such as Kiss and Strunk's Punkt algorithm) provide the structured foundation for syntactic parsing and feature extraction.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="1"><i><b></b></i>Beginner</span></span>
+      <span class="tagline">14 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/text-normalisation-unicode-and-regex/">Normalisation &amp; Regex</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Natural language processing · Words and text</dd>
+          <dt>Level</dt><dd>Beginner</dd>
+          <dt>Used by</dt><dd>3 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">To a computer, a book or webpage is an unbroken sequence of bytes. Before an algorithm can count frequencies, assign parts of speech, or parse syntactic dependencies, it must decide where one thought ends and the next begins, and where individual words separate. Yet human writing resists simplistic delimiter rules: is "St." a saint or a street? Does "Ph.D." terminate a sentence if it ends a paragraph? Is "rock'n'roll" one word or three? Resolving these edge cases cleanly is the objective of word and sentence tokenisation.</p>
+        <p>The illusion of whitespace separation: In English and Latin-script languages, spaces between words tempt developers to write simple text.split(' '). However, naive whitespace splitting fails on multiple fronts: it glues punctuation onto words ("apple." instead of "apple" and "."), lumps contracted auxiliary verbs into unrecognisable compounds ("we'll" instead of "we" and "will"), and fractures multi-word idioms. In non-segmented writing systems like Chinese, Japanese, or Thai, words are written continuously without spaces, rendering whitespace splitting completely useless.</p>
+        <p>Sentence Boundary Disambiguation (SBD): Splitting text into sentences (Sentence Boundary Detection or sentence segmentation) appears trivial—look for periods, question marks, and exclamation points. However, the period character '.' is overloaded: it serves as a sentence terminator, a decimal point in numbers (3.14), an abbreviation marker ("e.g.", "Prof."), an ellipsis (...), an email/URL element, and an acronym separator ("U.S.A."). If a sentence segmenter splits after "Dr.", subsequent syntactic parsers fail because they receive broken grammatical sentence fragments.</p>
+        <p>The Punkt unsupervised boundary discovery paradigm: Tiberius Kiss and Jan Strunk (2006) proved that sentence boundary disambiguation can be solved with high accuracy without manual rules or labelled training corpora. The Punkt algorithm examines unannotated text using statistical collocations: it identifies abbreviations by calculating whether a word followed by a period occurs frequently without the period, evaluates whether the following word is heavily capitalized, and tests whether the two-word sequence exhibits high mutual information. Punkt achieves over 98% accuracy across multilingual corpora without needing hand-engineered language grammars.</p>
+        <p>Penn Treebank standard for word tokenisation: The Penn Treebank (PTB) tokenisation convention established the standard for linguistic parsing. Rather than discarding punctuation or treating words as monolithic strings, PTB separates clitics and contractions into distinct syntactic morphemes: "don't" becomes "do" and "n't" (so "n't" can be tagged as an adverbial negation), "they'll" becomes "they" and "'ll", and possessive "'s" separates from its noun ("cat's" $\to$ "cat", "'s"). Standardising contractions into distinct grammatical tokens enables uniform downstream syntactic analysis.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Think of reading a continuous ticker-tape transcript of spoken dialogue. Without spaces, words run together like "wevegottogotothestation". Punctuation marks are like hand gestures made by the speaker: a period is sometimes a firm drop of the hand indicating a finished thought (end of sentence), but other times it is merely an abbreviated flick indicating a job title ("Dr. Smith"). A naive tokeniser is like a paper cutter that blindly slices the ticker tape every time it spots a dot: it accidentally cuts Dr. Smith in half, separating the doctor from their surname and ruining the medical file. A linguistically aware tokeniser inspects the surrounding context: it recognizes that "Dr." is an abbreviation prefix, preserves the integrity of the name, and only drops the slicing blade when a true full stop signals a fresh thought.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Log-likelihood ratio for abbreviation detection (Punkt)</h3><div class="formula">\Lambda = 2 \left( \log L(H_1) - \log L(H_0) \right) = 2 \sum_{i} k_i \log \frac{p_i}{p}</div><p>The Punkt algorithm evaluates whether a word with a trailing period (such as "Corp.") is an abbreviation ($H_1$) or an end-of-sentence word ($H_0$) by computing the log-likelihood ratio test of independence. Words with large positive $\Lambda$ scores are added to the abbreviation lexicon.</p></li>
+          <li><h3>Token-to-Type Ratio (TTR)</h3><div class="formula">\text{TTR} = \frac{|\mathcal{V}|}{N_{\text{tokens}}} = \frac{\text{Unique Types}}{\text{Total Running Tokens}}</div><p>Here $|\mathcal{V}|$ is the vocabulary size (number of unique types) and $N_{\text{tokens}}$ is total running token count. TTR quantifies lexical diversity in a corpus. Over-tokenising words increases $|\mathcal{V}|$ artificially, while under-tokenising leads to higher out-of-vocabulary rates.</p></li>
+          <li><h3>Heaps' Law of vocabulary growth</h3><div class="formula">|\mathcal{V}| = k \cdot N_{\text{tokens}}^\beta, \quad 0 < \beta < 1</div><p>Heaps' Law models how vocabulary size $|\mathcal{V}|$ grows asymptotically with corpus size $N_{\text{tokens}}$. Parameters $k \approx 10$ to $100$ and $\beta \approx 0.4$ to $0.6$ depend directly on how aggressively contractions, hyphens, and compound words are split during tokenisation.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Tokenisation converts raw continuous text into discrete sentence and word elements.</li><li>Naive whitespace splitting fails on punctuation, clitics, contractions, and unsegmented languages like Chinese.</li><li>Sentence Boundary Detection must disambiguate periods used for abbreviations, decimals, and true sentence terminations.</li><li>The Penn Treebank standard separates contractions ("don't" $\to$ "do", "n't") into distinct syntactic units.</li><li>Unsupervised algorithms like Punkt discover language-specific abbreviations without manual grammar engineering.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> re
+
+<span class="c"># Rule-based word and sentence tokenisation pipeline (Penn Treebank standard)</span>
+sample_text = <span class="s">&quot;Dr. Smith arrived at 3.15 p.m. He said, 'We couldn't visit the U.S. capital!' Did you see him?&quot;</span>
+
+<span class="c"># 1. Rule-based Sentence Boundary Detection</span>
+<span class="c"># Known honorific / title abbreviations to protect</span>
+abbreviations = [<span class="s">&quot;Dr&quot;</span>, <span class="s">&quot;Mr&quot;</span>, <span class="s">&quot;Mrs&quot;</span>, <span class="s">&quot;Ms&quot;</span>, <span class="s">&quot;Prof&quot;</span>, <span class="s">&quot;Inc&quot;</span>, <span class="s">&quot;Ltd&quot;</span>, <span class="s">&quot;Jr&quot;</span>, <span class="s">&quot;Sr&quot;</span>, <span class="s">&quot;U.S&quot;</span>, <span class="s">&quot;p.m&quot;</span>, <span class="s">&quot;a.m&quot;</span>]
+
+<span class="k">def</span> <span class="f">sentence_tokenize</span>(text):
+    <span class="c"># Protect abbreviation periods by replacing them with temporary placeholder</span>
+    protected_text = text
+    <span class="k">for</span> abbr <span class="k">in</span> abbreviations:
+        <span class="c"># Match whole word abbreviation followed by dot</span>
+        pattern = r<span class="s">'\b'</span> + re.<span class="f">escape</span>(abbr) + r<span class="s">'\.'</span>
+        protected_text = re.<span class="f">sub</span>(pattern, abbr + <span class="s">&quot;@DOT@&quot;</span>, protected_text)
+    
+    <span class="c"># Split on sentence terminals (. ! ?) followed by whitespace or end of string</span>
+    raw_sentences = re.<span class="f">split</span>(r<span class="s">'(?&lt;=[.!?])\s+'</span>, protected_text)
+    
+    <span class="c"># Restore protected periods</span>
+    sentences = [s.<span class="f">replace</span>(<span class="s">&quot;@DOT@&quot;</span>, <span class="s">&quot;.&quot;</span>) <span class="k">for</span> s <span class="k">in</span> raw_sentences <span class="k">if</span> s.<span class="f">strip</span>()]
+    <span class="k">return</span> sentences
+
+sentences = <span class="f">sentence_tokenize</span>(sample_text)
+<span class="k">print</span>(<span class="s">f&quot;Detected {len(sentences)} sentences:&quot;</span>)
+<span class="k">for</span> i, s <span class="k">in</span> <span class="f">enumerate</span>(sentences):
+    <span class="k">print</span>(<span class="s">f&quot;  Sentence {i+1}: \&quot;{s}\&quot;&quot;</span>)
+
+<span class="c"># 2. Penn Treebank style Word Tokenisation</span>
+<span class="k">def</span> <span class="f">word_tokenize_ptb</span>(sentence):
+    text = sentence
+    
+    <span class="c"># Isolate leading and trailing quotes, brackets, and punctuation</span>
+    text = re.<span class="f">sub</span>(r<span class="s">'([,;:\(\)\[\]\{\}\?!])'</span>, r<span class="s">' \1 '</span>, text)
+    
+    <span class="c"># Isolate periods that are true terminals (not in decimals or abbreviations)</span>
+    text = re.<span class="f">sub</span>(r<span class="s">'(?&lt;!\d)\.(?!\d)'</span>, r<span class="s">' . '</span>, text)
+    
+    <span class="c"># Handle negative contractions: split &quot;n't&quot;</span>
+    text = re.<span class="f">sub</span>(r<span class="s">&quot;(?i)\b([a-z]+)n't\b&quot;</span>, r<span class="s">&quot;\1 n't&quot;</span>, text)
+    <span class="c"># Special cases: &quot;can't&quot; -&gt; &quot;ca n't&quot;, &quot;won't&quot; -&gt; &quot;wo n't&quot;</span>
+    text = re.<span class="f">sub</span>(r<span class="s">&quot;(?i)\bca n't\b&quot;</span>, <span class="s">&quot;ca n't&quot;</span>, text)
+    text = re.<span class="f">sub</span>(r<span class="s">&quot;(?i)\bwo n't\b&quot;</span>, <span class="s">&quot;wo n't&quot;</span>, text)
+    
+    <span class="c"># Handle other clitics: 'll, 're, 've, 'm, 'd, 's</span>
+    text = re.<span class="f">sub</span>(r<span class="s">&quot;'(ll|re|ve|m|d|s)\b&quot;</span>, r<span class="s">&quot; '\1&quot;</span>, text)
+    
+    <span class="c"># Split on whitespace</span>
+    tokens = [tok <span class="k">for</span> tok <span class="k">in</span> text.<span class="f">split</span>() <span class="k">if</span> tok]
+    <span class="k">return</span> tokens
+
+<span class="k">print</span>(<span class="s">f&quot;\nWord tokens for Sentence 2 (\&quot;We couldn't visit the U.S. capital!\&quot;):&quot;</span>)
+tokens_s2 = <span class="f">word_tokenize_ptb</span>(sentences[<span class="n">1</span>])
+<span class="k">print</span>(tokens_s2)
+<span class="k">print</span>(<span class="s">f&quot;Notice 'couldn\\'t' split into: ['could', \&quot;n't\&quot;]&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Notice punctuation isolated:     ['!']&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Discarding all punctuation during word tokenisation: Stripping punctuation destroys sentence boundaries, removes numerical decimals, and strips grammatical markers; punctuation should be isolated as distinct tokens rather than deleted.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming periods always indicate sentence boundaries: Splitting on every period creates fragmented sentences around abbreviations ("Dr. Jane Smith moved to the U.S. in 2020.").</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Treating contractions as monolithic single words: Treating "don't" as an indivisible token prevents models from recognizing the negation operator "n't" and the auxiliary verb "do" independently.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Language-specific tokeniser assumptions: Applying an English whitespace tokeniser to unsegmented scripts (such as Chinese or Japanese) outputs the entire paragraph as a single giant token; specialized segmenters (like Jieba or MeCab) are required.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Inconsistent hyphen handling: Inconsistently handling hyphens ("state-of-the-art" vs "state of the art") splits single conceptual adjectives into fragments, causing vocabulary fragmentation unless normalised.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>Why does naive whitespace splitting (text.split(' ')) fail when preparing real-world English text for NLP pipelines?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It attaches punctuation to adjacent words ("dog." instead of "dog" and "."), fails to separate contractions into distinct grammatical units, and cannot process unsegmented languages like Chinese</span></button><button class="opt" type="button"><b>B</b><span>It can only process sentences shorter than ten words</span></button><button class="opt" type="button"><b>C</b><span>It causes memory buffer overflows in standard Python dictionaries</span></button><button class="opt" type="button"><b>D</b><span>It converts all characters to uppercase automatically</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Whitespace splitting glues punctuation onto tokens, creating duplicate vocabulary entries ("dog", "dog,", "dog."). It also fails to decompose grammatical contractions like "can't" into root and negation components.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>What makes Sentence Boundary Detection (SBD) challenging in natural language text?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Sentences in English never exceed five words in length</span></button><button class="opt" type="button"><b>B</b><span>Most operating systems do not support newline characters</span></button><button class="opt" type="button"><b>C</b><span>The period character '.' is overloaded: it serves as a sentence terminator, an abbreviation indicator ("Dr."), a decimal separator (3.14), and an ellipsis marker (...)</span></button><button class="opt" type="button"><b>D</b><span>Exclamation marks and question marks cannot be processed using regular expressions</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because the full stop is heavily overloaded as an abbreviation marker, decimal separator, and acronym element, simple rule-based splitting after every period causes severe fragmentation of proper names and numerical quantities.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>According to the Penn Treebank standard, how should the contraction "couldn't" be tokenised?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By deleting the apostrophe: ["couldnt"]</span></button><button class="opt" type="button"><b>B</b><span>By expanding to full dictionary words: ["could", "not"]</span></button><button class="opt" type="button"><b>C</b><span>As two separate tokens: ["could", "n't"]</span></button><button class="opt" type="button"><b>D</b><span>As a single unified token: ["couldn't"]</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The Penn Treebank standard separates clitics and contractions into distinct tokens: "could" (modal auxiliary verb) and "n't" (adverbial negation), allowing downstream taggers to assign distinct parts of speech to each.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q4</span>How does the Punkt algorithm detect abbreviations in an unannotated text corpus without human-engineered grammar rules?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By querying a hard-coded online English dictionary via an API</span></button><button class="opt" type="button"><b>B</b><span>By counting the number of syllables in each word</span></button><button class="opt" type="button"><b>C</b><span>By translating the text into Latin first</span></button><button class="opt" type="button"><b>D</b><span>By calculating statistical collocations and log-likelihood ratio tests to determine if a token with a period frequently appears in non-terminal positions</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Punkt evaluates whether a word followed by a period occurs with high probability inside sentences, whether subsequent words are capitalized, and whether the pair forms an abbreviation collocation, identifying abbreviations in an unsupervised manner.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/text-normalisation-unicode-and-regex/"><small class="kicker">Concept</small><b>Normalisation &amp; Regex</b></a><a href="../../concepts/tokenization/"><small class="kicker">Concept</small><b>Tokenization (BPE)</b></a><a href="../../concepts/data-cleaning-and-validation/"><small class="kicker">Concept</small><b>Data cleaning &amp; validation</b></a><a href="../../concepts/stop-words-and-n-grams/"><small class="kicker">Concept</small><b>Stop Words &amp; N-Grams</b></a><a href="../../concepts/stemming-vs-lemmatisation/"><small class="kicker">Concept</small><b>Stemming vs Lemmatisation</b></a><a href="../../concepts/bag-of-words-and-tf-idf/"><small class="kicker">Concept</small><b>BoW &amp; TF-IDF</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/text-normalisation-unicode-and-regex/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Natural language processing</small><b>Normalisation &amp; Regex</b></a>
+    <a class="pager-next" href="../../concepts/tokenization/"><small>Next · Natural language processing <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Tokenization (BPE)</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Dynamic programming: value and policy iteration · Learn · Yogesh Awate</title>
+<meta name="description" content="Dynamic programming provides exact mathematical algorithms for solving Markov Decision Processes when the environmental dynamics (transition probabilities and reward functions) are fully known. Policy Iteration decomposes control into alternating stages of Policy Evaluation (computing true state values via the Bellman Expectation equation) and Policy Improvement (acting greedily with respect to evaluated values). Value Iteration condenses this into a single Bellman Optimality backup per sweep, iteratively propagating optimal values until convergence under the contraction mapping theorem.">
+<meta property="og:title" content="Dynamic programming: value and policy iteration · Learn · Yogesh Awate">
+<meta property="og:description" content="Dynamic programming provides exact mathematical algorithms for solving Markov Decision Processes when the environmental dynamics (transition probabilities and reward functions) are fully known. Policy Iteration decomposes control into alternating stages of Policy Evaluation (computing true state values via the Bellman Expectation equation) and Policy Improvement (acting greedily with respect to evaluated values). Value Iteration condenses this into a single Bellman Optimality backup per sweep, iteratively propagating optimal values until convergence under the contraction mapping theorem.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="dynamic-programming-value-and-policy-iteration">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ai">Path 11 · AI</a> / Reinforcement learning / Lesson 10 of 42</span>
+    <h1 class="case-title">Dynamic programming: value and policy iteration</h1>
+    <p class="lede rise" style="--d:3">Dynamic programming provides exact mathematical algorithms for solving Markov Decision Processes when the environmental dynamics (transition probabilities and reward functions) are fully known. Policy Iteration decomposes control into alternating stages of Policy Evaluation (computing true state values via the Bellman Expectation equation) and Policy Improvement (acting greedily with respect to evaluated values). Value Iteration condenses this into a single Bellman Optimality backup per sweep, iteratively propagating optimal values until convergence under the contraction mapping theorem.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/mdps-and-bellman-equations/">MDPs &amp; Bellman Equations</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>AI · Reinforcement learning</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">If you possess a complete map of a maze—knowing every corridor, trap, and prize with exact probabilistic certainty—how should you compute the optimal navigation path? When an agent has complete knowledge of environmental physics, trial-and-error exploration is unnecessary. Dynamic programming applies Bellman's principle of optimality to compute the exact value of every state and extract the mathematically optimal policy without taking a single physical step.</p>
+        <p>Policy Evaluation as fixed-point relaxation: Given an arbitrary policy pi (for instance, walking in random directions), how good is it? Policy evaluation repeatedly applies the Bellman expectation backup across all states: V_{k+1}(s) = sum_a pi(a | s) sum_s' P(s' | s, a) [ R(s, a, s') + gamma V_k(s') ]. Because the Bellman operator is a contraction mapping, starting from any arbitrary initial vector (even all zeros), repeated sweeps converge monotonically to the true state values V^pi.</p>
+        <p>The Policy Improvement Theorem: Once state values V^pi are known, can we construct a better policy? The Policy Improvement Theorem proves that if an agent chooses an action greedily with respect to downstream values—selecting pi'(s) = argmax_a sum_s' P(s' | s, a) [ R(s, a, s') + gamma V^pi(s') ]—the new policy pi' is guaranteed to be strictly better than or equal to pi in every single state. Repeating this cycle guarantees reaching the globally optimal policy in finite steps.</p>
+        <p>Value Iteration: Truncating policy evaluation: Full policy iteration requires waiting for policy evaluation to converge completely before updating the policy. Value Iteration observes that complete evaluation is redundant: by immediately updating each state with the maximum possible action value—V_{k+1}(s) = max_a sum_s' P(s' | s, a) [ R(s, a, s') + gamma V_k(s') ]—it combines evaluation and improvement into a single unified sweep, dramatically reducing total computation.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Think of planning a train network across an entire country. Policy Iteration is like designing a fixed train timetable, running passenger simulations for six months until ticket revenues stabilise completely (policy evaluation), and then asking station masters for improvements (policy improvement), repeating this slow cycle. Value Iteration is like a dynamic traffic computer that looks at the current travel times between adjacent cities and immediately updates the fastest route across every station simultaneously every evening. Both methods arrive at the identical optimal railway schedule, but Value Iteration avoids waiting for stagnant simulations.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Policy Improvement Theorem guarantee</h3><div class="formula">q_\pi(s, \pi'(s)) \ge v_\pi(s) \implies v_{\pi'}(s) \ge v_\pi(s), \quad \forall s \in \mathcal{S}</div><p>If selecting action $\pi'(s)$ greedily yields an expected return at least as high as current policy $\pi$, then following $\pi'$ thereafter guarantees equal or strictly superior state values across the entire state space.</p></li>
+          <li><h3>Value Iteration Bellman Optimality backup</h3><div class="formula">V_{k+1}(s) = \max_{a \in \mathcal{A}} \sum_{s' \in \mathcal{S}} P(s' \mid s, a) \left[ R(s, a, s') + \gamma V_k(s') \right]</div><p>The Value Iteration update combines policy evaluation and greedy improvement in a single step. By Banach's fixed-point theorem, $V_k$ converges to unique optimal value $V^*$ at geometric rate $\gamma^k$.</p></li>
+          <li><h3>Value Iteration error bound and stopping condition</h3><div class="formula">\|V_{k+1} - V_k\|_\infty < \theta \implies \|V_{k+1} - V^*\|_\infty < \frac{2 \theta \gamma}{1 - \gamma}</div><p>When the maximum change in state values across a sweep drops below $\theta$, the distance between the current estimate and the true optimal value $V^*$ is bounded by $\frac{2 \theta \gamma}{1 - \gamma}$, ensuring controlled error tolerance.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Dynamic programming computes exact optimal policies in Markov Decision Processes with known transition and reward models.</li><li>Policy Iteration alternates between complete policy evaluation and greedy policy improvement until the policy stabilises.</li><li>The Policy Improvement Theorem guarantees that greedy action selection produces monotonically improving policies.</li><li>Value Iteration truncates policy evaluation to a single sweep, updating states directly via the Bellman Optimality operator.</li><li>Both methods converge to the identical optimal policy pi* and optimal value function V*.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">class</span> GridworldDP:
+    <span class="s">&quot;&quot;&quot;
+    Comparison of Policy Iteration vs Value Iteration
+    on a 4-state linear gridworld: [0] &lt;-&gt; [1] &lt;-&gt; [2] &lt;-&gt; [3 (Goal)]
+    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, gamma=<span class="n">0.9</span>):
+        <span class="k">self</span>.num_states = <span class="n">4</span>
+        <span class="k">self</span>.gamma = gamma
+        <span class="k">self</span>.actions = [<span class="n">0</span>, <span class="n">1</span>]  <span class="c"># 0: Left, 1: Right</span>
+        
+    <span class="k">def</span> <span class="f">step</span>(<span class="k">self</span>, s, a):
+        <span class="k">if</span> s == <span class="n">3</span>:
+            <span class="k">return</span> <span class="n">3</span>, <span class="n">0.0</span>, <span class="k">True</span>
+        <span class="k">if</span> a == <span class="n">1</span>:  <span class="c"># Right</span>
+            s_next = <span class="f">min</span>(<span class="n">3</span>, s + <span class="n">1</span>)
+            reward = <span class="n">10.0</span> <span class="k">if</span> s_next == <span class="n">3</span> <span class="k">else</span> <span class="n">0.0</span>
+        <span class="k">else</span>:       <span class="c"># Left</span>
+            s_next = <span class="f">max</span>(<span class="n">0</span>, s - <span class="n">1</span>)
+            reward = <span class="n">0.0</span>
+        <span class="k">return</span> s_next, reward, (s_next == <span class="n">3</span>)
+
+    <span class="k">def</span> <span class="f">policy_iteration</span>(<span class="k">self</span>, theta=<span class="n">1e-6</span>):
+        <span class="c"># Initialize random policy (all Left) and zero values</span>
+        policy = np.<span class="f">zeros</span>(<span class="k">self</span>.num_states - <span class="n">1</span>, dtype=int)
+        V = np.<span class="f">zeros</span>(<span class="k">self</span>.num_states)
+        eval_sweeps = <span class="n">0</span>
+        policy_steps = <span class="n">0</span>
+        
+        <span class="k">while</span> <span class="k">True</span>:
+            policy_steps += <span class="n">1</span>
+            <span class="c"># 1. Policy Evaluation</span>
+            <span class="k">while</span> <span class="k">True</span>:
+                delta = <span class="n">0.0</span>
+                eval_sweeps += <span class="n">1</span>
+                V_new = np.<span class="f">copy</span>(V)
+                <span class="k">for</span> s <span class="k">in</span> <span class="k">range</span>(<span class="k">self</span>.num_states - <span class="n">1</span>):
+                    a = policy[s]
+                    s_prime, r, _ = <span class="k">self</span>.<span class="f">step</span>(s, a)
+                    V_new[s] = r + <span class="k">self</span>.gamma * V[s_prime]
+                    delta = <span class="f">max</span>(delta, <span class="f">abs</span>(V_new[s] - V[s]))
+                V = V_new
+                <span class="k">if</span> delta &lt; theta:
+                    break
+                    
+            <span class="c"># 2. Policy Improvement</span>
+            policy_stable = <span class="k">True</span>
+            <span class="k">for</span> s <span class="k">in</span> <span class="k">range</span>(<span class="k">self</span>.num_states - <span class="n">1</span>):
+                old_action = policy[s]
+                <span class="c"># Find best action</span>
+                action_values = []
+                <span class="k">for</span> a <span class="k">in</span> <span class="k">self</span>.actions:
+                    s_prime, r, _ = <span class="k">self</span>.<span class="f">step</span>(s, a)
+                    action_values.<span class="f">append</span>(r + <span class="k">self</span>.gamma * V[s_prime])
+                best_action = <span class="f">int</span>(np.<span class="f">argmax</span>(action_values))
+                <span class="k">if</span> best_action != old_action:
+                    policy_stable = <span class="k">False</span>
+                policy[s] = best_action
+                
+            <span class="k">if</span> policy_stable:
+                break
+                
+        <span class="k">return</span> V, policy, policy_steps, eval_sweeps
+
+    <span class="k">def</span> <span class="f">value_iteration</span>(<span class="k">self</span>, theta=<span class="n">1e-6</span>):
+        V = np.<span class="f">zeros</span>(<span class="k">self</span>.num_states)
+        sweeps = <span class="n">0</span>
+        <span class="k">while</span> <span class="k">True</span>:
+            sweeps += <span class="n">1</span>
+            delta = <span class="n">0.0</span>
+            V_new = np.<span class="f">copy</span>(V)
+            <span class="k">for</span> s <span class="k">in</span> <span class="k">range</span>(<span class="k">self</span>.num_states - <span class="n">1</span>):
+                q_vals = [<span class="k">self</span>.<span class="f">step</span>(s, a)[<span class="n">1</span>] + <span class="k">self</span>.gamma * V[<span class="k">self</span>.<span class="f">step</span>(s, a)[<span class="n">0</span>]] <span class="k">for</span> a <span class="k">in</span> <span class="k">self</span>.actions]
+                V_new[s] = <span class="f">max</span>(q_vals)
+                delta = <span class="f">max</span>(delta, <span class="f">abs</span>(V_new[s] - V[s]))
+            V = V_new
+            <span class="k">if</span> delta &lt; theta:
+                break
+                
+        <span class="c"># Extract policy</span>
+        policy = np.<span class="f">zeros</span>(<span class="k">self</span>.num_states - <span class="n">1</span>, dtype=int)
+        <span class="k">for</span> s <span class="k">in</span> <span class="k">range</span>(<span class="k">self</span>.num_states - <span class="n">1</span>):
+            q_vals = [<span class="k">self</span>.<span class="f">step</span>(s, a)[<span class="n">1</span>] + <span class="k">self</span>.gamma * V[<span class="k">self</span>.<span class="f">step</span>(s, a)[<span class="n">0</span>]] <span class="k">for</span> a <span class="k">in</span> <span class="k">self</span>.actions]
+            policy[s] = <span class="f">int</span>(np.<span class="f">argmax</span>(q_vals))
+            
+        <span class="k">return</span> V, policy, sweeps
+
+dp = <span class="f">GridworldDP</span>(gamma=<span class="n">0.9</span>)
+v_pi, pi_pi, p_steps, e_sweeps = dp.<span class="f">policy_iteration</span>()
+v_vi, pi_vi, vi_sweeps = dp.<span class="f">value_iteration</span>()
+
+<span class="k">print</span>(<span class="s">&quot;1. Policy Iteration Results:&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;  Converged in {p_steps} policy improvement steps ({e_sweeps} total evaluation sweeps)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;  Values: {[round(x, 2) for x in v_pi]}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;  Policy: {['Left' if a == 0 else 'Right' for a in pi_pi]}&quot;</span>)
+
+<span class="k">print</span>(<span class="s">&quot;\n2. Value Iteration Results:&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;  Converged in {vi_sweeps} total sweeps&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;  Values: {[round(x, 2) for x in v_vi]}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;  Policy: {['Left' if a == 0 else 'Right' for a in pi_vi]}&quot;</span>)
+
+<span class="k">print</span>(<span class="s">&quot;\nNotice: Both algorithms produce mathematically identical optimal values and policies!&quot;</span>)
+</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Asynchronous state overwriting bugs: When implementing Value Iteration, updating state values in-place (Gauss-Seidel style) converges faster, but must be implemented deliberately; mixing old and new values in synchronous updates causes subtle mathematical divergence.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming dynamic programming scales to high-dimensional continuous domains: Full DP requires iterating over all |S| states and |A| actions at every sweep. For problems with continuous states (such as robotics), tabular DP suffers from the curse of dimensionality and requires function approximation.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Failing to anchor terminal state values: If terminal absorbing states are not clamped permanently to zero reward and zero value, discount loops accumulate infinitely, corrupting surrounding states.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Setting stopping threshold theta too loose: Terminating value iteration when theta is large produces sub-optimal policy extraction, particularly when discount factor gamma is close to 1.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>What does the Policy Improvement Theorem guarantee when constructing an updated policy pi' that acts greedily with respect to V^pi?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The environment transition matrix becomes deterministic</span></button><button class="opt" type="button"><b>B</b><span>All negative rewards are permanently removed from the MDP</span></button><button class="opt" type="button"><b>C</b><span>The discount factor gamma increases to 1.0</span></button><button class="opt" type="button"><b>D</b><span>The updated policy pi' is guaranteed to achieve expected state values greater than or equal to pi across every state in the state space</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The Policy Improvement Theorem proves that acting greedily with respect to the value function of policy pi produces a new policy pi' whose expected return V^{pi'}(s) >= V^{pi}(s) for all states s, guaranteeing monotonic convergence toward the optimal policy.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>How does Value Iteration differ operationally from Policy Iteration?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Value Iteration applies the Bellman Optimality operator directly to update state values in a single sweep without waiting for policy evaluation to converge</span></button><button class="opt" type="button"><b>B</b><span>Value Iteration requires an exploration epsilon parameter while Policy Iteration does not</span></button><button class="opt" type="button"><b>C</b><span>Value Iteration only works on continuous states</span></button><button class="opt" type="button"><b>D</b><span>Value Iteration updates policies using Monte Carlo sampling</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Policy Iteration runs iterative policy evaluation to full convergence between policy improvements. Value Iteration truncates evaluation to a single sweep, updating each state directly with the max over actions (Bellman optimality).</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>Why is dynamic programming incapable of solving complex real-world control tasks like autonomous driving directly in tabular form?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because Bellman equations only apply to game playing tasks like chess</span></button><button class="opt" type="button"><b>B</b><span>Because tabular dynamic programming suffers from the curse of dimensionality, requiring sweeps over the entire state space which is infinitely large in continuous real-world environments</span></button><button class="opt" type="button"><b>C</b><span>Because dynamic programming cannot handle positive rewards</span></button><button class="opt" type="button"><b>D</b><span>Because dynamic programming can only run on quantum computers</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Tabular DP requires enumerating all states in S. In real-world environments like driving, state variables (positions, velocities, angles) are continuous and high-dimensional, resulting in an infinite state space that cannot be indexed in a table.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/mdps-and-bellman-equations/"><small class="kicker">Concept</small><b>MDPs &amp; Bellman Equations</b></a><a href="../../concepts/intelligent-agents-and-environments/"><small class="kicker">Concept</small><b>Agents &amp; Environments</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/mdps-and-bellman-equations/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · AI</small><b>MDPs &amp; Bellman Equations</b></a>
+    <a class="pager-next" href="../../concepts/policy-gradient-reinforce/"><small>Next · AI <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Policy Gradient &amp; REINFORCE</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Classical Image Segmentation: K-Means Colour Clustering, Watershed, and GrabCut · Learn · Yogesh Awate</title>
+<meta name="description" content="Segmenting visual scenes without deep learning using pixel colour clustering, topographical gradient watershed flooding, and iterative min-cut GrabCut graph cuts.">
+<meta property="og:title" content="Classical Image Segmentation: K-Means Colour Clustering, Watershed, and GrabCut · Learn · Yogesh Awate">
+<meta property="og:description" content="Segmenting visual scenes without deep learning using pixel colour clustering, topographical gradient watershed flooding, and iterative min-cut GrabCut graph cuts.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="classical-segmentation-k-means-watershed-grabcut">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-vision">Path 09 · Computer vision</a> / Image basics / Lesson 5 of 37</span>
+    <h1 class="case-title">Classical Image Segmentation: K-Means Colour Clustering, Watershed, and GrabCut</h1>
+    <p class="lede rise" style="--d:3">Segmenting visual scenes without deep learning using pixel colour clustering, topographical gradient watershed flooding, and iterative min-cut GrabCut graph cuts.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Computer vision · Image basics</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Before deep convolutional networks dominated computer vision, image segmentation relied on rigorous mathematical algorithms rooted in graph theory, topographical fluid dynamics, and statistical clustering. Techniques like K-Means colour space clustering, the Watershed transform, and GrabCut provide fast, interpretable, training-free methods for isolating foreground objects, separating touching cells in microscopy, and extracting interactive foreground cutouts.</p>
+        <p>Image segmentation partitions an image into semantically coherent pixel regions. In classical vision, segmentation operates on low-level cues: pixel colour, intensity gradients, and spatial coordinates.</p>
+        <p>K-Means segmentation clusters pixels in colour space (such as CIE L*a*b* or RGB) into $K$ discrete colour modes. While fast, raw K-means ignores spatial connectivity, producing noisy, fragmented pixel masks.</p>
+        <p>The Watershed algorithm treats a greyscale gradient image as a 3D topographic relief map: light pixels are high ridges (boundaries), and dark pixels are low basins. Flooding basins from predefined markers partitions the image into catchment basins. However, raw gradient maps contain thousands of local noise minima, causing severe over-segmentation; marker-controlled watershed solves this by initializing floods strictly from user-defined seeds.</p>
+        <p>GrabCut (Rother et al.) formulates segmentation as an energy minimisation problem on a graph. Pixels are represented as graph nodes connected to source (Foreground) and sink (Background) terminals. Using Gaussian Mixture Models (GMMs) to model colour distributions and the Max-Flow / Min-Cut theorem, GrabCut iteratively cuts the minimum-cost graph edges, producing clean boundaries with minimal user bounding-box hints.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine an aerial photograph of mountainous terrain during a rising flood. The Watershed algorithm treats gradient magnitudes as topographical peaks and basins: as water rises simultaneously from every local valley, dams are erected wherever rising ponds touch, perfectly outlining mountain ridges. GrabCut is like stretching an elastic rubber membrane around an object: it finds the minimum-energy boundary that wraps tightly around the subject while cutting through the fewest connecting tissue fibers.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Select segmentation approach: Choose K-means for colour reduction, marker-controlled watershed for separating touching objects, or GrabCut for interactive object extraction.</li><li>Preprocess and filter: Apply bilateral filtering or median blur to suppress high-frequency sensor noise without blurring object edges.</li><li>Compute morphological gradients: For watershed, compute Sobel or morphological gradient $\nabla I$ to identify boundary ridges.</li><li>Generate seed markers: Apply distance transforms and thresholding to isolate confident object cores and background markers.</li><li>Apply graph cut (GrabCut): Initialize foreground/background Gaussian Mixture Models from a user bounding box; iteratively alternate between assigning pixels to GMM components and computing min-cut graph partitioning.</li><li>Post-process boundaries: Apply morphological closing and contour smoothing to produce final clean segmentation masks.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>GrabCut Energy Minimisation Formulation</h3><div class="formula">E(\underline{\alpha}, \mathbf{k}, \underline{\theta}, \mathbf{z}) = U(\underline{\alpha}, \mathbf{k}, \underline{\theta}, \mathbf{z}) + V(\underline{\alpha}, \mathbf{z})</div><p>Decomposes segmentation energy into regional data fidelity $U$ (likelihood under GMM colour models) and boundary smoothness $V$ (contrast-dependent penalty for assigning adjacent pixels to different classes).</p></li>
+          <li><h3>Boundary Smoothness Edge Penalty</h3><div class="formula">V(\underline{\alpha}, \mathbf{z}) = \gamma \sum_{(m, n) \in \mathcal{C}} [\alpha_m \ne \alpha_n] \exp\left( -\beta \|z_m - z_n\|^2 \right)</div><p>Penalises boundary cuts between adjacent pixels $(m, n)$, with penalties dropping when crossing sharp colour differences.</p></li>
+          <li><h3>Max-Flow / Min-Cut Optimality (Ford-Fulkerson)</h3><div class="formula">\min_{\mathcal{S}, \mathcal{T}} \operatorname{Capacity}(\mathcal{S}, \mathcal{T}) = \max \operatorname{Flow}(s \to t)</div><p>The globally optimal boundary cut minimising energy $E$ is computed in polynomial time via the maximum network flow algorithm.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Classical segmentation partitions images without requiring training labels or deep neural networks.</li><li>K-Means clusters pixel colours but lacks spatial boundary coherence.</li><li>Marker-controlled watershed treats gradients as topography, using seed markers to prevent over-segmentation.</li><li>GrabCut uses Gaussian Mixture Models and graph min-cuts to iteratively segment foreground objects from bounding boxes.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">def</span> <span class="f">simple_kmeans_color_quantisation</span>(image_rgb: np.ndarray, k: int = <span class="n">3</span>, max_iter: int = <span class="n">10</span>) -&gt; np.ndarray:
+    <span class="s">&quot;&quot;&quot;Segment image by clustering pixel colours in RGB space via K-Means.&quot;&quot;&quot;</span>
+    h, w, c = image_rgb.shape
+    pixels = image_rgb.<span class="f">reshape</span>(-<span class="n">1</span>, c).<span class="f">astype</span>(np.float32)
+    
+    <span class="c"># Initialize centroids randomly from pixels</span>
+    np.random.<span class="f">seed</span>(<span class="n">42</span>)
+    idx = np.random.<span class="f">choice</span>(<span class="k">len</span>(pixels), k, replace=<span class="k">False</span>)
+    centroids = pixels[idx]
+    
+    <span class="k">for</span> _ <span class="k">in</span> <span class="k">range</span>(max_iter):
+        <span class="c"># 1. Assign each pixel to nearest centroid</span>
+        <span class="c"># [N, K] distance matrix</span>
+        dists = np.linalg.<span class="f">norm</span>(pixels[:, <span class="k">None</span>, :] - centroids[<span class="k">None</span>, :, :], axis=-<span class="n">1</span>)
+        labels = np.<span class="f">argmin</span>(dists, axis=<span class="n">1</span>)
+        
+        <span class="c"># 2. Update centroids</span>
+        new_centroids = np.<span class="f">array</span>([pixels[labels == i].<span class="f">mean</span>(axis=<span class="n">0</span>) <span class="k">if</span> (labels == i).<span class="f">any</span>() 
+                                 <span class="k">else</span> centroids[i] <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(k)])
+        <span class="k">if</span> np.<span class="f">allclose</span>(centroids, new_centroids, atol=<span class="n">1e-2</span>):
+            break
+        centroids = new_centroids
+        
+    quantised = centroids[labels].<span class="f">reshape</span>(h, w, c).<span class="f">astype</span>(np.uint8)
+    <span class="k">return</span> quantised, labels.<span class="f">reshape</span>(h, w)
+
+<span class="c"># Test on 8x8 synthetic image with 2 colour regions</span>
+img = np.<span class="f">zeros</span>((<span class="n">8</span>, <span class="n">8</span>, <span class="n">3</span>), dtype=np.uint8)
+img[:<span class="n">4</span>, :] = [<span class="n">200</span>, <span class="n">30</span>, <span class="n">30</span>]   <span class="c"># Red foreground</span>
+img[<span class="n">4</span>:, :] = [<span class="n">30</span>, <span class="n">180</span>, <span class="n">50</span>]   <span class="c"># Green background</span>
+
+segmented_img, mask = <span class="f">simple_kmeans_color_quantisation</span>(img, k=<span class="n">2</span>)
+<span class="k">print</span>(<span class="s">&quot;Segmented mask unique labels:&quot;</span>, np.<span class="f">unique</span>(mask))
+<span class="k">print</span>(<span class="s">&quot;K-Means cleanly separated the two colour regions without neural networks!&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Over-segmentation in raw watershed: Applying watershed directly to noisy image gradients without marker seeds produces a fractured mosaic of thousands of tiny useless regions.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Colour overlap in GrabCut: If the foreground object shares identical colours with the background (e.g. a green frog on a green leaf), GrabCut cannot separate them using colour GMMs alone.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Ignoring spatial coordinates in K-Means: Clustering only $(R, G, B)$ values merges spatially distant pixels that happen to have similar colours; concatenate spatial coordinates $(R, G, B, x, y)$ for spatial compactness.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>Why does the raw, unseeded Watershed algorithm suffer from severe over-segmentation on natural images?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because water cannot flow in digital computers</span></button><button class="opt" type="button"><b>B</b><span>Because the image has more than 1 colour channel</span></button><button class="opt" type="button"><b>C</b><span>High-frequency image noise produces hundreds of tiny local gradient minima, each of which forms its own isolated catchment basin</span></button><button class="opt" type="button"><b>D</b><span>Because watershed requires deep neural networks</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Every local minimum in the gradient image acts as a seed for a catchment basin. Noise creates hundreds of false minima, fragmenting the image.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>How does the GrabCut algorithm achieve fast, globally optimal foreground/background boundary cuts?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By formulating the energy minimisation problem as a graph cut and solving it in polynomial time using the Max-Flow / Min-Cut theorem</span></button><button class="opt" type="button"><b>B</b><span>By computing the Fourier transform of the image</span></button><button class="opt" type="button"><b>C</b><span>Using brute-force search across all possible pixel subsets</span></button><button class="opt" type="button"><b>D</b><span>By running stochastic gradient descent on pixel coordinates</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> GrabCut represents pixel affinities and GMM likelihoods as edge capacities in a flow network. The min-cut separating source from sink is solved via maximum network flow.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>What is the primary limitation of pure K-Means colour segmentation?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It requires 100 epochs of GPU training</span></button><button class="opt" type="button"><b>B</b><span>It only works on black and white images</span></button><button class="opt" type="button"><b>C</b><span>It cannot process RGB images</span></button><button class="opt" type="button"><b>D</b><span>It operates strictly in colour space and ignores spatial pixel connectivity, creating noisy, fragmented masks with holes</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> K-Means clusters pixels purely by $(R, G, B)$ values without spatial awareness: two pixels with the same colour in opposite corners of the image are grouped together.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/thresholding-histograms-and-morphology/"><small class="kicker">Concept</small><b>Thresholds &amp; Morphology</b></a><a href="../../concepts/semantic-segmentation-fcn-and-u-net/"><small class="kicker">Concept</small><b>FCN &amp; U-Net</b></a><a href="../../concepts/edge-detection-sobel-and-canny/"><small class="kicker">Concept</small><b>Sobel &amp; Canny</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/thresholding-histograms-and-morphology/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Computer vision</small><b>Thresholds &amp; Morphology</b></a>
+    <a class="pager-next" href="../../concepts/corners-and-keypoints-harris-fast/"><small>Next · Computer vision <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Harris &amp; FAST</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

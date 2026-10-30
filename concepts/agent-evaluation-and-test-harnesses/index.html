@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Agent evaluation and test harnesses · Learn · Yogesh Awate</title>
+<meta name="description" content="Evaluating autonomous multi-step agents requires moving beyond static single-turn benchmarks to interactive simulation harnesses and trajectory-level audits. Unlike simple question-answering systems, agents alter environmental state, invoke APIs, navigate dynamic graphs, and make sequential decisions under uncertainty. Rigorous agent evaluation balances outcome-based verification (did the agent successfully modify the database, fix the software bug, or complete the purchase?) with trajectory-based diagnostic metrics (action efficiency, tool call error rates, cyclic loop detection, and safety violations).">
+<meta property="og:title" content="Agent evaluation and test harnesses · Learn · Yogesh Awate">
+<meta property="og:description" content="Evaluating autonomous multi-step agents requires moving beyond static single-turn benchmarks to interactive simulation harnesses and trajectory-level audits. Unlike simple question-answering systems, agents alter environmental state, invoke APIs, navigate dynamic graphs, and make sequential decisions under uncertainty. Rigorous agent evaluation balances outcome-based verification (did the agent successfully modify the database, fix the software bug, or complete the purchase?) with trajectory-based diagnostic metrics (action efficiency, tool call error rates, cyclic loop detection, and safety violations).">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="agent-evaluation-and-test-harnesses">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ai">Path 11 · AI</a> / Agents / Lesson 28 of 42</span>
+    <h1 class="case-title">Agent evaluation and test harnesses</h1>
+    <p class="lede rise" style="--d:3">Evaluating autonomous multi-step agents requires moving beyond static single-turn benchmarks to interactive simulation harnesses and trajectory-level audits. Unlike simple question-answering systems, agents alter environmental state, invoke APIs, navigate dynamic graphs, and make sequential decisions under uncertainty. Rigorous agent evaluation balances outcome-based verification (did the agent successfully modify the database, fix the software bug, or complete the purchase?) with trajectory-based diagnostic metrics (action efficiency, tool call error rates, cyclic loop detection, and safety violations).</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">20 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/the-agent-loop-react/">ReAct Agent Loop</a> <a href="../../concepts/evaluating-llms-benchmarks-and-judges/">Evaluating LLMs</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>AI · Agents</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">If evaluating a single-turn LLM is like scoring a written multiple-choice test, evaluating an autonomous agent is like administering a driving test in live traffic. An agent might eventually reach the desired destination, but did it take three unnecessary detours, exceed speed limits, or ignore stop signs along the way? Worse, did it get caught in an infinite loop calling the same broken endpoint fifty times? Developing robust agent systems requires deterministic test harnesses, sandboxed mock environments, trajectory log analysis, and regression suites.</p>
+        <p>Outcome vs Trajectory Evaluation:
+- Outcome Evaluation: Assesses the final state of the task environment. In SWE-bench, this means running unit tests to check if the patch resolves the issue without regressions. In WebArena, it means inspecting whether the order was placed with the correct shipping address.
+- Trajectory Evaluation: Assesses the path taken to reach the outcome. An agent that solves a task in 3 efficient tool calls is vastly superior in speed, cost, and reliability to one that takes 28 calls filled with syntax errors, retries, and hallucinations.</p>
+        <p>The Core Failure Modes of Autonomous Agents:
+- Infinite Loops / Thrashing: Repeating identical failed actions without learning from error observations.
+- Tool Hallucination: Inventing nonexistent tools or fictitious parameter names not in the schema.
+- Premature Termination: Declaring victory before completing necessary prerequisites.
+- Cascading Error Propagation: Basing subsequent reasoning on a faulty intermediate assumption.
+- Side-Effect Leakage: Modifying state destructively (e.g. deleting files) in attempts to explore.</p>
+        <p>Deterministic Sandboxed Test Harnesses: Live external web APIs are non-deterministic, rate-limited, and subject to external changes. Robust evaluation harnesses employ mock sandboxes (recorded HTTP cassettes, isolated Docker containers, virtual filesystems) that reset to identical initial states prior to each test run, ensuring reproducible evaluations.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Consider testing an autopilot flight system in commercial aviation. You would never evaluate the autopilot solely by checking whether the aeroplane touched down on the runway at the end of the journey (outcome only). If the autopilot stalled twice, exceeded G-force limits, burned twice the allotted fuel, and deviated 200 miles off course before landing, the flight was a catastrophic failure. A comprehensive flight simulator test harness (agent test harness) records altitude, pitch, telemetry, and pilot command interactions at every second (trajectory evaluation) while measuring touchdown precision and passenger safety (outcome evaluation).</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Trajectory Efficiency and Path Optimality</h3><div class="formula">\text{Efficiency}(\tau) = \frac{|\tau^*|}{\max\big(|\tau|, |\tau^*|\big)} \in (0, 1]</div><p>Let \tau^* be the minimal golden path trajectory (optimal number of tool calls) and \tau be the observed agent trajectory. If an agent completes a task in 3 steps when the golden path is 3, efficiency is 1.0. If the agent meanders for 12 steps before succeeding, efficiency drops to 0.25.</p></li>
+          <li><h3>Loop Detection and Action Repetition Index</h3><div class="formula">\text{RepetitionScore}(A) = \frac{1}{T - 1} \sum_{t=1}^{T-1} \mathbb{I}(a_{t+1} = a_t), \quad A = (a_1, a_2, \dots, a_T)</div><p>Detects consecutive thrashing loops where an agent blindly repeats an identical action command despite receiving error feedback. An agent with repetition score > 0 exhibits pathological stuck loops requiring circuit-breaker interventions.</p></li>
+          <li><h3>Composite Benchmark Scorecard with Resource Penalty</h3><div class="formula">\text{Score} = \text{Success} \times \left(w_1 \cdot \text{Efficiency}(\tau) + w_2 \cdot (1 - \text{ToolErrorRate})\right) \cdot \exp\left(-\lambda \cdot \frac{\text{Tokens}}{\text{TokenBudget}}\right)</div><p>Holistic agent scoring penalises inefficient or error-prone trajectories even when the ultimate objective is reached, scaling down rewards when token usage approaches the budget ceiling.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Agent evaluation requires evaluating both final outcome correctness and trajectory quality (efficiency, loop avoidance, error frequency).</li><li>Deterministic sandboxed simulation environments with state reset capabilities prevent external API drift and ensure test reproducibility.</li><li>Trajectory audits detect pathological failure modes such as thrashing loops, parameter schema hallucinations, and cascading error propagation.</li><li>Composite benchmarks balance binary task completion with resource consumption penalties (step count and token budget).</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="s">&quot;&quot;&quot;
+Autonomous Agent Evaluation Test Harness
+Demonstrating deterministic sandboxed execution, trajectory logging,
+loop detection, and outcome verification.
+&quot;&quot;&quot;</span>
+
+<span class="k">from</span> typing <span class="k">import</span> List, Dict, Any, Callable
+<span class="k">import</span> copy
+
+<span class="k">class</span> MockDatabaseSandbox:
+    <span class="s">&quot;&quot;&quot;Deterministic stateful environment fixture.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>):
+        <span class="k">self</span>._initial_state = {
+            <span class="s">&quot;users&quot;</span>: {<span class="s">&quot;u1&quot;</span>: {<span class="s">&quot;name&quot;</span>: <span class="s">&quot;Alice&quot;</span>, <span class="s">&quot;balance&quot;</span>: <span class="n">100</span>}, <span class="s">&quot;u2&quot;</span>: {<span class="s">&quot;name&quot;</span>: <span class="s">&quot;Bob&quot;</span>, <span class="s">&quot;balance&quot;</span>: <span class="n">50</span>}},
+            <span class="s">&quot;transactions&quot;</span>: []
+        }
+        <span class="k">self</span>.state = copy.<span class="f">deepcopy</span>(<span class="k">self</span>._initial_state)
+
+    <span class="k">def</span> <span class="f">reset</span>(<span class="k">self</span>):
+        <span class="k">self</span>.state = copy.<span class="f">deepcopy</span>(<span class="k">self</span>._initial_state)
+
+    <span class="k">def</span> <span class="f">transfer</span>(<span class="k">self</span>, from_user: str, to_user: str, amount: int) -&gt; str:
+        <span class="k">if</span> from_user <span class="k">not</span> <span class="k">in</span> <span class="k">self</span>.state[<span class="s">&quot;users&quot;</span>] <span class="k">or</span> to_user <span class="k">not</span> <span class="k">in</span> <span class="k">self</span>.state[<span class="s">&quot;users&quot;</span>]:
+            <span class="k">return</span> <span class="s">&quot;Error: Invalid user ID.&quot;</span>
+        <span class="k">if</span> <span class="k">self</span>.state[<span class="s">&quot;users&quot;</span>][from_user][<span class="s">&quot;balance&quot;</span>] &lt; amount:
+            <span class="k">return</span> <span class="s">&quot;Error: Insufficient funds.&quot;</span>
+        <span class="k">self</span>.state[<span class="s">&quot;users&quot;</span>][from_user][<span class="s">&quot;balance&quot;</span>] -= amount
+        <span class="k">self</span>.state[<span class="s">&quot;users&quot;</span>][to_user][<span class="s">&quot;balance&quot;</span>] += amount
+        <span class="k">self</span>.state[<span class="s">&quot;transactions&quot;</span>].<span class="f">append</span>({<span class="s">&quot;from&quot;</span>: from_user, <span class="s">&quot;to&quot;</span>: to_user, <span class="s">&quot;amount&quot;</span>: amount})
+        <span class="k">return</span> <span class="s">f&quot;Success: Transferred {amount} from {from_user} to {to_user}.&quot;</span>
+
+<span class="k">class</span> TrajectoryStep:
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, step_idx: int, thought: str, action: str, params: Dict[str, Any], observation: str, success: bool):
+        <span class="k">self</span>.step_idx = step_idx
+        <span class="k">self</span>.thought = thought
+        <span class="k">self</span>.action = action
+        <span class="k">self</span>.params = params
+        <span class="k">self</span>.observation = observation
+        <span class="k">self</span>.success = success
+
+<span class="k">class</span> AgentTestHarness:
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, sandbox: MockDatabaseSandbox):
+        <span class="k">self</span>.sandbox = sandbox
+
+    <span class="k">def</span> <span class="f">evaluate_trajectory</span>(<span class="k">self</span>, trajectory: List[TrajectoryStep], golden_steps: int = <span class="n">1</span>) -&gt; Dict[str, Any]:
+        <span class="s">&quot;&quot;&quot;Compute diagnostic metrics across the execution trace.&quot;&quot;&quot;</span>
+        total_steps = <span class="k">len</span>(trajectory)
+        <span class="k">if</span> total_steps == <span class="n">0</span>:
+            <span class="k">return</span> {<span class="s">&quot;efficiency&quot;</span>: <span class="n">0.0</span>, <span class="s">&quot;error_rate&quot;</span>: <span class="n">1.0</span>, <span class="s">&quot;loops_detected&quot;</span>: <span class="n">0</span>}
+
+        <span class="c"># 1. Trajectory Efficiency</span>
+        efficiency = <span class="f">round</span>(golden_steps / <span class="f">max</span>(total_steps, golden_steps), <span class="n">3</span>)
+
+        <span class="c"># 2. Tool Execution Error Rate</span>
+        errors = <span class="f">sum</span>(<span class="n">1</span> <span class="k">for</span> step <span class="k">in</span> trajectory <span class="k">if</span> <span class="k">not</span> step.success)
+        error_rate = <span class="f">round</span>(errors / total_steps, <span class="n">3</span>)
+
+        <span class="c"># 3. Thrashing / Consecutive Loop Detection</span>
+        loops = <span class="n">0</span>
+        <span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(<span class="k">len</span>(trajectory) - <span class="n">1</span>):
+            curr = (trajectory[i].action, <span class="f">str</span>(trajectory[i].params))
+            next_step = (trajectory[i+<span class="n">1</span>].action, <span class="f">str</span>(trajectory[i+<span class="n">1</span>].params))
+            <span class="k">if</span> curr == next_step <span class="k">and</span> <span class="k">not</span> trajectory[i].success:
+                loops += <span class="n">1</span>
+
+        <span class="k">return</span> {
+            <span class="s">&quot;total_steps&quot;</span>: total_steps,
+            <span class="s">&quot;efficiency&quot;</span>: efficiency,
+            <span class="s">&quot;error_rate&quot;</span>: error_rate,
+            <span class="s">&quot;loops_detected&quot;</span>: loops,
+        }
+
+    <span class="k">def</span> <span class="f">verify_outcome</span>(<span class="k">self</span>) -&gt; bool:
+        <span class="s">&quot;&quot;&quot;Run programmatic assertions against the environment state.&quot;&quot;&quot;</span>
+        <span class="c"># Task: Transfer 40 from u1 to u2</span>
+        state = <span class="k">self</span>.sandbox.state
+        u1_ok = state[<span class="s">&quot;users&quot;</span>][<span class="s">&quot;u1&quot;</span>][<span class="s">&quot;balance&quot;</span>] == <span class="n">60</span>
+        u2_ok = state[<span class="s">&quot;users&quot;</span>][<span class="s">&quot;u2&quot;</span>][<span class="s">&quot;balance&quot;</span>] == <span class="n">90</span>
+        tx_ok = <span class="k">len</span>(state[<span class="s">&quot;transactions&quot;</span>]) == <span class="n">1</span> <span class="k">and</span> state[<span class="s">&quot;transactions&quot;</span>][<span class="n">0</span>][<span class="s">&quot;amount&quot;</span>] == <span class="n">40</span>
+        <span class="k">return</span> u1_ok <span class="k">and</span> u2_ok <span class="k">and</span> tx_ok
+
+<span class="c"># --- Simulation Demonstration ---</span>
+sandbox = <span class="f">MockDatabaseSandbox</span>()
+harness = <span class="f">AgentTestHarness</span>(sandbox)
+
+<span class="c"># Scenario A: Highly efficient golden agent (1 step)</span>
+sandbox.<span class="f">reset</span>()
+obs_a = sandbox.<span class="f">transfer</span>(<span class="s">&quot;u1&quot;</span>, <span class="s">&quot;u2&quot;</span>, <span class="n">40</span>)
+trace_efficient = [
+    <span class="f">TrajectoryStep</span>(<span class="n">1</span>, <span class="s">&quot;Transfer 40 from u1 to u2&quot;</span>, <span class="s">&quot;transfer&quot;</span>, {<span class="s">&quot;from&quot;</span>: <span class="s">&quot;u1&quot;</span>, <span class="s">&quot;to&quot;</span>: <span class="s">&quot;u2&quot;</span>, <span class="s">&quot;amount&quot;</span>: <span class="n">40</span>}, obs_a, <span class="k">True</span>)
+]
+outcome_a = harness.<span class="f">verify_outcome</span>()
+metrics_a = harness.<span class="f">evaluate_trajectory</span>(trace_efficient, golden_steps=<span class="n">1</span>)
+
+<span class="k">print</span>(<span class="s">&quot;=== Scenario A: Efficient Agent ===&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;Task Succeeded:&quot;</span>, outcome_a)
+<span class="k">print</span>(<span class="s">&quot;Trajectory Metrics:&quot;</span>, metrics_a)
+
+<span class="c"># Scenario B: Flawed agent with bad parameters, repetition loop, then recovery</span>
+sandbox.<span class="f">reset</span>()
+obs_b1 = sandbox.<span class="f">transfer</span>(<span class="s">&quot;u1&quot;</span>, <span class="s">&quot;u99&quot;</span>, <span class="n">40</span>)  <span class="c"># Invalid user error</span>
+obs_b2 = sandbox.<span class="f">transfer</span>(<span class="s">&quot;u1&quot;</span>, <span class="s">&quot;u99&quot;</span>, <span class="n">40</span>)  <span class="c"># Repeated mistake (loop!)</span>
+obs_b3 = sandbox.<span class="f">transfer</span>(<span class="s">&quot;u1&quot;</span>, <span class="s">&quot;u2&quot;</span>, <span class="n">40</span>)   <span class="c"># Corrected action</span>
+
+trace_flawed = [
+    <span class="f">TrajectoryStep</span>(<span class="n">1</span>, <span class="s">&quot;Transfer to u99&quot;</span>, <span class="s">&quot;transfer&quot;</span>, {<span class="s">&quot;from&quot;</span>: <span class="s">&quot;u1&quot;</span>, <span class="s">&quot;to&quot;</span>: <span class="s">&quot;u99&quot;</span>, <span class="s">&quot;amount&quot;</span>: <span class="n">40</span>}, obs_b1, <span class="k">False</span>),
+    <span class="f">TrajectoryStep</span>(<span class="n">2</span>, <span class="s">&quot;Retry transfer to u99&quot;</span>, <span class="s">&quot;transfer&quot;</span>, {<span class="s">&quot;from&quot;</span>: <span class="s">&quot;u1&quot;</span>, <span class="s">&quot;to&quot;</span>: <span class="s">&quot;u99&quot;</span>, <span class="s">&quot;amount&quot;</span>: <span class="n">40</span>}, obs_b2, <span class="k">False</span>),
+    <span class="f">TrajectoryStep</span>(<span class="n">3</span>, <span class="s">&quot;Correct target to u2&quot;</span>, <span class="s">&quot;transfer&quot;</span>, {<span class="s">&quot;from&quot;</span>: <span class="s">&quot;u1&quot;</span>, <span class="s">&quot;to&quot;</span>: <span class="s">&quot;u2&quot;</span>, <span class="s">&quot;amount&quot;</span>: <span class="n">40</span>}, obs_b3, <span class="k">True</span>),
+]
+outcome_b = harness.<span class="f">verify_outcome</span>()
+metrics_b = harness.<span class="f">evaluate_trajectory</span>(trace_flawed, golden_steps=<span class="n">1</span>)
+
+<span class="k">print</span>(<span class="s">&quot;\n=== Scenario B: Flawed Trajectory Agent ===&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;Task Succeeded:&quot;</span>, outcome_b)
+<span class="k">print</span>(<span class="s">&quot;Trajectory Metrics:&quot;</span>, metrics_b)
+</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Relying exclusively on outcome metrics: An agent that succeeds only after twenty broken retries and heavy hallucination is fragile and will fail catastrophically in production.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Evaluating against live production APIs: Unsandboxed testing is non-deterministic, introduces rate limits, risks destructive state modification, and cannot be reproduced.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Ignoring looping behaviour: Agents that lack loop detection will exhaust maximum context length and incur massive API bills when tools return errors.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>Why is evaluating an agent's trajectory just as important as verifying its final outcome?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because trajectory length is always zero for good models</span></button><button class="opt" type="button"><b>B</b><span>Because outcomes cannot be measured by computers</span></button><button class="opt" type="button"><b>C</b><span>Because an agent may achieve the final outcome through inefficient random trials, thrashing loops, or dangerous side-effects; trajectory evaluation quantifies cost, speed, reliability, and safety</span></button><button class="opt" type="button"><b>D</b><span>Because trajectories are required to compile Python code</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> An agent that accidentally reaches the goal after 40 failing API calls and massive hallucination is brittle, expensive, and unsafe. Trajectory evaluation measures whether the agent reasoned effectively and acted efficiently.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>What constitutes a 'thrashing' or infinite loop failure mode in autonomous agents?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>When an agent completes a task in a single step</span></button><button class="opt" type="button"><b>B</b><span>When the computer processor overheats during training</span></button><button class="opt" type="button"><b>C</b><span>When the user types too many messages in chat</span></button><button class="opt" type="button"><b>D</b><span>When an agent repeatedly invokes the exact same tool with identical failing parameters across multiple consecutive steps without adapting to the error observation</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Thrashing occurs when an agent fails to assimilate error feedback in its Thought step, blindly repeating the identical failed tool invocation until hitting hard execution step limits.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>Why must test harnesses for autonomous agents utilise sandboxed mock environments with reset capabilities?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To make test runs run without needing Python installed</span></button><button class="opt" type="button"><b>B</b><span>To ensure evaluation runs are strictly deterministic, isolated from external network volatility, safe from destructive data mutations, and easily reproducible across benchmark iterations</span></button><button class="opt" type="button"><b>C</b><span>Because foundation models cannot connect to TCP sockets</span></button><button class="opt" type="button"><b>D</b><span>To prevent agents from generating natural language</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Sandboxes ensure that every test run starts with an identical pristine state fixture, isolating tests from live API changes, flakiness, rate limits, or accidental data destruction.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/the-agent-loop-react/"><small class="kicker">Concept</small><b>ReAct Agent Loop</b></a><a href="../../concepts/evaluating-llms-benchmarks-and-judges/"><small class="kicker">Concept</small><b>Evaluating LLMs</b></a><a href="../../concepts/tool-use-and-function-calling/"><small class="kicker">Concept</small><b>Tool Use &amp; Function Calling</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/the-agent-loop-react/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · AI</small><b>ReAct Agent Loop</b></a>
+    <a class="pager-next" href="../../concepts/planning-and-task-decomposition/"><small>Next · AI <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Planning &amp; Task Decomposition</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

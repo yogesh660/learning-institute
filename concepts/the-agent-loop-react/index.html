@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>The agent loop: ReAct · Learn · Yogesh Awate</title>
+<meta name="description" content="The ReAct (Reasoning and Acting) framework establishes the foundational architectural paradigm for autonomous LLM agents. By interleaving chain-of-thought reasoning steps with environment interactions through external tool execution, ReAct enables models to perform dynamic planning, query real-time information, verify intermediate results, and self-correct trajectory errors. The execution loop operates as a cyclic state machine: perceiving current environment observations, formulating internal thoughts, selecting and parameterising tool actions, observing execution feedback, and iterating until reaching a termination condition or final answer.">
+<meta property="og:title" content="The agent loop: ReAct · Learn · Yogesh Awate">
+<meta property="og:description" content="The ReAct (Reasoning and Acting) framework establishes the foundational architectural paradigm for autonomous LLM agents. By interleaving chain-of-thought reasoning steps with environment interactions through external tool execution, ReAct enables models to perform dynamic planning, query real-time information, verify intermediate results, and self-correct trajectory errors. The execution loop operates as a cyclic state machine: perceiving current environment observations, formulating internal thoughts, selecting and parameterising tool actions, observing execution feedback, and iterating until reaching a termination condition or final answer.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="the-agent-loop-react">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ai">Path 11 · AI</a> / Agents / Lesson 27 of 42</span>
+    <h1 class="case-title">The agent loop: ReAct</h1>
+    <p class="lede rise" style="--d:3">The ReAct (Reasoning and Acting) framework establishes the foundational architectural paradigm for autonomous LLM agents. By interleaving chain-of-thought reasoning steps with environment interactions through external tool execution, ReAct enables models to perform dynamic planning, query real-time information, verify intermediate results, and self-correct trajectory errors. The execution loop operates as a cyclic state machine: perceiving current environment observations, formulating internal thoughts, selecting and parameterising tool actions, observing execution feedback, and iterating until reaching a termination condition or final answer.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">20 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/tool-use-and-function-calling/">Tool Use &amp; Function Calling</a> <a href="../../concepts/intelligent-agents-and-environments/">Agents &amp; Environments</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>AI · Agents</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Pure large language models suffer from two symmetric limitations: Chain-of-Thought (CoT) reasoning allows deep internal deliberation but is cut off from the outside world, unable to verify facts or query real-time data; while pure action systems (such as blind API calling) execute commands without deliberate planning, making them fragile to errors and unable to adapt when unexpected results occur. The ReAct framework synergises reasoning and acting into a unified cyclic loop. How does an agent maintain working memory, deliberate on observations, and safely navigate complex multi-step objectives?</p>
+        <p>Synergising Reasoning and Action: In human problem solving, we constantly alternate between thinking and doing. When cooking a new recipe, you don't plan 50 actions blindly upfront, nor do you sit motionless thinking without touching ingredients. You read a step (observation), deliberate on timing and proportions (thought), measure an ingredient or adjust the burner (action), inspect the colour and aroma (observation), and decide next steps. ReAct translates this human cognition pattern into AI systems.</p>
+        <p>The Thought-Action-Observation Loop:
+- Thought: The agent generates an internal reasoning trace analysing the current state, diagnosing previous errors, and breaking down sub-goals ("I need the stock price of Apple on 12 May 2024. First I must query the financial API").
+- Action: The agent outputs a structured tool invocation with specific arguments (Action: stock_ticker(symbol='AAPL', date='2024-05-12')).
+- Observation: The external environment or sandbox executes the tool and injects the raw result back into the prompt context (Observation: 182.52 USD).
+- Loop Continuation: The agent absorbs the observation, reasons about whether the goal has been achieved, and either triggers another action or outputs Final Answer: ...</p>
+        <p>Error Recovery and Self-Correction: When an API fails with a 404 or invalid parameter error, a naive script crashes. A ReAct agent reads the error message inside its Observation step, reflects in its Thought step ("The ticker was not found. Perhaps I should search for the company's full corporate name first"), and takes corrective action.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Think of an investigator solving a mystery. If they only sit in an armchair thinking (Chain-of-Thought), they cannot discover new physical clues. If they run around opening random doors and arresting people without thinking (blind Action), they cause chaos. The successful detective uses ReAct: they inspect the crime scene (Observation), deduce that the suspect must have fled through the window (Thought), check the alleyway CCTV footage (Action), view the footage showing a blue sedan (Observation), deduce that they need the registration database (Thought), query the database (Action), and finally solve the case (Final Answer).</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>ReAct Trajectory Representation and State Space</h3><div class="formula">\tau_t = \left(x, \, r_1, a_1, o_1, \, r_2, a_2, o_2, \, \dots, \, r_t, a_t, o_t\right) \in (\mathcal{X} \times (\mathcal{R} \times \mathcal{A} \times \mathcal{O})^t)</div><p>The agent trajectory \tau_t at step t begins with user prompt x \in \mathcal{X} followed by triples of thoughts r_i \in \mathcal{R} (reasoning traces), actions a_i \in \mathcal{A} (external tool commands), and observations o_i \in \mathcal{O} (environment feedback received from execution \mathcal{E}(a_i)).</p></li>
+          <li><h3>Autoregressive Factorisation of Reason-Action Policy</h3><div class="formula">p(\tau_T \mid x) = \prod_{t=1}^T p_\theta(r_t \mid \tau_{t-1}, x) \cdot p_\theta(a_t \mid \tau_{t-1}, r_t, x), \quad o_t \sim p_{\text{env}}(o_t \mid a_t, s_t)</div><p>The language model \theta generates thoughts r_t and actions a_t conditioned on complete historical context \tau_{t-1}. Unlike ungrounded generation, observations o_t are sampled from the external environment p_{\text{env}} at environmental state s_t, grounding future reasoning in verifiable external reality.</p></li>
+          <li><h3>Loop Guardrail and Convergence Bound</h3><div class="formula">\text{StopCondition}(\tau_t) = \mathbb{I}\Big(a_t = \text{Finish}(y)\Big) \lor \mathbb{I}\Big(t \ge T_{\max}\Big) \lor \mathbb{I}\Big(\text{Cost}(\tau_t) \ge C_{\max}\Big)</div><p>Because autonomous agent loops can experience degenerative behaviour such as infinite repetition loops or runaway API calls, safety guardrails terminate execution whenever the model signals completion, hits step limit T_{\max}, or exceeds monetary budget C_{\max}.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>ReAct synergises Chain-of-Thought reasoning with external environment actions into an interleaved Thought-Action-Observation loop.</li><li>Reasoning traces allow the agent to decompose goals, track progress, and diagnose execution errors, while actions interact with dynamic external environments.</li><li>Observations from tools are injected directly back into the agent's prompt history, allowing it to adapt to real-world feedback in real time.</li><li>Safety guardrails including maximum step limits and tool parameter validation are essential to prevent infinite thrashing loops.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="s">&quot;&quot;&quot;
+The ReAct Agent Execution Loop
+Demonstrating Thought-Action-Observation interleaving, tool execution,
+working memory updates, and safety step limits.
+&quot;&quot;&quot;</span>
+
+<span class="k">import</span> re
+<span class="k">from</span> typing <span class="k">import</span> Callable, Dict, Any, List
+
+<span class="k">class</span> ToolRegistry:
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>):
+        <span class="k">self</span>.tools: Dict[str, Callable] = {}
+        <span class="k">self</span>.descriptions: Dict[str, str] = {}
+
+    <span class="k">def</span> <span class="f">register</span>(<span class="k">self</span>, name: str, desc: str):
+        <span class="k">def</span> <span class="f">decorator</span>(func: Callable):
+            <span class="k">self</span>.tools[name] = func
+            <span class="k">self</span>.descriptions[name] = desc
+            <span class="k">return</span> func
+        <span class="k">return</span> decorator
+
+    <span class="k">def</span> <span class="f">execute</span>(<span class="k">self</span>, tool_name: str, argument: str) -&gt; str:
+        <span class="k">if</span> tool_name <span class="k">not</span> <span class="k">in</span> <span class="k">self</span>.tools:
+            <span class="k">return</span> <span class="s">f&quot;Error: Tool '{tool_name}' does not exist. Available tools: {list(self.tools.keys())}&quot;</span>
+        try:
+            <span class="k">return</span> <span class="f">str</span>(<span class="k">self</span>.tools[tool_name](argument.<span class="f">strip</span>()))
+        except Exception <span class="k">as</span> e:
+            <span class="k">return</span> <span class="s">f&quot;Execution Error in '{tool_name}': {str(e)}&quot;</span>
+
+<span class="c"># Initialise Tool Registry</span>
+registry = <span class="f">ToolRegistry</span>()
+
+@registry.<span class="f">register</span>(<span class="s">&quot;calculate&quot;</span>, <span class="s">&quot;Evaluate basic arithmetic expressions. Argument: mathematical expression string.&quot;</span>)
+<span class="k">def</span> <span class="f">tool_calculate</span>(expr: str) -&gt; str:
+    <span class="c"># Safe evaluator for demonstration</span>
+    clean = re.<span class="f">sub</span>(r<span class="s">'[^0-9+\-*/(). ]'</span>, <span class="s">''</span>, expr)
+    <span class="k">return</span> <span class="f">str</span>(<span class="f">eval</span>(clean))
+
+@registry.<span class="f">register</span>(<span class="s">&quot;lookup_price&quot;</span>, <span class="s">&quot;Look up product pricing from warehouse catalog. Argument: item name.&quot;</span>)
+<span class="k">def</span> <span class="f">tool_lookup_price</span>(item: str) -&gt; str:
+    db = {<span class="s">&quot;laptop&quot;</span>: <span class="n">1200</span>, <span class="s">&quot;monitor&quot;</span>: <span class="n">350</span>, <span class="s">&quot;docking station&quot;</span>: <span class="n">150</span>, <span class="s">&quot;mouse&quot;</span>: <span class="n">25</span>}
+    key = item.<span class="f">lower</span>().<span class="f">strip</span>()
+    <span class="k">if</span> key <span class="k">in</span> db:
+        <span class="k">return</span> <span class="s">f&quot;{db[key]} USD&quot;</span>
+    <span class="k">return</span> <span class="s">f&quot;Item '{item}' not found in catalog.&quot;</span>
+
+<span class="k">class</span> ReActAgent:
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, registry: ToolRegistry, max_steps: int = <span class="n">5</span>):
+        <span class="k">self</span>.registry = registry
+        <span class="k">self</span>.max_steps = max_steps
+
+    <span class="k">def</span> <span class="f">_mock_llm_decide</span>(<span class="k">self</span>, trajectory: str) -&gt; str:
+        <span class="s">&quot;&quot;&quot;
+        Simulated LLM simulating Thought -&gt; Action sequence conditioned on trajectory.
+        In production, this calls a language model API with stop tokens.
+        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s">&quot;Observation:&quot;</span> <span class="k">not</span> <span class="k">in</span> trajectory:
+            <span class="k">return</span> (
+                <span class="s">&quot;Thought: The user wants to know the total price for 2 monitors and 1 docking station. &quot;</span>
+                <span class="s">&quot;First, I need to lookup the unit price of a monitor.\n&quot;</span>
+                <span class="s">&quot;Action: lookup_price\n&quot;</span>
+                <span class="s">&quot;Action Input: monitor&quot;</span>
+            )
+        <span class="k">elif</span> <span class="s">&quot;monitor&quot;</span> <span class="k">in</span> trajectory <span class="k">and</span> <span class="s">&quot;docking station&quot;</span> <span class="k">not</span> <span class="k">in</span> trajectory:
+            <span class="k">return</span> (
+                <span class="s">&quot;Thought: The monitor costs 350 USD. Now I need to check the price of a docking station.\n&quot;</span>
+                <span class="s">&quot;Action: lookup_price\n&quot;</span>
+                <span class="s">&quot;Action Input: docking station&quot;</span>
+            )
+        <span class="k">elif</span> <span class="s">&quot;docking station&quot;</span> <span class="k">in</span> trajectory <span class="k">and</span> <span class="s">&quot;calculate&quot;</span> <span class="k">not</span> <span class="k">in</span> trajectory:
+            <span class="k">return</span> (
+                <span class="s">&quot;Thought: A docking station costs 150 USD and a monitor costs 350 USD. &quot;</span>
+                <span class="s">&quot;Now I will calculate: (2 * 350) + 150.\n&quot;</span>
+                <span class="s">&quot;Action: calculate\n&quot;</span>
+                <span class="s">&quot;Action Input: (2 * 350) + 150&quot;</span>
+            )
+        <span class="k">else</span>:
+            <span class="k">return</span> (
+                <span class="s">&quot;Thought: The calculation yielded 850. I now have all required facts to conclude.\n&quot;</span>
+                <span class="s">&quot;Final Answer: The total cost for 2 monitors and 1 docking station is 850 USD.&quot;</span>
+            )
+
+    <span class="k">def</span> <span class="f">run</span>(<span class="k">self</span>, user_objective: str) -&gt; Dict[str, Any]:
+        <span class="s">&quot;&quot;&quot;Execute the cyclic ReAct loop.&quot;&quot;&quot;</span>
+        <span class="k">print</span>(<span class="s">f&quot;=== Starting ReAct Agent Loop for Objective: '{user_objective}' ===&quot;</span>)
+        trajectory = <span class="s">f&quot;Question: {user_objective}\n&quot;</span>
+        step = <span class="n">1</span>
+
+        <span class="k">while</span> step &lt;= <span class="k">self</span>.max_steps:
+            <span class="k">print</span>(<span class="s">f&quot;\n--- Step {step} ---&quot;</span>)
+            <span class="c"># 1. Generate Thought and Action</span>
+            llm_output = <span class="k">self</span>.<span class="f">_mock_llm_decide</span>(trajectory)
+            trajectory += llm_output + <span class="s">&quot;\n&quot;</span>
+
+            <span class="c"># Check for Final Answer termination</span>
+            <span class="k">if</span> <span class="s">&quot;Final Answer:&quot;</span> <span class="k">in</span> llm_output:
+                final_answer = llm_output.<span class="f">split</span>(<span class="s">&quot;Final Answer:&quot;</span>)[<span class="n">1</span>].<span class="f">strip</span>()
+                <span class="k">print</span>(<span class="s">f&quot;[Agent Decided] {llm_output}&quot;</span>)
+                <span class="k">return</span> {<span class="s">&quot;status&quot;</span>: <span class="s">&quot;SUCCESS&quot;</span>, <span class="s">&quot;steps&quot;</span>: step, <span class="s">&quot;final_answer&quot;</span>: final_answer, <span class="s">&quot;trace&quot;</span>: trajectory}
+
+            <span class="c"># 2. Parse Action and Action Input</span>
+            action_match = re.<span class="f">search</span>(r<span class="s">&quot;Action:\s*([a-zA-Z0-9_]+)&quot;</span>, llm_output)
+            input_match = re.<span class="f">search</span>(r<span class="s">&quot;Action Input:\s*(.+)&quot;</span>, llm_output)
+
+            <span class="k">if</span> <span class="k">not</span> action_match <span class="k">or</span> <span class="k">not</span> input_match:
+                <span class="k">print</span>(<span class="s">f&quot;[Parse Error] Failed to parse Action/Input from:\n{llm_output}&quot;</span>)
+                <span class="k">return</span> {<span class="s">&quot;status&quot;</span>: <span class="s">&quot;FAILED_PARSE&quot;</span>, <span class="s">&quot;steps&quot;</span>: step, <span class="s">&quot;trace&quot;</span>: trajectory}
+
+            tool_name = action_match.<span class="f">group</span>(<span class="n">1</span>).<span class="f">strip</span>()
+            tool_input = input_match.<span class="f">group</span>(<span class="n">1</span>).<span class="f">strip</span>()
+
+            <span class="k">print</span>(<span class="s">f&quot;Thought: {re.search(r'Thought:(.*?)(?=Action:|$)', llm_output, re.DOTALL).group(1).strip()}&quot;</span>)
+            <span class="k">print</span>(<span class="s">f&quot;Action: {tool_name}({tool_input})&quot;</span>)
+
+            <span class="c"># 3. Execute Tool Environment</span>
+            observation = <span class="k">self</span>.registry.<span class="f">execute</span>(tool_name, tool_input)
+            <span class="k">print</span>(<span class="s">f&quot;Observation: {observation}&quot;</span>)
+
+            <span class="c"># 4. Ingest Observation back into Trajectory</span>
+            trajectory += <span class="s">f&quot;Observation: {observation}\n&quot;</span>
+            step += <span class="n">1</span>
+
+        <span class="k">print</span>(<span class="s">&quot;\n[Safety Limit] Exceeded maximum allowed steps.&quot;</span>)
+        <span class="k">return</span> {<span class="s">&quot;status&quot;</span>: <span class="s">&quot;MAX_STEPS_EXCEEDED&quot;</span>, <span class="s">&quot;steps&quot;</span>: step, <span class="s">&quot;trace&quot;</span>: trajectory}
+
+<span class="c"># --- Demonstration Run ---</span>
+agent = <span class="f">ReActAgent</span>(registry, max_steps=<span class="n">5</span>)
+result = agent.<span class="f">run</span>(<span class="s">&quot;What is the total price for 2 monitors and 1 docking station?&quot;</span>)
+
+<span class="k">print</span>(<span class="s">&quot;\n=== Agent Run Summary ===&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;Status:&quot;</span>, result[<span class="s">&quot;status&quot;</span>])
+<span class="k">print</span>(<span class="s">&quot;Steps Taken:&quot;</span>, result[<span class="s">&quot;steps&quot;</span>])
+<span class="k">print</span>(<span class="s">&quot;Final Output:&quot;</span>, result[<span class="s">&quot;final_answer&quot;</span>])
+</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Running without step limits: When an agent encounters an unresolvable error, it will repeatedly query the broken tool indefinitely, draining token budgets and crashing servers.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Brittle regex parsing of actions: Standard LLM outputs often vary spacing or casing; robust agents use structured output modes (JSON schema / function calling) or resilient grammar parsers.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Over-reliance on reasoning without checking observations: Failing to condition subsequent thoughts strictly on the returned tool output leads to cascading delusional loops.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>Why does ReAct outperform pure Chain-of-Thought (CoT) on multi-step fact-seeking tasks?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because CoT relies solely on static internal parametric knowledge and cannot fetch live data or verify facts, whereas ReAct executes external tools and grounds its reasoning on dynamic observations</span></button><button class="opt" type="button"><b>B</b><span>Because ReAct requires no training data or prompt</span></button><button class="opt" type="button"><b>C</b><span>Because CoT cannot generate mathematical expressions</span></button><button class="opt" type="button"><b>D</b><span>Because ReAct disables the transformer's attention layers during reasoning</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Pure Chain-of-Thought is isolated from the physical world and prone to hallucinating facts or dates. ReAct interleaves reasoning with external tool calls (APIs, search engines, databases), grounding its reasoning in verifiable observations.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>What is the purpose of the 'Observation' step in the ReAct loop?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To compress the context window using vector quantization</span></button><button class="opt" type="button"><b>B</b><span>To feed the real output of an external tool or environment execution back into the agent's context window, allowing subsequent thoughts to be conditioned on actual results</span></button><button class="opt" type="button"><b>C</b><span>To let human supervisors manually approve every token</span></button><button class="opt" type="button"><b>D</b><span>To reset the agent's memory to zero</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The Observation step injects the environment's response (API JSON, database rows, arithmetic answer, or error messages) into the working prompt, providing empirical evidence for the agent's next Thought step.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>How does a ReAct agent handle an unexpected API error (such as a 404 Not Found)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The agent converts the error code into a floating point number</span></button><button class="opt" type="button"><b>B</b><span>The entire server automatically reboots</span></button><button class="opt" type="button"><b>C</b><span>The error string is injected as an Observation; the agent's next Thought step interprets the error and plans an alternative strategy or corrected search query</span></button><button class="opt" type="button"><b>D</b><span>The agent crashes immediately and deletes its weights</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Unlike deterministic scripts that throw fatal exceptions, an agent absorbs the error message as an observation, reflects on the failure mode in its next thought, and autonomously initiates corrective actions.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/tool-use-and-function-calling/"><small class="kicker">Concept</small><b>Tool Use &amp; Function Calling</b></a><a href="../../concepts/intelligent-agents-and-environments/"><small class="kicker">Concept</small><b>Agents &amp; Environments</b></a><a href="../../concepts/prompting-and-in-context-learning/"><small class="kicker">Concept</small><b>Prompting &amp; In-Context Learning</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/graphrag-and-multi-hop-retrieval/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · AI</small><b>GraphRAG &amp; Multi-Hop Retrieval</b></a>
+    <a class="pager-next" href="../../concepts/agent-evaluation-and-test-harnesses/"><small>Next · AI <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Agent Evaluation</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

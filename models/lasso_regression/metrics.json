@@ -1,0 +1,17 @@
+{
+  "dataset": "diabetes progression sample",
+  "summary": "Lasso (CV-tuned alpha) trained on 80% of the diabetes progression sample (Target as target), scored on a held-out 20%. The baseline always predicts the training mean.",
+  "model_label": "Lasso (CV-tuned alpha)",
+  "baseline_label": "Predict the mean",
+  "metrics": {
+    "RMSE": 5.6297,
+    "MAE": 4.8693,
+    "R²": 0.9526
+  },
+  "baseline": {
+    "RMSE": 25.8784,
+    "MAE": 21.3137,
+    "R²": -0.0013
+  },
+  "generated": "generated 2026-10-28"
+}

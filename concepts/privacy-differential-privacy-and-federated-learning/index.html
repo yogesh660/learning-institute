@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Privacy-Preserving Machine Learning: Differential Privacy and Federated Learning · Learn · Yogesh Awate</title>
+<meta name="description" content="The mathematical guarantees of Differential Privacy and decentralised training mechanics of Federated Learning to protect confidential user data.">
+<meta property="og:title" content="Privacy-Preserving Machine Learning: Differential Privacy and Federated Learning · Learn · Yogesh Awate">
+<meta property="og:description" content="The mathematical guarantees of Differential Privacy and decentralised training mechanics of Federated Learning to protect confidential user data.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="privacy-differential-privacy-and-federated-learning">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ai">Path 11 · AI</a> / Safety and society / Lesson 40 of 42</span>
+    <h1 class="case-title">Privacy-Preserving Machine Learning: Differential Privacy and Federated Learning</h1>
+    <p class="lede rise" style="--d:3">The mathematical guarantees of Differential Privacy and decentralised training mechanics of Federated Learning to protect confidential user data.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="3"><i><b></b></i>Advanced</span></span>
+      <span class="tagline">18 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>AI · Safety and society</dd>
+          <dt>Level</dt><dd>Advanced</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Machine learning models trained on sensitive user data are vulnerable to membership inference and training data reconstruction attacks. Privacy-Preserving Machine Learning (PPML) mitigates these threats through rigorous mathematical frameworks: Differential Privacy (DP) guarantees plausible deniability via calibrated noise injection, while Federated Learning (FL) trains models collaboratively across decentralised edge devices without centralizing private data.</p>
+        <p>Deep neural networks have enormous capacity and can memorise rare training outliers (like a patient's clinical diagnosis or a user's credit card number). An attacker with model access can launch a Membership Inference Attack to determine if a specific person was in the training dataset, or prompt an LLM to regurgitate memorised secrets.</p>
+        <p>Differential Privacy (DP) provides a rigorous mathematical definition of privacy: the output of a computation should be virtually indistinguishable whether any single individual's data is included or excluded from the dataset. In DP-SGD (Differentially Private Stochastic Gradient Descent), this is achieved by clipping per-sample gradients to a maximum norm $C$ and adding Gaussian noise $\sigma$. Federated Learning complements this by keeping data on client devices (e.g. mobile phones) and transmitting only model weight updates, aggregated via algorithms like FedAvg.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine a public survey asking citizens if they have committed tax fraud. If respondents answer truthfully, nobody participates for fear of prosecution. Under randomised response (Differential Privacy), every participant flips a coin: if heads, they answer truthfully; if tails, they answer "yes". A statistician can still reconstruct the exact population percentage mathematically, yet any individual respondent has complete legal plausible deniability.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Define privacy budget $(\epsilon, \delta)$: establish the maximum allowable privacy loss $\epsilon$ and failure probability $\delta$ for the application.</li><li>Implement per-sample gradient clipping: during training, clip the $L_2$ norm of every individual sample gradient to maximum threshold $C$.</li><li>Inject calibrated noise: add Gaussian noise scaled by noise multiplier $\sigma$ and clipping bound $C$ to the aggregated mini-batch gradient.</li><li>Track cumulative privacy loss: monitor privacy budget consumption across training iterations using Rényi Differential Privacy (RDP) accountants.</li><li>Distribute decentralised training (FL): broadcast global model weights to participating edge clients, train locally for $E$ epochs on device data.</li><li>Aggregate model updates (FedAvg): average client parameter updates on the central server weighted by each client's local dataset size.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Differential Privacy Definition ($(\epsilon, \delta)$-DP)</h3><div class="formula">P(\mathcal{M}(D) \in S) \le e^\epsilon P(\mathcal{M}(D') \in S) + \delta</div><p>Guarantees that randomised mechanism $\mathcal{M}$ outputs nearly identical distributions on any two neighbouring datasets $D, D'$ differing by at most one individual.</p></li>
+          <li><h3>Federated Averaging (FedAvg) Update</h3><div class="formula">w_{t+1} = \sum_{k=1}^K \frac{n_k}{n} w_{t+1}^k, \quad w_{t+1}^k = w_t - \eta \nabla F_k(w_t)</div><p>Aggregates decentralised weights from $K$ client devices weighted by their local sample count $n_k$ relative to total samples $n$.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Differential Privacy mathematically bounds the privacy risk of individuals contributing to a machine learning dataset.</li><li>DP-SGD clips per-sample gradients and adds calibrated Gaussian noise to prevent memorisation of outliers.</li><li>Federated Learning trains models collaboratively across decentralised devices, ensuring raw training data never leaves client hardware.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">def</span> <span class="f">dp_sgd_step</span>(gradients, clip_norm=<span class="n">1.0</span>, noise_multiplier=<span class="n">0.5</span>):
+    <span class="s">&quot;&quot;&quot;Simulates a Differentially Private SGD gradient aggregation step.&quot;&quot;&quot;</span>
+    <span class="c"># 1. Per-sample gradient clipping</span>
+    clipped_grads = []
+    <span class="k">for</span> g <span class="k">in</span> gradients:
+        norm = np.linalg.<span class="f">norm</span>(g)
+        clip_factor = <span class="f">min</span>(<span class="n">1.0</span>, clip_norm / <span class="f">max</span>(norm, <span class="n">1e-8</span>))
+        clipped_grads.<span class="f">append</span>(g * clip_factor)
+        
+    clipped_grads = np.<span class="f">array</span>(clipped_grads)
+    
+    <span class="c"># 2. Sum clipped gradients</span>
+    summed_grad = np.<span class="f">sum</span>(clipped_grads, axis=<span class="n">0</span>)
+    
+    <span class="c"># 3. Add calibrated Gaussian noise</span>
+    sigma = noise_multiplier * clip_norm
+    noise = np.random.<span class="f">normal</span>(<span class="n">0</span>, sigma, size=summed_grad.shape)
+    
+    <span class="c"># Private average gradient</span>
+    private_grad = (summed_grad + noise) / <span class="k">len</span>(gradients)
+    <span class="k">return</span> private_grad
+
+<span class="k">def</span> <span class="f">federated_averaging</span>(client_weights, client_sizes):
+    <span class="s">&quot;&quot;&quot;Computes FedAvg weighted parameter aggregation across clients.&quot;&quot;&quot;</span>
+    total_samples = <span class="f">sum</span>(client_sizes)
+    global_weights = np.<span class="f">zeros_like</span>(client_weights[<span class="n">0</span>])
+    <span class="k">for</span> w, n <span class="k">in</span> <span class="f">zip</span>(client_weights, client_sizes):
+        global_weights += (n / total_samples) * w
+    <span class="k">return</span> global_weights
+
+<span class="c"># Simulation: 5 sample gradients</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+sample_grads = [np.<span class="f">array</span>([<span class="n">2.5</span>, -<span class="n">1.2</span>, <span class="n">0.4</span>]), np.<span class="f">array</span>([<span class="n">0.1</span>, <span class="n">0.2</span>, <span class="n">0.1</span>]), 
+                np.<span class="f">array</span>([<span class="n">8.0</span>, <span class="n">4.0</span>, -<span class="n">2.0</span>])] <span class="c"># Sample 3 is an outlier!</span>
+
+priv_grad = <span class="f">dp_sgd_step</span>(sample_grads, clip_norm=<span class="n">1.5</span>, noise_multiplier=<span class="n">0.8</span>)
+<span class="k">print</span>(<span class="s">&quot;Differentially Private Aggregated Gradient:&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;  Private Gradient: {priv_grad.round(4)}&quot;</span>)
+
+<span class="c"># Federated Averaging simulation across 3 clients</span>
+client_w = [np.<span class="f">array</span>([<span class="n">1.2</span>, <span class="n">0.8</span>]), np.<span class="f">array</span>([<span class="n">1.4</span>, <span class="n">0.7</span>]), np.<span class="f">array</span>([<span class="n">1.1</span>, <span class="n">0.9</span>])]
+client_n = [<span class="n">1000</span>, <span class="n">500</span>, <span class="n">1500</span>]
+fed_w = <span class="f">federated_averaging</span>(client_w, client_n)
+<span class="k">print</span>(<span class="s">f&quot;\nFederated Averaged Global Weights: {fed_w.round(4)}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Clipping gradients too aggressively (norm too small), destroying gradient signal and causing model underfitting.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming Federated Learning alone guarantees privacy; gradient updates themselves can leak training data via inversion attacks unless combined with Differential Privacy.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>What is the operational meaning of the parameter $\epsilon$ (epsilon) in Differential Privacy?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The privacy loss budget: smaller $\epsilon$ indicates stronger privacy protection but adds more noise to the output</span></button><button class="opt" type="button"><b>B</b><span>The learning rate of the model</span></button><button class="opt" type="button"><b>C</b><span>The percentage of missing data in the dataset</span></button><button class="opt" type="button"><b>D</b><span>The number of GPUs in the cluster</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In $(\epsilon, \delta)$-DP, $\epsilon$ quantifies the worst-case privacy budget; smaller values enforce tighter privacy guarantees.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>Why does DP-SGD require clipping per-sample gradients before adding noise?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To save disk memory</span></button><button class="opt" type="button"><b>B</b><span>To speed up floating point operations</span></button><button class="opt" type="button"><b>C</b><span>To bound the maximum sensitivity of the gradient sum, ensuring that no single individual sample can exert unlimited influence on the aggregate update</span></button><button class="opt" type="button"><b>D</b><span>To convert negative numbers into positive numbers</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Noise calibration requires knowing the maximum potential impact (sensitivity) of a single record; clipping to $C$ sets that sensitivity bound.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>What is a major challenge in Federated Learning known as "Non-IID client data"?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Clients refuse to accept software updates</span></button><button class="opt" type="button"><b>B</b><span>Device batteries run out of charge</span></button><button class="opt" type="button"><b>C</b><span>Data distributions across different mobile devices vary widely depending on individual user habits, complicating global model convergence</span></button><button class="opt" type="button"><b>D</b><span>Clients do not have internet connections</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Different users exhibit vastly different language, photo, or typing habits. Non-IID distributions cause local client gradients to pull in conflicting directions.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/guardrails-and-red-teaming/"><small class="kicker">Concept</small><b>Guardrails &amp; Red-Teaming</b></a><a href="../../concepts/ci-cd-for-ml/"><small class="kicker">Concept</small><b>CI/CD for ML</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/guardrails-and-red-teaming/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · AI</small><b>Guardrails &amp; Red-Teaming</b></a>
+    <a class="pager-next" href="../../concepts/ai-governance-and-regulation/"><small>Next · AI <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>AI Governance &amp; Regulation</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

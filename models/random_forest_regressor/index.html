@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Random Forest Regression · Learn · Yogesh Awate</title>
+<meta name="description" content="Averages hundreds of deep, decorrelated trees. Little tuning, strong accuracy, hard to overfit by adding trees.">
+<meta property="og:title" content="Random Forest Regression · Learn · Yogesh Awate">
+<meta property="og:description" content="Averages hundreds of deep, decorrelated trees. Little tuning, strong accuracy, hard to overfit by adding trees.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="random_forest_regressor">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-regression">Path 03 · Regression</a> / Trees and ensembles / Lesson 12 of 23</span>
+    <h1 class="case-title">Random Forest Regression</h1>
+    <p class="lede rise" style="--d:3">Averages hundreds of deep, decorrelated trees. Little tuning, strong accuracy, hard to overfit by adding trees.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      <span class="tagline lab">Live lab</span>
+      <span class="prereq">Before this: <a href="../../models/decision_tree_regressor/">Decision tree regressor</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Task</dt><dd>Regression</dd>
+          <dt>Family</dt><dd>Bagging ensemble</dd>
+          <dt>What it learns</dt><dd>B deep trees</dd>
+          <dt>Training cost</dt><dd>$O(B\,p'\,n\log n)$</dd>
+          <dt>Prediction cost</dt><dd>$O(B \cdot \text{depth})$</dd>
+          <dt>In code</dt><dd><code class="no-math">sklearn.<wbr>ensemble.<wbr>RandomForestRegressor</code></dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>How it works</a></li><li><a href="#lab"><span>03</span>Try it</a></li><li><a href="#maths"><span>04</span>The maths</a></li><li><a href="#tuning"><span>05</span>Hyperparameters</a></li><li><a href="#when"><span>06</span>When to use it</a></li><li><a href="#code"><span>07</span>In code</a></li><li><a href="#results"><span>08</span>On real data</a></li><li><a href="#quiz"><span>09</span>Check yourself</a></li><li><a href="#related"><span>10</span>Related lessons</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Grow many deep trees, each on a bootstrap sample of the rows and with a random subset of features at every split, then average their predictions. Averaging cancels out the trees’ individual mistakes.</p>
+        <p>A single deep tree has low bias but high variance. Averaging $B$ independent estimates divides variance by $B$, but trees trained on the same data are correlated, and correlation limits the gain. Random forests attack the correlation by forcing each split to consider only a random subset of features.</p>
+        <p>Each tree only sees about 63% of the rows. The rest are "out-of-bag", a free validation set for that tree. Combining them gives an honest error estimate without a separate hold-out.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Asking many independent appraisers who each looked at different houses and focused on different details, then averaging their estimates.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> How it works</h2>
+        <ol class="steps"><li>For $b = 1..B$: draw a bootstrap sample of rows.</li><li>Grow a deep tree on it; at each split, consider only a random subset of <code>max_features</code> features.</li><li>Predict by averaging all trees.</li><li>Use out-of-bag predictions to estimate test error and permutation importance.</li></ol>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>03</span> Try it</h2>
+        <p>Each faint line is one tree trained on a bootstrap sample; the bright line is their average.</p>
+        <div class="lab" data-lab="random_forest_regressor" data-kind="models" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>With 1 tree the fit is blocky and noisy. Add trees and watch the average smooth out.</li><li>Note how test RMSE stops improving after a few dozen trees.</li><li>Lower max depth and compare: shallower trees average into a less detailed curve.</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>04</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Variance of an average of correlated trees</h3><div class="formula">$$\operatorname{Var}\Big(\frac1B\sum_b T_b(x)\Big) = \rho\,\sigma^2 + \frac{1-\rho}{B}\,\sigma^2$$</div><p>As $B$ grows the second term vanishes, leaving $\rho\sigma^2$. Feature subsampling lowers the correlation $\rho$, which is where the forest’s strength comes from.</p></li>
+          <li><h3>Out-of-bag fraction</h3><div class="formula">$$P(\text{row not in a bootstrap sample}) = \Big(1 - \tfrac1n\Big)^n \to e^{-1} \approx 0.368$$</div><p>About a third of the rows are left out of each tree and serve as its validation set.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="tuning">
+        <h2 class="h3"><span>05</span> Hyperparameters</h2>
+        <div class="table-wrap"><table class="kv">
+          <thead><tr><th>Setting</th><th>What it does</th><th>Typical choice</th></tr></thead>
+          <tbody><tr><td><span class="hp">n_estimators</span></td><td>Number of trees.</td><td>200–1000; more never overfits, just costs time.</td></tr><tr><td><span class="hp">max_features</span></td><td>Features tried per split.</td><td>1.0 (regression default), or 0.3–0.5 for more decorrelation.</td></tr><tr><td><span class="hp">min_samples_leaf</span></td><td>Leaf size.</td><td>1–5; larger smooths.</td></tr><tr><td><span class="hp">max_depth</span></td><td>Depth cap.</td><td>Usually None.</td></tr></tbody>
+        </table></div>
+      </section>
+      <section class="reveal" id="when">
+        <h2 class="h3"><span>06</span> When to use it</h2>
+        <div class="split2">
+          <div class="box good"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Strengths</h3><ul><li>Strong accuracy with almost no tuning.</li><li>Robust to outliers and irrelevant features.</li><li>Free out-of-bag error estimate; parallel training.</li></ul></div>
+          <div class="box bad"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg> Limitations</h3><ul><li>Large models with slower prediction than a single tree.</li><li>Cannot extrapolate.</li><li>Less interpretable than one tree; impurity importances are biased toward high-cardinality features.</li></ul></div>
+          <div class="box use"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> Reach for it when</h3><p>A reliable, low-effort baseline for almost any tabular problem.</p></div>
+          <div class="box avoid"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Think twice when</h3><p>You need the last few percent of accuracy (try boosting) or tiny, fast models.</p></div>
+        </div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>07</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">from</span> sklearn.ensemble <span class="k">import</span> RandomForestRegressor
+<span class="k">from</span> sklearn.inspection <span class="k">import</span> permutation_importance
+
+rf = <span class="f">RandomForestRegressor</span>(n_estimators=<span class="n">500</span>, max_features=<span class="n">0.5</span>, oob_score=<span class="k">True</span>,
+                           n_jobs=-<span class="n">1</span>, random_state=<span class="n">0</span>).<span class="f">fit</span>(X_tr, y_tr)
+<span class="k">print</span>(<span class="s">&quot;OOB R2:&quot;</span>, <span class="f">round</span>(rf.oob_score_, <span class="n">3</span>), <span class="s">&quot;test R2:&quot;</span>, <span class="f">round</span>(rf.<span class="f">score</span>(X_te, y_te), <span class="n">3</span>))
+imp = <span class="f">permutation_importance</span>(rf, X_te, y_te, n_repeats=<span class="n">10</span>, random_state=<span class="n">0</span>)
+<span class="k">print</span>(<span class="f">sorted</span>(<span class="f">zip</span>(imp.importances_mean.<span class="f">round</span>(<span class="n">3</span>), X.columns), reverse=<span class="k">True</span>)[:<span class="n">5</span>])</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Trusting impurity-based <code>feature_importances_</code>; prefer permutation importance on held-out data.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Tuning <code>n_estimators</code> as if it could overfit. It cannot; it only costs time.</span></li></ul>
+      </section>
+      <section class="reveal" id="results">
+        <h2 class="h3"><span>08</span> On real data</h2>
+        <p>Random forest (400 trees) trained on 80% of the California housing sample (MedHouseVal as target), scored on a held-out 20%. The baseline always predicts the training mean.</p>
+        <div class="table-wrap" style="margin-top:18px"><table class="kv results-table">
+          <thead><tr><th>Metric</th><th>Random forest (400 trees)</th><th>Predict the mean</th></tr></thead>
+          <tbody><tr><td>RMSE</td><td>0.348</td><td>0.957</td></tr><tr><td>MAE</td><td>0.262</td><td>0.815</td></tr><tr><td>R²</td><td>0.868</td><td>-0.000</td></tr></tbody>
+        </table></div>
+        <p class="note">Produced by <a href="https://github.com/yogesh660/ml-model-zoo/blob/main/models/random_forest_regressor/train.py" target="_blank" rel="noopener">models/random_forest_regressor/train.py</a> · generated 2026-10-28. Run it yourself: <code class="no-math">python models/random_forest_regressor/train.py</code></p>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>09</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>Why does a random forest sample features at each split?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To speed up training only</span></button><button class="opt" type="button"><b>B</b><span>To decorrelate the trees, so averaging reduces variance more</span></button><button class="opt" type="button"><b>C</b><span>To handle missing values</span></button><button class="opt" type="button"><b>D</b><span>To reduce bias</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Without it, every tree would split on the same strong feature first and they would make similar mistakes.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>Adding more trees to a random forest generally:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Increases bias</span></button><button class="opt" type="button"><b>B</b><span>Causes overfitting</span></button><button class="opt" type="button"><b>C</b><span>Lowers training time</span></button><button class="opt" type="button"><b>D</b><span>Stabilises predictions; test error plateaus</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> More trees means the average converges; it does not add flexibility to each tree.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>What is the Out-of-Bag (OOB) score in Random Forest Regression?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The variance explained by discarded features</span></button><button class="opt" type="button"><b>B</b><span>The test score on an independent external dataset</span></button><button class="opt" type="button"><b>C</b><span>The percentage of rows containing missing values</span></button><button class="opt" type="button"><b>D</b><span>An evaluation score computed for each training row using only the subset of trees that did not include that row in their bootstrap training sample</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because each bootstrap draw samples with replacement, about 36.8% of rows are left out of any given tree. Evaluating each row against the trees that never saw it gives a built-in cross-validation estimate with zero data leakage.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q4</span>In scikit-learn's RandomForestRegressor, what is the default value of max_features (unless specified otherwise)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$\sqrt{p}$</span></button><button class="opt" type="button"><b>B</b><span>$\log_2(p)$</span></button><button class="opt" type="button"><b>C</b><span>$p / 3$</span></button><button class="opt" type="button"><b>D</b><span>1.0 (all $p$ features considered at every split)</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> While RandomForestClassifier defaults to max_features='sqrt', scikit-learn's RandomForestRegressor historically defaults to max_features=1.0 (all features), though setting max_features=1.0/3 often yields better decorrelation.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q5</span>Why can a Random Forest Regressor NOT extrapolate continuous linear trends outside the range of targets observed in the training set?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because scikit-learn scales targets to $[0, 1]$ internally</span></button><button class="opt" type="button"><b>B</b><span>Because random forests cannot model non-linear functions</span></button><button class="opt" type="button"><b>C</b><span>Because every tree in the forest outputs a weighted average of training target values; an average of numbers bounded in $[y_{\min}, y_{\max}]$ can never exceed $y_{\max}$ or fall below $y_{\min}$</span></button><button class="opt" type="button"><b>D</b><span>Because bootstrap sampling removes the highest and lowest 10% of rows</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> An ensemble of regression trees is still fundamentally a piecewise constant estimator. For inputs beyond the training envelope, instances route to boundary leaves whose predictions cannot exceed the maximum training leaf mean.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q6</span>Why does increasing the number of trees (n_estimators) in a Random Forest from 100 to 1,000 NOT cause overfitting?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because trees added later in training have shallower depth</span></button><button class="opt" type="button"><b>B</b><span>Because scikit-learn automatically increases regularisation as n_estimators increases</span></button><button class="opt" type="button"><b>C</b><span>Adding more trees simply computes the sample mean of more independent bootstrap estimates, which converges by the Law of Large Numbers without expanding individual model capacity</span></button><button class="opt" type="button"><b>D</b><span>Because the learning rate decays to zero after 100 trees</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Unlike gradient boosting where each tree fits previous errors (and can overfit), random forest trees are trained independently. Increasing $B$ reduces Monte Carlo sampling variance until test error plateaus.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q7</span>When evaluating feature importance in Random Forest Regressor, why is permutation importance on held-out data preferred over default MDI (Mean Decrease in Impurity)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>MDI only works for classification tasks</span></button><button class="opt" type="button"><b>B</b><span>Permutation importance guarantees all feature scores sum to 0</span></button><button class="opt" type="button"><b>C</b><span>MDI is computed on training splits and artificially favours continuous or high-cardinality features that provide many split opportunities, whereas permutation importance measures genuine generalisation drop</span></button><button class="opt" type="button"><b>D</b><span>Permutation importance is 10 times faster to compute than MDI</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Impurity-based importance evaluates variance reduction on training data. High-cardinality features can split on idiosyncratic training noise, receiving high MDI despite having zero predictive value on unseen data.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q8</span>If you reduce max_features from 1.0 (all features) down to 0.33 in a Random Forest Regressor, what is the expected impact on individual trees and the ensemble as a whole?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Individual tree bias decreases, but variance increases</span></button><button class="opt" type="button"><b>B</b><span>Individual trees become weaker (higher bias), but their predictions become less correlated (lower $\rho$), allowing ensemble averaging to achieve a larger overall variance reduction</span></button><button class="opt" type="button"><b>C</b><span>The forest requires 10 times fewer trees to converge</span></button><button class="opt" type="button"><b>D</b><span>Individual trees become more correlated, increasing ensemble variance</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Subsetting features forces trees to explore alternative predictive signals. Each tree has slightly higher bias, but the pairwise correlation $\rho$ between trees drops sharply, leading to lower total ensemble variance.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q9</span>How does setting bootstrap=False in RandomForestRegressor alter the algorithm?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It trains every tree on the entire training dataset without replacement, relying solely on random feature subsampling at splits (similar to Extra-Trees)</span></button><button class="opt" type="button"><b>B</b><span>It disables random feature subsampling entirely</span></button><button class="opt" type="button"><b>C</b><span>It enables out-of-bag scoring on 50% of the data</span></button><button class="opt" type="button"><b>D</b><span>It causes the forest to train using gradient boosting</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> With bootstrap=False, row subsampling is disabled. Every tree sees all $n$ training instances, so the only source of tree diversity is the random selection of max_features at each split node.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q10</span>In a dataset of $n = 5$ observations $\{A, B, C, D, E\}$, what is the exact probability that observation $A$ is NOT included in a bootstrap sample of size 5 drawn with replacement?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$1/5 = 20.00\%$</span></button><button class="opt" type="button"><b>B</b><span>$(4/5)^5 = 1{,}024 / 3{,}125 \approx 32.77\%$</span></button><button class="opt" type="button"><b>C</b><span>$(1/5)^5 = 0.032\%$</span></button><button class="opt" type="button"><b>D</b><span>$1 - (4/5)^5 \approx 67.23\%$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> On each draw, the probability of selecting an observation other than $A$ is $4/5 = 0.80$. Across 5 independent draws with replacement, the probability that $A$ is never drawn is $(4/5)^5 = 0.80^5 = 0.32768 \approx 32.77\%$. As $n \to \infty$, this approaches $(1 - 1/n)^n \to e^{-1} \approx 36.79\%$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q11</span>Individual trees in a Random Forest Regressor have variance $\sigma^2 = 9.0$ and pairwise correlation $\rho = 0.20$. What are the ensemble variances when the forest has $B = 4$ trees and in the theoretical limit as $B \to \infty$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>For $B = 4$: $\operatorname{Var} = 7.20$; as $B \to \infty$: $\operatorname{Var} = 3.60$</span></button><button class="opt" type="button"><b>B</b><span>For $B = 4$: $\operatorname{Var} = 3.60$; as $B \to \infty$: $\operatorname{Var} = 1.80$</span></button><button class="opt" type="button"><b>C</b><span>For $B = 4$: $\operatorname{Var} = 2.25$; as $B \to \infty$: $\operatorname{Var} = 0.00$</span></button><button class="opt" type="button"><b>D</b><span>For $B = 4$: $\operatorname{Var} = 4.50$; as $B \to \infty$: $\operatorname{Var} = 2.00$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Ensemble variance is $\operatorname{Var}(\bar{T}) = \rho \sigma^2 + \frac{1 - \rho}{B}\sigma^2$. For $B = 4$: $0.20(9.0) + \frac{0.80}{4}(9.0) = 1.80 + 0.20(9.0) = 1.80 + 1.80 = 3.60$. As $B \to \infty$: the second term vanishes, leaving $\rho \sigma^2 = 0.20 \times 9.0 = 1.80$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q12</span>A Random Forest of 5 trees is evaluated on a row with true target $y = 50.0$. In training, this row was included in the bootstrap samples for Trees 1, 2, and 4, but was out-of-bag for Trees 3 and 5. The five trees predict: Tree 1 ($48.0$), Tree 2 ($52.0$), Tree 3 ($44.0$), Tree 4 ($50.0$), Tree 5 ($46.0$). What are the standard ensemble prediction and the Out-of-Bag (OOB) prediction for this row?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Standard prediction $= 48.0$; OOB prediction $= 45.0$</span></button><button class="opt" type="button"><b>B</b><span>Standard prediction $= 50.0$; OOB prediction $= 48.0$</span></button><button class="opt" type="button"><b>C</b><span>Standard prediction $= 46.0$; OOB prediction $= 44.0$</span></button><button class="opt" type="button"><b>D</b><span>Standard prediction $= 48.0$; OOB prediction $= 50.0$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Standard prediction averages all 5 trees: $(48 + 52 + 44 + 50 + 46) / 5 = 240 / 5 = 48.0$. OOB prediction averages only the trees that did NOT see this row during training (Trees 3 and 5): $(44 + 46) / 2 = 90 / 2 = 45.0$.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>10</span> Related lessons</h2>
+        <div class="related"><a href="../../models/decision_tree_regressor/"><small class="kicker">Regression</small><b>Decision tree regressor</b></a><a href="../../models/gradient_boosting_regressor/"><small class="kicker">Regression</small><b>Gradient boosting regressor</b></a><a href="../../models/random_forest_classifier/"><small class="kicker">Classification</small><b>Random forest classifier</b></a><a href="../../concepts/bias-variance-tradeoff/"><small class="kicker">Concept</small><b>Bias–variance trade-off</b></a><a href="../../concepts/cross-validation/"><small class="kicker">Concept</small><b>Cross-validation</b></a><a href="../../concepts/feature-selection/"><small class="kicker">Concept</small><b>Feature selection</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../models/decision_tree_regressor/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Regression</small><b>Decision tree regressor</b></a>
+    <a class="pager-next" href="../../models/gradient_boosting_regressor/"><small>Next · Regression <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Gradient boosting regressor</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/sequences.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Inference: KV cache, batching, paged attention · Learn · Yogesh Awate</title>
+<meta name="description" content="Autoregressive language model generation is fundamentally memory-bandwidth bound during token-by-token generation. To eliminate the quadratic O(N^2) computation incurred by re-evaluating past token states at every generation step, the Key-Value (KV) cache stores previously computed key and value activation tensors in high-bandwidth GPU memory (HBM). However, naive static memory pre-allocation for the KV cache introduces extreme internal and external memory fragmentation (wasting 60-80% of GPU memory). PagedAttention overcomes this limitation by partitioning KV caches into fixed-size physical memory pages, enabling non-contiguous storage, dynamic allocation, copy-on-write memory sharing across parallel generation paths, and high-throughput continuous batching.">
+<meta property="og:title" content="Inference: KV cache, batching, paged attention · Learn · Yogesh Awate">
+<meta property="og:description" content="Autoregressive language model generation is fundamentally memory-bandwidth bound during token-by-token generation. To eliminate the quadratic O(N^2) computation incurred by re-evaluating past token states at every generation step, the Key-Value (KV) cache stores previously computed key and value activation tensors in high-bandwidth GPU memory (HBM). However, naive static memory pre-allocation for the KV cache introduces extreme internal and external memory fragmentation (wasting 60-80% of GPU memory). PagedAttention overcomes this limitation by partitioning KV caches into fixed-size physical memory pages, enabling non-contiguous storage, dynamic allocation, copy-on-write memory sharing across parallel generation paths, and high-throughput continuous batching.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="inference-kv-cache-batching-paged-attention">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ai">Path 11 · AI</a> / LLM systems / Lesson 33 of 42</span>
+    <h1 class="case-title">Inference: KV cache, batching, paged attention</h1>
+    <p class="lede rise" style="--d:3">Autoregressive language model generation is fundamentally memory-bandwidth bound during token-by-token generation. To eliminate the quadratic O(N^2) computation incurred by re-evaluating past token states at every generation step, the Key-Value (KV) cache stores previously computed key and value activation tensors in high-bandwidth GPU memory (HBM). However, naive static memory pre-allocation for the KV cache introduces extreme internal and external memory fragmentation (wasting 60-80% of GPU memory). PagedAttention overcomes this limitation by partitioning KV caches into fixed-size physical memory pages, enabling non-contiguous storage, dynamic allocation, copy-on-write memory sharing across parallel generation paths, and high-throughput continuous batching.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">20 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/the-attention-mechanism/">The attention mechanism</a> <a href="../../concepts/gpt-and-decoder-only-models/">GPT &amp; Decoder-Only Models</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>AI · LLM systems</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Why does generating a 500-token response from an LLM feel so slow compared to processing a 500-token prompt, and why does an inference server with 80 GB of GPU memory run out of memory serving only a few dozen concurrent users? The answer lies in the asymmetric physics of transformer inference: prefill is compute-bound, but token-by-token decoding is memory-bandwidth bound and memory-capacity constrained by the Key-Value (KV) cache. Mastering the KV cache, iteration-level continuous batching, and virtual memory paging via PagedAttention is the key to achieving 10x-20x higher serving throughput.</p>
+        <p>The Quadratic Cost of Naive Generation: In autoregressive generation, generating token t+1 requires computing attention over all preceding tokens 1, ..., t. Without caching, the transformer must re-embed, project, and transform all previous t tokens through every attention layer, turning an N-token generation into an O(N^2) matrix recomputation nightmare.</p>
+        <p>The KV Cache Solution: In causal self-attention, token t attends only to tokens <= t. When decoding token t+1, the key and value representations of earlier tokens 1, ..., t do not change! By caching these K and V tensors in GPU memory, step t+1 only needs to compute q_{t+1}, k_{t+1}, v_{t+1} for the single new token, append (k_{t+1}, v_{t+1}) to the cache, and compute attention in O(N) linear time.</p>
+        <p>The Memory Crisis and Fragmentation: While the KV cache saves vast computation, it consumes enormous GPU memory. For a 13B model in FP16 with 40 layers, 40 heads, and head dimension 128, each token requires 2 * 2 * 40 * 5120 = 800 KB per request! Naive serving systems pre-allocate a contiguous memory buffer for each request's maximum context length (e.g. 4096 tokens = 3.2 GB). Because actual output lengths vary unpredictably, 60% to 80% of GPU memory sits idle in reserved, unused buffers.</p>
+        <p>PagedAttention: Virtual Memory for LLMs: Inspired by classical OS virtual memory paging, PagedAttention (Kwon et al., vLLM) partitions the KV cache of each sequence into small, fixed-size blocks (e.g. 16 tokens per block). Blocks do not need to be contiguous in physical GPU memory. A logical-to-physical block table dynamically allocates blocks on-demand, reducing wasted memory to under 4% and enabling shared memory across parallel beams and multi-turn prompt prefixes.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine writing a 500-page historical novel in a notebook. Without a KV cache, every time you want to write a new sentence on page 300, you are legally required to re-read and re-transcribe pages 1 through 299 from scratch before writing the new word. The KV cache is your bookmark: you keep all 299 previous pages open and simply append the new sentence. But how do you store your notebook? Naive serving is like buying a massive 2000-page binder for every client who walks through the door, even if they only plan to write a one-page postcard, quickly filling your bookshelf. PagedAttention is a binder with loose-leaf sheets: you allocate blank sheets one at a time only when a page fills up, allowing dozens of authors to share the same bookshelf without wasting empty paper.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>KV Cache Memory Footprint per Token</h3><div class="formula">M_{\text{token}} = 2 \times 2 \times n_{\text{layers}} \times n_{\text{kv\_heads}} \times d_{\text{head}} \times b_{\text{elem}} \quad \text{bytes}</div><p>The factor of 2 accounts for storing both Key and Value tensors, and another factor of 2 represents 16-bit floating point precision (FP16/BF16, b_{\text{elem}} = 2 bytes). In Multi-Head Attention (MHA), n_{\text{kv\_heads}} = n_{\text{heads}}, while in Grouped-Query Attention (GQA), n_{\text{kv\_heads}} \ll n_{\text{heads}}, dramatically reducing memory requirements.</p></li>
+          <li><h3>Causal Attention Decoding with KV Cache</h3><div class="formula">\mathbf{a}_t = \text{Softmax}\left(\frac{\mathbf{q}_t \mathbf{K}_{\le t}^\top}{\sqrt{d_{\text{head}}}}\right) \mathbf{V}_{\le t}, \quad \text{where } \mathbf{K}_{\le t} = [\mathbf{K}_{<t} \, ; \, \mathbf{k}_t], \quad \mathbf{V}_{\le t} = [\mathbf{V}_{<t} \, ; \, \mathbf{v}_t]</div><p>During decoding at step t, query \mathbf{q}_t has dimension (1, d). Keys \mathbf{K}_{\le t} and values \mathbf{V}_{\le t} have dimension (t, d). The computational complexity of the attention step is O(t \cdot d), compared to O(t^2 \cdot d) if all past tokens had to be re-projected from scratch.</p></li>
+          <li><h3>PagedAttention Logical-to-Physical Mapping</h3><div class="formula">\text{block\_id} = \text{BlockTable}[r]\left[\left\lfloor \frac{i}{B} \right\rfloor\right], \quad \text{offset} = i \pmod B</div><p>For request r at logical token position i, the physical memory location of the key or value vector is resolved by looking up the logical block index \lfloor i / B \rfloor in the sequence's block table, where B is the block size (e.g. 16). Physical blocks reside non-contiguously in GPU HBM.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Autoregressive generation without a KV cache recomputes all past token keys and values, suffering from quadratic O(N^2) complexity.</li><li>The KV cache stores key and value activations across attention layers, reducing incremental per-token decoding computation to O(N).</li><li>Static memory allocation causes severe fragmentation, wasting 60-80% of GPU memory on reserved but unused output buffers.</li><li>PagedAttention resolves fragmentation by managing KV memory as virtual pages, enabling dynamic allocation, zero-waste block sharing, and high-throughput continuous batching.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="s">&quot;&quot;&quot;
+KV Cache and PagedAttention Block Manager Simulation
+Demonstrates autoregressive decoding with KV caching, memory calculation,
+and non-contiguous physical block allocation.
+&quot;&quot;&quot;</span>
+
+<span class="k">import</span> math
+<span class="k">from</span> typing <span class="k">import</span> List, Dict, Tuple, Optional
+
+<span class="k">class</span> SimpleKVCache:
+    <span class="s">&quot;&quot;&quot;Standard contiguous KV Cache for a single sequence.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, num_layers: int, num_heads: int, head_dim: int):
+        <span class="k">self</span>.num_layers = num_layers
+        <span class="k">self</span>.num_heads = num_heads
+        <span class="k">self</span>.head_dim = head_dim
+        <span class="c"># Stores keys and values per layer: [layer_idx][token_idx] -&gt; vector</span>
+        <span class="k">self</span>.k_cache: List[List[List[float]]] = [[] <span class="k">for</span> _ <span class="k">in</span> <span class="k">range</span>(num_layers)]
+        <span class="k">self</span>.v_cache: List[List[List[float]]] = [[] <span class="k">for</span> _ <span class="k">in</span> <span class="k">range</span>(num_layers)]
+
+    <span class="k">def</span> <span class="f">append</span>(<span class="k">self</span>, layer: int, k_vec: List[float], v_vec: List[float]):
+        <span class="k">self</span>.k_cache[layer].<span class="f">append</span>(k_vec)
+        <span class="k">self</span>.v_cache[layer].<span class="f">append</span>(v_vec)
+
+    <span class="k">def</span> <span class="f">get_length</span>(<span class="k">self</span>, layer: int = <span class="n">0</span>) -&gt; int:
+        <span class="k">return</span> <span class="k">len</span>(<span class="k">self</span>.k_cache[layer])
+
+    <span class="k">def</span> <span class="f">memory_bytes</span>(<span class="k">self</span>, bytes_per_elem: int = <span class="n">2</span>) -&gt; int:
+        tokens = <span class="k">self</span>.<span class="f">get_length</span>(<span class="n">0</span>)
+        <span class="c"># 2 (Key + Value) * num_layers * num_heads * head_dim * bytes_per_elem</span>
+        <span class="k">return</span> <span class="n">2</span> * tokens * <span class="k">self</span>.num_layers * <span class="k">self</span>.num_heads * <span class="k">self</span>.head_dim * bytes_per_elem
+
+<span class="k">class</span> PagedBlockManager:
+    <span class="s">&quot;&quot;&quot;
+    PagedAttention Block Manager
+    Allocates fixed-size physical blocks and maintains per-sequence block tables.
+    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, total_physical_blocks: int, block_size: int = <span class="n">16</span>):
+        <span class="k">self</span>.block_size = block_size
+        <span class="k">self</span>.free_blocks: List[int] = <span class="f">list</span>(<span class="k">range</span>(total_physical_blocks))
+        <span class="c"># Maps request_id -&gt; List[physical_block_id]</span>
+        <span class="k">self</span>.block_tables: Dict[str, List[int]] = {}
+        <span class="c"># Tracks token count per request</span>
+        <span class="k">self</span>.seq_lengths: Dict[str, int] = {}
+
+    <span class="k">def</span> <span class="f">allocate_request</span>(<span class="k">self</span>, request_id: str, prompt_tokens: int):
+        <span class="s">&quot;&quot;&quot;Allocate initial physical blocks required for prompt.&quot;&quot;&quot;</span>
+        num_blocks_needed = math.<span class="f">ceil</span>(prompt_tokens / <span class="k">self</span>.block_size)
+        <span class="k">if</span> <span class="k">len</span>(<span class="k">self</span>.free_blocks) &lt; num_blocks_needed:
+            raise <span class="f">MemoryError</span>(<span class="s">f&quot;Out of GPU Memory! Needed {num_blocks_needed} blocks, available {len(self.free_blocks)}.&quot;</span>)
+
+        allocated = [<span class="k">self</span>.free_blocks.<span class="f">pop</span>(<span class="n">0</span>) <span class="k">for</span> _ <span class="k">in</span> <span class="k">range</span>(num_blocks_needed)]
+        <span class="k">self</span>.block_tables[request_id] = allocated
+        <span class="k">self</span>.seq_lengths[request_id] = prompt_tokens
+
+    <span class="k">def</span> <span class="f">append_token</span>(<span class="k">self</span>, request_id: str) -&gt; Tuple[int, int]:
+        <span class="s">&quot;&quot;&quot;
+        Append a generated token to request. Allocates new physical block if current block is full.
+        Returns (physical_block_id, offset_within_block).
+        &quot;&quot;&quot;</span>
+        curr_len = <span class="k">self</span>.seq_lengths[request_id]
+        block_idx = curr_len // <span class="k">self</span>.block_size
+        offset = curr_len % <span class="k">self</span>.block_size
+
+        <span class="k">if</span> offset == <span class="n">0</span>:
+            <span class="c"># Need a new physical block!</span>
+            <span class="k">if</span> <span class="k">not</span> <span class="k">self</span>.free_blocks:
+                raise <span class="f">MemoryError</span>(<span class="s">&quot;Out of GPU Memory during token generation!&quot;</span>)
+            new_block = <span class="k">self</span>.free_blocks.<span class="f">pop</span>(<span class="n">0</span>)
+            <span class="k">self</span>.block_tables[request_id].<span class="f">append</span>(new_block)
+
+        physical_block = <span class="k">self</span>.block_tables[request_id][-<span class="n">1</span>]
+        <span class="k">self</span>.seq_lengths[request_id] += <span class="n">1</span>
+        <span class="k">return</span> physical_block, offset
+
+    <span class="k">def</span> <span class="f">free_request</span>(<span class="k">self</span>, request_id: str):
+        <span class="s">&quot;&quot;&quot;Release allocated blocks back to the free pool.&quot;&quot;&quot;</span>
+        <span class="k">if</span> request_id <span class="k">in</span> <span class="k">self</span>.block_tables:
+            <span class="k">self</span>.free_blocks.<span class="f">extend</span>(<span class="k">self</span>.block_tables[request_id])
+            del <span class="k">self</span>.block_tables[request_id]
+            del <span class="k">self</span>.seq_lengths[request_id]
+
+    <span class="k">def</span> <span class="f">get_memory_utilisation</span>(<span class="k">self</span>, total_blocks: int) -&gt; float:
+        used_blocks = total_blocks - <span class="k">len</span>(<span class="k">self</span>.free_blocks)
+        <span class="k">return</span> <span class="f">round</span>((used_blocks / total_blocks) * <span class="n">100</span>, <span class="n">1</span>)
+
+<span class="c"># --- Demonstration Run ---</span>
+<span class="k">print</span>(<span class="s">&quot;=== 1. KV Cache Memory Scaling Profile ===&quot;</span>)
+layers, heads, head_dim = <span class="n">32</span>, <span class="n">32</span>, <span class="n">128</span>  <span class="c"># Typical 7B parameter model</span>
+kv_cache = <span class="f">SimpleKVCache</span>(layers, heads, head_dim)
+
+<span class="c"># Simulate generating 512 tokens</span>
+<span class="k">for</span> t <span class="k">in</span> <span class="k">range</span>(<span class="n">512</span>):
+    dummy_k = [<span class="n">0.1</span>] * head_dim
+    dummy_v = [<span class="n">0.2</span>] * head_dim
+    <span class="k">for</span> l <span class="k">in</span> <span class="k">range</span>(layers):
+        kv_cache.<span class="f">append</span>(l, dummy_k, dummy_v)
+
+mem_mb = kv_cache.<span class="f">memory_bytes</span>() / (<span class="n">1024</span> * <span class="n">1024</span>)
+<span class="k">print</span>(<span class="s">f&quot;Model: 7B (32 layers, 32 heads, dim {head_dim})&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Tokens in cache: {kv_cache.get_length()}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;KV Cache memory consumption: {mem_mb:.2f} MB per request&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Memory for 100 concurrent requests: {(mem_mb * 100) / 1024:.2f} GB\n&quot;</span>)
+
+<span class="k">print</span>(<span class="s">&quot;=== 2. PagedAttention Dynamic Block Allocation ===&quot;</span>)
+total_blocks = <span class="n">20</span>
+block_size = <span class="n">4</span>  <span class="c"># 4 tokens per block for demonstration</span>
+manager = <span class="f">PagedBlockManager</span>(total_physical_blocks=total_blocks, block_size=block_size)
+
+<span class="c"># Request A arrives with 6 tokens</span>
+manager.<span class="f">allocate_request</span>(<span class="s">&quot;Req-A&quot;</span>, prompt_tokens=<span class="n">6</span>)
+<span class="k">print</span>(<span class="s">f&quot;Req-A (6 prompt tokens) allocated physical blocks: {manager.block_tables['Req-A']}&quot;</span>)
+
+<span class="c"># Request B arrives with 4 tokens</span>
+manager.<span class="f">allocate_request</span>(<span class="s">&quot;Req-B&quot;</span>, prompt_tokens=<span class="n">4</span>)
+<span class="k">print</span>(<span class="s">f&quot;Req-B (4 prompt tokens) allocated physical blocks: {manager.block_tables['Req-B']}&quot;</span>)
+
+<span class="c"># Generate 3 tokens for Req-A</span>
+<span class="k">print</span>(<span class="s">&quot;\n--- Generating 3 tokens for Req-A ---&quot;</span>)
+<span class="k">for</span> step <span class="k">in</span> <span class="k">range</span>(<span class="n">1</span>, <span class="n">4</span>):
+    p_block, offset = manager.<span class="f">append_token</span>(<span class="s">&quot;Req-A&quot;</span>)
+    <span class="k">print</span>(<span class="s">f&quot;  Step {step}: Token written to Physical Block {p_block}, offset {offset}&quot;</span>)
+
+<span class="k">print</span>(<span class="s">f&quot;Req-A updated block table: {manager.block_tables['Req-A']}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;GPU Block Memory Utilisation: {manager.get_memory_utilisation(total_blocks)}%&quot;</span>)
+
+<span class="c"># Free Req-B</span>
+manager.<span class="f">free_request</span>(<span class="s">&quot;Req-B&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;\nAfter freeing Req-B, available free blocks: {len(manager.free_blocks)}&quot;</span>)
+</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Ignoring KV cache growth when calculating serving capacity: A server with ample memory for model weights will rapidly crash with Out-Of-Memory (OOM) errors as concurrent sequence lengths grow.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using static request batching instead of continuous batching: In static batching, short requests remain trapped in GPU memory until the longest request in the batch finishes generating.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Overlooking Grouped-Query Attention (GQA): For large context models, multi-head attention KV caches can exceed the model weights themselves; GQA reduces KV cache size by 4x to 8x.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>Why does autoregressive transformer decoding require a Key-Value (KV) cache?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because causal attention allows previous tokens' key and value vectors to remain invariant; caching them eliminates redundant O(N^2) recomputation of previous token states at each generation step</span></button><button class="opt" type="button"><b>B</b><span>Because transformer models cannot perform matrix multiplication without disk caches</span></button><button class="opt" type="button"><b>C</b><span>Because the KV cache compresses text into binary format</span></button><button class="opt" type="button"><b>D</b><span>Because gradient descent requires caching during inference</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In causal decoder models, tokens only attend to past tokens. The key and value projections of past tokens do not change when a new token is generated. Caching them avoids recomputing the entire sequence at each step.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>What major problem does PagedAttention solve in production LLM serving?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The inability of GPUs to run 16-bit floating point operations</span></button><button class="opt" type="button"><b>B</b><span>GPU memory fragmentation and waste caused by static pre-allocation for unpredictable output lengths, allowing KV caches to be stored non-contiguously in virtual memory blocks</span></button><button class="opt" type="button"><b>C</b><span>Network latency between web clients and load balancers</span></button><button class="opt" type="button"><b>D</b><span>The need for prompt engineering</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Traditional systems pre-allocated contiguous memory for the maximum possible sequence length, wasting up to 80% of GPU memory. PagedAttention allocates small fixed-size physical blocks on demand, eliminating internal fragmentation.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>How does continuous (iteration-level) batching differ from traditional request-level batching?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Continuous batching iterates at the token generation level, immediately evicting finished sequences and introducing newly arrived requests at every forward pass step rather than waiting for the entire batch to finish</span></button><button class="opt" type="button"><b>B</b><span>Continuous batching trains the model continuously while serving users</span></button><button class="opt" type="button"><b>C</b><span>Continuous batching runs strictly on CPU cores</span></button><button class="opt" type="button"><b>D</b><span>Continuous batching requires all users to write prompts of identical length</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Traditional batching holds GPU resources until the slowest request in the batch completes. Continuous batching schedules at the iteration level, inserting new requests as soon as any active request generates an end-of-sequence token.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/the-attention-mechanism/"><small class="kicker">Concept</small><b>The attention mechanism</b></a><a href="../../concepts/gpt-and-decoder-only-models/"><small class="kicker">Concept</small><b>GPT &amp; Decoder-Only Models</b></a><a href="../../models/transformer_networks/"><small class="kicker">Natural language processing</small><b>Transformers</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/agent-protocols-mcp/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · AI</small><b>Agent Protocols: MCP</b></a>
+    <a class="pager-next" href="../../concepts/serving-latency-and-cost/"><small>Next · AI <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Serving, Latency &amp; Cost</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

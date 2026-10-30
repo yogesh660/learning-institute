@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Bayesian Optimisation and Optuna · Learn · Yogesh Awate</title>
+<meta name="description" content="Sequential model-based optimisation balancing exploration and exploitation via Gaussian process surrogates, Expected Improvement, and Optuna's TPE.">
+<meta property="og:title" content="Bayesian Optimisation and Optuna · Learn · Yogesh Awate">
+<meta property="og:description" content="Sequential model-based optimisation balancing exploration and exploitation via Gaussian process surrogates, Expected Improvement, and Optuna's TPE.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="bayesian-optimisation-and-optuna">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ml-toolbox">Path 06 · Machine learning toolbox</a> / Model selection / Lesson 24 of 50</span>
+    <h1 class="case-title">Bayesian Optimisation and Optuna</h1>
+    <p class="lede rise" style="--d:3">Sequential model-based optimisation balancing exploration and exploitation via Gaussian process surrogates, Expected Improvement, and Optuna's TPE.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/hyperparameter-search-grid-random-successive-halving/">Hyperparameter search</a> <a href="../../concepts/cross-validation/">Cross-validation</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Machine learning toolbox · Model selection</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Random search and grid search treat every trial independently, discarding valuable information about the objective landscape uncovered during previous runs. Bayesian optimisation models the objective function as an expensive black-box probabilistic distribution, balancing exploration of uncertain regions with exploitation of known high-performing areas using acquisition functions like Expected Improvement. Modern frameworks like Optuna replace Gaussian processes with Tree-structured Parzen Estimators (TPE) and automated pruning, enabling scalable tuning across complex mixed-type search spaces.</p>
+        <p>Imagine prospecting for oil across a vast desert by drilling exploratory test wells. Drilling a single well costs £100,000 and takes two weeks. You would never choose your drilling sites using a rigid grid or random lottery. After drilling your first few sites, you analyse the geological data to form a mental map of the subsurface: where oil is likely concentrated (high expected yield) and where the terrain remains completely unknown (high uncertainty).</p>
+        <p>If you only drill right next to your best existing well, you might squeeze out minor gains while missing a massive oil basin fifty miles away (over-exploitation). If you only drill in completely random unexplored corners, you waste millions confirming dry dust (over-exploration). The rational strategy balances both: drill where the probability of finding a larger deposit than your current best is highest.</p>
+        <p>Bayesian optimisation formalises this balance using two components: a probabilistic surrogate model (such as a Gaussian process) that predicts both the expected performance and its uncertainty at every unvisited coordinate, and an acquisition function (such as Expected Improvement) that scores each point's potential. Optuna brings this into modern production through the Tree-structured Parzen Estimator (TPE). Instead of modelling $p(y \mid \theta)$ via expensive matrix inversions, TPE models the parameter distributions of good trials $p(\theta \mid y &lt; y^*)$ and bad trials $p(\theta \mid y \ge y^*)$ separately using kernel density estimates, selecting candidate points that maximise their ratio while aggressively pruning stalled trials mid-training.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>A grandmaster chess player evaluating candidate moves: calculating deep variants only for moves with high tactical promise while occasionally exploring unconventional lines that offer surprising upside.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Initialise the search space: evaluate a small budget of seed points (typically 5 to 10 trials) using quasi-random Sobol or Latin hypercube sampling.</li><li>Fit the surrogate model: train a Gaussian Process or Tree-structured Parzen Estimator (TPE) on all evaluated configurations and their observed validation losses.</li><li>Formulate the acquisition function: calculate Expected Improvement (EI) or Upper Confidence Bound (UCB) across candidate hyperparameter configurations.</li><li>Optimise the acquisition function: identify the hyperparameter coordinate $\theta^*$ that maximises the acquisition score.</li><li>Evaluate the objective: train the machine learning model using $\theta^*$ on validation data to record its true objective value $f(\theta^*)$.</li><li>Enable automated pruning: abort trials early (via Optuna's MedianPruner or Hyperband) if intermediate training curves fall below median historical progress.</li><li>Update the surrogate dataset and iterate until the computational trial budget is exhausted.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Gaussian Process surrogate posterior</h3><div class="formula">$$f(\theta) \sim \mathcal{GP}\big(\mu(\theta), \, k(\theta, \theta')\big), \qquad \mu_n(\theta) = k_*^T (K + \sigma_n^2 I)^{-1} y, \quad \sigma_n^2(\theta) = k(\theta, \theta) - k_*^T (K + \sigma_n^2 I)^{-1} k_*$$</div><p>where $K$ is the kernel Gram matrix evaluated at observed trials and $k_*$ is the covariance vector between candidate $\theta$ and past observations. The posterior mean $\mu_n(\theta)$ models exploitation, while the posterior variance $\sigma_n^2(\theta)$ quantifies epistemic uncertainty for exploration.</p></li>
+          <li><h3>Expected Improvement (EI) acquisition function</h3><div class="formula">$$\operatorname{EI}(\theta) = \mathbb{E}\big[\max(0, y_{\text{best}} - f(\theta))\big] = (y_{\text{best}} - \mu_n(\theta)) \, \Phi(z) + \sigma_n(\theta) \, \phi(z), \quad z = \frac{y_{\text{best}} - \mu_n(\theta)}{\sigma_n(\theta)}$$</div><p>where $\Phi$ is the standard normal cumulative distribution function and $\phi$ is the standard normal density function. The first term prioritises exploitation (large improvement over current best $y_{\text{best}}$), while the second term rewards exploration (high uncertainty $\sigma_n(\theta)$).</p></li>
+          <li><h3>Optuna's Tree-structured Parzen Estimator (TPE)</h3><div class="formula">$$\frac{p(\theta \mid y &lt; y^*)}{p(\theta \mid y \ge y^*)} = \frac{\ell(\theta)}{g(\theta)} \propto \operatorname{EI}(\theta)$$</div><p>By setting a quantile threshold $\gamma$ (typically 10% or 15%), TPE partitions historical trials into good performers $\ell(\theta)$ and bad performers $g(\theta)$. Maximising the likelihood ratio $\ell(\theta) / g(\theta)$ samples points that are highly probable under the good distribution and improbable under the bad distribution, eliminating $O(n^3)$ GP matrix inversion.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Replaces uninformed sampling with sequential probabilistic modelling of the hyperparameter response surface.</li><li>Expected Improvement balances the trade-off between exploiting promising regions and exploring uncertain areas.</li><li>Optuna's Tree-structured Parzen Estimator (TPE) replaces Gaussian processes with non-parametric kernel density ratios, scaling to high trial counts and categorical spaces.</li><li>Automated pruning terminates unpromising trials midway through training epochs, saving up to 80% of total compute.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">from</span> scipy.stats <span class="k">import</span> norm
+
+<span class="c"># True black-box function with local minimum</span>
+<span class="k">def</span> <span class="f">f</span>(x):
+    <span class="k">return</span> np.<span class="f">sin</span>(<span class="n">3</span> * x) + <span class="n">0.5</span> * (x - <span class="n">1</span>) ** <span class="n">2</span>
+
+<span class="c"># Initial observations</span>
+X_obs = np.<span class="f">array</span>([<span class="n">0.2</span>, <span class="n">1.8</span>, <span class="n">2.8</span>])
+y_obs = <span class="f">f</span>(X_obs)
+
+<span class="c"># RBF kernel for Gaussian Process surrogate</span>
+<span class="k">def</span> <span class="f">rbf_cov</span>(x1, x2, l=<span class="n">0.5</span>, s=<span class="n">1.0</span>):
+    <span class="k">return</span> s**<span class="n">2</span> * np.<span class="f">exp</span>(-<span class="n">0.5</span> * (x1[:, <span class="k">None</span>] - x2[<span class="k">None</span>, :])**<span class="n">2</span> / l**<span class="n">2</span>)
+
+<span class="c"># Run 4 Bayesian Optimisation steps via Expected Improvement (EI)</span>
+cands = np.<span class="f">linspace</span>(<span class="n">0</span>, <span class="n">3</span>, <span class="n">100</span>)
+<span class="k">for</span> step <span class="k">in</span> <span class="k">range</span>(<span class="n">4</span>):
+    K = <span class="f">rbf_cov</span>(X_obs, X_obs) + <span class="n">1e-6</span> * np.<span class="f">eye</span>(<span class="k">len</span>(X_obs))
+    K_s = <span class="f">rbf_cov</span>(cands, X_obs)
+    mu = K_s @ np.linalg.<span class="f">solve</span>(K, y_obs)
+    sigma = np.<span class="f">sqrt</span>(np.<span class="f">maximum</span>(<span class="n">1e-6</span>, <span class="n">1.0</span> - np.<span class="f">sum</span>(K_s * np.linalg.<span class="f">solve</span>(K, K_s.T).T, axis=<span class="n">1</span>)))
+    
+    <span class="c"># Expected Improvement (minimisation: improvement over current best y_best)</span>
+    y_best = np.<span class="f">min</span>(y_obs)
+    z = (y_best - mu) / sigma
+    ei = (y_best - mu) * norm.<span class="f">cdf</span>(z) + sigma * norm.<span class="f">pdf</span>(z)
+    
+    next_x = cands[np.<span class="f">argmax</span>(ei)]
+    X_obs = np.<span class="f">append</span>(X_obs, next_x)
+    y_obs = np.<span class="f">append</span>(y_obs, <span class="f">f</span>(next_x))
+
+best_idx = np.<span class="f">argmin</span>(y_obs)
+<span class="k">print</span>(<span class="s">f&quot;Evaluated points: {X_obs.round(3)}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Best observed x*: {X_obs[best_idx]:.3f} | Minimum value: {y_obs[best_idx]:.4f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Cubic scaling of Gaussian processes: Inverting the GP covariance matrix scales as $O(n^3)$ with the number of trials $n$. Standard GP Bayesian optimisation slows to a crawl beyond 150 to 200 trials (which is why Optuna uses TPE or Random Forests).</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Inappropriate kernel length scales: If the GP kernel length-scale is too short, the surrogate assumes the objective is wildly jagged, treating nearby points as completely independent and collapsing into random search.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Cold-start vulnerability: If initial seed points all happen to fall in uninformative regions, the acquisition function can get trapped reinforcing local minima before exploring broader basins.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Ignoring trial execution overhead: In fast-training models (e.g. linear models or small decision trees), fitting a complex surrogate model can take longer than simply running 500 parallel random trials.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>What is the primary role of the acquisition function in Bayesian optimisation?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To calculate the training accuracy of the neural network</span></button><button class="opt" type="button"><b>B</b><span>To compute the gradient of the loss function with respect to model weights</span></button><button class="opt" type="button"><b>C</b><span>To perform Singular Value Decomposition on the feature matrix</span></button><button class="opt" type="button"><b>D</b><span>To mathematically quantify the trade-off between exploiting areas of known high performance and exploring regions of high uncertainty</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The acquisition function (such as Expected Improvement or Upper Confidence Bound) evaluates the surrogate model's posterior mean and uncertainty across unvisited points, guiding the search to coordinates with the highest potential return.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>How does Optuna's Tree-structured Parzen Estimator (TPE) differ fundamentally from a standard Gaussian Process surrogate?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>TPE models the input distribution of good trials $\ell(\theta)$ and poor trials $g(\theta)$ separately, choosing points that maximise the ratio $\ell(\theta)/g(\theta)$ without inverting covariance matrices</span></button><button class="opt" type="button"><b>B</b><span>TPE only works on strictly convex linear regression problems</span></button><button class="opt" type="button"><b>C</b><span>TPE requires computing the full Hessian matrix of the neural network weights</span></button><button class="opt" type="button"><b>D</b><span>TPE uses exhaustive grid search across integer coordinates</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Instead of modelling $p(y \mid \theta)$ with a computationally heavy Gaussian Process ($O(n^3)$ complexity), TPE splits historical evaluations into top performers $\ell(\theta)$ and remaining performers $g(\theta)$ using a quantile cutoff $\gamma$, maximising $\ell(\theta)/g(\theta) \propto \operatorname{EI}(\theta)$.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q3</span>In the Expected Improvement formula $\operatorname{EI}(\theta) = (y_{\text{best}} - \mu) \Phi(z) + \sigma \phi(z)$, what behaviour does the second term $\sigma \phi(z)$ represent?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>L1 regularisation penalty</span></button><button class="opt" type="button"><b>B</b><span>Exploitation of the current best observed hyperparameter</span></button><button class="opt" type="button"><b>C</b><span>Early stopping of divergent neural networks</span></button><button class="opt" type="button"><b>D</b><span>Exploration of regions where the surrogate model has high prediction uncertainty $\sigma$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The term $\sigma \phi(z)$ is proportional to the posterior standard deviation $\sigma$. When evaluating an unexplored region of the search space, $\sigma$ is large, driving up Expected Improvement even if the predicted mean $\mu$ is unremarkable.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q4</span>What is the purpose of Optuna's automated "pruning" mechanism (such as MedianPruner)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To prune branches from decision tree models during inference</span></button><button class="opt" type="button"><b>B</b><span>To abort unpromising training trials early if intermediate metrics fall below historical baselines, freeing compute for better candidates</span></button><button class="opt" type="button"><b>C</b><span>To zero out small neural network weights after backpropagation</span></button><button class="opt" type="button"><b>D</b><span>To remove low-importance features from the training dataset</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Pruning checks intermediate validation scores (e.g. after each epoch) against past completed trials. If a trial performs worse than the historical median at that epoch, Optuna halts the trial immediately, saving compute.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/hyperparameter-search-grid-random-successive-halving/"><small class="kicker">Concept</small><b>Hyperparameter search</b></a><a href="../../concepts/nested-cross-validation/"><small class="kicker">Concept</small><b>Nested cross-validation</b></a><a href="../../concepts/cross-validation/"><small class="kicker">Concept</small><b>Cross-validation</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/hyperparameter-search-grid-random-successive-halving/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Machine learning toolbox</small><b>Hyperparameter search</b></a>
+    <a class="pager-next" href="../../concepts/learning-curves-and-diagnosing-fit/"><small>Next · Machine learning toolbox <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Learning curves &amp; fit</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

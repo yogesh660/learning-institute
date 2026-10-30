@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Total variation, Hellinger and Bhattacharyya distances · Learn · Yogesh Awate</title>
+<meta name="description" content="Total Variation distance, Hellinger distance, and Bhattacharyya distance form the foundational geometric family of probability metrics grounded in statistical distinguishability and f-divergences. While Total Variation quantifies the maximum possible difference in probability assigned to any measurable event, Hellinger distance provides a true metric on the unit Hilbert sphere via square-root density mappings, obeying the triangle inequality and establishing tight bounds on minimax estimation error via Le Cam's inequalities. The Bhattacharyya distance connects these metrics to optimal Bayes classification error bounds.">
+<meta property="og:title" content="Total variation, Hellinger and Bhattacharyya distances · Learn · Yogesh Awate">
+<meta property="og:description" content="Total Variation distance, Hellinger distance, and Bhattacharyya distance form the foundational geometric family of probability metrics grounded in statistical distinguishability and f-divergences. While Total Variation quantifies the maximum possible difference in probability assigned to any measurable event, Hellinger distance provides a true metric on the unit Hilbert sphere via square-root density mappings, obeying the triangle inequality and establishing tight bounds on minimax estimation error via Le Cam's inequalities. The Bhattacharyya distance connects these metrics to optimal Bayes classification error bounds.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="total-variation-hellinger-and-bhattacharyya-distances">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-statistics">Path 02 · Statistics</a> / Information theory / Lesson 28 of 51</span>
+    <h1 class="case-title">Total variation, Hellinger and Bhattacharyya distances</h1>
+    <p class="lede rise" style="--d:3">Total Variation distance, Hellinger distance, and Bhattacharyya distance form the foundational geometric family of probability metrics grounded in statistical distinguishability and f-divergences. While Total Variation quantifies the maximum possible difference in probability assigned to any measurable event, Hellinger distance provides a true metric on the unit Hilbert sphere via square-root density mappings, obeying the triangle inequality and establishing tight bounds on minimax estimation error via Le Cam's inequalities. The Bhattacharyya distance connects these metrics to optimal Bayes classification error bounds.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">20 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/entropy-and-cross-entropy/">Entropy and Cross-Entropy</a> <a href="../../concepts/kl-divergence/">Kullback–Leibler Divergence</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Statistics · Information theory</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">How different are two probability distributions, and what is the absolute worst-case error you could make if you used model Q instead of true distribution P? While KL divergence is asymmetric, unbounded, and violates the triangle inequality, Total Variation distance is bounded in [0, 1] and directly measures the maximum discrepancy across all possible events. Hellinger distance turns probability densities into Euclidean vectors on a sphere. Mastering these classical metrics provides the theoretical foundation for differential privacy, Markov chain convergence, and statistical minimax theory.</p>
+        <p>Total Variation as Maximum Disagreement: Suppose an auditor inspects two probability models P and Q. The auditor is allowed to pick any conceivable event A (e.g. "tomorrow's temperature exceeds 30C"). The Total Variation distance D_TV(P, Q) is the maximum possible difference |P(A) - Q(A)| the auditor could ever find. If D_TV = 0.05, the two models will never differ by more than 5 percentage points on any forecast.</p>
+        <p>Hellinger Distance as Sphere Geometry: Probability densities integrate to 1: int p(x) dx = 1. If we take the square root sqrt(p(x)), then int (sqrt(p(x)))^2 dx = 1. This means sqrt(p(x)) is a unit vector on an infinite-dimensional hypersphere! The Hellinger distance is simply the standard Euclidean distance between these two square-root unit vectors, scaled by 1/sqrt(2). Because it is an actual metric space distance, it satisfies symmetry and the triangle inequality!</p>
+        <p>The Bhattacharyya Affinity: The inner product between the two square-root vectors is the Bhattacharyya coefficient rho(P, Q) = int sqrt(p(x) q(x)) dx in [0, 1]. If the distributions are identical, rho = 1; if they have disjoint supports, rho = 0. The Bhattacharyya distance -log rho provides an upper bound on Bayes classification error.</p>
+        <p>Le Cam's Inequalities and Minimax Rates: In statistical decision theory, Le Cam's lemmas prove that the ability of any algorithm to distinguish between two hypothetical data distributions is fundamentally bounded by their Total Variation and Hellinger distances: H^2(P, Q) <= D_TV(P, Q) <= sqrt(2) * H(P, Q).</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Think of two light beams shining through stained glass. Total Variation is the maximum difference in brightness you could see through any filter. Hellinger distance treats each light beam as an arrow pointing to the surface of a globe, measuring the straight-line physical distance between the two arrow tips through 3D space.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Total Variation Distance Formulation</h3><div class="formula">D_{\text{TV}}(P, Q) = \sup_{A \in \mathcal{F}} \big| P(A) - Q(A) \big| = \frac{1}{2} \int_{\mathcal{X}} \big| p(x) - q(x) \big| \, dx = \frac{1}{2} \|p - q\|_1</div><p>Total Variation is the supremum difference over all measurable events A. It equals half the L_1 distance between the densities, bounded in [0, 1], where 0 indicates identical distributions and 1 indicates mutually singular distributions with disjoint supports.</p></li>
+          <li><h3>Squared Hellinger Distance and Bhattacharyya Coefficient</h3><div class="formula">H^2(P, Q) = \frac{1}{2} \int_{\mathcal{X}} \left( \sqrt{p(x)} - \sqrt{q(x)} \right)^2 dx = 1 - \int_{\mathcal{X}} \sqrt{p(x) q(x)} \, dx = 1 - \rho(P, Q)</div><p>The Hellinger distance is a true metric satisfying the triangle inequality. The quantity \rho(P, Q) = \int \sqrt{p(x) q(x)} \, dx is the Bhattacharyya affinity coefficient. For product distributions P = \prod P_i and Q = \prod Q_i, the affinity factorises multiplicatively: \rho(P, Q) = \prod \rho(P_i, Q_i).</p></li>
+          <li><h3>Le Cam's Sandwich Inequalities</h3><div class="formula">H^2(P, Q) \le D_{\text{TV}}(P, Q) \le H(P, Q) \sqrt{2 - H^2(P, Q)} \le \sqrt{2} H(P, Q)</div><p>Le Cam's inequalities connect Total Variation and Hellinger distance. Because Hellinger distance factorises cleanly across independent observations, it is widely used to prove minimax lower bounds in statistical estimation.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Total Variation distance quantifies the maximum possible difference in probability assigned to any measurable event, bounded in [0, 1].</li><li>Hellinger distance is a true metric obeying the triangle inequality, measuring Euclidean distance between square-root density vectors on the unit Hilbert sphere.</li><li>The Bhattacharyya distance directly establishes an upper bound on the minimum Bayes classification error rate.</li><li>Le Cam's inequalities tightly sandwich Total Variation between H^2 and sqrt(2)*H, enabling minimax sample complexity proofs.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="s">&quot;&quot;&quot;
+Total Variation, Hellinger, and Bhattacharyya Distances
+Calculates exact distances for Gaussian distributions and verifies
+Le Cam's bounding inequalities.
+&quot;&quot;&quot;</span>
+
+<span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">def</span> <span class="f">compute_distances_gaussian</span>(mu1: float, sig1: float, mu2: float, sig2: float):
+    <span class="s">&quot;&quot;&quot;
+    Compute analytical Bhattacharyya, Hellinger, and numerical Total Variation
+    between two univariate Gaussians N(mu1, sig1^2) and N(mu2, sig2^2).
+    &quot;&quot;&quot;</span>
+    v1, v2 = sig1**<span class="n">2</span>, sig2**<span class="n">2</span>
+    
+    <span class="c"># 1. Bhattacharyya Distance for 1D Gaussians</span>
+    <span class="c"># D_B = (1/4) * ln( (1/4)*(v1/v2 + v2/v1 + 2) ) + (1/4) * ( (mu1 - mu2)^2 / (v1 + v2) )</span>
+    term1 = <span class="n">0.25</span> * np.<span class="f">log</span>(<span class="n">0.25</span> * (v1/v2 + v2/v1 + <span class="n">2.0</span>))
+    term2 = <span class="n">0.25</span> * ((mu1 - mu2)**<span class="n">2</span> / (v1 + v2))
+    d_bhattacharyya = term1 + term2
+    
+    <span class="c"># Bhattacharyya affinity rho = exp(-D_B)</span>
+    rho = np.<span class="f">exp</span>(-d_bhattacharyya)
+    
+    <span class="c"># 2. Hellinger Distance: H^2 = 1 - rho</span>
+    h_squared = <span class="n">1.0</span> - rho
+    h_distance = np.<span class="f">sqrt</span>(h_squared)
+    
+    <span class="c"># 3. Total Variation Distance via numerical integration</span>
+    x_grid = np.<span class="f">linspace</span>(<span class="f">min</span>(mu1 - <span class="n">4</span>*sig1, mu2 - <span class="n">4</span>*sig2), <span class="f">max</span>(mu1 + <span class="n">4</span>*sig1, mu2 + <span class="n">4</span>*sig2), <span class="n">20000</span>)
+    dx = x_grid[<span class="n">1</span>] - x_grid[<span class="n">0</span>]
+    p_dens = (<span class="n">1.0</span> / (np.<span class="f">sqrt</span>(<span class="n">2</span> * np.pi) * sig1)) * np.<span class="f">exp</span>(-<span class="n">0.5</span> * ((x_grid - mu1) / sig1)**<span class="n">2</span>)
+    q_dens = (<span class="n">1.0</span> / (np.<span class="f">sqrt</span>(<span class="n">2</span> * np.pi) * sig2)) * np.<span class="f">exp</span>(-<span class="n">0.5</span> * ((x_grid - mu2) / sig2)**<span class="n">2</span>)
+    tv_distance = <span class="n">0.5</span> * np.<span class="f">sum</span>(np.<span class="f">abs</span>(p_dens - q_dens)) * dx
+    
+    <span class="k">return</span> {
+        <span class="s">&quot;bhattacharyya_dist&quot;</span>: <span class="f">round</span>(d_bhattacharyya, <span class="n">4</span>),
+        <span class="s">&quot;affinity_rho&quot;</span>: <span class="f">round</span>(rho, <span class="n">4</span>),
+        <span class="s">&quot;hellinger_squared&quot;</span>: <span class="f">round</span>(h_squared, <span class="n">4</span>),
+        <span class="s">&quot;hellinger_dist&quot;</span>: <span class="f">round</span>(h_distance, <span class="n">4</span>),
+        <span class="s">&quot;total_variation&quot;</span>: <span class="f">round</span>(tv_distance, <span class="n">4</span>),
+    }
+
+<span class="c"># Experiment: P ~ N(0, 1), Q ~ N(mu, 1) as mu shifts</span>
+<span class="k">print</span>(<span class="s">&quot;=== Metric Comparison for N(0, 1) vs N(mu, 1) ===&quot;</span>)
+<span class="k">for</span> mu <span class="k">in</span> [<span class="n">0.0</span>, <span class="n">0.5</span>, <span class="n">1.0</span>, <span class="n">2.0</span>, <span class="n">3.5</span>]:
+    m = <span class="f">compute_distances_gaussian</span>(<span class="n">0.0</span>, <span class="n">1.0</span>, mu, <span class="n">1.0</span>)
+    h2 = m[<span class="s">&quot;hellinger_squared&quot;</span>]
+    tv = m[<span class="s">&quot;total_variation&quot;</span>]
+    upper_bound = np.<span class="f">sqrt</span>(<span class="n">2</span> * h2)
+    <span class="k">print</span>(<span class="s">f&quot;Shift mu = {mu:3.1f} | TV: {tv:6.4f} | H^2: {h2:6.4f} | Bhattacharyya: {m['bhattacharyya_dist']:6.4f}&quot;</span>)
+    <span class="k">print</span>(<span class="s">f&quot;    Le Cam Bounds Check: H^2 ({h2:.4f}) &lt;= TV ({tv:.4f}) &lt;= sqrt(2)*H ({upper_bound:.4f}) -&gt; {h2 &lt;= tv &lt;= upper_bound + 1e-4}&quot;</span>)
+</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Confusing Total Variation with total variance: Total Variation is a bounded probability divergence, whereas variance measures second-order dispersion around the mean.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Assuming Bhattacharyya distance satisfies the triangle inequality: The Bhattacharyya distance -ln(\rho) is not a true metric (it violates the triangle inequality); only Hellinger distance is a true metric.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Overlooking product factorisation: For multi-dimensional independent variables, the Bhattacharyya affinity \rho factorises as a simple product, making Hellinger distance vastly easier to compute than Total Variation.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>What is the maximum possible value of the Total Variation distance between two probability distributions?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>2.0</span></button><button class="opt" type="button"><b>B</b><span>1.0 (indicating that the distributions have completely disjoint supports and disagree with certainty on some event)</span></button><button class="opt" type="button"><b>C</b><span>0.5</span></button><button class="opt" type="button"><b>D</b><span>Positive infinity</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Total Variation is defined as the supremum difference in event probabilities |P(A) - Q(A)|. Since probabilities are bounded in [0, 1], D_TV is strictly bounded in [0, 1].</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q2</span>Why is Hellinger distance preferred over KL divergence in statistical minimax lower bound proofs?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because Hellinger distance does not require integration</span></button><button class="opt" type="button"><b>B</b><span>Because KL divergence cannot be computed for Gaussian distributions</span></button><button class="opt" type="button"><b>C</b><span>Because Hellinger distance is always equal to 1</span></button><button class="opt" type="button"><b>D</b><span>Because Hellinger distance is a true metric that satisfies the triangle inequality and factorises cleanly over independent product distributions</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> KL divergence is asymmetric and violates the triangle inequality. Hellinger distance is a genuine metric on the unit sphere whose affinity factorises multiplicatively across independent dimensions, facilitating Le Cam's minimax bounds.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>How does the Bhattacharyya distance D_B relate to the minimum achievable Bayes classification error rate?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It is equal to the training set accuracy</span></button><button class="opt" type="button"><b>B</b><span>It guarantees zero false positives</span></button><button class="opt" type="button"><b>C</b><span>It provides an analytical upper bound on the Bayes error: P_error <= 0.5 * exp(-D_B)</span></button><button class="opt" type="button"><b>D</b><span>It has no relation to classification error</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The Bhattacharyya bound is a celebrated result in statistical pattern recognition: the probability of misclassification under the optimal Bayes classifier is bounded above by (1/2) * exp(-D_B).</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/wasserstein-earth-movers-distance/"><small class="kicker">Concept</small><b>Wasserstein Distance</b></a><a href="../../concepts/kl-divergence/"><small class="kicker">Concept</small><b>Kullback–Leibler Divergence</b></a><a href="../../concepts/jensen-shannon-divergence/"><small class="kicker">Concept</small><b>Jensen–Shannon Divergence</b></a><a href="../../concepts/hypothesis-testing-and-p-values/"><small class="kicker">Concept</small><b>Hypothesis Tests &amp; p-Values</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/wasserstein-earth-movers-distance/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Statistics</small><b>Wasserstein Distance</b></a>
+    <a class="pager-next" href="../../concepts/ols-inference-t-tests-f-test-r2-and-adjusted-r2/"><small>Next · Statistics <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>OLS Inference: t, F &amp; R-Squared</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

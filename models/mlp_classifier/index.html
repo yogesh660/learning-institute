@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Multi-Layer Perceptron Classification · Learn · Yogesh Awate</title>
+<meta name="description" content="Hidden layers of neurons learn their own features, so the network can draw any boundary. The core of deep learning.">
+<meta property="og:title" content="Multi-Layer Perceptron Classification · Learn · Yogesh Awate">
+<meta property="og:description" content="Hidden layers of neurons learn their own features, so the network can draw any boundary. The core of deep learning.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="mlp_classifier">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-neural">Path 08 · Deep learning</a> / From neurons to networks / Lesson 2 of 42</span>
+    <h1 class="case-title">Multi-Layer Perceptron Classification</h1>
+    <p class="lede rise" style="--d:3">Hidden layers of neurons learn their own features, so the network can draw any boundary. The core of deep learning.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">22 min</span>
+      <span class="tagline lab">Live lab</span>
+      <span class="prereq">Before this: <a href="../../models/perceptron/">Perceptron</a> <a href="../../models/logistic_regression/">Logistic regression</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Task</dt><dd>Classification</dd>
+          <dt>Family</dt><dd>Neural network</dd>
+          <dt>What it learns</dt><dd>Weights of every layer</dd>
+          <dt>Training cost</dt><dd>$O(\text{epochs}\cdot n\cdot\text{weights})$</dd>
+          <dt>Prediction cost</dt><dd>$O(\text{weights})$</dd>
+          <dt>In code</dt><dd><code class="no-math">sklearn.<wbr>neural_network.<wbr>MLPClassifier</code></dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>How it works</a></li><li><a href="#lab"><span>03</span>Try it</a></li><li><a href="#maths"><span>04</span>The maths</a></li><li><a href="#tuning"><span>05</span>Hyperparameters</a></li><li><a href="#when"><span>06</span>When to use it</a></li><li><a href="#code"><span>07</span>In code</a></li><li><a href="#results"><span>08</span>On real data</a></li><li><a href="#quiz"><span>09</span>Check yourself</a></li><li><a href="#related"><span>10</span>Related lessons</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Stack layers of neurons with non-linear activations between them, end with a softmax, and train everything jointly with backpropagation. Hidden layers learn intermediate features, which lets the network carve curved, even disconnected, decision regions.</p>
+        <p>Each hidden ReLU unit draws one line through the input space and outputs "how far past the line" a point is. The next layer combines these half-planes into polygons, curves and islands. That is how a two-layer network solves XOR, which no single perceptron can.</p>
+        <p>Training is <a class="inline" href="../../concepts/gradient-descent/">Gradient descent</a> on cross-entropy loss. Backpropagation applies the chain rule layer by layer to get every weight’s gradient in one backward sweep. Initialisation, learning rate, batch size, L2 penalty and early stopping all matter.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>A team where the first row of workers each draws one rule of thumb, and the second row learns how to combine those rules into a decision.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> How it works</h2>
+        <ol class="steps"><li>Scale the inputs.</li><li>Forward: $h = \text{ReLU}(W_1x + b_1)$, $p = \text{softmax}(W_2h + b_2)$.</li><li>Loss: cross-entropy plus L2 penalty.</li><li>Backward: propagate $\partial L/\partial z = p - y$ back through the layers.</li><li>Update with Adam on mini-batches; stop early on validation loss.</li></ol>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>03</span> Try it</h2>
+        <p>A real neural network trained in your browser with backpropagation. Watch the boundary bend as the loss falls.</p>
+        <div class="lab" data-lab="mlp_classifier" data-kind="models" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>Solve "XOR" with 4 hidden units. Then try it with 1: impossible.</li><li>On "spiral", use 2 layers of 16 and be patient.</li><li>Crank the learning rate until the loss curve starts to jump.</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>04</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Softmax output and cross-entropy</h3><div class="formula">$$p_c = \frac{e^{z_c}}{\sum_{c'} e^{z_{c'}}}, \qquad L = -\sum_c y_c\log p_c, \qquad \frac{\partial L}{\partial z} = p - y$$</div><p>The gradient at the output is simply "predicted minus true", just as in <a class="inline" href="../../models/logistic_regression/">Logistic regression</a>.</p></li>
+          <li><h3>Backpropagating through a hidden layer</h3><div class="formula">$$\delta_1 = (W_2^\top\delta_2)\odot\mathbb 1[z_1 &gt; 0], \qquad \frac{\partial L}{\partial W_1} = \delta_1 x^\top$$</div><p>The ReLU derivative is 1 where the unit was active and 0 elsewhere, so gradients only flow through active units.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="tuning">
+        <h2 class="h3"><span>05</span> Hyperparameters</h2>
+        <div class="table-wrap"><table class="kv">
+          <thead><tr><th>Setting</th><th>What it does</th><th>Typical choice</th></tr></thead>
+          <tbody><tr><td><span class="hp">hidden_layer_sizes</span></td><td>Width and depth.</td><td>(32,) to (128, 64).</td></tr><tr><td><span class="hp">activation</span></td><td>relu, tanh or logistic.</td><td>relu.</td></tr><tr><td><span class="hp">alpha</span></td><td>L2 penalty.</td><td>1e-5 to 1e-2.</td></tr><tr><td><span class="hp">learning_rate_init, batch_size</span></td><td>Optimiser settings.</td><td>1e-3; 32–256.</td></tr><tr><td><span class="hp">early_stopping</span></td><td>Hold out validation data.</td><td>On.</td></tr></tbody>
+        </table></div>
+      </section>
+      <section class="reveal" id="when">
+        <h2 class="h3"><span>06</span> When to use it</h2>
+        <div class="split2">
+          <div class="box good"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Strengths</h3><ul><li>Learns non-linear features automatically.</li><li>Scales with data and compute.</li><li>Same building block as modern deep learning.</li></ul></div>
+          <div class="box bad"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg> Limitations</h3><ul><li>Many hyperparameters; sensitive to scaling and initialisation.</li><li>Often beaten by boosting on small tabular data.</li><li>Black box.</li></ul></div>
+          <div class="box use"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> Reach for it when</h3><p>Large datasets with complex structure, or when you will move on to deep architectures.</p></div>
+          <div class="box avoid"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Think twice when</h3><p>Small tabular datasets or when you need an interpretable model.</p></div>
+        </div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>07</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">from</span> sklearn.pipeline <span class="k">import</span> make_pipeline
+<span class="k">from</span> sklearn.preprocessing <span class="k">import</span> StandardScaler
+<span class="k">from</span> sklearn.neural_network <span class="k">import</span> MLPClassifier
+
+mlp = <span class="f">make_pipeline</span>(<span class="f">StandardScaler</span>(),
+                    <span class="f">MLPClassifier</span>(hidden_layer_sizes=(<span class="n">64</span>, <span class="n">32</span>), alpha=<span class="n">1e-3</span>, early_stopping=<span class="k">True</span>,
+                                  max_iter=<span class="n">1000</span>, random_state=<span class="n">0</span>)).<span class="f">fit</span>(X_tr, y_tr)
+<span class="k">print</span>(<span class="s">&quot;test accuracy:&quot;</span>, <span class="f">round</span>(mlp.<span class="f">score</span>(X_te, y_te), <span class="n">3</span>), <span class="s">&quot;epochs:&quot;</span>, mlp[-<span class="n">1</span>].n_iter_)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Skipping input scaling.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Judging a network by a single training run; seeds matter.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Comparing to boosting without tuning either.</span></li></ul>
+      </section>
+      <section class="reveal" id="results">
+        <h2 class="h3"><span>08</span> On real data</h2>
+        <p>MLP (32, 16) trained on 80% of the breast cancer sample and scored on a stratified 20% hold-out. The baseline always predicts the most common class.</p>
+        <div class="table-wrap" style="margin-top:18px"><table class="kv results-table">
+          <thead><tr><th>Metric</th><th>MLP (32, 16)</th><th>Majority class</th></tr></thead>
+          <tbody><tr><td>Accuracy</td><td>1.000</td><td>0.670</td></tr><tr><td>F1 (malignant)</td><td>1.000</td><td>0.000</td></tr><tr><td>ROC-AUC</td><td>1.000</td><td>0.500</td></tr></tbody>
+        </table></div>
+        <p class="note">Produced by <a href="https://github.com/yogesh660/ml-model-zoo/blob/main/models/mlp_classifier/train.py" target="_blank" rel="noopener">models/mlp_classifier/train.py</a> · generated 2026-10-28. Run it yourself: <code class="no-math">python models/mlp_classifier/train.py</code></p>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>09</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>Why can a two-layer network solve XOR but a perceptron cannot?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It has a bias term</span></button><button class="opt" type="button"><b>B</b><span>It trains for longer</span></button><button class="opt" type="button"><b>C</b><span>Hidden units create intermediate features that make the problem separable</span></button><button class="opt" type="button"><b>D</b><span>It uses a different loss</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Two hidden lines carve the plane into regions the output layer can combine.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>For softmax + cross-entropy, the gradient with respect to the logits is:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$y - p$</span></button><button class="opt" type="button"><b>B</b><span>$p - y$</span></button><button class="opt" type="button"><b>C</b><span>$p(1-p)$</span></button><button class="opt" type="button"><b>D</b><span>$\log p$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> A clean result that makes training stable and fast.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>What would happen if a multi-layer perceptron had 10 hidden layers, but every layer used a linear activation function ($f(z) = z$)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The network would automatically learn decision trees at each layer</span></button><button class="opt" type="button"><b>B</b><span>The backpropagation gradient would explode exponentially to infinity at every step</span></button><button class="opt" type="button"><b>C</b><span>The network would become equivalent to a single linear model, because the composition of linear transformations is strictly linear</span></button><button class="opt" type="button"><b>D</b><span>The network would be able to fit any non-linear function due to having 10 layers of parameters</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Without non-linear activation functions, multiplying successive weight matrices $W_{10} W_9 \dots W_1 x$ collapses into a single matrix $W_{\text{eff}} x$, restricting the model to linear decision boundaries.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q4</span>Why is it standard practice to apply StandardScaler to input features before feeding them into an MLP?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Neural networks cannot process negative numerical inputs</span></button><button class="opt" type="button"><b>B</b><span>Disparate feature scales cause gradients to oscillate unevenly, slowing down gradient descent and biasing regularisation penalties</span></button><button class="opt" type="button"><b>C</b><span>Unscaled features cause the output softmax probabilities to sum to more than 1.0</span></button><button class="opt" type="button"><b>D</b><span>Feature scaling is required by the mathematical definition of the ReLU activation function</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Unscaled features create elongated, elliptical loss surfaces where gradient descent oscillates wildly. Standardising features to zero mean and unit variance makes the contours spherical and ensures L2 regularisation penalises weights fairly.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q5</span>What is the primary role of enabling early_stopping=True in MLPClassifier?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To switch the optimiser from Adam to stochastic gradient descent halfway through training</span></button><button class="opt" type="button"><b>B</b><span>To stop training as soon as the training loss drops below a predetermined constant</span></button><button class="opt" type="button"><b>C</b><span>To prevent overfitting by monitoring validation loss and halting when it fails to improve for several epochs</span></button><button class="opt" type="button"><b>D</b><span>To prune hidden neurons with zero incoming weights</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Early stopping reserves a validation set from the training data. If validation score stops improving for a patience window, training halts and the best weights are restored, guarding against overfitting.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q6</span>A single hidden layer has 2 ReLU neurons. Given input $x = [2.0, -1.0]^\top$, weight matrix $W = \begin{bmatrix} 1.0 &amp; 3.0 \\ 1.0 &amp; 2.0 \end{bmatrix}$, and bias vector $b = [0.5, 1.5]^\top$, what is the activated hidden vector $h = \text{ReLU}(Wx + b)$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$[0.0, 0.0]^\top$</span></button><button class="opt" type="button"><b>B</b><span>$[-0.5, 1.5]^\top$</span></button><button class="opt" type="button"><b>C</b><span>$[0.0, 1.5]^\top$</span></button><button class="opt" type="button"><b>D</b><span>$[0.5, 2.5]^\top$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Pre-activation for neuron 1 is $1(2) + 3(-1) + 0.5 = -0.5$. Since $-0.5 \le 0$, $\text{ReLU}(-0.5) = 0.0$. For neuron 2, $1(2) + 2(-1) + 1.5 = +1.5$. Since $1.5 &gt; 0$, $\text{ReLU}(1.5) = 1.5$. Thus $h = [0.0, 1.5]^\top$.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q7</span>A 3-class classification MLP produces output logits $z = [\ln 4, \, \ln 2, \, \ln 2]$. What are the resulting softmax class probabilities $[p_1, p_2, p_3]$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$[0.40, \, 0.30, \, 0.30]$</span></button><button class="opt" type="button"><b>B</b><span>$[0.33, \, 0.33, \, 0.33]$</span></button><button class="opt" type="button"><b>C</b><span>$[0.50, \, 0.25, \, 0.25]$</span></button><button class="opt" type="button"><b>D</b><span>$[0.60, \, 0.20, \, 0.20]$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The unnormalised exponents are $e^{\ln 4} = 4$, $e^{\ln 2} = 2$, and $e^{\ln 2} = 2$. The normalising sum is $4 + 2 + 2 = 8$. Dividing each by 8 yields $p_1 = 4/8 = 0.50$, $p_2 = 2/8 = 0.25$, and $p_3 = 2/8 = 0.25$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q8</span>What is the "dying ReLU" problem during MLP training?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Neurons saturate at $+1.0$ because activations grow without bound</span></button><button class="opt" type="button"><b>B</b><span>Neurons receive large negative pre-activations, outputting 0 with derivative 0, so gradient updates can no longer revive them</span></button><button class="opt" type="button"><b>C</b><span>The softmax denominator approaches 0, causing division by zero</span></button><button class="opt" type="button"><b>D</b><span>The learning rate decays to 0 before the loss function reaches a local minimum</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> For any input where pre-activation $z \le 0$, the ReLU output is 0 and its derivative $\mathbb{1}[z &gt; 0]$ is 0. If a large gradient knocks a neuron's weights such that $z \le 0$ for all training points, no gradient will ever flow back to update it, rendering the neuron permanently inactive ("dead").</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q9</span>An MLP takes an input with 4 features, has a single hidden layer of 10 neurons, and outputs class scores for a 3-class classification problem. Including all weights and biases, how many learnable parameters does this network have?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>83</span></button><button class="opt" type="button"><b>B</b><span>90</span></button><button class="opt" type="button"><b>C</b><span>70</span></button><button class="opt" type="button"><b>D</b><span>73</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Input-to-hidden layer requires $4 \times 10 = 40$ weights plus 10 biases ($50$ parameters). Hidden-to-output layer requires $10 \times 3 = 30$ weights plus 3 biases ($33$ parameters). Total learnable parameters $= 50 + 33 = 83$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q10</span>A network with softmax output for a 3-class problem computes predicted probabilities $p = [0.4, 0.4, 0.2]^\top$. The true target label is class 1 (one-hot vector $y = [1, 0, 0]^\top$). What is the exact gradient vector $\frac{\partial L}{\partial z}$ of the cross-entropy loss with respect to the logits $z$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$[-0.6, +0.4, +0.2]^\top$</span></button><button class="opt" type="button"><b>B</b><span>$[0.0, +0.4, +0.2]^\top$</span></button><button class="opt" type="button"><b>C</b><span>$[+0.6, -0.4, -0.2]^\top$</span></button><button class="opt" type="button"><b>D</b><span>$[-0.4, +0.4, +0.2]^\top$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> For softmax cross-entropy, $\frac{\partial L}{\partial z} = p - y$. Here, $[0.4 - 1.0, \, 0.4 - 0.0, \, 0.2 - 0.0]^\top = [-0.6, +0.4, +0.2]^\top$. The negative gradient on the true class increases its logit under gradient descent, while the positive gradients on the other classes push their logits down.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q11</span>In a network with 2 hidden ReLU neurons and 2 outputs, the incoming gradient from the output layer is $\delta_2 = [0.5, -0.5]^\top$. The connecting weight matrix is $W_2 = \begin{bmatrix} 2.0 &amp; -1.0 \\ 1.0 &amp; 3.0 \end{bmatrix}$ (where row $k$ connects hidden units to output $k$). The hidden pre-activation was $z_1 = [1.2, -0.4]^\top$. What is the backpropagated error vector $\delta_1 = (W_2^\top \delta_2) \odot \mathbb{1}[z_1 &gt; 0]$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$[1.0, 0.0]^\top$</span></button><button class="opt" type="button"><b>B</b><span>$[0.5, -2.0]^\top$</span></button><button class="opt" type="button"><b>C</b><span>$[0.5, 0.0]^\top$</span></button><button class="opt" type="button"><b>D</b><span>$[0.0, -2.0]^\top$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> First, $W_2^\top \delta_2 = \begin{bmatrix} 2.0 &amp; 1.0 \\ -1.0 &amp; 3.0 \end{bmatrix} \begin{bmatrix} 0.5 \\ -0.5 \end{bmatrix} = \begin{bmatrix} 2(0.5) + 1(-0.5) \\ -1(0.5) + 3(-0.5) \end{bmatrix} = \begin{bmatrix} 0.5 \\ -2.0 \end{bmatrix}$. Next, because neuron 2 was inactive ($z_{1,2} = -0.4 \le 0$), its ReLU derivative is 0, while neuron 1 was active ($z_{1,1} = 1.2 &gt; 0$) with derivative 1. Multiplying elementwise yields $[0.5 \times 1, -2.0 \times 0]^\top = [0.5, 0.0]^\top$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q12</span>In MLPClassifier, the loss function includes an L2 regularisation term with penalty parameter alpha ($\frac{\alpha}{2} \sum \|W\|^2$). During stochastic gradient descent with learning rate $\eta$, how does this regularisation term modify the weight update for each weight matrix $W$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It shrinks the weights by a factor of $(1 - \eta \alpha)$ before subtracting the data loss gradient</span></button><button class="opt" type="button"><b>B</b><span>It clips the maximum eigenvalue of $W$ to $1 / \alpha$</span></button><button class="opt" type="button"><b>C</b><span>It sets weights with absolute magnitude smaller than $\eta \alpha$ directly to zero</span></button><button class="opt" type="button"><b>D</b><span>It subtracts a constant value $\eta \alpha \operatorname{sgn}(W)$ regardless of weight magnitude</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The regularised loss is $L_{\text{total}} = L_{\text{data}} + \frac{\alpha}{2}\|W\|^2$. The gradient is $\nabla L_{\text{data}} + \alpha W$. The update step is $W \leftarrow W - \eta(\nabla L_{\text{data}} + \alpha W) = (1 - \eta \alpha)W - \eta \nabla L_{\text{data}}$, which acts as an exponential multiplicative shrinkage (weight decay) on each step.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>10</span> Related lessons</h2>
+        <div class="related"><a href="../../models/mlp_regressor/"><small class="kicker">Regression</small><b>MLP regressor</b></a><a href="../../models/perceptron/"><small class="kicker">Deep learning</small><b>Perceptron</b></a><a href="../../models/convolutional_neural_networks/"><small class="kicker">Deep learning</small><b>CNNs</b></a><a href="../../concepts/gradient-descent/"><small class="kicker">Concept</small><b>Gradient descent</b></a><a href="../../concepts/loss-functions/"><small class="kicker">Concept</small><b>Loss functions</b></a><a href="../../concepts/regularization/"><small class="kicker">Concept</small><b>Regularisation</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../models/perceptron/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>Perceptron</b></a>
+    <a class="pager-next" href="../../concepts/backpropagation-and-autodiff/"><small>Next · Deep learning <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Backprop and autodiff</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/sequences.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

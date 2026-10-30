@@ -1,0 +1,17 @@
+{
+  "dataset": "collinear housing sample",
+  "summary": "Ridge (CV-tuned alpha) trained on 80% of the collinear housing sample (Price as target), scored on a held-out 20%. The baseline always predicts the training mean.",
+  "model_label": "Ridge (CV-tuned alpha)",
+  "baseline_label": "Predict the mean",
+  "metrics": {
+    "RMSE": 7.831,
+    "MAE": 6.7948,
+    "R²": 0.999
+  },
+  "baseline": {
+    "RMSE": 244.7145,
+    "MAE": 221.1516,
+    "R²": -0.0012
+  },
+  "generated": "generated 2026-10-28"
+}

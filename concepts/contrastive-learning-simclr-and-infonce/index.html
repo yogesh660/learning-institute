@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Contrastive Learning: SimCLR and InfoNCE · Learn · Yogesh Awate</title>
+<meta name="description" content="Extracting rich visual representations without human annotations by pulling augmented views of the same image together while repelling distinct images in embedding space.">
+<meta property="og:title" content="Contrastive Learning: SimCLR and InfoNCE · Learn · Yogesh Awate">
+<meta property="og:description" content="Extracting rich visual representations without human annotations by pulling augmented views of the same image together while repelling distinct images in embedding space.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="contrastive-learning-simclr-and-infonce">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-neural">Path 08 · Deep learning</a> / Representation learning / Lesson 31 of 42</span>
+    <h1 class="case-title">Contrastive Learning: SimCLR and InfoNCE</h1>
+    <p class="lede rise" style="--d:3">Extracting rich visual representations without human annotations by pulling augmented views of the same image together while repelling distinct images in embedding space.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/transfer-learning-and-fine-tuning/">Transfer learning &amp; fine-tuning</a> <a href="../../concepts/the-pytorch-training-loop/">PyTorch training loop</a> <a href="../../concepts/residual-networks-and-skip-connections/">ResNets and skip connections</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Deep learning · Representation learning</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Supervised visual models require millions of manually annotated labels, which are costly, labour-intensive, and prone to annotator bias. Contrastive self-supervised learning—epitomised by SimCLR (Chen et al. 2020) and the InfoNCE loss—trains neural backbones to learn invariant semantic representations by pulling differently augmented views of the same image together while pushing representations of different images apart.</p>
+        <p>If you show a child a photograph of a dog, and then show them a cropped, colour-distorted version of that same dog, they instantly recognize it as the same animal. If you then show them a photograph of a bicycle, they immediately recognize it as distinct. Human visual perception relies on learning representations that remain invariant to trivial changes in viewpoint, lighting, and framing while remaining sensitive to genuine semantic differences.</p>
+        <p>**Contrastive Learning** operationalises this principle without any human labels:
+1. Sample an unlabelled mini-batch of $N$ images.
+2. For each image, apply two stochastic data augmentations (such as random cropping, colour jittering, and Gaussian blur) to create two distinct views. These two views form a **positive pair**.
+3. All other $2(N-1)$ augmented images in the mini-batch serve as **negative pairs**.
+4. Pass both views through an encoder backbone (such as a ResNet) to produce representation $h$, and then through a small non-linear projection head (a 2-layer MLP) to produce latent vector $z$.
+5. The **InfoNCE loss** (Information Noise-Contrastive Estimation) treats the positive view as the target class in a multi-class softmax classification task, pulling positive views together while driving negative views apart.</p>
+        <p>A critical empirical discovery in SimCLR was the role of the non-linear projection head $g(h) = z$. Because the contrastive objective forces $z$ to be completely invariant to transformations, $z$ actively discards information like orientation, cropping bounds, and colour palette. However, downstream tasks often benefit from knowing colour or spatial layout! By throwing away the projection head $g$ after pre-training and using the intermediate representation $h$, practitioners retain richer, more generalisable features for linear probing and transfer learning.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Like training a facial recognition algorithm with identical twins in different outfits: the model learns that photos of the same twin under different lighting and angles must map to the same identity, while photos of different people must never overlap.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Generate stochastic augmented pairs: for each image $x_i$ in mini-batch of size $N$, apply two distinct data augmentations to produce $2N$ views.</li><li>Extract representations with an encoder: pass each view through backbone network $f(\cdot)$ to extract representation vectors $h_i = f(\tilde{x}_i)$.</li><li>Map through a projection head: project representations into lower-dimensional space using 2-layer MLP $z_i = g(h_i)$ and $L_2$-normalise each vector ($\lVert z_i \rVert_2 = 1$).</li><li>Calculate pairwise cosine similarities: compute scaled dot-product matrix $S_{i,j} = z_i^T z_j / \tau$, where $\tau$ is the temperature hyperparameter.</li><li>Evaluate InfoNCE contrastive loss: for each anchor, compute cross-entropy classifying its positive partner against all $2(N-1)$ negative candidates in the batch.</li><li>Discard projection head for downstream tasks: detach $g(\cdot)$ and use backbone representations $h$ for downstream linear classification or fine-tuning.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>The InfoNCE loss (NT-Xent in SimCLR)</h3><div class="formula">$$\ell_{i,j} = -\log \frac{\exp\big(\operatorname{sim}(z_i, z_j) / \tau\big)}{\sum_{k=1}^{2N} \mathbb{I}_{[k \ne i]} \exp\big(\operatorname{sim}(z_i, z_k) / \tau\big)}, \qquad \operatorname{sim}(u, v) = \frac{u^T v}{\lVert u \rVert_2 \lVert v \rVert_2}$$</div><p>$z_i$ and $z_j$ are $L_2$-normalised latent projections of positive views of the same image, $\tau$ is the temperature parameter (typically $0.07$ to $0.1$), and $2N$ is the total number of augmented views in the batch. The loss is symmetric across both views in each pair.</p></li>
+          <li><h3>Mutual information lower bound connection</h3><div class="formula">$$I(X_1; X_2) \ge \log(K) - \mathcal{L}_{\text{InfoNCE}}, \qquad K = 2N - 1$$</div><p>$K$ is the number of negative samples. Minimising InfoNCE loss directly maximises a lower bound on the mutual information between the representations of two views of the same data sample.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>SimCLR learns representations by maximising agreement between differently augmented views of the same image while minimising agreement with negative batch samples.</li><li>The temperature parameter $\tau$ modulates penalty sharpness: smaller $\tau$ penalises hard negatives with high cosine similarity more aggressively.</li><li>Discarding the projection head $g(h)$ after pre-training preserves rich semantic features in $h$ that would otherwise be discarded due to forced augmentation invariance.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Simulate InfoNCE loss on 2 positive pairs (4 views total), embedding dimension D = 3</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+<span class="c"># Pair 0: views 0 &amp; 1 (similar); Pair 1: views 2 &amp; 3 (similar)</span>
+z = np.<span class="f">array</span>([
+    [<span class="n">1.0</span>, <span class="n">0.1</span>, <span class="n">0.0</span>],
+    [<span class="n">0.95</span>, <span class="n">0.15</span>, <span class="n">0.0</span>],
+    [<span class="n">0.0</span>, <span class="n">0.9</span>, <span class="n">0.1</span>],
+    [<span class="n">0.0</span>, <span class="n">0.95</span>, <span class="n">0.15</span>]
+])
+
+<span class="c"># L2-normalise embeddings</span>
+z = z / np.linalg.<span class="f">norm</span>(z, axis=<span class="n">1</span>, keepdims=<span class="k">True</span>)
+
+tau = <span class="n">0.1</span>  <span class="c"># Temperature parameter</span>
+sim_matrix = (z @ z.T) / tau
+np.<span class="f">fill_diagonal</span>(sim_matrix, -<span class="n">1e9</span>)  <span class="c"># Mask self-similarity</span>
+
+<span class="c"># Compute InfoNCE loss for anchor 0 (positive partner is view 1)</span>
+exp_sim = np.<span class="f">exp</span>(sim_matrix)
+loss_anchor_0 = -<span class="f">float</span>(np.<span class="f">log</span>(exp_sim[<span class="n">0</span>, <span class="n">1</span>] / np.<span class="f">sum</span>(exp_sim[<span class="n">0</span>])))
+
+pos_sim = <span class="f">float</span>(np.<span class="f">dot</span>(z[<span class="n">0</span>], z[<span class="n">1</span>]))
+neg_sim = <span class="f">float</span>(np.<span class="f">dot</span>(z[<span class="n">0</span>], z[<span class="n">2</span>]))
+
+<span class="k">print</span>(<span class="s">f&quot;Cosine similarity - positive pair (0, 1): {pos_sim:.4f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Cosine similarity - negative pair (0, 2): {neg_sim:.4f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;InfoNCE contrastive loss for anchor 0:   {loss_anchor_0:.4f}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using small mini-batch sizes: contrastive learning relies on large numbers of negative pairs to prevent representation collapse; SimCLR requires batch sizes of 2,048 to 4,096 (or memory queues like MoCo).</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Weak data augmentations: without aggressive colour jittering, the network cheats by simply matching colour histograms between crops rather than learning shape and structure.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Deploying projection vectors $z$ instead of representations $h$ for downstream tasks, which reduces transfer accuracy because $z$ has stripped away useful task-specific details.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>Why does SimCLR discard the projection head $g(h)$ and use the pre-projection representation $h$ for downstream evaluation?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because the projection head has too many parameters to run on GPU hardware</span></button><button class="opt" type="button"><b>B</b><span>Because the contrastive loss forces $z$ to be invariant to data augmentations, discarding information like colour and pose that downstream tasks need</span></button><button class="opt" type="button"><b>C</b><span>Because the projection head weights are erased after pre-training</span></button><button class="opt" type="button"><b>D</b><span>Because $h$ contains non-normalised probabilities</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Chen et al. showed that forcing representations to be fully invariant to augmentations removes fine-grained spatial and chromatic information from $z$; intermediate representation $h$ retains this information, yielding higher linear probe accuracy.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>What role does the temperature hyperparameter $\tau$ play in the InfoNCE loss?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It controls the penalty sensitivity to hard negative examples: smaller $\tau$ exponentially amplifies penalties for negatives with high cosine similarity</span></button><button class="opt" type="button"><b>B</b><span>It limits the maximum number of layers in the encoder</span></button><button class="opt" type="button"><b>C</b><span>It scales the learning rate of the optimiser</span></button><button class="opt" type="button"><b>D</b><span>It converts negative cosine similarities into positive numbers</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because similarities are divided by $\tau$ inside the exponential, a small $\tau$ creates sharp probability distributions, heavily penalising any negative sample that lies close to the anchor.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>Why is aggressive colour jittering essential when creating augmented views for contrastive learning?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To convert RGB images into greyscale tensors</span></button><button class="opt" type="button"><b>B</b><span>Because without colour distortion, the model exploits an unintended shortcut: matching global colour histograms between crops rather than learning semantic shapes</span></button><button class="opt" type="button"><b>C</b><span>To make images look aesthetically pleasing</span></button><button class="opt" type="button"><b>D</b><span>To satisfy requirements of the InfoNCE mutual information bound</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> If two random crops come from the same photo, they share identical colour palettes. Without colour jittering, the network trivially matches colour distributions without learning object semantics.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q4</span>Why does standard SimCLR require exceptionally large batch sizes (e.g. 2,048 to 4,096)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because cosine similarity cannot be computed with fewer than 1,000 samples</span></button><button class="opt" type="button"><b>B</b><span>Because large batches automatically eliminate the need for data augmentations</span></button><button class="opt" type="button"><b>C</b><span>Because small batches cannot be processed by GPUs</span></button><button class="opt" type="button"><b>D</b><span>Because larger batch sizes provide a rich pool of negative candidates per positive pair, preventing representation collapse</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Contrastive learning relies on negative examples to push the representation space outwards. With too few negatives, the encoder can collapse representations into a narrow subspace.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/clip-and-multimodal-embeddings/"><small class="kicker">Concept</small><b>CLIP &amp; multimodal embeddings</b></a><a href="../../concepts/the-attention-mechanism/"><small class="kicker">Concept</small><b>The attention mechanism</b></a><a href="../../concepts/autoencoders/"><small class="kicker">Concept</small><b>Autoencoders</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/normalising-flows/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>Normalising flows</b></a>
+    <a class="pager-next" href="../../concepts/clip-and-multimodal-embeddings/"><small>Next · Deep learning <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>CLIP &amp; multimodal embeddings</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

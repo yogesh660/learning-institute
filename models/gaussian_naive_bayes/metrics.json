@@ -1,0 +1,17 @@
+{
+  "dataset": "Titanic sample",
+  "summary": "Gaussian NB trained on 80% of the Titanic sample and scored on a stratified 20% hold-out. The baseline always predicts the most common class.",
+  "model_label": "Gaussian NB",
+  "baseline_label": "Majority class",
+  "metrics": {
+    "Accuracy": 0.96,
+    "F1 (survived)": 0.9459,
+    "ROC-AUC": 0.9918
+  },
+  "baseline": {
+    "Accuracy": 0.63,
+    "F1 (survived)": 0.0,
+    "ROC-AUC": 0.5
+  },
+  "generated": "generated 2026-10-28"
+}

@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Regularisation: Dropout, Weight Decay, and Early Stopping · Learn · Yogesh Awate</title>
+<meta name="description" content="Overparameterised neural networks have enough capacity to memorise training noise verbatim. Regularisation bounds model complexity through stochastic feature dropout, weight shrinkage penalties, and validation-based early stopping.">
+<meta property="og:title" content="Regularisation: Dropout, Weight Decay, and Early Stopping · Learn · Yogesh Awate">
+<meta property="og:description" content="Overparameterised neural networks have enough capacity to memorise training noise verbatim. Regularisation bounds model complexity through stochastic feature dropout, weight shrinkage penalties, and validation-based early stopping.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="regularisation-dropout-weight-decay-early-stopping">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-neural">Path 08 · Deep learning</a> / Training fundamentals / Lesson 10 of 42</span>
+    <h1 class="case-title">Regularisation: Dropout, Weight Decay, and Early Stopping</h1>
+    <p class="lede rise" style="--d:3">Overparameterised neural networks have enough capacity to memorise training noise verbatim. Regularisation bounds model complexity through stochastic feature dropout, weight shrinkage penalties, and validation-based early stopping.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/optimisers-sgd-momentum-rmsprop-adam-adamw/">Optimisers: SGD to AdamW</a> <a href="../../concepts/bias-variance-tradeoff/">Bias–variance trade-off</a> <a href="../../concepts/backpropagation-and-autodiff/">Backprop and autodiff</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Deep learning · Training fundamentals</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Modern deep neural networks often contain far more parameters than training observations, granting them the capacity to achieve zero training error even on completely randomised labels. To ensure high test-time generalisation, practitioners combine three complementary regularisation pillars: weight decay to shrink parameter norms, inverted dropout to break co-adaptations between neurons, and early stopping to halt optimisation before noise memorisation begins.</p>
+        <p>Consider a dense neural network where two neurons in layer 2 always activate together to compensate for each other's errors. This co-adaptation creates fragile internal representations: if test data exhibits a slightly different distribution, both neurons misfire. <strong>Dropout</strong> shatters co-adaptations by randomly deactivating a subset of neurons (with probability $p$, typically $0.1$ to $0.5$) during each training forward pass. Because no neuron can rely on the presence of any other specific neuron, each is forced to learn robust, self-sufficient features. Mathematically, dropout acts as an implicit ensemble over $2^N$ possible thinned subnetworks.</p>
+        <p><strong>Weight Decay</strong> adds an $L_2$ penalty on parameter magnitudes, directly shrinking weights toward zero at every optimisation step. Keeping weights small ensures that small perturbations in input features cannot trigger massive, uncontrolled swings in downstream activations, effectively bounding the model's curvature. In adaptive optimisers such as <a class="inline" href="../../concepts/optimisers-sgd-momentum-rmsprop-adam-adamw/">AdamW</a>, this shrinkage must be decoupled from gradient scaling to prevent parameters with historically large gradients from escaping regularisation.</p>
+        <p><strong>Early Stopping</strong> exploits the learning dynamics of gradient descent. When training deep networks, optimisers typically capture broad, low-frequency patterns first before memorising high-frequency sample quirks and labelling errors. By continuously evaluating loss on a separate validation split and stopping training when validation loss stops improving (after a patience window, such as 5 epochs), early stopping acts as a non-parametric complexity control, preserving the checkpoint with the highest true generalisation power.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Like training a robust disaster response team: weight decay ensures no single specialist hoards all responsibility, dropout ensures team members can function when colleagues are absent, and early stopping ends drills when team peak performance is reached before exhaustion induces bad habits.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Partition a validation holdout: reserve 10% to 20% of training data (or establish cross-validation splits) to monitor generalisation independently of the optimiser's loss.</li><li>Apply decoupled weight decay: set decay coefficient $\lambda$ (commonly $0.01$ to $0.1$ in AdamW) across 2D/3D weight matrices, while excluding 1D bias vectors and normalisation scales.</li><li>Insert inverted dropout layers: position dropout modules ($p \in [0.1, 0.5]$) after activations or attention projections, scaling active units by $1 / (1-p)$ during training.</li><li>Toggle evaluation mode: invoke `model.eval()` during inference to disable dropout, allowing all neurons to contribute deterministically without test-time scaling.</li><li>Configure early stopping monitor: track validation loss with a patience threshold $P$ (e.g. 5 epochs), automatically rolling back to the best checkpoint when patience is exhausted.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Decoupled weight decay parameter update</h3><div class="formula">$$w_t = (1 - \eta \lambda) w_{t-1} - \eta \Delta w_t$$</div><p>$w_t$ is the weight vector at iteration $t$, $\eta$ is the learning rate, $\lambda$ is the weight decay coefficient, and $\Delta w_t$ is the gradient update direction (either the standard gradient or Adam's preconditioned gradient). The factor $(1 - \eta \lambda)$ shrinks the parameter toward zero at every step independently of gradient magnitudes.</p></li>
+          <li><h3>Inverted Dropout forward transform</h3><div class="formula">$$\tilde{h}_i = \frac{m_i}{1 - p} \cdot h_i, \qquad m_i \sim \operatorname{Bernoulli}(1 - p)$$</div><p>$h_i$ is the original pre-dropout activation, $p$ is the dropout drop probability ($1-p$ is the survival probability), and $m_i \in \{0, 1\}$ is a random binary mask. Multiplying by the inverted scale factor $\frac{1}{1-p}$ ensures $\mathbb{E}[\tilde{h}_i] = h_i$, meaning expected activation magnitudes are preserved and test-time evaluation requires no post-scaling.</p></li>
+          <li><h3>Early stopping decision criterion</h3><div class="formula">$$\text{Halt if } t - \arg\min_{k \le t} \mathcal{L}_{\text{val}}(k) \ge P$$</div><p>$\mathcal{L}_{\text{val}}(k)$ denotes validation loss evaluated at epoch $k$, and $P$ is the patience window. Training terminates when the number of epochs elapsed since the historical minimum validation loss reaches or exceeds $P$, preventing late-stage overfitting on idiosyncratic training artifacts.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Weight decay penalises large parameter norms, smoothing the model's decision boundaries and bounding sensitivity to input noise.</li><li>Inverted dropout trains an exponential ensemble of sub-architectures by randomly silencing units during forward passes, preventing co-adaptation.</li><li>Early stopping serves as a compute-efficient regulariser that halts training before the network expends capacity memorising sample-specific label noise.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># 1. Inverted Dropout: preserve expectation across 10,000 activations</span>
+np.random.<span class="f">seed</span>(<span class="n">42</span>)
+h = np.<span class="f">ones</span>(<span class="n">10000</span>) * <span class="n">4.0</span>
+p_drop = <span class="n">0.25</span>
+mask = (np.random.<span class="f">rand</span>(<span class="n">10000</span>) &gt;= p_drop).<span class="f">astype</span>(float)
+h_drop = (h * mask) / (<span class="n">1.0</span> - p_drop)
+
+<span class="k">print</span>(<span class="s">&quot;Original activation mean: &quot;</span>, <span class="f">round</span>(<span class="f">float</span>(np.<span class="f">mean</span>(h)), <span class="n">2</span>))
+<span class="k">print</span>(<span class="s">&quot;Inverted dropout mean:   &quot;</span>, <span class="f">round</span>(<span class="f">float</span>(np.<span class="f">mean</span>(h_drop)), <span class="n">2</span>), <span class="s">&quot;(expectation preserved)&quot;</span>)
+
+<span class="c"># 2. Decoupled weight decay step</span>
+w = <span class="n">2.0</span>
+lr, wd = <span class="n">0.1</span>, <span class="n">0.05</span>
+w_decayed = w * (<span class="n">1.0</span> - lr * wd)
+<span class="k">print</span>(<span class="s">f&quot;Weight after decay step (lr={lr}, wd={wd}): {w_decayed:.4f}&quot;</span>)
+
+<span class="c"># 3. Early stopping loop with patience = 2</span>
+val_losses = [<span class="n">1.20</span>, <span class="n">0.90</span>, <span class="n">0.70</span>, <span class="n">0.72</span>, <span class="n">0.75</span>, <span class="n">0.80</span>]
+patience, best_loss, counter, stop_epoch = <span class="n">2</span>, <span class="f">float</span>(<span class="s">'inf'</span>), <span class="n">0</span>, -<span class="n">1</span>
+
+<span class="k">for</span> epoch, loss <span class="k">in</span> <span class="f">enumerate</span>(val_losses):
+    <span class="k">if</span> loss &lt; best_loss:
+        best_loss = loss
+        counter = <span class="n">0</span>
+    <span class="k">else</span>:
+        counter += <span class="n">1</span>
+        <span class="k">if</span> counter &gt;= patience:
+            stop_epoch = epoch
+            break
+
+<span class="k">print</span>(<span class="s">f&quot;Early stopping triggered at epoch {stop_epoch} (restoring best loss {best_loss:.2f})&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Leaving dropout active during inference, which introduces unwanted stochastic randomness and degraded deterministic test accuracy.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Applying weight decay to bias parameters and normalisation scales ($\gamma, \beta$), which underfits the model by unnecessarily constraining affine shifts.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Using $L_2$ regularisation inside Adam instead of decoupled weight decay (AdamW), where adaptive gradient denominators distort the intended shrinkage rate.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>Why does inverted dropout multiply surviving activations by $1 / (1 - p)$ during training?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To maintain the same expected activation magnitude during training so that evaluation requires no modification</span></button><button class="opt" type="button"><b>B</b><span>To completely eliminate the need for backpropagation through hidden layers</span></button><button class="opt" type="button"><b>C</b><span>To ensure that the loss function is strictly non-negative</span></button><button class="opt" type="button"><b>D</b><span>To convert negative activations into positive values</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because each neuron has probability $1-p$ of surviving, the expected sum of activations drops by a factor of $1-p$. Pre-scaling by $1/(1-p)$ ensures $\mathbb{E}[\tilde{h}] = h$, meaning the model can be used directly at test time without any rescaling.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>Why should weight decay typically be applied to weight matrices but excluded from bias vectors and normalisation scales?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because bias vectors cannot be stored in 32-bit floating point format</span></button><button class="opt" type="button"><b>B</b><span>Because biases and normalisation gains govern output shifting and scaling; shrinking them toward zero restricts expressivity without reducing variance</span></button><button class="opt" type="button"><b>C</b><span>Because regularising biases causes the Adam optimiser to divide by zero</span></button><button class="opt" type="button"><b>D</b><span>Because biases do not receive gradients during backpropagation</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Biases and normalisation parameters represent a tiny fraction of total model capacity. Penalising them forces the model's activations toward an arbitrary zero baseline, risking underfitting without improving overfitting protection.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q3</span>What is the primary mechanism through which dropout prevents overfitting in deep neural networks?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It discards 50% of the training labels at every epoch</span></button><button class="opt" type="button"><b>B</b><span>It breaks co-adaptations between neurons by forcing each unit to extract useful features in the absence of random peers</span></button><button class="opt" type="button"><b>C</b><span>It forces the learning rate to decay to zero after each mini-batch</span></button><button class="opt" type="button"><b>D</b><span>It rounds weight values to the nearest integer</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Dropout ensures that no neuron can rely on a specific partner neuron to fix its errors. Neurons must develop standalone, generalisable features, functioning like an implicit ensemble over vast sub-networks.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q4</span>When implementing early stopping, what parameter state should be deployed to production?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The final weights from the very last training epoch</span></button><button class="opt" type="button"><b>B</b><span>An average of all weights across all training epochs</span></button><button class="opt" type="button"><b>C</b><span>The initial random weights before training began</span></button><button class="opt" type="button"><b>D</b><span>The checkpoint that achieved the lowest recorded validation loss before patience was exhausted</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Early stopping continues past the optimum to confirm that validation loss has truly stopped improving. Once patience is exhausted, the training process must restore the checkpoint corresponding to the minimum validation loss.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/normalisation-batch-layer-rms/"><small class="kicker">Concept</small><b>Normalisation: Batch, Layer, RMS</b></a><a href="../../concepts/learning-rate-schedules-and-warm-up/"><small class="kicker">Concept</small><b>LR schedules and warm-up</b></a><a href="../../concepts/vanishing-and-exploding-gradients-clipping/"><small class="kicker">Concept</small><b>Vanishing/exploding gradients</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/normalisation-batch-layer-rms/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>Normalisation: Batch, Layer, RMS</b></a>
+    <a class="pager-next" href="../../concepts/mixed-precision-and-training-stability/"><small>Next · Deep learning <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Mixed precision training</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>MDPs and Bellman equations · Learn · Yogesh Awate</title>
+<meta name="description" content="Markov Decision Processes (MDPs) provide the foundational mathematical framework for reinforcement learning and sequential decision-making under uncertainty. Defined by states, actions, transition probabilities, rewards, and a temporal discount factor, an MDP formalises how an agent's choices influence both immediate gains and future trajectories. The Bellman Expectation and Optimality equations decompose value functions into recursive relationships, enabling exact policy evaluation and optimal control via dynamic programming.">
+<meta property="og:title" content="MDPs and Bellman equations · Learn · Yogesh Awate">
+<meta property="og:description" content="Markov Decision Processes (MDPs) provide the foundational mathematical framework for reinforcement learning and sequential decision-making under uncertainty. Defined by states, actions, transition probabilities, rewards, and a temporal discount factor, an MDP formalises how an agent's choices influence both immediate gains and future trajectories. The Bellman Expectation and Optimality equations decompose value functions into recursive relationships, enabling exact policy evaluation and optimal control via dynamic programming.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="mdps-and-bellman-equations">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ai">Path 11 · AI</a> / Reinforcement learning / Lesson 9 of 42</span>
+    <h1 class="case-title">MDPs and Bellman equations</h1>
+    <p class="lede rise" style="--d:3">Markov Decision Processes (MDPs) provide the foundational mathematical framework for reinforcement learning and sequential decision-making under uncertainty. Defined by states, actions, transition probabilities, rewards, and a temporal discount factor, an MDP formalises how an agent's choices influence both immediate gains and future trajectories. The Bellman Expectation and Optimality equations decompose value functions into recursive relationships, enabling exact policy evaluation and optimal control via dynamic programming.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>AI · Reinforcement learning</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Should an autonomous robot pick up an immediate small reward right now, or invest time navigating a dangerous maze to unlock a massive treasure later? Sequential decision-making requires balancing immediate gratification against long-term consequences under environmental uncertainty. Markov Decision Processes and the Bellman equations turn this philosophical dilemma into precise recursive linear algebra.</p>
+        <p>The Markov Property: "The future is independent of the past given the present." Formally, the transition probability P(S_{t+1} = s' | S_t = s, A_t = a, S_{t-1}, ...) depends strictly on the current state s and action a. You do not need to know the entire historical route the agent took to arrive at state s; all relevant predictive information is compressed into the current state description.</p>
+        <p>Discounted returns and temporal patience: The total return G_t is the sum of discounted future rewards: G_t = sum_{k=0}^inf gamma^k R_{t+k+1}. The discount factor gamma in [0, 1) serves three roles: mathematically, it bounds infinite sums so infinite-horizon returns converge; economically, it reflects preference for immediate returns; and practically, it models environmental risk (the future may terminate at rate 1 - gamma).</p>
+        <p>The recursive beauty of the Bellman decomposition: How much is being in a state worth? Richard Bellman realised that the value of state s can be decomposed into two clean parts: the immediate reward expected from the next step, plus the discounted value of wherever you land next: V(s) = Reward + gamma * V(s'). This recursive decomposition turns an intractable infinite-horizon summation into local one-step expectations.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Think of planning your retirement investments. If you evaluate your net worth at age 65 by simulating every single daily coffee purchase for the next forty years, the combinatorial calculation is overwhelming. Bellman's insight is the recursive budget equation: your net worth at the end of this year is simply your savings earned this year (immediate reward), plus your net worth at the start of next year compounded by market interest (gamma * V(s')). By planning one year at a time backwards from retirement, you solve the entire forty-year financial plan effortlessly.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>The Markov property condition</h3><div class="formula">\mathbb{P}(S_{t+1} = s', R_{t+1} = r \mid S_t, A_t, S_{t-1}, A_{t-1}, \dots, S_0, A_0) = \mathbb{P}(S_{t+1} = s', R_{t+1} = r \mid S_t, A_t)</div><p>The future dynamics depend solely on current state $S_t$ and action $A_t$, establishing the state as a sufficient statistic for decision-making.</p></li>
+          <li><h3>Bellman Expectation Equation for V^pi</h3><div class="formula">V^\pi(s) = \sum_{a \in \mathcal{A}} \pi(a \mid s) \sum_{s' \in \mathcal{S}} P(s' \mid s, a) \left[ R(s, a, s') + \gamma V^\pi(s') \right]</div><p>The value of state $s$ under policy $\pi$ equals the expected immediate reward plus the discounted expected value of the successor state $s'$, averaged across policy action choices and environmental transitions.</p></li>
+          <li><h3>Bellman Optimality Equations for V* and Q*</h3><div class="formula">\begin{aligned} V^*(s) &= \max_{a \in \mathcal{A}} \sum_{s' \in \mathcal{S}} P(s' \mid s, a) \left[ R(s, a, s') + \gamma V^*(s') \right] \\ Q^*(s, a) &= \sum_{s' \in \mathcal{S}} P(s' \mid s, a) \left[ R(s, a, s') + \gamma \max_{a' \in \mathcal{A}} Q^*(s', a') \right] \end{aligned}</div><p>The optimal state value $V^*(s)$ selects the action that achieves maximum expected return. The Bellman optimality operator $T^*$ is a $\gamma$-contraction mapping in the infinity norm, guaranteeing convergence to a unique optimal fixed point.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>A Markov Decision Process formalises decision-making via states S, actions A, transitions P, rewards R, and discount gamma.</li><li>The Markov property asserts that future transitions depend strictly on current state and action, independent of history.</li><li>Bellman equations decompose value functions into immediate reward plus discounted downstream successor values.</li><li>Bellman expectation equations are linear systems for fixed policies; Bellman optimality equations are non-linear systems solved via dynamic programming.</li><li>The contraction mapping theorem guarantees that value iteration converges to a unique optimal value function V* and optimal policy pi*.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="k">class</span> SimpleGridworldMDP:
+    <span class="s">&quot;&quot;&quot;
+    3-state linear MDP: State 0 &lt;-&gt; State 1 &lt;-&gt; State 2 (Terminal Goal).
+    Demonstrates Bellman Expectation and Optimality evaluation.
+    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, gamma=<span class="n">0.9</span>):
+        <span class="k">self</span>.num_states = <span class="n">3</span>
+        <span class="k">self</span>.gamma = gamma
+        <span class="k">self</span>.actions = [<span class="s">&quot;Left&quot;</span>, <span class="s">&quot;Right&quot;</span>]
+        
+    <span class="k">def</span> <span class="f">step</span>(<span class="k">self</span>, state, action):
+        <span class="s">&quot;&quot;&quot;Returns (next_state, reward, is_terminal).&quot;&quot;&quot;</span>
+        <span class="k">if</span> state == <span class="n">2</span>:
+            <span class="k">return</span> <span class="n">2</span>, <span class="n">0.0</span>, <span class="k">True</span>  <span class="c"># Goal state</span>
+            
+        <span class="k">if</span> action == <span class="s">&quot;Right&quot;</span>:
+            next_state = <span class="f">min</span>(<span class="n">2</span>, state + <span class="n">1</span>)
+            reward = <span class="n">10.0</span> <span class="k">if</span> next_state == <span class="n">2</span> <span class="k">else</span> <span class="n">0.0</span>
+        <span class="k">elif</span> action == <span class="s">&quot;Left&quot;</span>:
+            next_state = <span class="f">max</span>(<span class="n">0</span>, state - <span class="n">1</span>)
+            reward = <span class="n">0.0</span>
+            
+        <span class="k">return</span> next_state, reward, (next_state == <span class="n">2</span>)
+
+    <span class="k">def</span> <span class="f">value_iteration</span>(<span class="k">self</span>, theta=<span class="n">1e-4</span>):
+        <span class="s">&quot;&quot;&quot;Solve Bellman Optimality Equation via Value Iteration.&quot;&quot;&quot;</span>
+        V = np.<span class="f">zeros</span>(<span class="k">self</span>.num_states)
+        
+        <span class="k">while</span> <span class="k">True</span>:
+            delta = <span class="n">0.0</span>
+            V_new = np.<span class="f">copy</span>(V)
+            
+            <span class="k">for</span> s <span class="k">in</span> <span class="k">range</span>(<span class="k">self</span>.num_states - <span class="n">1</span>):  <span class="c"># Skip terminal state 2</span>
+                q_values = []
+                <span class="k">for</span> a <span class="k">in</span> <span class="k">self</span>.actions:
+                    s_prime, r, _ = <span class="k">self</span>.<span class="f">step</span>(s, a)
+                    <span class="c"># Bellman Optimality update: r + gamma * V(s')</span>
+                    q_val = r + <span class="k">self</span>.gamma * V[s_prime]
+                    q_values.<span class="f">append</span>(q_val)
+                    
+                <span class="c"># V*(s) = max_a Q*(s, a)</span>
+                V_new[s] = <span class="f">max</span>(q_values)
+                delta = <span class="f">max</span>(delta, <span class="f">abs</span>(V_new[s] - V[s]))
+                
+            V = V_new
+            <span class="k">if</span> delta &lt; theta:
+                break
+                
+        <span class="k">return</span> V
+
+    <span class="k">def</span> <span class="f">extract_policy</span>(<span class="k">self</span>, V):
+        <span class="s">&quot;&quot;&quot;Extract optimal greedy policy pi*(s) from V*.&quot;&quot;&quot;</span>
+        policy = {}
+        <span class="k">for</span> s <span class="k">in</span> <span class="k">range</span>(<span class="k">self</span>.num_states - <span class="n">1</span>):
+            best_action = <span class="k">None</span>
+            best_q = -<span class="f">float</span>(<span class="s">'inf'</span>)
+            <span class="k">for</span> a <span class="k">in</span> <span class="k">self</span>.actions:
+                s_prime, r, _ = <span class="k">self</span>.<span class="f">step</span>(s, a)
+                q = r + <span class="k">self</span>.gamma * V[s_prime]
+                <span class="k">if</span> q &gt; best_q:
+                    best_q = q
+                    best_action = a
+            policy[s] = best_action
+        <span class="k">return</span> policy
+
+mdp = <span class="f">SimpleGridworldMDP</span>(gamma=<span class="n">0.9</span>)
+optimal_V = mdp.<span class="f">value_iteration</span>()
+optimal_pi = mdp.<span class="f">extract_policy</span>(optimal_V)
+
+<span class="k">print</span>(<span class="s">f&quot;MDP Discount factor gamma: {mdp.gamma}&quot;</span>)
+<span class="k">print</span>(<span class="s">&quot;Solved Bellman Optimality Values V*(s):&quot;</span>)
+<span class="k">for</span> s <span class="k">in</span> <span class="k">range</span>(mdp.num_states):
+    <span class="k">print</span>(<span class="s">f&quot;  State {s}: V*(s) = {optimal_V[s]:.2f}&quot;</span>)
+
+<span class="k">print</span>(<span class="s">&quot;\nExtracted Optimal Policy pi*(s):&quot;</span>)
+<span class="k">for</span> s, act <span class="k">in</span> optimal_pi.<span class="f">items</span>():
+    <span class="k">print</span>(<span class="s">f&quot;  State {s} -&gt; Action: '{act}' (moves towards Goal at State 2)&quot;</span>)
+</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Violating the Markov property: If a state representation omits velocity in a physics simulator, the state is non-Markovian because future positions depend on unobserved speed. Always ensure states contain sufficient information.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Setting gamma = 1 in continuing tasks: In non-terminating environments without absorbing states, setting gamma = 1 causes returns to diverge to infinity, breaking dynamic programming convergence.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Conflating V(s) and Q(s, a): V(s) measures the value of being in a state before choosing an action; Q(s, a) measures the value of executing specific action a from state s. Q-values allow direct policy extraction without transition model P.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Curse of dimensionality in tabular MDPs: Tabular Bellman equations require iterating over all |S| states. For complex problems with continuous or high-dimensional states (e.g. Atari video frames), tabular methods must be replaced by deep Q-networks (DQN).</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>What does the Markov property formally state regarding an environment's state transition dynamics?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The discount factor gamma must be equal to 1.0</span></button><button class="opt" type="button"><b>B</b><span>The probability distribution over future states depends strictly on the current state and chosen action, independent of the historical path taken to reach the state</span></button><button class="opt" type="button"><b>C</b><span>Rewards can only be granted at the terminal state</span></button><button class="opt" type="button"><b>D</b><span>The environment must always be deterministic</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The Markov property asserts that current state S_t contains all necessary information to predict the next state S_{t+1}. The historical trajectory is irrelevant given current state and action.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q2</span>What role does the discount factor gamma in [0, 1) play in infinite-horizon Markov Decision Processes?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It mathematically bounds the infinite summation of future rewards, guaranteeing that expected returns converge to finite values while modelling preference for earlier rewards</span></button><button class="opt" type="button"><b>B</b><span>It converts continuous state spaces into discrete grids</span></button><button class="opt" type="button"><b>C</b><span>It forces all rewards to be negative numbers</span></button><button class="opt" type="button"><b>D</b><span>It increases the number of available actions exponentially</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In non-terminating tasks, summing unweighted rewards yields infinite returns. The discount factor gamma < 1 ensures that the geometric series sum_{k=0}^inf gamma^k R converges to a finite bound.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>Why does Value Iteration converge to the unique optimal value function V*?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because computers use 64-bit floating point arithmetic</span></button><button class="opt" type="button"><b>B</b><span>Because state transitions are always symmetric</span></button><button class="opt" type="button"><b>C</b><span>Because the Bellman optimality operator is a gamma-contraction mapping in the infinity norm, guaranteeing a unique fixed point via Banach's fixed-point theorem</span></button><button class="opt" type="button"><b>D</b><span>Because rewards are strictly positive integers</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The Bellman optimality operator T* satisfies ||T* V - T* U||_inf <= gamma ||V - U||_inf. Since gamma < 1, T* is a contraction mapping. By Banach's fixed-point theorem, repeated application converges to the unique fixed point V*.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/intelligent-agents-and-environments/"><small class="kicker">Concept</small><b>Agents &amp; Environments</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/planning-strips/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · AI</small><b>Planning: STRIPS</b></a>
+    <a class="pager-next" href="../../concepts/dynamic-programming-value-and-policy-iteration/"><small>Next · AI <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Value &amp; Policy Iteration</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

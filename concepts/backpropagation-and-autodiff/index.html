@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Backpropagation and Automatic Differentiation · Learn · Yogesh Awate</title>
+<meta name="description" content="Computing exact loss gradients across millions of nested parameters using the multivariate chain rule on directed computation graphs.">
+<meta property="og:title" content="Backpropagation and Automatic Differentiation · Learn · Yogesh Awate">
+<meta property="og:description" content="Computing exact loss gradients across millions of nested parameters using the multivariate chain rule on directed computation graphs.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="backpropagation-and-autodiff">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-neural">Path 08 · Deep learning</a> / Training fundamentals / Lesson 3 of 42</span>
+    <h1 class="case-title">Backpropagation and Automatic Differentiation</h1>
+    <p class="lede rise" style="--d:3">Computing exact loss gradients across millions of nested parameters using the multivariate chain rule on directed computation graphs.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/gradient-descent/">Gradient descent</a> <a href="../../concepts/loss-functions/">Loss functions</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Deep learning · Training fundamentals</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">Neural networks learn by adjusting weights to reduce prediction loss, but computing gradients numerically via finite differences across millions of parameters is computationally impossible. Backpropagation applies the multivariate calculus chain rule in reverse topological order across a directed acyclic computation graph. Reverse-mode automatic differentiation evaluates exact gradients for all parameters simultaneously in a single backward pass with compute cost proportional to the forward pass.</p>
+        <p>Suppose you train a neural network with 1,000 weights and need the gradient of the loss with respect to each weight. The naive numerical method perturbs weight w_1 by a tiny step epsilon = 0.0001, executes a complete forward pass to measure the change in loss, and divides by epsilon. You must repeat this full forward pass 1,000 times—once for every individual parameter! For modern deep learning models containing billions of weights, computing gradients numerically would take centuries for a single optimisation step.</p>
+        <p>Backpropagation recognizes that any neural network is simply a composite chain of elementary mathematical operations (additions, matrix multiplications, non-linear activations) arranged in a Directed Acyclic Graph (DAG). During the forward pass, data flows from inputs to loss, and intermediate activations are cached in memory. To determine how much an early weight influenced the final scalar loss, we work backwards from the output. By the multivariate chain rule, the gradient at any intermediate node equals the sum of incoming adjoint gradients from its downstream consumers multiplied by the local Jacobian.</p>
+        <p>Forward-mode autodiff propagates tangent derivatives forward alongside activations. It is efficient when a function has few inputs and many outputs. In deep learning, however, the loss function maps millions of parameters to a single scalar loss. Reverse-mode automatic differentiation computes adjoint derivatives backwards from the scalar root, yielding exact, analytically perfect gradients for all parameters simultaneously in approximately twice the computational time of a single forward pass.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>A financial auditor tracing a multi-million-pound deficit back through an enterprise ledger: rather than recalculating the entire global supply chain for every invoice, the auditor works backward from the final balance sheet line-by-line, apportioning exact responsibility to each contributing department.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Construct the forward computational tape: trace tensor operations during the forward pass, recording operation types and caching intermediate values needed for local Jacobians.</li><li>Evaluate terminal scalar loss: compute the objective value $L(y, \hat{y})$ and seed the backward gradient root with $\bar{L} = \partial L / \partial L = 1.0$.</li><li>Traverse graph in reverse topological order: visit each node from output to input, applying its specific vector-Jacobian product (VJP).</li><li>Accumulate gradients at branching nodes: when an intermediate tensor feeds multiple downstream operations, sum the adjoint contributions.</li><li>Update leaf parameter tensors: apply the accumulated gradients via your optimiser and clear intermediate activations to free GPU memory.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Multivariate chain rule on a directed acyclic graph</h3><div class="formula">\frac{\partial L}{\partial u_i} = \sum_{j \in \text{Children}(u_i)} \frac{\partial L}{\partial u_j} \frac{\partial u_j}{\partial u_i}</div><p>Where $u_i$ is an intermediate node in the computation graph. The adjoint derivative $\bar{u}_i = \partial L / \partial u_i$ accumulates contributions from all descendant nodes that consumed $u_i$ during forward execution.</p></li>
+          <li><h3>Vector-Jacobian product (VJP) for linear transformations</h3><div class="formula">Z = X W \implies \frac{\partial L}{\partial X} = \frac{\partial L}{\partial Z} W^T, \qquad \frac{\partial L}{\partial W} = X^T \frac{\partial L}{\partial Z}</div><p>Where $\bar{Z} = \partial L / \partial Z \in \mathbb{R}^{B \times D_{\text{out}}}$ is the incoming gradient tensor, $X \in \mathbb{R}^{B \times D_{\text{in}}}$, and $W \in \mathbb{R}^{D_{\text{in}} \times D_{\text{out}}}$. Gradients are evaluated via matrix transposition without materialising enormous explicit Jacobian tensors.</p></li>
+          <li><h3>Computational complexity bound (Baur–Strassen theorem)</h3><div class="formula">\text{ops}\left(\nabla L(\mathbf{w})\right) \le c \cdot \text{ops}\left(L(\mathbf{w})\right), \qquad c \approx 2 \text{ to } 5</div><p>The Baur–Strassen theorem guarantees that evaluating the entire gradient vector $\nabla L$ via reverse-mode autodiff requires a small constant multiple $c$ of the forward pass floating-point operations, completely independent of parameter count $P$.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Reverse-mode automatic differentiation evaluates exact gradients for all model parameters in a single backward pass.</li><li>Branching tensors in computation graphs sum gradients from all downstream consumers (multivariate chain rule).</li><li>Intermediate forward activations must be retained in memory until the backward pass completes, dictating GPU memory usage during training.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Scalar reverse-mode autodiff engine</span>
+<span class="k">class</span> Value:
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="k">self</span>, data, _children=()):
+        <span class="k">self</span>.data = <span class="f">float</span>(data)
+        <span class="k">self</span>.grad = <span class="n">0.0</span>
+        <span class="k">self</span>._backward = <span class="k">lambda</span>: <span class="k">None</span>
+        <span class="k">self</span>._prev = <span class="f">set</span>(_children)
+
+    <span class="k">def</span> <span class="f">__add__</span>(<span class="k">self</span>, other):
+        other = other <span class="k">if</span> <span class="f">isinstance</span>(other, Value) <span class="k">else</span> <span class="f">Value</span>(other)
+        out = <span class="f">Value</span>(<span class="k">self</span>.data + other.data, (<span class="k">self</span>, other))
+        <span class="k">def</span> <span class="f">_backward</span>():
+            <span class="k">self</span>.grad += out.grad
+            other.grad += out.grad
+        out._backward = _backward
+        <span class="k">return</span> out
+
+    <span class="k">def</span> <span class="f">__mul__</span>(<span class="k">self</span>, other):
+        other = other <span class="k">if</span> <span class="f">isinstance</span>(other, Value) <span class="k">else</span> <span class="f">Value</span>(other)
+        out = <span class="f">Value</span>(<span class="k">self</span>.data * other.data, (<span class="k">self</span>, other))
+        <span class="k">def</span> <span class="f">_backward</span>():
+            <span class="k">self</span>.grad += other.data * out.grad
+            other.grad += <span class="k">self</span>.data * out.grad
+        out._backward = _backward
+        <span class="k">return</span> out
+
+    <span class="k">def</span> <span class="f">tanh</span>(<span class="k">self</span>):
+        t = np.<span class="f">tanh</span>(<span class="k">self</span>.data)
+        out = <span class="f">Value</span>(t, (<span class="k">self</span>,))
+        <span class="k">def</span> <span class="f">_backward</span>():
+            <span class="k">self</span>.grad += (<span class="n">1.0</span> - t**<span class="n">2</span>) * out.grad
+        out._backward = _backward
+        <span class="k">return</span> out
+
+    <span class="k">def</span> <span class="f">backward</span>(<span class="k">self</span>):
+        topo = []
+        visited = <span class="f">set</span>()
+        <span class="k">def</span> <span class="f">build_topo</span>(v):
+            <span class="k">if</span> v <span class="k">not</span> <span class="k">in</span> visited:
+                visited.<span class="f">add</span>(v)
+                <span class="k">for</span> child <span class="k">in</span> v._prev:
+                    <span class="f">build_topo</span>(child)
+                topo.<span class="f">append</span>(v)
+        <span class="f">build_topo</span>(<span class="k">self</span>)
+        <span class="k">self</span>.grad = <span class="n">1.0</span>
+        <span class="k">for</span> node <span class="k">in</span> <span class="f">reversed</span>(topo):
+            node.<span class="f">_backward</span>()
+
+<span class="c"># Evaluate loss: L = (y - tanh(x*w + b))^2</span>
+x, y = <span class="f">Value</span>(<span class="n">2.0</span>), <span class="f">Value</span>(<span class="n">1.0</span>)
+w, b = <span class="f">Value</span>(<span class="n">0.5</span>), <span class="f">Value</span>(-<span class="n">0.2</span>)
+pred = (x * w + b).<span class="f">tanh</span>()
+diff = pred + <span class="f">Value</span>(-y.data)
+loss = diff * diff
+loss.<span class="f">backward</span>()
+
+<span class="c"># Finite difference verification</span>
+eps = <span class="n">1e-6</span>
+w_plus = <span class="f">Value</span>(<span class="n">0.5</span> + eps)
+l_plus = ((x * w_plus + b).<span class="f">tanh</span>() + <span class="f">Value</span>(-y.data)) * ((x * w_plus + b).<span class="f">tanh</span>() + <span class="f">Value</span>(-y.data))
+w_minus = <span class="f">Value</span>(<span class="n">0.5</span> - eps)
+l_minus = ((x * w_minus + b).<span class="f">tanh</span>() + <span class="f">Value</span>(-y.data)) * ((x * w_minus + b).<span class="f">tanh</span>() + <span class="f">Value</span>(-y.data))
+num_grad_w = (l_plus.data - l_minus.data) / (<span class="n">2</span> * eps)
+
+<span class="k">print</span>(<span class="s">f&quot;Analytical autodiff gradient dL/dw: {w.grad:.6f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Numerical finite-difference dL/dw:  {num_grad_w:.6f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Absolute discrepancy: {abs(w.grad - num_grad_w):.2e}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>In-place tensor modifications: mutating a tensor in-place overwrites activations required by backward Jacobians, corrupting gradient calculations.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Forgetting to zero accumulated gradients: deep learning frameworks accumulate gradients by default; omitting zero_grad() compounds gradients across training steps.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Performing finite-difference gradient checks in single precision float32, which introduces numerical roundoff artifacts rather than verifying autodiff correctness.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="2">
+            <p><span>Q1</span>Why is reverse-mode automatic differentiation universally preferred over forward-mode automatic differentiation in deep learning?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Reverse-mode consumes zero GPU memory</span></button><button class="opt" type="button"><b>B</b><span>Forward-mode only works on CPUs</span></button><button class="opt" type="button"><b>C</b><span>Reverse-mode computes gradients for all input parameters in a single backward pass when the output is a scalar loss, whereas forward-mode requires one pass per parameter</span></button><button class="opt" type="button"><b>D</b><span>Forward-mode cannot compute derivatives of non-linear activations</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In deep learning, loss functions map millions of parameters to a single scalar loss. Reverse-mode evaluates gradients for all inputs in one reverse pass, whereas forward-mode requires as many passes as there are input parameters.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>In a computation graph, what mathematical rule dictates how gradients are handled when a single tensor feeds into multiple downstream operation branches?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Only the largest downstream gradient is retained</span></button><button class="opt" type="button"><b>B</b><span>The gradients from all downstream branches must be summed together (multivariate chain rule)</span></button><button class="opt" type="button"><b>C</b><span>The gradients from all downstream branches must be multiplied together</span></button><button class="opt" type="button"><b>D</b><span>The gradient is set to zero to prevent exploding values</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> By the multivariate chain rule of calculus, if a variable x influences the final output through multiple paths, the total derivative dL/dx is the sum of the derivatives across all individual paths.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q3</span>Why does deep learning training consume significantly more GPU memory during backpropagation than during inference?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because all intermediate layer activations computed in the forward pass must be held in memory to evaluate backward vector-Jacobian products</span></button><button class="opt" type="button"><b>B</b><span>Because the optimiser creates ten copies of the dataset</span></button><button class="opt" type="button"><b>C</b><span>Because backward passes compile the network into machine code</span></button><button class="opt" type="button"><b>D</b><span>Because weights are doubled in size during backpropagation</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Evaluating local derivatives of activations (such as tanh or matrix products) requires the exact forward activation values, forcing frameworks to cache intermediate tensors until the backward pass completes.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/activation-functions/"><small class="kicker">Concept</small><b>Activation functions</b></a><a href="../../concepts/weight-initialisation-xavier-and-he/"><small class="kicker">Concept</small><b>Weight initialisation: Xavier, He</b></a><a href="../../concepts/optimisers-sgd-momentum-rmsprop-adam-adamw/"><small class="kicker">Concept</small><b>Optimisers: SGD to AdamW</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../models/mlp_classifier/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Deep learning</small><b>MLP classifier</b></a>
+    <a class="pager-next" href="../../concepts/activation-functions/"><small>Next · Deep learning <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Activation functions</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

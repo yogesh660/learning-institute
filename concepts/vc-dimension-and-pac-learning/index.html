@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>VC Dimension and Probably Approximately Correct (PAC) Learning · Learn · Yogesh Awate</title>
+<meta name="description" content="Quantify the learning capacity of hypothesis classes and sample complexity: master Valiant’s PAC framework, shattering, and Vapnik–Chervonenkis (VC) dimension.">
+<meta property="og:title" content="VC Dimension and Probably Approximately Correct (PAC) Learning · Learn · Yogesh Awate">
+<meta property="og:description" content="Quantify the learning capacity of hypothesis classes and sample complexity: master Valiant’s PAC framework, shattering, and Vapnik–Chervonenkis (VC) dimension.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="vc-dimension-and-pac-learning">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-ml-toolbox">Path 06 · Machine learning toolbox</a> / Learning theory / Lesson 37 of 50</span>
+    <h1 class="case-title">VC Dimension and Probably Approximately Correct (PAC) Learning</h1>
+    <p class="lede rise" style="--d:3">Quantify the learning capacity of hypothesis classes and sample complexity: master Valiant’s PAC framework, shattering, and Vapnik–Chervonenkis (VC) dimension.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="3"><i><b></b></i>Advanced</span></span>
+      <span class="tagline">18 min</span>
+      
+      <span class="prereq">Before this: <a href="../../models/support_vector_classifier/">Support vector classifier</a> <a href="../../concepts/bias-variance-tradeoff/">Bias–variance trade-off</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Machine learning toolbox · Learning theory</dd>
+          <dt>Level</dt><dd>Advanced</dd>
+          <dt>Used by</dt><dd>0 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">How many training samples are mathematically required to guarantee that a machine learning model will generalise out-of-sample? Computational learning theory formalises generalisation bounds using PAC learning and VC dimension.</p>
+        <p>How do we know that a machine learning model with low training error will genuinely perform well on unseen future data, rather than having memorized noise? If a model achieves 0% training error on 50 samples, when does this guarantee true generalisation? Computational Learning Theory provides the mathematical foundation.</p>
+        <p>Leslie Valiant (1984) founded Probably Approximately Correct (PAC) Learning. The PAC framework defines what it means for an algorithm to "learn": given error tolerance $\epsilon &gt; 0$ and failure probability $\delta &gt; 0$, an algorithm is a PAC learner if, with high probability (at least $1 - \delta$), it outputs a hypothesis whose true generalisation error is at most $\epsilon$. The sample complexity $m$ is the minimum number of training examples required to guarantee this.</p>
+        <p>For finite hypothesis spaces (a discrete dictionary of $|\mathcal{H}|$ possible models), PAC bounds show that sample complexity scales logarithmically: $m \ge \frac{1}{\epsilon} \left( \ln |\mathcal{H}| + \ln \frac{1}{\delta} \right)$. However, nearly all practical models—such as linear hyperplanes, logistic regression, support vector machines, and neural networks—have continuous real-valued parameters, meaning $|\mathcal{H}| = \infty$. When $|\mathcal{H}| = \infty$, the naive bound $\ln |\mathcal{H}|$ becomes infinite and useless.</p>
+        <p>Vladimir Vapnik and Alexey Chervonenkis resolved this by measuring the combinatorial expressiveness of continuous hypothesis classes through the Vapnik–Chervonenkis (VC) Dimension. A hypothesis class $\mathcal{H}$ shatters a set of $m$ points if it can assign all $2^m$ possible binary labelings to those points. The VC dimension $d_{\mathrm{VC}}$ is the maximum number of points that can be shattered. By Sauer’s Lemma, once sample size exceeds $d_{\mathrm{VC}}$, the number of realizable labelings grows only polynomially, proving that generalisation bounds depend on $d_{\mathrm{VC}}$ rather than the infinite cardinality of $\mathcal{H}$.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Imagine a teacher testing students with multiple-choice questions. A student who memorized a cheat sheet of 10 answers (finite hypothesis space) might pass a 10-question test purely by memorisation. But to guarantee they truly understand the underlying subject (PAC learning with error < 5%), you must test them on enough diverse questions that pure guessing or memorisation becomes statistically impossible. The VC dimension measures the student memorisation capacity: how many arbitrary questions they could pass by rote before genuine conceptual understanding is required.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li><li>[object Object]</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>PAC Sample Complexity (Finite Hypothesis Class)</h3><div class="formula">m \ge \frac{1}{\epsilon} \left( \ln |\mathcal{H}| + \ln \frac{1}{\delta} \right)</div><p>Minimum number of training samples required to guarantee true risk <= epsilon with probability >= 1 - delta for consistent learners in finite hypothesis spaces.</p></li>
+          <li><h3>VC Dimension Definition and Growth Function</h3><div class="formula">d_{\mathrm{VC}}(\mathcal{H}) = \max \left\{ m : \Pi_{\mathcal{H}}(m) = 2^m \right\}, \quad \Pi_{\mathcal{H}}(m) \le \sum_{i=0}^{d} \binom{m}{i} \le \left(\frac{em}{d}\right)^d \; (\text{Sauer's Lemma})</div><p>The maximum number of points that can be shattered. Sauer's Lemma proves that for m > d, the growth function is bounded polynomially by (em/d)^d.</p></li>
+          <li><h3>Vapnik–Chervonenkis Generalisation Error Bound</h3><div class="formula">R(h) \le R_{\mathrm{emp}}(h) + 2 \sqrt{2 \frac{d_{\mathrm{VC}} \ln\left(\frac{2e m}{d_{\mathrm{VC}}}\right) + \ln\left(\frac{4}{\delta}\right)}{m}}</div><p>Guarantees that true out-of-sample risk R(h) is bounded by empirical training risk plus a structural complexity penalty scaling as O(sqrt(d_VC / m)).</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>PAC learning formalises the conditions under which an algorithm produces low generalisation error with high probability.</li><li>For finite hypothesis spaces, sample complexity scales as $m = O\left(\frac{1}{\epsilon} \ln |\mathcal{H}|\right)$.</li><li>VC dimension measures the capacity of infinite continuous hypothesis classes by determining the maximum number of shatterable points.</li><li>For linear hyperplanes in $\mathbb{R}^p$, the VC dimension is exactly $p + 1$.</li><li>Vapnik’s generalisation bounds prove that generalisation error decays as $O\left(\sqrt{d_{\mathrm{VC}} / m}\right)$, independent of ambient parameter space.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+
+<span class="c"># Demonstrating Shattering and VC Dimension in 2D Linear Classifiers</span>
+<span class="c"># For a 2D line (w1*x1 + w2*x2 + b = 0), VC dimension is 2 + 1 = 3.</span>
+<span class="c"># 3 points can be shattered in all 2^3 = 8 configurations.</span>
+<span class="c"># 4 points cannot be shattered (XOR configuration always fails!)</span>
+
+<span class="k">def</span> <span class="f">can_shatter</span>(points, labels_list):
+    <span class="c"># Check if a linear classifier can perfectly separate each binary labeling</span>
+    <span class="k">from</span> sklearn.linear_model <span class="k">import</span> LogisticRegression
+    shattered_count = <span class="n">0</span>
+    
+    <span class="k">for</span> y <span class="k">in</span> labels_list:
+        <span class="k">if</span> <span class="k">len</span>(np.<span class="f">unique</span>(y)) == <span class="n">1</span>:
+            shattered_count += <span class="n">1</span>
+            continue
+        clf = <span class="f">LogisticRegression</span>(penalty=<span class="k">None</span>, solver=<span class="s">'lbfgs'</span>)
+        clf.<span class="f">fit</span>(points, y)
+        preds = clf.<span class="f">predict</span>(points)
+        <span class="k">if</span> np.<span class="f">array_equal</span>(preds, y):
+            shattered_count += <span class="n">1</span>
+            
+    <span class="k">return</span> shattered_count
+
+<span class="c"># 1. Test 3 non-collinear points in 2D</span>
+points_3 = np.<span class="f">array</span>([
+    [<span class="n">0.0</span>, <span class="n">0.0</span>],
+    [<span class="n">1.0</span>, <span class="n">0.0</span>],
+    [<span class="n">0.0</span>, <span class="n">1.0</span>]
+])
+
+<span class="c"># Generate all 2^3 = 8 binary labelings</span>
+labels_3 = []
+<span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(<span class="n">8</span>):
+    binary_str = <span class="f">format</span>(i, <span class="s">'03b'</span>)
+    labels_3.<span class="f">append</span>(np.<span class="f">array</span>([<span class="f">int</span>(b) <span class="k">for</span> b <span class="k">in</span> binary_str]))
+
+shattered_3 = <span class="f">can_shatter</span>(points_3, labels_3)
+
+<span class="c"># 2. Test 4 points forming an XOR square</span>
+points_4 = np.<span class="f">array</span>([
+    [<span class="n">0.0</span>, <span class="n">0.0</span>],
+    [<span class="n">1.0</span>, <span class="n">0.0</span>],
+    [<span class="n">0.0</span>, <span class="n">1.0</span>],
+    [<span class="n">1.0</span>, <span class="n">1.0</span>]
+])
+
+<span class="c"># Generate all 2^4 = 16 binary labelings</span>
+labels_4 = []
+<span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(<span class="n">16</span>):
+    binary_str = <span class="f">format</span>(i, <span class="s">'04b'</span>)
+    labels_4.<span class="f">append</span>(np.<span class="f">array</span>([<span class="f">int</span>(b) <span class="k">for</span> b <span class="k">in</span> binary_str]))
+
+shattered_4 = <span class="f">can_shatter</span>(points_4, labels_4)
+
+<span class="c"># 3. Calculate VC Sample Complexity Bound</span>
+d_vc = <span class="n">3</span>  <span class="c"># For 2D linear classifier</span>
+epsilon = <span class="n">0.10</span>  <span class="c"># Max 10% generalisation error</span>
+delta = <span class="n">0.05</span>    <span class="c"># 95% confidence (delta = 5%)</span>
+
+<span class="c"># Vapnik sample complexity approximation: m approx (d_vc + log(1/delta)) / eps</span>
+m_approx = <span class="f">int</span>(np.<span class="f">ceil</span>((d_vc * np.<span class="f">log</span>(<span class="n">1.0</span> / epsilon) + np.<span class="f">log</span>(<span class="n">1.0</span> / delta)) / epsilon))
+
+<span class="k">print</span>(<span class="s">f&quot;--- VC Dimension Verification in 2D ---&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;3 Points: Can shatter {shattered_3} / 8 labelings (100% shattered -&gt; d_VC &gt;= 3)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;4 Points: Can shatter {shattered_4} / 16 labelings (XOR fails -&gt; d_VC &lt; 4)&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Exact VC Dimension of 2D Linear Classifier: {d_vc}&quot;</span>)
+
+<span class="k">print</span>(<span class="s">f&quot;\n--- PAC Learning Sample Complexity ---&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Target generalisation error (epsilon): {epsilon * 100:.1f}%&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Confidence level (1 - delta):           {(1 - delta) * 100:.1f}%&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Guaranteed sample complexity m:        {m_approx} samples required&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Confusing parameter count with VC dimension: A model with only 1 parameter can have infinite VC dimension (e.g. $f(x) = \operatorname{sign}(\sin(\theta x))$ can shatter infinitely many points).</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Overly conservative theoretical bounds: VC generalisation bounds are worst-case upper bounds across all distributions, often requiring 10x to 100x more samples than empirical neural network practice.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Data-independent bounds: Standard VC dimension ignores the underlying data distribution $P(x)$; data lying on a low-dimensional manifold generalises with far fewer samples than raw VC dimension suggests.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="3">
+            <p><span>Q1</span>What is the VC dimension of a linear hyperplane classifier operating in 2-dimensional space (R^2)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>1 (it can only classify 1 point at a time)</span></button><button class="opt" type="button"><b>B</b><span>2 (matching the number of features)</span></button><button class="opt" type="button"><b>C</b><span>Infinite</span></button><button class="opt" type="button"><b>D</b><span>3 (it can shatter any 3 non-collinear points in all 8 labelings, but cannot shatter 4 points in an XOR configuration)</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In R^p, a linear hyperplane has VC dimension p + 1. In 2D, 3 points can be shattered in all 8 labelings, but an XOR configuration of 4 points cannot be linearly separated.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q2</span>Why does Sauer’s Lemma represent a crucial breakthrough in machine learning theory?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It shows that test error is always zero when training error is zero</span></button><button class="opt" type="button"><b>B</b><span>It proves that once sample size m exceeds the VC dimension d, the number of realizable labelings grows polynomially O(m^d) rather than exponentially 2^m, enabling generalisation bounds</span></button><button class="opt" type="button"><b>C</b><span>It proves that all neural networks converge in polynomial time</span></button><button class="opt" type="button"><b>D</b><span>It allows linear regression to solve classification problems</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Without Sauer's lemma, the combinatorial growth of labelings 2^m prevents generalisation bounds. Sauer's lemma establishes polynomial growth (em/d)^d for m > d_VC, proving PAC learnability.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/svm-dual-formulation/"><small class="kicker">Concept</small><b>SVM dual formulation</b></a><a href="../../concepts/no-free-lunch-and-inductive-bias/"><small class="kicker">Concept</small><b>No free lunch &amp; inductive bias</b></a><a href="../../concepts/bias-variance-tradeoff/"><small class="kicker">Concept</small><b>Bias–variance trade-off</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/svm-dual-formulation/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Machine learning toolbox</small><b>SVM dual formulation</b></a>
+    <a class="pager-next" href="../../concepts/no-free-lunch-and-inductive-bias/"><small>Next · Machine learning toolbox <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>No free lunch &amp; inductive bias</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

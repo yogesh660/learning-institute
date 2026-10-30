@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>Chi-Square Tests · Learn · Yogesh Awate</title>
+<meta name="description" content="Test categorical distributions using goodness-of-fit and contingency table tests of independence, comparing observed counts against expected frequencies.">
+<meta property="og:title" content="Chi-Square Tests · Learn · Yogesh Awate">
+<meta property="og:description" content="Test categorical distributions using goodness-of-fit and contingency table tests of independence, comparing observed counts against expected frequencies.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="chi-square-tests">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-statistics">Path 02 · Statistics</a> / Hypothesis testing / Lesson 15 of 51</span>
+    <h1 class="case-title">Chi-Square Tests</h1>
+    <p class="lede rise" style="--d:3">Test categorical distributions using goodness-of-fit and contingency table tests of independence, comparing observed counts against expected frequencies.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="2"><i><b></b></i>Intermediate</span></span>
+      <span class="tagline">16 min</span>
+      
+      <span class="prereq">Before this: <a href="../../concepts/hypothesis-testing-and-p-values/">Hypothesis Tests &amp; p-Values</a> <a href="../../concepts/random-variables-and-distributions/">Random variables</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Path</dt><dd>Statistics · Hypothesis testing</dd>
+          <dt>Level</dt><dd>Intermediate</dd>
+          <dt>Used by</dt><dd>2 model lessons</dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>Step by step</a></li><li><a href="#maths"><span>03</span>The maths</a></li><li><a href="#takeaways"><span>04</span>Key takeaways</a></li><li><a href="#code"><span>05</span>In code</a></li><li><a href="#quiz"><span>06</span>Check yourself</a></li><li><a href="#related"><span>07</span>Where it shows up</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">While t-tests evaluate continuous measurements, many empirical problems involve counts of categorical occurrences. Pearson's chi-square ($\chi^2$) tests assess whether observed categorical frequencies conform to a theoretical distribution (goodness-of-fit) or whether two categorical variables are statistically independent.</p>
+        <p>Suppose an engineering team tests whether user device type (Desktop vs Mobile) is independent of subscription tier choice (Free, Pro, Enterprise). Over a week, 500 new users register: Desktop users comprise 120 Free, 80 Pro, and 50 Enterprise (250 total); Mobile users comprise 180 Free, 50 Pro, and 20 Enterprise (250 total). Overall, 300 users choose Free (60%), 130 choose Pro (26%), and 70 choose Enterprise (14%).</p>
+        <p>If device type had zero influence on subscription choice (the null hypothesis of independence), both Desktop and Mobile users should mirror these overall 60%, 26%, and 14% shares. We would expect $250 \times 0.60 = 150.0$ Free Desktop users, $250 \times 0.26 = 65.0$ Pro Desktop users, and $250 \times 0.14 = 35.0$ Enterprise Desktop users. The exact same expected counts would apply to Mobile users.</p>
+        <p>Comparing observed counts to expected frequencies reveals clear discrepancies: Free Desktop count is 120 (30 fewer than expected), while Enterprise Desktop is 50 (15 more than expected). Pearson's chi-square test tallies the normalised squared discrepancy $(O - E)^2 / E$ across all six table cells. Squaring prevents positive and negative deviations from cancelling out, while dividing by $E$ scales each residual relative to its baseline magnitude. For this table, the sum of residuals yields $\chi^2 = 31.78$ with 2 degrees of freedom, producing a p-value of $1.26 \times 10^{-7}$. Because this is vastly smaller than $\alpha = 0.05$, we reject independence and confirm that subscription choice is strongly linked to device type.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>Pearson's chi-square test is like auditing a casino roulette wheel: you compare how often the ball lands in each pocket against how often it should land if the wheel were perfectly balanced.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> Step by step</h2>
+        <ol class="steps"><li>Compile observed data into a two-way contingency table of raw frequency counts across $R$ rows and $C$ columns.</li><li>Compute row totals $R_i$, column totals $C_j$, and the grand total sample size $N = \sum O_{ij}$.</li><li>Under the null hypothesis of independence, calculate expected cell frequencies: $E_{ij} = (R_i \times C_j) / N$.</li><li>Check Cochran's sample size criteria: ensure all $E_{ij} \ge 1$ and at least 80% of cells have $E_{ij} \ge 5$.</li><li>Sum Pearson residuals $\sum (O_{ij} - E_{ij})^2 / E_{ij}$ to obtain the test statistic $\chi^2$ with degrees of freedom $\nu = (R - 1)(C - 1)$.</li><li>Calculate the p-value from the $\chi^2(\nu)$ distribution and decide whether to reject the null hypothesis of independence.</li></ol>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>03</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Pearson's Chi-Square Test Statistic</h3><div class="formula">$$\chi^2 = \sum_{i=1}^R \sum_{j=1}^C \frac{(O_{ij} - E_{ij})^2}{E_{ij}} \sim \chi^2(\nu)$$</div><p>Here $O_{ij}$ is the observed integer frequency in row $i$ and column $j$, and $E_{ij}$ is the expected frequency under $H_0$. Under the null hypothesis, as sample size $N \to \infty$, this sum of normalised squared deviations converges asymptotically to a chi-square distribution with $\nu$ degrees of freedom.</p></li>
+          <li><h3>Expected Frequencies and Degrees of Freedom</h3><div class="formula">$$E_{ij} = \frac{R_i C_j}{N}, \qquad \nu = (R - 1)(C - 1)$$</div><p>Here $R_i$ is the $i$-th row marginal sum, $C_j$ is the $j$-th column marginal sum, and $N$ is total sample size. In an $R \times C$ contingency table, fixing row and column totals leaves $(R - 1)(C - 1)$ cells free to vary independently, determining the degrees of freedom $\nu$. For a 1D goodness-of-fit test with $K$ categories, $\nu = K - 1$.</p></li>
+          <li><h3>Goodness-of-Fit Test Statistic</h3><div class="formula">$$\chi^2 = \sum_{k=1}^K \frac{(O_k - n p_k)^2}{n p_k} \sim \chi^2(K - 1 - m)$$</div><p>In goodness-of-fit testing, observed counts $O_k$ across $K$ categories are compared to theoretical expected counts $n p_k$, where $p_k$ is the hypothesised probability of category $k$. If $m$ parameters of the theoretical distribution are estimated from the sample data (such as fitting a Poisson rate $\lambda$), the degrees of freedom are reduced to $\nu = K - 1 - m$.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="takeaways">
+        <h2 class="h3"><span>04</span> Key takeaways</h2>
+        <div class="box use"><ul><li>Chi-square tests require raw integer counts; never run chi-square calculations on percentages, fractions, or normalised rates.</li><li>Degrees of freedom in contingency tables depend exclusively on table dimensions $(R - 1)(C - 1)$, entirely independent of sample size $N$.</li><li>Cochran's guideline requires expected cell counts to equal or exceed 5 in at least 80% of cells; when counts are smaller, use Fisher's exact test.</li><li>A significant chi-square test confirms an association exists, but standardised residuals must be examined to identify which specific cells drive the divergence.</li></ul></div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>05</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">import</span> numpy <span class="k">as</span> np
+<span class="k">import</span> scipy.stats <span class="k">as</span> stats
+
+<span class="c"># Contingency table: Device (Desktop, Mobile) vs Tier (Free, Pro, Enterprise)</span>
+observed = np.<span class="f">array</span>([
+    [<span class="n">120</span>, <span class="n">80</span>, <span class="n">50</span>],   <span class="c"># Desktop</span>
+    [<span class="n">180</span>, <span class="n">50</span>, <span class="n">20</span>],   <span class="c"># Mobile</span>
+])
+
+<span class="c"># Pearson's chi-square test of independence</span>
+chi2_stat, p_val, dof, expected = stats.<span class="f">chi2_contingency</span>(observed)
+
+<span class="k">print</span>(<span class="s">&quot;Observed table:\n&quot;</span>, observed)
+<span class="k">print</span>(<span class="s">f&quot;Expected counts:\n{np.round(expected, 1)}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Chi-square statistic: {chi2_stat:.3f}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Degrees of freedom:   {dof}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;p-value:              {p_val:.4e}&quot;</span>)
+<span class="k">print</span>(<span class="s">f&quot;Independence rejected at alpha=0.05: {p_val &lt;= 0.05}&quot;</span>)</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Inputting percentages or conversion rates instead of raw integer counts, which destroys the underlying multinomial sampling variance model.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Applying standard chi-square tests to repeated measures or paired categorical data (such as user choices before and after an update); use McNemar's test instead.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Ignoring low expected cell frequencies ($E_{ij} &lt; 5$), where the continuous chi-square approximation fails and produces inaccurate p-values.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Confusing statistical association with causal direction: a significant chi-square test indicates dependence between variables, not that one variable causes the other.</span></li></ul>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>06</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="0">
+            <p><span>Q1</span>Why is it invalid to run a chi-square test on percentages or proportions (e.g. 0.40 and 0.60) rather than raw counts?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because percentages disguise sample size, destroying the relationship between count variance and expected frequencies</span></button><button class="opt" type="button"><b>B</b><span>Because chi-square algorithms only accept floating-point numbers</span></button><button class="opt" type="button"><b>C</b><span>Because proportions follow a Student's t-distribution</span></button><button class="opt" type="button"><b>D</b><span>Because percentages always sum to 100</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Chi-square test statistics rely on Poisson or multinomial sampling variance, where the variance of a count is proportional to $N$. Converting counts to proportions eliminates sample size information.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>How many degrees of freedom does a $3 \times 4$ contingency table have in a test of independence?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>12</span></button><button class="opt" type="button"><b>B</b><span>7</span></button><button class="opt" type="button"><b>C</b><span>6</span></button><button class="opt" type="button"><b>D</b><span>11</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Degrees of freedom for an $R \times C$ table are $(R - 1)(C - 1)$. For a $3 \times 4$ table, $(3 - 1)(4 - 1) = 2 \times 3 = 6$.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>When expected cell counts $E_{ij}$ in a $2 \times 2$ table fall below 5, which test should be used instead of Pearson's chi-square test?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>One-way ANOVA</span></button><button class="opt" type="button"><b>B</b><span>Mann-Whitney U test</span></button><button class="opt" type="button"><b>C</b><span>Fisher's exact test</span></button><button class="opt" type="button"><b>D</b><span>Paired t-test</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> When cell counts are small ($E_{ij} &lt; 5$), the continuous chi-square approximation breaks down. Fisher's exact test computes exact hypergeometric probabilities without relying on asymptotic approximations.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q4</span>What does a statistically significant result ($p &lt; 0.001$) in a chi-square test of independence demonstrate?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>All categories have identical frequencies</span></button><button class="opt" type="button"><b>B</b><span>The two categorical variables are statistically dependent in the sampled population</span></button><button class="opt" type="button"><b>C</b><span>One categorical variable directly causes the other</span></button><button class="opt" type="button"><b>D</b><span>The expected cell counts are all greater than 5</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Rejecting the null hypothesis of independence indicates that the row and column classifications are statistically dependent, though it does not imply causal direction.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q5</span>In a customer survey of $N = 200$ people, 80 are mobile users and 120 are desktop users. Overall, 50 users prefer dark mode. Under the null hypothesis that UI preference is independent of device, what is the expected count of mobile users who prefer dark mode?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>25.0</span></button><button class="opt" type="button"><b>B</b><span>40.0</span></button><button class="opt" type="button"><b>C</b><span>20.0</span></button><button class="opt" type="button"><b>D</b><span>10.0</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Under the null hypothesis of independence, $E_{ij} = (R_i \times C_j) / N$. Here $E = (80 \times 50) / 200 = 4000 / 200 = 20.0$.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q6</span>What is Cochran's standard criterion for determining whether sample sizes are sufficient for the asymptotic chi-square approximation in an $R \times C$ contingency table?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The degrees of freedom must be greater than 10</span></button><button class="opt" type="button"><b>B</b><span>Every observed cell count $O_{ij}$ must exceed 30</span></button><button class="opt" type="button"><b>C</b><span>All expected frequencies $E_{ij}$ must be at least 1, and at least 80% of cells must have $E_{ij} \ge 5$</span></button><button class="opt" type="button"><b>D</b><span>The total sample size $N$ must exceed 10,000</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Cochran (1954) established that the continuous chi-square distribution accurately approximates multinomial cell probabilities when no expected cell frequency is less than 1 and at least 80% of cells have expected frequencies of 5 or more.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q7</span>100 users are surveyed on whether they like a software interface before and after a major redesign (producing binary Yes/No responses for each user at both time points). Why is Pearson's standard chi-square test of independence invalid for this table?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Because the before and after observations come from the same individuals, violating the assumption of independent observations</span></button><button class="opt" type="button"><b>B</b><span>Because the data is continuous rather than categorical</span></button><button class="opt" type="button"><b>C</b><span>Because binary data cannot be analysed with hypothesis tests</span></button><button class="opt" type="button"><b>D</b><span>Because a $2 \times 2$ table has zero degrees of freedom</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Pearson's chi-square test requires mutually independent observations. When the same users are evaluated before and after an update, the data is paired (repeated measures); McNemar's test must be used instead.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q8</span>After obtaining a statistically significant chi-square test of independence in a $3 \times 3$ table, how can an analyst identify which specific combinations of categories deviate most strongly from independence?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By examining the standardised (Pearson) residuals $r_{ij} = (O_{ij} - E_{ij}) / \sqrt{E_{ij}}$, where values with $|r_{ij}| &gt; 2$ or $3$ indicate substantial divergence</span></button><button class="opt" type="button"><b>B</b><span>By summing the row marginals</span></button><button class="opt" type="button"><b>C</b><span>By running a one-sample z-test on the grand total $N$</span></button><button class="opt" type="button"><b>D</b><span>By recalculating the table with percentages</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Standardised residuals $r_{ij} = (O_{ij} - E_{ij}) / \sqrt{E_{ij}}$ quantify the direction and magnitude of departure in each individual cell. Under $H_0$, they approximate standard normal variates, so values outside $[-2, +2]$ highlight cells that drive the overall significance.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q9</span>Consider the following code:
+<code>table = [ [50, 30], [20, 60] ]
+chi2, p, dof, expected = stats.chi2_contingency(table, correction=False)</code>
+What does the parameter <code>correction=False</code> control in this test?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It skips calculating expected cell frequencies</span></button><button class="opt" type="button"><b>B</b><span>It converts the test from a two-sided test to a one-sided test</span></button><button class="opt" type="button"><b>C</b><span>It disables Yates' continuity correction, which subtracts $0.5$ from $|O_{ij} - E_{ij}|$ in $2 \times 2$ tables</span></button><button class="opt" type="button"><b>D</b><span>It forces degrees of freedom to equal 1</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> For $2 \times 2$ contingency tables, Yates' continuity correction adjusts for approximating discrete counts with a continuous distribution by subtracting 0.5 from each absolute difference $|O - E|$. Setting <code>correction=False</code> computes the uncorrected Pearson chi-square statistic.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q10</span>Consider the following $2 \times 2$ observed table:
+Row 1: [30, 10] (Total = 40)
+Row 2: [10, 30] (Total = 40)
+Column totals are 40 and 40, with grand total $N = 80$.
+Under $H_0$, all four expected counts are $E_{ij} = (40 \times 40) / 80 = 20$.
+What is the uncorrected Pearson chi-square statistic $\chi^2 = \sum (O - E)^2 / E$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>40.0</span></button><button class="opt" type="button"><b>B</b><span>10.0</span></button><button class="opt" type="button"><b>C</b><span>5.0</span></button><button class="opt" type="button"><b>D</b><span>20.0</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> For each of the 4 cells, $|O - E| = 10$, so $(O - E)^2 = 100$. Dividing by $E = 20$ yields $100 / 20 = 5.0$ per cell. Summing over all 4 cells gives $\chi^2 = 4 \times 5.0 = 20.0$.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q11</span>An auditor rolls a 6-sided die 60 times to test if it is fair ($p_k = 1/6$, expected count $E_k = 10$ for each face). The observed counts are: Face 1: 15, Face 2: 5, Face 3: 10, Face 4: 10, Face 5: 10, Face 6: 10. What is the chi-square goodness-of-fit statistic $\chi^2$ and its degrees of freedom?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$\chi^2 = 5.0$ with $\nu = 6$ degrees of freedom</span></button><button class="opt" type="button"><b>B</b><span>$\chi^2 = 10.0$ with $\nu = 5$ degrees of freedom</span></button><button class="opt" type="button"><b>C</b><span>$\chi^2 = 5.0$ with $\nu = 5$ degrees of freedom</span></button><button class="opt" type="button"><b>D</b><span>$\chi^2 = 2.5$ with $\nu = 1$ degree of freedom</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The discrepancy comes entirely from Face 1 ($25/10 = 2.5$) and Face 2 ($25/10 = 2.5$), summing to $\chi^2 = 5.0$. For goodness-of-fit with $K = 6$ categories and no estimated parameters, degrees of freedom are $K - 1 = 6 - 1 = 5$.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q12</span>A data scientist fits a Poisson distribution to website server crash counts grouped into $K = 8$ discrete frequency bins. The Poisson rate parameter $\lambda$ is not known in advance and must be estimated from the sample data. What are the degrees of freedom for the chi-square goodness-of-fit test?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>6</span></button><button class="opt" type="button"><b>B</b><span>8</span></button><button class="opt" type="button"><b>C</b><span>5</span></button><button class="opt" type="button"><b>D</b><span>7</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> For a chi-square goodness-of-fit test, estimating $m$ parameters from the data imposes $m$ additional linear constraints on the expected counts. The degrees of freedom are $\nu = K - 1 - m$. With $K = 8$ bins and $m = 1$ parameter ($\lambda$), $\nu = 8 - 1 - 1 = 6$.</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>07</span> Where it shows up</h2>
+        <div class="related"><a href="../../concepts/type-i-ii-errors-power-and-sample-size/"><small class="kicker">Concept</small><b>Errors, Power and Sample Size</b></a><a href="../../concepts/z-test-and-t-tests/"><small class="kicker">Concept</small><b>z-Test and Student's t-Tests</b></a><a href="../../concepts/confusion-matrix/"><small class="kicker">Concept</small><b>Confusion matrix</b></a><a href="../../models/decision_tree_classifier/"><small class="kicker">Classification</small><b>Decision tree classifier</b></a><a href="../../concepts/feature-selection/"><small class="kicker">Concept</small><b>Feature selection</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../concepts/z-test-and-t-tests/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Statistics</small><b>z-Test and Student's t-Tests</b></a>
+    <a class="pager-next" href="../../concepts/anova-and-post-hoc-tests/"><small>Next · Statistics <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>ANOVA and Post-Hoc Tests</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/concepts.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>

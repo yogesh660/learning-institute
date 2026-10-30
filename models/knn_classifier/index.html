@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070709">
+<title>k-Nearest Neighbours Classification · Learn · Yogesh Awate</title>
+<meta name="description" content="Classify a point by a vote among its k closest training examples.">
+<meta property="og:title" content="k-Nearest Neighbours Classification · Learn · Yogesh Awate">
+<meta property="og:description" content="Classify a point by a vote among its k closest training examples.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://yogesh660.github.io/assets/yogesh-suit-cutout.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css?v=mvv2cvn8">
+<link rel="stylesheet" href="../../assets/learn.css?v=mvv2cvn8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="page-lesson" data-lesson="knn_classifier">
+<a class="skip" href="#main">Skip to content</a>
+
+<nav id="nav">
+  <div class="brand"><a class="mark" href="/" aria-label="Yogesh Awate, home">YA<span>.</span></a><a class="brand-sub" href="../../">Learn</a></div>
+  <div class="navlinks" id="navlinks">
+    <a href="/work/">Work</a>
+    <a href="../../" class="active" aria-current="page">Learn</a>
+    <a href="/featured-games/">Play</a>
+    <a href="/about/">About</a>
+    <a href="#contact">Contact</a>
+    <a class="pill" href="mailto:awateyogeshs@gmail.com?subject=R%C3%A9sum%C3%A9%20request">Request résumé <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  </div>
+  <button class="menu" id="menu" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+</nav>
+
+<main id="main">
+
+<div class="progress" aria-hidden="true"></div>
+<article class="case-page">
+  <header class="page-head lesson-head">
+    <a class="back rise" style="--d:1" href="../../#curriculum"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All lessons</a>
+    <span class="tag rise" style="--d:2"><a href="../../#path-classification">Path 04 · Classification</a> / Margin and instance-based / Lesson 7 of 19</span>
+    <h1 class="case-title">k-Nearest Neighbours Classification</h1>
+    <p class="lede rise" style="--d:3">Classify a point by a vote among its k closest training examples.</p>
+    <div class="lesson-meta rise" style="--d:4">
+      <span class="tagline"><span class="lvl" data-l="1"><i><b></b></i>Beginner</span></span>
+      <span class="tagline">12 min</span>
+      <span class="tagline lab">Live lab</span>
+      <span class="prereq">Before this: <a href="../../concepts/exploratory-data-analysis/">Exploratory data analysis</a></span>
+    </div>
+  </header>
+
+  <div class="case-body lesson-body">
+    <aside class="glance reveal">
+      <h4>At a glance</h4>
+      <dl>
+          <dt>Task</dt><dd>Classification</dd>
+          <dt>Family</dt><dd>Instance-based</dd>
+          <dt>What it learns</dt><dd>Nothing: stores the data</dd>
+          <dt>Training cost</dt><dd>$O(1)$ / $O(n\log n)$ tree build</dd>
+          <dt>Prediction cost</dt><dd>$O(\log n)$–$O(n)$ per query</dd>
+          <dt>In code</dt><dd><code class="no-math">sklearn.<wbr>neighbors.<wbr>KNeighborsClassifier</code></dd>
+      </dl>
+      <ol class="toc"><li><a href="#idea"><span>01</span>The idea</a></li><li><a href="#how"><span>02</span>How it works</a></li><li><a href="#lab"><span>03</span>Try it</a></li><li><a href="#maths"><span>04</span>The maths</a></li><li><a href="#tuning"><span>05</span>Hyperparameters</a></li><li><a href="#when"><span>06</span>When to use it</a></li><li><a href="#code"><span>07</span>In code</a></li><li><a href="#results"><span>08</span>On real data</a></li><li><a href="#quiz"><span>09</span>Check yourself</a></li><li><a href="#related"><span>10</span>Related lessons</a></li></ol>
+      <button class="button ghost small complete" id="complete" type="button" aria-pressed="false"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-label>Mark as complete</span></button>
+    </aside>
+
+    <div class="story">
+      <section class="reveal" id="idea">
+        <h2 class="h3"><span>01</span> The idea</h2>
+        <p class="lead-line">To classify a point, find the $k$ training points nearest to it and let them vote. That is the entire algorithm.</p>
+        <p>k-NN draws boundaries that follow the data exactly. With $k = 1$ every training point owns the region closest to it (a Voronoi cell), so the boundary is jagged and every training point is classified correctly. Larger $k$ smooths the boundary by letting more neighbours outvote isolated points.</p>
+        <p>Because everything rests on distance, feature scaling and the choice of metric dominate performance. In high dimensions, distances between all points become similar and "nearest" loses its meaning.</p>
+        <div class="analogy"><small class="kicker">In everyday terms</small><p>You are probably like the people who live closest to you.</p></div>
+      </section>
+      <section class="reveal" id="how">
+        <h2 class="h3"><span>02</span> How it works</h2>
+        <ol class="steps"><li>Scale the features.</li><li>Store the training data (often in a KD-tree or ball tree).</li><li>For a query, find the $k$ nearest neighbours.</li><li>Return the majority class (or class proportions as probabilities).</li></ol>
+      </section>
+      <section class="reveal" id="lab">
+        <h2 class="h3"><span>03</span> Try it</h2>
+        <p>k-NN decision regions computed live. Hover over the plot to see which neighbours vote for that spot.</p>
+        <div class="lab" data-lab="knn_classifier" data-kind="models" style="margin-top:18px"><noscript><p class="lab-noscript">The live lab needs JavaScript.</p></noscript></div>
+        <div class="try"><small class="kicker">Things to try</small><ol><li>$k = 1$: tiny islands around every stray point.</li><li>Raise $k$ until the islands vanish and test accuracy peaks.</li><li>Push $k$ near the dataset size: the majority class takes over.</li></ol></div>
+      </section>
+      <section class="reveal" id="maths">
+        <h2 class="h3"><span>04</span> The maths</h2>
+        <ol class="math-steps">
+          <li><h3>Vote</h3><div class="formula">$$\hat y(x) = \arg\max_c \sum_{i \in N_k(x)} w_i\,\mathbb 1[y_i = c], \qquad \hat P(c \mid x) = \frac{\sum_{i \in N_k(x)} w_i\mathbb 1[y_i = c]}{\sum_{i \in N_k(x)} w_i}$$</div><p>$w_i = 1$ for a plain vote, or $1/d(x, x_i)$ to let close neighbours count more.</p></li>
+          <li><h3>Asymptotic error</h3><div class="formula">$$R^* \le R_{1\text{NN}} \le 2R^*(1 - R^*)$$</div><p>With infinite data, 1-NN’s error is at most twice the Bayes-optimal error $R^*$: a remarkable guarantee for such a simple rule.</p></li>
+        </ol>
+      </section>
+      <section class="reveal" id="tuning">
+        <h2 class="h3"><span>05</span> Hyperparameters</h2>
+        <div class="table-wrap"><table class="kv">
+          <thead><tr><th>Setting</th><th>What it does</th><th>Typical choice</th></tr></thead>
+          <tbody><tr><td><span class="hp">n_neighbors</span></td><td>Number of voters.</td><td>Odd values 3–31 for binary problems; tune by CV.</td></tr><tr><td><span class="hp">weights</span></td><td>uniform or distance.</td><td>distance when densities vary.</td></tr><tr><td><span class="hp">metric</span></td><td>Distance function.</td><td>Euclidean default; cosine for text embeddings.</td></tr></tbody>
+        </table></div>
+      </section>
+      <section class="reveal" id="when">
+        <h2 class="h3"><span>06</span> When to use it</h2>
+        <div class="split2">
+          <div class="box good"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Strengths</h3><ul><li>No training, easy to update.</li><li>Naturally multi-class.</li><li>Flexible boundaries; predictions are explainable by example.</li></ul></div>
+          <div class="box bad"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg> Limitations</h3><ul><li>Slow prediction on large data.</li><li>Needs scaling; hurt by irrelevant features.</li><li>Weak in high dimensions.</li></ul></div>
+          <div class="box use"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> Reach for it when</h3><p>Low-dimensional data, recommendation by similarity, or a quick non-parametric baseline.</p></div>
+          <div class="box avoid"><h3><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Think twice when</h3><p>Large, high-dimensional datasets or strict latency budgets.</p></div>
+        </div>
+      </section>
+      <section class="reveal" id="code">
+        <h2 class="h3"><span>07</span> In code</h2>
+        <div class="code"><div class="code-head"><span>python</span><button class="copy" type="button"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span>Copy</span></button></div><pre class="no-math"><code><span class="k">from</span> sklearn.pipeline <span class="k">import</span> make_pipeline
+<span class="k">from</span> sklearn.preprocessing <span class="k">import</span> StandardScaler
+<span class="k">from</span> sklearn.neighbors <span class="k">import</span> KNeighborsClassifier
+<span class="k">from</span> sklearn.model_selection <span class="k">import</span> cross_val_score
+
+<span class="k">for</span> k <span class="k">in</span> [<span class="n">1</span>, <span class="n">5</span>, <span class="n">15</span>, <span class="n">31</span>]:
+    model = <span class="f">make_pipeline</span>(<span class="f">StandardScaler</span>(), <span class="f">KNeighborsClassifier</span>(n_neighbors=k))
+    <span class="k">print</span>(k, <span class="f">cross_val_score</span>(model, X_tr, y_tr, cv=<span class="n">5</span>).<span class="f">mean</span>().<span class="f">round</span>(<span class="n">3</span>))</code></pre></div>
+        <h3 class="subhead" style="margin:34px 0 16px">Common pitfalls</h3><ul class="pitfalls"><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Evaluating on the training set with $k = 1$: always 100%.</span></li><li><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.3 3.9-8.2 14A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-3.1l-8.2-14a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span>Even $k$ in binary problems: ties.</span></li></ul>
+      </section>
+      <section class="reveal" id="results">
+        <h2 class="h3"><span>08</span> On real data</h2>
+        <p>k-NN (k = 11) trained on 80% of the breast cancer sample and scored on a stratified 20% hold-out. The baseline always predicts the most common class.</p>
+        <div class="table-wrap" style="margin-top:18px"><table class="kv results-table">
+          <thead><tr><th>Metric</th><th>k-NN (k = 11)</th><th>Majority class</th></tr></thead>
+          <tbody><tr><td>Accuracy</td><td>1.000</td><td>0.670</td></tr><tr><td>F1 (malignant)</td><td>1.000</td><td>0.000</td></tr><tr><td>ROC-AUC</td><td>1.000</td><td>0.500</td></tr></tbody>
+        </table></div>
+        <p class="note">Produced by <a href="https://github.com/yogesh660/ml-model-zoo/blob/main/models/knn_classifier/train.py" target="_blank" rel="noopener">models/knn_classifier/train.py</a> · generated 2026-10-28. Run it yourself: <code class="no-math">python models/knn_classifier/train.py</code></p>
+      </section>
+      <section class="reveal" id="quiz">
+        <h2 class="h3"><span>09</span> Check yourself</h2>
+        <div class="quiz">
+          <div class="q" data-answer="1">
+            <p><span>Q1</span>With $k = 1$, training accuracy is:</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Equal to test accuracy</span></button><button class="opt" type="button"><b>B</b><span>100% (each point is its own nearest neighbour)</span></button><button class="opt" type="button"><b>C</b><span>About 50%</span></button><button class="opt" type="button"><b>D</b><span>Undefined</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Every training point finds itself at distance 0.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q2</span>What usually happens to the boundary as $k$ grows?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It becomes exactly linear</span></button><button class="opt" type="button"><b>B</b><span>Unchanged</span></button><button class="opt" type="button"><b>C</b><span>Smoother; small islands disappear</span></button><button class="opt" type="button"><b>D</b><span>More jagged</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> More voters mean isolated points get outvoted.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q3</span>What geometric structure divides the feature space into individual decision cells when $k = 1$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>A Fourier series decomposition</span></button><button class="opt" type="button"><b>B</b><span>A Delaunay triangulation</span></button><button class="opt" type="button"><b>C</b><span>A Voronoi tessellation (or Voronoi diagram)</span></button><button class="opt" type="button"><b>D</b><span>A hyper-ellipsoid</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> For 1-NN, the space is partitioned into Voronoi cells, where each cell consists of all points closer to one specific training example than to any other.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q4</span>Why is it common practice to choose an odd number for $k$ (e.g. $k = 3, 5, 7$) in binary classification problems?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>To avoid voting ties where both classes receive an equal number of votes</span></button><button class="opt" type="button"><b>B</b><span>Because even values of $k$ cause KD-trees to enter infinite loops</span></button><button class="opt" type="button"><b>C</b><span>To ensure the distance metric satisfies the triangle inequality</span></button><button class="opt" type="button"><b>D</b><span>Because odd numbers guarantee that training accuracy is 100%</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> In binary classification with uniform weights, an even $k$ (like $k=4$) can result in a 2–2 tie, requiring an arbitrary tie-breaking rule. An odd $k$ guarantees a strict majority.</div>
+          </div>
+          <div class="q" data-answer="0">
+            <p><span>Q5</span>How does KNeighborsClassifier estimate class probabilities (predict_proba) for a query point?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>By taking the proportion of the $k$ nearest neighbours belonging to each class (or the normalised sum of their weights)</span></button><button class="opt" type="button"><b>B</b><span>By running a Gaussian mixture model on the training data</span></button><button class="opt" type="button"><b>C</b><span>By fitting a logistic sigmoid over all pairwise training distances</span></button><button class="opt" type="button"><b>D</b><span>Probabilities are always strictly 0.0 or 1.0</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> With uniform weights, $P(y=c \mid x) = \frac{1}{k}\sum_{i \in N_k(x)} \mathbb{1}[y_i = c]$. For example, if 4 out of 5 neighbours belong to class 1, the predicted probability is $4/5 = 0.80$.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q6</span>According to the Cover & Hart (1967) theorem, what is the upper bound on the asymptotic error rate $R_{1\text{NN}}$ of a 1-Nearest Neighbour classifier as $n \to \infty$ relative to the optimal Bayes error rate $R^*$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$R_{1\text{NN}} \le \sqrt{R^*}$</span></button><button class="opt" type="button"><b>B</b><span>$R_{1\text{NN}} \le 2 R^* (1 - R^*) \le 2 R^*$</span></button><button class="opt" type="button"><b>C</b><span>$R_{1\text{NN}} = 0$</span></button><button class="opt" type="button"><b>D</b><span>$R_{1\text{NN}} \le R^*$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Cover and Hart proved that with infinite data, the 1-NN error rate is bounded by at most twice the irreducible Bayes error: $R^* \le R_{1\text{NN}} \le 2R^*(1 - R^*)$. If the Bayes error is $0$, 1-NN also achieves $0$ error.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q7</span>Why does omitting feature standardisation severely harm k-NN classification accuracy?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>It causes the KD-tree to prune all leaf nodes</span></button><button class="opt" type="button"><b>B</b><span>Features must be scaled to sum to 1 to compute probabilities</span></button><button class="opt" type="button"><b>C</b><span>Unscaled features produce negative Euclidean distances</span></button><button class="opt" type="button"><b>D</b><span>Distance metrics (like Euclidean distance) are sensitive to scale; features with large numeric ranges will completely dominate the distance computation, rendering small-scale features irrelevant</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Distance is computed across all dimensions. If feature 1 has variance 10,000 and feature 2 has variance 1, distance along feature 1 completely dictates who the nearest neighbours are, ignoring feature 2.</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q8</span>In scikit-learn, what distance metric does KNeighborsClassifier use by default with metric='minkowski' and p=2?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Manhattan distance ($L_1$ norm)</span></button><button class="opt" type="button"><b>B</b><span>Euclidean distance ($L_2$ norm)</span></button><button class="opt" type="button"><b>C</b><span>Cosine similarity</span></button><button class="opt" type="button"><b>D</b><span>Chebyshev distance ($L_\infty$ norm)</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> The Minkowski distance is defined as $D(x, y) = (\sum |x_i - y_i|^p)^{1/p}$. Setting $p=2$ yields standard Euclidean distance $\sqrt{\sum (x_i - y_i)^2}$, while $p=1$ yields Manhattan distance.</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q9</span>What challenge does a k-NN classifier face when applied to highly imbalanced datasets (e.g. 99% negative class, 1% positive class)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>The classifier refuses to make predictions when classes have unequal sizes</span></button><button class="opt" type="button"><b>B</b><span>KD-trees cannot store points from the minority class</span></button><button class="opt" type="button"><b>C</b><span>Training time becomes infinite</span></button><button class="opt" type="button"><b>D</b><span>Query points from the rare class will almost always have a majority of negative neighbours simply due to class prevalence, causing the minority class to be consistently outvoted</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> Because nearest neighbours are drawn from the overall population, the dense majority class surrounds isolated minority instances. Unless neighbours are weighted or balanced sampling is used, the majority class will routinely win the vote.</div>
+          </div>
+          <div class="q" data-answer="2">
+            <p><span>Q10</span>A 3-NN classifier ($k=3$) with inverse-distance weighting $w_i = 1 / d(x, x_i)$ evaluates a test point. The 3 nearest neighbours have: Neighbour 1 (Class A, distance $d_1 = 1.0$), Neighbour 2 (Class B, distance $d_2 = 2.0$), Neighbour 3 (Class B, distance $d_3 = 2.0$). Which class wins the vote, and what is the predicted probability $P(\text{Class A} \mid x)$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>Class A wins with $P(\text{Class A} \mid x) = 0.667$</span></button><button class="opt" type="button"><b>B</b><span>Class B wins with $P(\text{Class A} \mid x) = 0.333$</span></button><button class="opt" type="button"><b>C</b><span>Tie between Class A and Class B with $P(\text{Class A} \mid x) = 0.500$</span></button><button class="opt" type="button"><b>D</b><span>Class B wins with $P(\text{Class A} \mid x) = 0.250$</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> $w_1 = 1 / 1.0 = 1.0$ (Class A). $w_2 = 1 / 2.0 = 0.5$ (Class B). $w_3 = 1 / 2.0 = 0.5$ (Class B). Total weight for Class A $= 1.0$; for Class B $= 0.5 + 0.5 = 1.0$. Both classes receive exactly equal weighted votes (a tie with $P = 0.500$).</div>
+          </div>
+          <div class="q" data-answer="1">
+            <p><span>Q11</span>A query point is at $(0, 0)$. Two candidate training points are $P_1(2, 2)$ and $P_2(0, 3)$. Which point is closer under Euclidean distance ($L_2$), and which is closer under Manhattan distance ($L_1$)?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>$P_2$ is closer under $L_2$; $P_1$ is closer under $L_1$</span></button><button class="opt" type="button"><b>B</b><span>$P_1$ is closer under $L_2$; $P_2$ is closer under $L_1$</span></button><button class="opt" type="button"><b>C</b><span>$P_1$ is closer under both metrics</span></button><button class="opt" type="button"><b>D</b><span>$P_2$ is closer under both metrics</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> For $P_1(2, 2)$: $L_2 = \sqrt{2^2 + 2^2} = \sqrt{8} \approx 2.828$, while $L_1 = |2| + |2| = 4.0$. For $P_2(0, 3)$: $L_2 = 3.0$ and $L_1 = 3.0$. Thus $P_1$ is closer under $L_2$ ($2.83 &lt; 3.0$), while $P_2$ is closer under $L_1$ ($3.0 &lt; 4.0$).</div>
+          </div>
+          <div class="q" data-answer="3">
+            <p><span>Q12</span>If the optimal Bayes error rate for a two-class classification problem is $R^* = 0.10$ (10%), what is the theoretical upper bound on the asymptotic error rate of the 1-Nearest Neighbour classifier $R_{1\text{NN}}$ as sample size $n \to \infty$?</p>
+            <div class="opts"><button class="opt" type="button"><b>A</b><span>20.0%</span></button><button class="opt" type="button"><b>B</b><span>10.0%</span></button><button class="opt" type="button"><b>C</b><span>36.0%</span></button><button class="opt" type="button"><b>D</b><span>18.0%</span></button></div>
+            <div class="why" hidden><strong>Why:</strong> By the Cover–Hart theorem: $R_{1\text{NN}} \le 2 R^* (1 - R^*)$. Substituting $R^* = 0.10$ gives $2 \times 0.10 \times 0.90 = 0.180$ (18.0%).</div>
+          </div>
+        </div>
+        <p class="quiz-score" id="quiz-score" aria-live="polite" style="margin-top:14px"></p>
+      </section>
+      <section class="reveal" id="related">
+        <h2 class="h3"><span>10</span> Related lessons</h2>
+        <div class="related"><a href="../../models/knn_regressor/"><small class="kicker">Regression</small><b>k-NN regressor</b></a><a href="../../models/support_vector_classifier/"><small class="kicker">Classification</small><b>Support vector classifier</b></a><a href="../../models/decision_tree_classifier/"><small class="kicker">Classification</small><b>Decision tree classifier</b></a><a href="../../concepts/bias-variance-tradeoff/"><small class="kicker">Concept</small><b>Bias–variance trade-off</b></a><a href="../../concepts/cross-validation/"><small class="kicker">Concept</small><b>Cross-validation</b></a></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="pager" role="navigation" aria-label="Previous and next lesson">
+    <a href="../../models/support_vector_classifier/"><small><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Previous · Classification</small><b>Support vector classifier</b></a>
+    <a class="pager-next" href="../../models/decision_tree_classifier/"><small>Next · Classification <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></small><b>Decision tree classifier</b></a>
+  </div>
+</article>
+</main>
+
+<section id="contact" class="contact">
+  <span class="tag reveal">Let's connect</span>
+  <h2 class="reveal">Have a hard problem?<br><span>Let's make it simple.</span></h2>
+  <a class="email reveal" href="mailto:awateyogeshs@gmail.com">awateyogeshs@gmail.com <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+  <div class="socials reveal">
+    <a href="https://www.linkedin.com/in/yogesh-s-awate/" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn</a>
+    <a href="https://github.com/yogesh660" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.2-.3-2.5-1-3.5.3-1.1.3-2.4 0-3.5 0 0-1 0-3 1.5a10.5 10.5 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.4 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.6-.2.6-.2 1.3-.1 1.9v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg> GitHub</a>
+    <a href="https://medium.com/@yogeshinawate" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Medium</a>
+    <a href="https://twitter.com/YogeshSAwate1" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg> X / Twitter</a>
+  </div>
+</section>
+
+<footer>
+  <a class="mark" href="/">YA<span>.</span></a>
+  <div class="footlinks"><a href="/work/">Work</a><a href="../../">Learn</a><a href="/featured-games/">Play</a><a href="/about/">About</a></div>
+  <span>© 2026 YOGESH AWATE</span>
+</footer>
+
+<script src="../../assets/site.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/core.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/algos.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/models.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/labs/sequences.js?v=mvv2cvn8" defer></script>
+<script src="../../assets/learn.js?v=mvv2cvn8" defer></script>
+</body>
+</html>
