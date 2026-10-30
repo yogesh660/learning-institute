@@ -24,6 +24,10 @@ class DuplicateTaskKey(ValueError):
     """Raised when a different task already owns an idempotency key."""
 
 
+class TaskStoreCorrupt(RuntimeError):
+    """Raised when the persisted task store is unreadable or malformed."""
+
+
 class TaskStore:
     _save_lock = RLock()
     def __init__(self, path: str | Path, audit_log: AuditLog | None = None) -> None:
@@ -33,7 +37,13 @@ class TaskStore:
     def _read(self) -> dict[str, dict]:
         if not self.path.exists():
             return {}
-        return json.loads(self.path.read_text(encoding="utf-8"))
+        try:
+            data = json.loads(self.path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise TaskStoreCorrupt("task store could not be decoded") from exc
+        if not isinstance(data, dict) or any(not isinstance(key, str) or not isinstance(value, dict) for key, value in data.items()):
+            raise TaskStoreCorrupt("task store has an invalid structure")
+        return data
 
     def _write(self, tasks: dict[str, dict]) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)

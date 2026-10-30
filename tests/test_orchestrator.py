@@ -8,7 +8,7 @@ from pathlib import Path
 from agent_foundation.audit import AuditLog
 
 from orchestrator.state import Task, TaskStatus
-from orchestrator.store import ConcurrentTaskUpdate, DuplicateTaskKey, SensitiveTaskData, TaskStore
+from orchestrator.store import ConcurrentTaskUpdate, DuplicateTaskKey, SensitiveTaskData, TaskStore, TaskStoreCorrupt
 from orchestrator.workflow import CurriculumReviewWorkflow
 from orchestrator.main import main
 from agents.researcher import ResearchFinding, ResearcherAgent
@@ -67,6 +67,16 @@ class OrchestratorTests(unittest.TestCase):
             store = TaskStore(Path(directory) / "tasks.json")
             with self.assertRaises(SensitiveTaskData):
                 store.save(Task(kind="curriculum-review", payload={"api_key": "must-not-persist"}))
+
+    def test_store_corruption_fails_with_controlled_error(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "tasks.json"
+            path.write_text("not-json", encoding="utf-8")
+            with self.assertRaises(TaskStoreCorrupt):
+                TaskStore(path).list()
+            path.write_text(json.dumps([]), encoding="utf-8")
+            with self.assertRaises(TaskStoreCorrupt):
+                TaskStore(path).list()
 
     def test_store_rejects_duplicate_dedupe_key(self):
         with tempfile.TemporaryDirectory() as directory:
