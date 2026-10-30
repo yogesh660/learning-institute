@@ -77,6 +77,25 @@ class FoundationTests(unittest.TestCase):
             records = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
             self.assertEqual(len(records), 20)
 
+    def test_audit_hash_chain_detects_tampering(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "audit.jsonl"
+            audit = AuditLog(path)
+            audit.append({"event": "first"})
+            audit.append({"event": "second"})
+            self.assertTrue(audit.verify())
+            path.write_text(path.read_text(encoding="utf-8").replace('"first"', '"changed"'), encoding="utf-8")
+            self.assertFalse(audit.verify())
+
+    def test_audit_chain_preserves_secret_redaction(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "audit.jsonl"
+            audit = AuditLog(path)
+            audit.append({"event": "secret", "api_key": "do-not-write"})
+            record = json.loads(path.read_text(encoding="utf-8"))
+            self.assertEqual(record["api_key"], "[REDACTED]")
+            self.assertTrue(audit.verify())
+
     def test_permissions_fail_closed(self):
         manager = PermissionManager(default_policies())
         manager.require("software_engineer", Action.CREATE_PULL_REQUEST)

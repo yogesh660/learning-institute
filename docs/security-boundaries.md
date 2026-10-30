@@ -13,6 +13,8 @@
   direct identifiers, raw answers, or free-form personal data.
 - Retention windows are explicit; no automatic deletion is performed.
 - Task and proposal operations can be written to a secret-free audit log.
+- Audit entries are hash-chained and can be verified for tampering; legacy
+  unchained entries are retained but only anchor subsequent entries.
 - CI scans committed files for common credential patterns.
 
 The repository does not yet implement a production identity provider, student

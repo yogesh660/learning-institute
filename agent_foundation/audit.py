@@ -1,6 +1,7 @@
 """Append-only JSONL audit logging with basic secret redaction."""
 
 import json
+import hashlib
 import re
 from pathlib import Path
 from threading import Lock
@@ -28,6 +29,8 @@ def _redact(value: Any) -> Any:
 
 
 class AuditLog:
+    _GENESIS = "0" * 64
+
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path)
         self._lock = Lock()
@@ -35,6 +38,54 @@ class AuditLog:
     def append(self, event: dict[str, Any]) -> None:
         with self._lock:
             self.path.parent.mkdir(parents=True, exist_ok=True)
+            previous = self._last_hash()
+            record = _redact(event)
+            record.pop("_prev_hash", None)
+            record.pop("_hash", None)
+            record["_prev_hash"] = previous
+            record["_hash"] = self._digest(record)
             with self.path.open("a", encoding="utf-8") as handle:
-                handle.write(json.dumps(_redact(event), sort_keys=True) + "\n")
+                handle.write(json.dumps(record, sort_keys=True) + "\n")
+
+    def verify(self) -> bool:
+        """Verify the hash chain; return false for malformed or altered records."""
+        if not self.path.exists():
+            return True
+        previous = self._GENESIS
+        try:
+            lines = self.path.read_text(encoding="utf-8").splitlines()
+            for line in lines:
+                record = json.loads(line)
+                if "_hash" not in record or "_prev_hash" not in record:
+                    # Preserve compatibility with legacy entries and anchor the
+                    # first chained entry to their exact serialized bytes.
+                    previous = hashlib.sha256(line.encode("utf-8")).hexdigest()
+                    continue
+                if record["_prev_hash"] != previous or record["_hash"] != self._digest(record):
+                    return False
+                previous = record["_hash"]
+        except (OSError, UnicodeError, json.JSONDecodeError, TypeError, ValueError):
+            return False
+        return True
+
+    def _last_hash(self) -> str:
+        if not self.path.exists():
+            return self._GENESIS
+        lines = self.path.read_text(encoding="utf-8").splitlines()
+        if not lines:
+            return self._GENESIS
+        last_line = lines[-1]
+        try:
+            record = json.loads(last_line)
+            if isinstance(record, dict) and isinstance(record.get("_hash"), str):
+                return record["_hash"]
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            pass
+        return hashlib.sha256(last_line.encode("utf-8")).hexdigest()
+
+    @staticmethod
+    def _digest(record: dict[str, Any]) -> str:
+        unsigned = {key: value for key, value in record.items() if key != "_hash"}
+        encoded = json.dumps(unsigned, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        return hashlib.sha256(encoded).hexdigest()
 
