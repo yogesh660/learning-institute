@@ -56,3 +56,8 @@ class TaskStore:
             raise KeyError(f"unknown task: {task_id}")
         return Task.from_dict(data)
 
+    def list(self) -> list[Task]:
+        """Return tasks ordered by their first recorded state transition."""
+        tasks = [Task.from_dict(data) for data in self._read().values()]
+        return sorted(tasks, key=lambda task: task.history[0]["at"] if task.history else "")
+
