@@ -20,7 +20,7 @@ class ProviderConfig:
 class AcademyConfig:
     github_repository: str = "yogesh660/learning-institute"
     source_repository: str = "yogesh660/ml-model-zoo"
-    github_token_env: str = "GITHUB_TOKEN"
+    github_token_env: str = "ACADEMY_GITHUB_TOKEN"
     max_retries: int = 2
 
     def __post_init__(self) -> None:

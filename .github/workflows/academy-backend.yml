@@ -2,6 +2,8 @@ name: Academy backend validation
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
 
@@ -10,6 +12,7 @@ permissions:
 
 jobs:
   backend:
+    name: Academy backend validation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

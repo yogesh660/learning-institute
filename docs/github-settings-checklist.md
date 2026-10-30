@@ -30,6 +30,8 @@ settings before any real source-repository proposal is attempted.
 - Do not add provider credentials until a provider is approved.
 - If GitHub API access is enabled, use a GitHub App or fine-grained token with
   only the required repository permissions.
+- Store the integration credential as `ACADEMY_GITHUB_TOKEN` when using a
+  fine-grained token; never send its value in chat or commit it to the repo.
 - Store credentials in an environment, not in repository files or task JSON.
 - Rotate credentials through the documented credential alias mechanism.
 

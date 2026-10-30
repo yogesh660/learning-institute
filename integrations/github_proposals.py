@@ -43,7 +43,7 @@ class GitHubProposalClient:
         self,
         repository: str = "yogesh660/ml-model-zoo",
         *,
-        token_env: str = "GITHUB_TOKEN",
+        token_env: str = "ACADEMY_GITHUB_TOKEN",
         permissions: PermissionManager,
         audit_log: AuditLog | None = None,
         transport: Transport = _default_transport,
