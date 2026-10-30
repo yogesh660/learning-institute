@@ -10,7 +10,7 @@ from agent_foundation.audit import AuditLog
 from agent_foundation.config import AcademyConfig
 from agent_foundation.budgets import Budget, BudgetExceeded, BudgetLedger, PersistentBudgetLedger
 from agent_foundation.permissions import Action, PermissionDenied, PermissionManager, default_policies
-from agent_foundation.providers import BudgetedProvider, DisabledProvider, ProviderUnavailable
+from agent_foundation.providers import BudgetedProvider, DisabledProvider, ProviderRouter, ProviderUnavailable
 from agent_foundation.registry import AgentRegistry
 from agent_foundation.schemas import Approval, Report, Task
 
@@ -97,6 +97,13 @@ class FoundationTests(unittest.TestCase):
         ledger = BudgetLedger({"curriculum_designer": Budget(1.0, 2.0, 2, 4)})
         with self.assertRaises(PermissionDenied):
             BudgetedProvider(FakeProvider(), ledger, "curriculum_designer", PermissionManager(default_policies())).complete("x")
+
+    def test_provider_router_requires_explicit_route(self):
+        fake = object()
+        router = ProviderRouter({"test": fake}, {"curriculum-review": "test"})
+        self.assertIs(router.for_task("curriculum-review"), fake)
+        with self.assertRaises(ProviderUnavailable):
+            router.for_task("unknown-task")
 
     def test_allowed_provider_call_consumes_budget(self):
         class FakeProvider:

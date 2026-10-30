@@ -37,6 +37,20 @@ class DisabledProvider:
         raise ProviderUnavailable("no AI provider is enabled")
 
 
+class ProviderRouter:
+    """Resolve an explicitly configured provider route; never fall back silently."""
+
+    def __init__(self, providers: dict[str, Provider], routes: dict[str, str]) -> None:
+        self.providers = providers
+        self.routes = routes
+
+    def for_task(self, task_kind: str) -> Provider:
+        provider_name = self.routes.get(task_kind)
+        if provider_name is None or provider_name not in self.providers:
+            raise ProviderUnavailable(f"no approved provider route for {task_kind}")
+        return self.providers[provider_name]
+
+
 class BudgetedProvider:
     """Reserve usage before delegating to an explicitly configured adapter."""
 
