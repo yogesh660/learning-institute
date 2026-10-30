@@ -49,6 +49,7 @@ python -m unittest discover -s tests -v
 python3 scripts/dev/check.py overflow concepts/<lesson-id>
 node scripts/dev/quiz-check.js --hard
 python -m orchestrator.main health
+python -m orchestrator.main audit-verify --audit .academy/audit.jsonl
 python scripts/academy/secret-scan.py .
 ```
 

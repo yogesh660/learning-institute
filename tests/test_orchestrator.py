@@ -1,12 +1,15 @@
 import json
 import tempfile
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
 from agent_foundation.audit import AuditLog
 
 from orchestrator.state import Task, TaskStatus
 from orchestrator.store import ConcurrentTaskUpdate, SensitiveTaskData, TaskStore
 from orchestrator.workflow import CurriculumReviewWorkflow
+from orchestrator.main import main
 
 
 class OrchestratorTests(unittest.TestCase):
@@ -62,6 +65,14 @@ class OrchestratorTests(unittest.TestCase):
             store = TaskStore(Path(directory) / "tasks.json")
             with self.assertRaises(SensitiveTaskData):
                 store.save(Task(kind="curriculum-review", payload={"api_key": "must-not-persist"}))
+
+    def test_audit_verify_cli_accepts_missing_optional_log(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = StringIO()
+            with redirect_stdout(output):
+                code = main(["audit-verify", "--audit", str(Path(directory) / "missing.jsonl")])
+            self.assertEqual(code, 0)
+            self.assertIn('"valid": true', output.getvalue())
 
     def test_curriculum_review_pauses_for_approval(self):
         with tempfile.TemporaryDirectory() as directory:

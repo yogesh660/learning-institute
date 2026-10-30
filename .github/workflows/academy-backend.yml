@@ -22,6 +22,8 @@ jobs:
         run: python scripts/academy/secret-scan.py .
       - name: Generate backend health report
         run: python -m orchestrator.main health --output backend-health.json
+      - name: Verify audit chain
+        run: python -m orchestrator.main audit-verify --audit /tmp/academy-audit.jsonl --output audit-verification.json
       - name: Generate read-only curriculum review
         shell: bash
         run: |
@@ -34,4 +36,5 @@ jobs:
           name: academy-backend-health
           path: |
             backend-health.json
+            audit-verification.json
             curriculum-review.json

@@ -19,11 +19,12 @@ from .workflow import CurriculumReviewWorkflow
 from .health import collect_health
 from .service import AcademyService
 from security.auth import Identity, Role
+from agent_foundation.audit import AuditLog
 
 
 def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Learning Institute workflow runner")
-    p.add_argument("command", choices=("create", "run", "approve", "complete", "status", "list", "health"))
+    p.add_argument("command", choices=("create", "run", "approve", "complete", "status", "list", "health", "audit-verify"))
     p.add_argument("task_id", nargs="?")
     p.add_argument("--store", default=".academy/tasks.json")
     p.add_argument("--repo-root", default=".")
@@ -33,6 +34,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--reason", default="", help="required Principal approval rationale")
     p.add_argument("--dedupe-key", help="idempotency key for create (returns an existing task on retry)")
     p.add_argument("--status-filter", choices=[status.value for status in TaskStatus], help="filter queue listing")
+    p.add_argument("--audit", default=".academy/audit.jsonl", help="audit JSONL path for audit-verify")
     return p
 
 
@@ -47,6 +49,15 @@ def main(argv: list[str] | None = None) -> int:
             output.write_text(rendered + "\n", encoding="utf-8")
         print(rendered)
         return 0
+    if args.command == "audit-verify":
+        valid = AuditLog(args.audit).verify()
+        rendered = json.dumps({"path": args.audit, "valid": valid}, indent=2)
+        if args.output:
+            output = Path(args.output)
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(rendered + "\n", encoding="utf-8")
+        print(rendered)
+        return 0 if valid else 1
     if args.command == "list":
         selected = TaskStatus(args.status_filter) if args.status_filter else None
         rendered = json.dumps([task.summary() for task in store.list(selected)], indent=2)
