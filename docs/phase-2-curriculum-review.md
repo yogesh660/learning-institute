@@ -22,4 +22,6 @@ Researcher work is deliberately separate: source-backed research reports must
 include links, dates, and evidence before they can become curriculum input.
 Persisted research reports are revalidated on read; changing a finding or its
 metadata invalidates the report instead of silently accepting stale evidence.
+When `reports/research.json` is present, the curriculum workflow validates it,
+includes only finding metadata in the task result, and records its digest.
 

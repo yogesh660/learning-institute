@@ -9,6 +9,7 @@ from pathlib import Path
 from agents.curriculum_designer import CurriculumDesignerAgent
 from agents.analytics import AcademicAnalyticsAgent
 from agents.qa import QAEngineerAgent
+from agents.researcher import ResearcherAgent
 from agents.teacher import TeacherAgent
 from .state import Task, TaskStatus
 
@@ -39,6 +40,8 @@ class CurriculumReviewWorkflow:
         qa_path = root / "reports" / "phase-3-qa-report.json"
         qa_result = QAEngineerAgent().inspect_report(qa_path).to_dict() if qa_path.exists() else None
         analytics = AcademicAnalyticsAgent().aggregate(report_path, qa_path).to_dict() if qa_path.exists() else None
+        research_path = root / "reports" / "research.json"
+        research = ResearcherAgent().read_report(research_path) if research_path.exists() else None
         task.result = {
             "evidence_file": str(report_path),
             "evidence_sha256": {"curriculum": self._sha256(report_path)},
@@ -53,9 +56,15 @@ class CurriculumReviewWorkflow:
             "curriculum_proposal": curriculum_proposal,
             "qa_result": qa_result,
             "analytics": analytics,
+            "research": {
+                "finding_count": research["finding_count"],
+                "publication_required": research["publication_required"],
+            } if research else None,
         }
         if qa_path.exists():
             task.result["evidence_sha256"]["qa"] = self._sha256(qa_path)
+        if research_path.exists():
+            task.result["evidence_sha256"]["research"] = self._sha256(research_path)
         task.transition(TaskStatus.REVIEW_REQUIRED)
         return task
 

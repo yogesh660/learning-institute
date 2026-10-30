@@ -11,6 +11,7 @@ from orchestrator.state import Task, TaskStatus
 from orchestrator.store import ConcurrentTaskUpdate, DuplicateTaskKey, SensitiveTaskData, TaskStore
 from orchestrator.workflow import CurriculumReviewWorkflow
 from orchestrator.main import main
+from agents.researcher import ResearchFinding, ResearcherAgent
 
 
 class OrchestratorTests(unittest.TestCase):
@@ -98,6 +99,22 @@ class OrchestratorTests(unittest.TestCase):
             self.assertIsInstance(task.result["curriculum_proposal"]["planned_lessons"], list)
             self.assertIsNone(task.result["qa_result"])
             self.assertIsNone(task.result["analytics"])
+
+    def test_curriculum_review_integrates_validated_research_evidence(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            reports = root / "reports"
+            reports.mkdir()
+            (reports / "phase-2-curriculum-audit.json").write_text(
+                json.dumps({"totals": {"sourceLessons": 1, "planned": 0}, "checks": {"structuralStatus": "pass"}})
+            )
+            ResearcherAgent().write_report(
+                reports / "research.json",
+                [ResearchFinding("claim", "https://example.org/source", "2026-10-31", "curriculum context")],
+            )
+            task = CurriculumReviewWorkflow().run(Task(kind="curriculum-review"), root)
+            self.assertEqual(task.result["research"]["finding_count"], 1)
+            self.assertIn("research", task.result["evidence_sha256"])
 
 
 if __name__ == "__main__":
