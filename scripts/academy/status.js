@@ -40,6 +40,17 @@ if (process.env.ACADEMY_BUDGET_SNAPSHOT) {
     budgets = { available: true, data };
   }
 }
+let audit = { available: false, valid: true, entries: 0 };
+if (process.env.ACADEMY_AUDIT_LOG) {
+  const auditPath = path.resolve(process.env.ACADEMY_AUDIT_LOG);
+  if (fs.existsSync(auditPath)) {
+    const lines = fs.readFileSync(auditPath, 'utf8').split(/\r?\n/).filter(Boolean);
+    audit = { available: true, valid: true, entries: lines.length };
+    for (const line of lines) {
+      try { JSON.parse(line); } catch { audit.valid = false; }
+    }
+  }
+}
 const snapshot = {
   phase: 6,
   repository: 'yogesh660/learning-institute',
@@ -47,6 +58,7 @@ const snapshot = {
   evidence,
   taskQueue,
   budgets,
+  audit,
   agentOperations: {
     providerCallsEnabled: false,
     productionMergeEnabled: false,

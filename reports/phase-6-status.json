@@ -1222,6 +1222,11 @@
     "available": false,
     "data": null
   },
+  "audit": {
+    "available": false,
+    "valid": true,
+    "entries": 0
+  },
   "agentOperations": {
     "providerCallsEnabled": false,
     "productionMergeEnabled": false,

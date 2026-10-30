@@ -18,4 +18,6 @@ this report after the backend, authentication, audit retention, and approval
 model are settled. If `ACADEMY_BUDGET_SNAPSHOT` points to a metadata-only
 `BudgetLedger.snapshot()` JSON file, the report also includes quota capacity;
 otherwise it explicitly marks budget data unavailable.
+If `ACADEMY_AUDIT_LOG` is supplied, only its parse validity and entry count are
+reported; raw audit events are never included in the snapshot.
 
