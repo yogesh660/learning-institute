@@ -39,6 +39,8 @@ class Task:
     id: str = field(default_factory=lambda: f"task-{uuid4().hex[:12]}")
     status: TaskStatus = TaskStatus.CREATED
     result: dict[str, Any] | None = None
+    approved_by: str | None = None
+    completed_by: str | None = None
     history: list[dict[str, str]] = field(default_factory=list)
 
     def __post_init__(self) -> None:
@@ -64,6 +66,8 @@ class Task:
             id=data["id"],
             status=TaskStatus(data.get("status", TaskStatus.CREATED)),
             result=data.get("result"),
+            approved_by=data.get("approved_by"),
+            completed_by=data.get("completed_by"),
             history=data.get("history", []),
         )
 

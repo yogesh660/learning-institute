@@ -22,6 +22,9 @@ class ServiceTests(unittest.TestCase):
             service.store.save(task)
             approved = service.approve(principal, task.id)
             self.assertEqual(approved.status.value, "approved")
+            self.assertEqual(approved.approved_by, "principal-1")
+            completed = service.complete(principal, task.id)
+            self.assertEqual(completed.completed_by, "principal-1")
 
     def test_anonymous_cannot_create_task(self):
         with tempfile.TemporaryDirectory() as directory:

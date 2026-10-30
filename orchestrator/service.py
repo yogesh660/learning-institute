@@ -30,10 +30,12 @@ class AcademyService:
         self.authorizer.require(identity, "approve_production")
         task = self.store.get(task_id)
         task.transition(TaskStatus.APPROVED)
+        task.approved_by = identity.subject
         return self.store.save(task)
 
     def complete(self, identity: Identity, task_id: str) -> Task:
         self.authorizer.require(identity, "approve_production")
         task = self.store.get(task_id)
         task.transition(TaskStatus.COMPLETED)
+        task.completed_by = identity.subject
         return self.store.save(task)

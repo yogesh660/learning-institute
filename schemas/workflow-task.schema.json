@@ -9,6 +9,8 @@
     "status": {"enum": ["created", "running", "review_required", "approved", "completed", "failed"]},
     "payload": {"type": "object"},
     "result": {"type": ["object", "null"]},
+    "approved_by": {"type": ["string", "null"]},
+    "completed_by": {"type": ["string", "null"]},
     "history": {"type": "array", "items": {"type": "object", "required": ["status", "at"]}}
   },
   "additionalProperties": false
