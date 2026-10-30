@@ -25,6 +25,10 @@ class ApprovalRequired(GitHubProposalError):
     """Raised when a proposal task has not received Principal approval."""
 
 
+class BranchProtectionRequired(GitHubProposalError):
+    """Raised until repository protection and required checks are verified."""
+
+
 Transport = Callable[[str, str, dict[str, str], bytes], tuple[int, bytes]]
 
 
@@ -43,6 +47,7 @@ class GitHubProposalClient:
         permissions: PermissionManager,
         audit_log: AuditLog | None = None,
         transport: Transport = _default_transport,
+        branch_policy_verified: bool = False,
     ) -> None:
         if repository.count("/") != 1:
             raise ValueError("repository must be owner/name")
@@ -51,6 +56,7 @@ class GitHubProposalClient:
         self.permissions = permissions
         self.audit_log = audit_log
         self._transport = transport
+        self.branch_policy_verified = branch_policy_verified
 
     def _audit_failure(self, agent: str, task: Task, reason: str, **details: object) -> None:
         if self.audit_log:
@@ -77,6 +83,9 @@ class GitHubProposalClient:
         base: str = "main",
     ) -> dict:
         self.permissions.require(agent, Action.CREATE_PULL_REQUEST)
+        if not self.branch_policy_verified:
+            self._audit_failure(agent, task, "branch_policy_unverified")
+            raise BranchProtectionRequired("branch protection and required checks must be verified")
         if task.status is not TaskStatus.APPROVED:
             raise ApprovalRequired(f"task {task.id} is not approved")
         if not task.approved_by or not task.approval_reason or not task.approved_fingerprint:

@@ -14,6 +14,8 @@ foundation for future governed agent workflows.
   center reporting; prompts and provider responses are never included.
 - Audit events are append-only JSONL records with common secret keys redacted.
 - These primitives do not grant GitHub access, merge pull requests, or deploy production.
+- GitHub proposal creation fails closed until branch protection and required
+  checks have been explicitly verified by the deployment integration.
 
 ## Phase 1 follow-up
 

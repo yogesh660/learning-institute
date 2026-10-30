@@ -11,4 +11,7 @@ The adapter does not merge, create arbitrary commits, or expose credentials.
 Successful proposals and metadata-only failures are written to the configured
 hash-chained, secret-free audit log. Credentials, request bodies, and proposal
 text are never recorded.
+
+The client requires an explicit `branch_policy_verified=True` preflight result;
+it will not create a proposal based on task approval alone.
 Production merges remain a Principal action outside this adapter.

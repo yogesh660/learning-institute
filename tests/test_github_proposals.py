@@ -6,7 +6,7 @@ from pathlib import Path
 
 from agent_foundation.permissions import PermissionManager, default_policies
 from agent_foundation.audit import AuditLog
-from integrations.github_proposals import ApprovalRequired, GitHubProposalClient, GitHubProposalError
+from integrations.github_proposals import ApprovalRequired, BranchProtectionRequired, GitHubProposalClient, GitHubProposalError
 from orchestrator.state import Task, TaskStatus
 
 
@@ -26,6 +26,7 @@ class GitHubProposalTests(unittest.TestCase):
                 token_env="TEST_GITHUB_TOKEN",
                 audit_log=AuditLog(Path(tempfile.mkdtemp()) / "audit.jsonl"),
                 transport=transport,
+                branch_policy_verified=True,
             )
             task = Task("curriculum-review")
             with self.assertRaises(ApprovalRequired):
@@ -53,6 +54,7 @@ class GitHubProposalTests(unittest.TestCase):
                 token_env="TEST_GITHUB_TOKEN",
                 audit_log=AuditLog(audit_path),
                 transport=lambda *args: (201, b"{}"),
+                branch_policy_verified=True,
             )
             task = Task("curriculum-review")
             task.transition(TaskStatus.RUNNING)
@@ -73,6 +75,7 @@ class GitHubProposalTests(unittest.TestCase):
                 token_env="TEST_GITHUB_TOKEN",
                 audit_log=AuditLog(audit_path),
                 transport=lambda *args: (422, b"rejected"),
+                branch_policy_verified=True,
             )
             task = Task("curriculum-review")
             task.transition(TaskStatus.RUNNING)
@@ -83,6 +86,19 @@ class GitHubProposalTests(unittest.TestCase):
             record = json.loads(audit_path.read_text(encoding="utf-8"))
             self.assertEqual(record["http_status"], 422)
             self.assertNotIn("private title", record)
+
+    def test_proposal_requires_branch_policy_preflight(self):
+        task = Task("curriculum-review")
+        task.transition(TaskStatus.RUNNING)
+        task.transition(TaskStatus.REVIEW_REQUIRED)
+        task.approve("principal-1", "Reviewed the evidence.")
+        client = GitHubProposalClient(
+            permissions=PermissionManager(default_policies()),
+            token_env="TEST_GITHUB_TOKEN",
+            transport=lambda *args: (201, b"{}"),
+        )
+        with self.assertRaises(BranchProtectionRequired):
+            client.create_pull_request("software_engineer", task=task, title="x", body="y", head="agent/x")
         client = GitHubProposalClient(
             permissions=PermissionManager(default_policies()), token_env="TEST_GITHUB_TOKEN", transport=lambda *args: (201, b"{}")
         )
