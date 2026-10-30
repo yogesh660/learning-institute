@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from agent_foundation.audit import AuditLog
 from agent_foundation.config import AcademyConfig
-from agent_foundation.budgets import Budget, BudgetExceeded, BudgetLedger
+from agent_foundation.budgets import Budget, BudgetExceeded, BudgetLedger, PersistentBudgetLedger
 from agent_foundation.permissions import Action, PermissionDenied, PermissionManager, default_policies
 from agent_foundation.providers import DisabledProvider, ProviderUnavailable
 from agent_foundation.registry import AgentRegistry
@@ -42,6 +42,15 @@ class FoundationTests(unittest.TestCase):
         current[0] = datetime(2026, 2, 1, tzinfo=timezone.utc)
         self.assertEqual(ledger.remaining("teacher")["daily_calls"], 2)
         self.assertEqual(ledger.remaining("teacher")["monthly_calls"], 4)
+
+    def test_budget_ledger_round_trips_persisted_usage(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "budgets.json"
+            budgets = {"teacher": Budget(1.0, 2.0, 2, 4)}
+            PersistentBudgetLedger(budgets, path).reserve("teacher", usd=0.5, calls=1)
+            restored = PersistentBudgetLedger(budgets, path)
+            self.assertEqual(restored.remaining("teacher")["daily_calls"], 1)
+            self.assertEqual(restored.remaining("teacher")["monthly_usd"], 1.5)
 
     def test_audit_redacts_secrets(self):
         with tempfile.TemporaryDirectory() as directory:

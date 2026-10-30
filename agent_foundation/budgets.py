@@ -2,6 +2,10 @@
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import json
+import os
+from pathlib import Path
+import tempfile
 from threading import Lock
 from typing import Callable
 
@@ -67,4 +71,33 @@ class BudgetLedger:
             now = now.replace(tzinfo=timezone.utc)
         period = now.strftime("%Y-%m-%d") if metric.startswith("daily") else now.strftime("%Y-%m")
         self._usage[(agent, period, metric)] = value
+
+
+class PersistentBudgetLedger(BudgetLedger):
+    """Atomically persist budget reservations to a local JSON file."""
+
+    def __init__(self, budgets: dict[str, Budget], path: str | Path, clock: Callable[[], datetime] | None = None) -> None:
+        super().__init__(budgets, clock=clock)
+        self.path = Path(path)
+        if self.path.exists():
+            raw = json.loads(self.path.read_text(encoding="utf-8"))
+            self._usage = {
+                tuple(key.split("\u001f")): value for key, value in raw.items()
+            }
+
+    def reserve(self, agent: str, *, usd: float, calls: int = 1) -> None:
+        super().reserve(agent, usd=usd, calls=calls)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        serialised = {"\u001f".join(key): value for key, value in self._usage.items()}
+        fd, temp_name = tempfile.mkstemp(prefix="academy-budget-", suffix=".json", dir=self.path.parent)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                json.dump(serialised, handle, indent=2)
+                handle.write("\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temp_name, self.path)
+        finally:
+            if os.path.exists(temp_name):
+                os.unlink(temp_name)
 
