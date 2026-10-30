@@ -16,11 +16,11 @@ _SECRET_VALUES = (
 )
 
 
-def _redact(value: Any) -> Any:
+def redact(value: Any) -> Any:
     if isinstance(value, dict):
-        return {k: "[REDACTED]" if k.lower() in _SECRET_KEYS else _redact(v) for k, v in value.items()}
+        return {k: "[REDACTED]" if k.lower() in _SECRET_KEYS else redact(v) for k, v in value.items()}
     if isinstance(value, list):
-        return [_redact(v) for v in value]
+        return [redact(v) for v in value]
     if isinstance(value, str):
         for pattern in _SECRET_VALUES:
             value = pattern.sub("[REDACTED]", value)
@@ -39,7 +39,7 @@ class AuditLog:
         with self._lock:
             self.path.parent.mkdir(parents=True, exist_ok=True)
             previous = self._last_hash()
-            record = _redact(event)
+            record = redact(event)
             record.pop("_prev_hash", None)
             record.pop("_hash", None)
             record["_prev_hash"] = previous

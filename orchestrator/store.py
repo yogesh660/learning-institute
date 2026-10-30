@@ -7,12 +7,16 @@ import os
 import tempfile
 from pathlib import Path
 
-from agent_foundation.audit import AuditLog
+from agent_foundation.audit import AuditLog, redact
 from .state import Task, TaskStatus
 
 
 class ConcurrentTaskUpdate(RuntimeError):
     """Raised when a stale task tries to overwrite a newer revision."""
+
+
+class SensitiveTaskData(ValueError):
+    """Raised when a task contains credential-like data."""
 
 
 class TaskStore:
@@ -53,7 +57,10 @@ class TaskStore:
             if task.revision != 0:
                 raise ConcurrentTaskUpdate(f"new task {task.id} has invalid revision {task.revision}")
             task.revision = 1
-        tasks[task.id] = task.to_dict()
+        serialised = task.to_dict()
+        if redact(serialised) != serialised:
+            raise SensitiveTaskData("task contains secret-like data")
+        tasks[task.id] = serialised
         self._write(tasks)
         if self.audit_log:
             self.audit_log.append(

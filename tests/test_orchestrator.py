@@ -5,7 +5,7 @@ from pathlib import Path
 from agent_foundation.audit import AuditLog
 
 from orchestrator.state import Task, TaskStatus
-from orchestrator.store import ConcurrentTaskUpdate, TaskStore
+from orchestrator.store import ConcurrentTaskUpdate, SensitiveTaskData, TaskStore
 from orchestrator.workflow import CurriculumReviewWorkflow
 
 
@@ -52,11 +52,16 @@ class OrchestratorTests(unittest.TestCase):
             root = Path(directory)
             audit = root / "audit.jsonl"
             store = TaskStore(root / "tasks.json", AuditLog(audit))
-            task = store.save(Task(kind="curriculum-review", payload={"api_key": "must-not-log"}))
+            task = store.save(Task(kind="curriculum-review", payload={"context": "safe"}))
             record = audit.read_text(encoding="utf-8")
             self.assertIn(task.id, record)
-            self.assertNotIn("must-not-log", record)
             self.assertNotIn('"payload"', record)
+
+    def test_store_rejects_secret_like_task_data(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store = TaskStore(Path(directory) / "tasks.json")
+            with self.assertRaises(SensitiveTaskData):
+                store.save(Task(kind="curriculum-review", payload={"api_key": "must-not-persist"}))
 
     def test_curriculum_review_pauses_for_approval(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -12,6 +12,8 @@
   GitHub proposals require the recorded approver, rationale, and fingerprint.
 - Task writes use optimistic revisions so concurrent workers cannot silently
   overwrite newer lifecycle state.
+- Task persistence rejects secret-like keys and values; credentials must remain
+  in the execution environment or a secrets manager, never task JSON.
 - GitHub pull-request proposals require both an allowed agent and an
   `approved` task.
 - The default AI provider is disabled; no provider call happens implicitly.
