@@ -3,6 +3,7 @@ import unittest
 from pathlib import Path
 
 from orchestrator.service import AcademyService
+from orchestrator.state import TaskStatus
 from orchestrator.store import TaskStore
 from security.auth import AuthorizationDenied, Identity, Role
 
@@ -16,6 +17,9 @@ class ServiceTests(unittest.TestCase):
             task = service.create_curriculum_review(agent)
             with self.assertRaises(AuthorizationDenied):
                 service.approve(agent, task.id)
+            task.transition(TaskStatus.RUNNING)
+            task.transition(TaskStatus.REVIEW_REQUIRED)
+            service.store.save(task)
             approved = service.approve(principal, task.id)
             self.assertEqual(approved.status.value, "approved")
 
