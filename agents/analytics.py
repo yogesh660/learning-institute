@@ -9,6 +9,8 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Any
 
+from security.student_data import validate_student_event
+
 
 @dataclass(frozen=True)
 class AnalyticsSnapshot:
@@ -18,6 +20,20 @@ class AnalyticsSnapshot:
     qa_status: str
     student_data_read: bool = False
     personal_data_read: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class StudentAnalyticsSummary:
+    """Aggregated event counts with small-cohort suppression."""
+
+    total_events: int
+    unique_students: int
+    suppressed: bool
+    by_event_type: dict[str, int]
+    by_lesson: dict[str, int]
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -37,6 +53,24 @@ class AcademicAnalyticsAgent:
             curriculum_status=checks.get("structuralStatus", "unknown"),
             qa_status=qa.get("status", "unknown"),
         )
+
+    def aggregate_student_events(
+        self, events: list[dict[str, Any]], *, minimum_cohort: int = 5
+    ) -> StudentAnalyticsSummary:
+        """Aggregate validated pseudonymous events without exposing subjects."""
+        if minimum_cohort <= 0:
+            raise ValueError("minimum_cohort must be positive")
+        for event in events:
+            validate_student_event(event)
+        unique_students = len({event["student_subject"] for event in events})
+        if unique_students < minimum_cohort:
+            return StudentAnalyticsSummary(len(events), unique_students, True, {}, {})
+        by_event_type: dict[str, int] = {}
+        by_lesson: dict[str, int] = {}
+        for event in events:
+            by_event_type[event["event_type"]] = by_event_type.get(event["event_type"], 0) + 1
+            by_lesson[event["lesson_id"]] = by_lesson.get(event["lesson_id"], 0) + 1
+        return StudentAnalyticsSummary(len(events), unique_students, False, by_event_type, by_lesson)
 
     def write_snapshot(self, output_path: str | Path, curriculum_report: str | Path, qa_report: str | Path) -> AnalyticsSnapshot:
         snapshot = self.aggregate(curriculum_report, qa_report)
