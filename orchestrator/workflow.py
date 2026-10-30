@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from agents.curriculum_designer import CurriculumDesignerAgent
+from agents.teacher import TeacherAgent
 from .state import Task, TaskStatus
 
 
@@ -25,6 +27,8 @@ class CurriculumReviewWorkflow:
             return task
         evidence = json.loads(report_path.read_text(encoding="utf-8"))
         totals = evidence.get("totals", {})
+        teacher_review = TeacherAgent().review_report(report_path).to_dict()
+        curriculum_proposal = CurriculumDesignerAgent().propose_from_report(report_path).to_dict()
         task.result = {
             "evidence_file": str(report_path),
             "summary": {
@@ -34,6 +38,8 @@ class CurriculumReviewWorkflow:
             },
             "side_effects": [],
             "approval_required": True,
+            "teacher_review": teacher_review,
+            "curriculum_proposal": curriculum_proposal,
         }
         task.transition(TaskStatus.REVIEW_REQUIRED)
         return task

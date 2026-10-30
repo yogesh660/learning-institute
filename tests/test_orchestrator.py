@@ -31,6 +31,8 @@ class OrchestratorTests(unittest.TestCase):
             self.assertEqual(task.status, TaskStatus.REVIEW_REQUIRED)
             self.assertTrue(task.result["approval_required"])
             self.assertEqual(task.result["side_effects"], [])
+            self.assertEqual(task.result["teacher_review"]["lessons_reviewed"], 379)
+            self.assertIsInstance(task.result["curriculum_proposal"]["planned_lessons"], list)
 
 
 if __name__ == "__main__":

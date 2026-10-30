@@ -18,7 +18,10 @@ class TeacherReview:
     production_changes: bool = False
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        data = asdict(self)
+        data["candidates"] = list(self.candidates)
+        data["recommendations"] = list(self.recommendations)
+        return data
 
 
 class TeacherAgent:
@@ -30,6 +33,7 @@ class TeacherAgent:
         path = Path(report_path)
         evidence = json.loads(path.read_text(encoding="utf-8"))
         totals = evidence.get("totals", {})
+        summary = evidence.get("summary", {})
         checks = evidence.get("checks", {})
         candidates = tuple(checks.get("teacherReviewCandidates", ()))
         recommendations: list[str] = []
@@ -42,7 +46,7 @@ class TeacherAgent:
         return TeacherReview(
             source_report=str(path),
             status=checks.get("structuralStatus", "unknown"),
-            lessons_reviewed=totals.get("sourceLessons", 0),
+            lessons_reviewed=totals.get("sourceLessons", summary.get("lessons", 0)),
             candidates=candidates,
             recommendations=tuple(recommendations),
         )

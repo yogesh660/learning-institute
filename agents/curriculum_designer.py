@@ -16,7 +16,10 @@ class CurriculumProposal:
     production_changes: bool = False
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        data = asdict(self)
+        data["planned_lessons"] = list(self.planned_lessons)
+        data["priorities"] = list(self.priorities)
+        return data
 
 
 class CurriculumDesignerAgent:
