@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+from threading import RLock
 from pathlib import Path
 
 from agent_foundation.audit import AuditLog, redact
@@ -19,7 +20,12 @@ class SensitiveTaskData(ValueError):
     """Raised when a task contains credential-like data."""
 
 
+class DuplicateTaskKey(ValueError):
+    """Raised when a different task already owns an idempotency key."""
+
+
 class TaskStore:
+    _save_lock = RLock()
     def __init__(self, path: str | Path, audit_log: AuditLog | None = None) -> None:
         self.path = Path(path)
         self.audit_log = audit_log
@@ -44,24 +50,29 @@ class TaskStore:
                 os.unlink(temp_name)
 
     def save(self, task: Task) -> Task:
-        tasks = self._read()
-        existing = tasks.get(task.id)
-        if existing is not None:
-            current_revision = int(existing.get("revision", 0))
-            if task.revision != current_revision:
-                raise ConcurrentTaskUpdate(
-                    f"task {task.id} is stale (expected revision {current_revision}, got {task.revision})"
-                )
-            task.revision = current_revision + 1
-        else:
-            if task.revision != 0:
-                raise ConcurrentTaskUpdate(f"new task {task.id} has invalid revision {task.revision}")
-            task.revision = 1
-        serialised = task.to_dict()
-        if redact(serialised) != serialised:
-            raise SensitiveTaskData("task contains secret-like data")
-        tasks[task.id] = serialised
-        self._write(tasks)
+        with self._save_lock:
+            tasks = self._read()
+            existing = tasks.get(task.id)
+            if existing is not None:
+                current_revision = int(existing.get("revision", 0))
+                if task.revision != current_revision:
+                    raise ConcurrentTaskUpdate(
+                        f"task {task.id} is stale (expected revision {current_revision}, got {task.revision})"
+                    )
+                task.revision = current_revision + 1
+            else:
+                if task.revision != 0:
+                    raise ConcurrentTaskUpdate(f"new task {task.id} has invalid revision {task.revision}")
+                if task.dedupe_key and any(
+                    data.get("dedupe_key") == task.dedupe_key for data in tasks.values()
+                ):
+                    raise DuplicateTaskKey(f"dedupe key is already in use: {task.dedupe_key}")
+                task.revision = 1
+            serialised = task.to_dict()
+            if redact(serialised) != serialised:
+                raise SensitiveTaskData("task contains secret-like data")
+            tasks[task.id] = serialised
+            self._write(tasks)
         if self.audit_log:
             self.audit_log.append(
                 {

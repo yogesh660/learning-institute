@@ -8,7 +8,7 @@ from security.auth import Authorizer, Identity, default_authorizer
 from security.rate_limit import InMemoryRateLimiter
 
 from .state import Task, TaskStatus
-from .store import TaskStore
+from .store import DuplicateTaskKey, TaskStore
 from .workflow import CurriculumReviewWorkflow
 
 
@@ -35,7 +35,15 @@ class AcademyService:
             existing = self.store.find_by_dedupe_key(dedupe_key)
             if existing is not None:
                 return existing
-        return self.store.save(Task(kind=CurriculumReviewWorkflow.kind, dedupe_key=dedupe_key))
+        task = Task(kind=CurriculumReviewWorkflow.kind, dedupe_key=dedupe_key)
+        try:
+            return self.store.save(task)
+        except DuplicateTaskKey:
+            if dedupe_key is not None:
+                existing = self.store.find_by_dedupe_key(dedupe_key)
+                if existing is not None:
+                    return existing
+            raise
 
     def run_curriculum_review(self, identity: Identity, task_id: str, repo_root: str | Path) -> Task:
         self._require(identity, "prepare_proposal")

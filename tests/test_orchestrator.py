@@ -8,7 +8,7 @@ from pathlib import Path
 from agent_foundation.audit import AuditLog
 
 from orchestrator.state import Task, TaskStatus
-from orchestrator.store import ConcurrentTaskUpdate, SensitiveTaskData, TaskStore
+from orchestrator.store import ConcurrentTaskUpdate, DuplicateTaskKey, SensitiveTaskData, TaskStore
 from orchestrator.workflow import CurriculumReviewWorkflow
 from orchestrator.main import main
 
@@ -66,6 +66,13 @@ class OrchestratorTests(unittest.TestCase):
             store = TaskStore(Path(directory) / "tasks.json")
             with self.assertRaises(SensitiveTaskData):
                 store.save(Task(kind="curriculum-review", payload={"api_key": "must-not-persist"}))
+
+    def test_store_rejects_duplicate_dedupe_key(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store = TaskStore(Path(directory) / "tasks.json")
+            store.save(Task(kind="curriculum-review", dedupe_key="same-key"))
+            with self.assertRaises(DuplicateTaskKey):
+                store.save(Task(kind="curriculum-review", dedupe_key="same-key"))
 
     def test_audit_verify_cli_accepts_missing_optional_log(self):
         with tempfile.TemporaryDirectory() as directory:
