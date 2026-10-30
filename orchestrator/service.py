@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from security.auth import Authorizer, Identity, default_authorizer
-from security.rate_limit import InMemoryRateLimiter
+from security.rate_limit import InMemoryRateLimiter, RateLimitExceeded
 from security.auth import AuthorizationDenied
 from agent_foundation.audit import AuditLog
 
@@ -42,7 +42,19 @@ class AcademyService:
                 )
             raise
         if self.rate_limiter is not None:
-            self.rate_limiter.check(identity.subject)
+            try:
+                self.rate_limiter.check(identity.subject)
+            except RateLimitExceeded:
+                if self.audit_log:
+                    self.audit_log.append(
+                        {
+                            "event": "rate_limited",
+                            "subject": identity.subject,
+                            "role": identity.role.value,
+                            "capability": capability,
+                        }
+                    )
+                raise
 
     def create_curriculum_review(self, identity: Identity, dedupe_key: str | None = None) -> Task:
         self._require(identity, "prepare_proposal")

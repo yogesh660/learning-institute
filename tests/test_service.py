@@ -69,11 +69,14 @@ class ServiceTests(unittest.TestCase):
     def test_service_can_enforce_rate_limit_after_authorization(self):
         with tempfile.TemporaryDirectory() as directory:
             limiter = InMemoryRateLimiter(1, 60)
-            service = AcademyService(TaskStore(Path(directory) / "tasks.json"), rate_limiter=limiter)
+            audit = AuditLog(Path(directory) / "audit.jsonl")
+            service = AcademyService(TaskStore(Path(directory) / "tasks.json"), rate_limiter=limiter, audit_log=audit)
             agent = Identity("agent-1", Role.AGENT)
             service.create_curriculum_review(agent)
             with self.assertRaises(RateLimitExceeded):
                 service.create_curriculum_review(agent)
+            record = json.loads((Path(directory) / "audit.jsonl").read_text(encoding="utf-8").splitlines()[-1])
+            self.assertEqual(record["event"], "rate_limited")
 
     def test_unauthorized_identity_is_rejected_before_rate_limit(self):
         with tempfile.TemporaryDirectory() as directory:
