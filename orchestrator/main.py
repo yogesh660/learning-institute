@@ -30,6 +30,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--output", help="optional UTF-8 JSON workflow report")
     p.add_argument("--subject", help="authenticated identity subject")
     p.add_argument("--role", choices=[role.value for role in Role], help="authenticated identity role")
+    p.add_argument("--reason", default="", help="required Principal approval rationale")
     return p
 
 
@@ -57,7 +58,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "run":
             task = service.run_curriculum_review(identity, task.id, args.repo_root)
         elif args.command == "approve":
-            task = service.approve(identity, task.id)
+            task = service.approve(identity, task.id, args.reason)
         elif args.command == "complete":
             task = service.complete(identity, task.id)
     rendered = json.dumps(task.to_dict(), indent=2)

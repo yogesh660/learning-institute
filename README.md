@@ -59,7 +59,7 @@ The validation workflows run the Python backend suite, rebuild the imported stat
 ```bash
 python -m orchestrator.main create --store .academy/tasks.json --subject teacher-1 --role agent
 python -m orchestrator.main run TASK_ID --store .academy/tasks.json --repo-root . --subject teacher-1 --role agent --output reports/task-review.json
-python -m orchestrator.main approve TASK_ID --store .academy/tasks.json --subject principal-1 --role principal
+python -m orchestrator.main approve TASK_ID --store .academy/tasks.json --subject principal-1 --role principal --reason "Reviewed evidence and approved the scoped proposal."
 ```
 
 `learning-institute` prepares evidence and proposals for `ml-model-zoo`; it does not replace the public site or merge production changes.

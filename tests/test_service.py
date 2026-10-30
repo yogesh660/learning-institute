@@ -16,13 +16,16 @@ class ServiceTests(unittest.TestCase):
             principal = Identity("principal-1", Role.PRINCIPAL)
             task = service.create_curriculum_review(agent)
             with self.assertRaises(AuthorizationDenied):
-                service.approve(agent, task.id)
+                service.approve(agent, task.id, "not allowed")
             task.transition(TaskStatus.RUNNING)
             task.transition(TaskStatus.REVIEW_REQUIRED)
             service.store.save(task)
-            approved = service.approve(principal, task.id)
+            with self.assertRaises(ValueError):
+                service.approve(principal, task.id, "")
+            approved = service.approve(principal, task.id, "Reviewed evidence and approved the scoped proposal.")
             self.assertEqual(approved.status.value, "approved")
             self.assertEqual(approved.approved_by, "principal-1")
+            self.assertEqual(approved.approval_reason, "Reviewed evidence and approved the scoped proposal.")
             completed = service.complete(principal, task.id)
             self.assertEqual(completed.completed_by, "principal-1")
 

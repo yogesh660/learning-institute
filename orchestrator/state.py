@@ -40,6 +40,7 @@ class Task:
     status: TaskStatus = TaskStatus.CREATED
     result: dict[str, Any] | None = None
     approved_by: str | None = None
+    approval_reason: str | None = None
     completed_by: str | None = None
     history: list[dict[str, str]] = field(default_factory=list)
 
@@ -67,6 +68,7 @@ class Task:
             status=TaskStatus(data.get("status", TaskStatus.CREATED)),
             result=data.get("result"),
             approved_by=data.get("approved_by"),
+            approval_reason=data.get("approval_reason"),
             completed_by=data.get("completed_by"),
             history=data.get("history", []),
         )
