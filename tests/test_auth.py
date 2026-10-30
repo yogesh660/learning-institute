@@ -12,6 +12,15 @@ class AuthTests(unittest.TestCase):
         with self.assertRaises(AuthorizationDenied):
             authorizer.require(None, "read_public_lessons")
 
+    def test_malformed_identity_is_denied_without_type_errors(self):
+        authorizer = default_authorizer()
+        with self.assertRaises(AuthorizationDenied):
+            authorizer.require(Identity(123, Role.STUDENT), "read_public_lessons")
+        with self.assertRaises(AuthorizationDenied):
+            authorizer.require(Identity("anon_example01", "student"), "read_public_lessons")
+        with self.assertRaises(AuthorizationDenied):
+            authorizer.require(Identity("anon_example01", Role.STUDENT), None)
+
 
 if __name__ == "__main__":
     unittest.main()

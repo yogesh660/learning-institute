@@ -27,7 +27,14 @@ class Authorizer:
         self._permissions = permissions
 
     def require(self, identity: Identity | None, capability: str) -> None:
-        if identity is None or not identity.subject.strip() or capability not in self._permissions.get(identity.role, frozenset()):
+        if (
+            not isinstance(identity, Identity)
+            or not isinstance(identity.subject, str)
+            or not identity.subject.strip()
+            or not isinstance(identity.role, Role)
+            or not isinstance(capability, str)
+            or capability not in self._permissions.get(identity.role, frozenset())
+        ):
             raise AuthorizationDenied(f"identity is not allowed to {capability}")
 
 
