@@ -38,7 +38,12 @@ def validate_learning_event(event: dict[str, Any]) -> None:
 
 def _contains_key(value: Any, target: str) -> bool:
     if isinstance(value, dict):
-        return any(key.lower() == target or _contains_key(item, target) for key, item in value.items())
+        for key, item in value.items():
+            if not isinstance(key, str):
+                raise PrivacyViolation("event object keys must be strings")
+            if key.lower() == target or _contains_key(item, target):
+                return True
+        return False
     if isinstance(value, list):
         return any(_contains_key(item, target) for item in value)
     return False

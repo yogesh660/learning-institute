@@ -24,6 +24,17 @@ class PrivacyTests(unittest.TestCase):
                 {"student_key": "real-student-123", "event_type": "lesson_viewed", "lesson_id": "x"}
             )
 
+    def test_rejects_non_string_nested_keys(self):
+        with self.assertRaises(PrivacyViolation):
+            validate_learning_event(
+                {
+                    "student_key": "anon_example01",
+                    "event_type": "lesson_viewed",
+                    "lesson_id": "x",
+                    "metadata": {"nested": {1: "unexpected"}},
+                }
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
