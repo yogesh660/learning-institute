@@ -9,7 +9,7 @@ from typing import MutableMapping, Protocol
 
 from .budgets import BudgetLedger
 from .audit import AuditLog
-from .permissions import Action, PermissionManager
+from .permissions import Action, PermissionDenied, PermissionManager
 
 
 class ProviderUnavailable(RuntimeError):
@@ -96,7 +96,21 @@ class BudgetedProvider:
             raise ValueError("prompt must not be empty")
         if len(prompt) > self.max_prompt_chars:
             raise ValueError("prompt exceeds configured character limit")
-        self.permissions.require(self.agent, Action.CALL_PROVIDER)
+        try:
+            self.permissions.require(self.agent, Action.CALL_PROVIDER)
+        except PermissionDenied:
+            if self.audit_log:
+                self.audit_log.append(
+                    {
+                        "event": "provider_call",
+                        "agent": self.agent,
+                        "provider": self.provider.name,
+                        "model": self.provider.model,
+                        "prompt_chars": len(prompt),
+                        "status": "denied",
+                    }
+                )
+            raise
         cache_key = self._cache_key(prompt) if self.cache is not None else None
         if cache_key is not None:
             with self._cache_lock:

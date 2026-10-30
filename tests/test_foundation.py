@@ -176,6 +176,30 @@ class FoundationTests(unittest.TestCase):
         with self.assertRaises(PermissionDenied):
             BudgetedProvider(FakeProvider(), ledger, "curriculum_designer", PermissionManager(default_policies())).complete("x")
 
+    def test_denied_provider_call_is_audited_without_prompt(self):
+        class FakeProvider:
+            name = "fake"
+            model = "test"
+
+            def complete(self, prompt):
+                return "never"
+
+        with tempfile.TemporaryDirectory() as directory:
+            audit_path = Path(directory) / "audit.jsonl"
+            ledger = BudgetLedger({"curriculum_designer": Budget(1.0, 2.0, 2, 4)})
+            provider = BudgetedProvider(
+                FakeProvider(),
+                ledger,
+                "curriculum_designer",
+                PermissionManager(default_policies()),
+                audit_log=AuditLog(audit_path),
+            )
+            with self.assertRaises(PermissionDenied):
+                provider.complete("private prompt")
+            record = json.loads(audit_path.read_text(encoding="utf-8"))
+            self.assertEqual(record["status"], "denied")
+            self.assertNotIn("private prompt", record)
+
     def test_provider_router_requires_explicit_route(self):
         fake = object()
         router = ProviderRouter({"test": fake}, {"curriculum-review": "test"})
