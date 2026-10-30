@@ -1,4 +1,5 @@
 import json
+import hashlib
 import tempfile
 import unittest
 from contextlib import redirect_stdout
@@ -84,6 +85,8 @@ class OrchestratorTests(unittest.TestCase):
             self.assertEqual(task.status, TaskStatus.REVIEW_REQUIRED)
             self.assertTrue(task.result["approval_required"])
             self.assertEqual(task.result["side_effects"], [])
+            expected_hash = hashlib.sha256(report.read_bytes()).hexdigest()
+            self.assertEqual(task.result["evidence_sha256"]["curriculum"], expected_hash)
             self.assertEqual(task.result["teacher_review"]["lessons_reviewed"], 379)
             self.assertIsInstance(task.result["curriculum_proposal"]["planned_lessons"], list)
             self.assertIsNone(task.result["qa_result"])
