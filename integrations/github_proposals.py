@@ -11,7 +11,7 @@ from collections.abc import Callable
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
-from agent_foundation.permissions import Action, PermissionManager
+from agent_foundation.permissions import Action, PermissionDenied, PermissionManager
 from agent_foundation.audit import AuditLog
 from agent_foundation.credentials import CredentialManager, CredentialUnavailable
 from orchestrator.state import Task, TaskStatus
@@ -86,7 +86,11 @@ class GitHubProposalClient:
         head: str,
         base: str = "main",
     ) -> dict:
-        self.permissions.require(agent, Action.CREATE_PULL_REQUEST)
+        try:
+            self.permissions.require(agent, Action.CREATE_PULL_REQUEST)
+        except PermissionDenied:
+            self._audit_failure(agent, task, "permission_denied")
+            raise
         if self.branch_policy_check is not None:
             try:
                 policy_verified = self.branch_policy_check()

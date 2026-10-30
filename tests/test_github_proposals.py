@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from agent_foundation.permissions import PermissionManager, default_policies
+from agent_foundation.permissions import PermissionDenied, PermissionManager, default_policies
 from agent_foundation.audit import AuditLog
 from integrations.github_proposals import ApprovalRequired, BranchProtectionRequired, GitHubProposalClient, GitHubProposalError
 from orchestrator.state import Task, TaskStatus
@@ -44,6 +44,21 @@ class GitHubProposalTests(unittest.TestCase):
                 os.environ.pop("TEST_GITHUB_TOKEN", None)
             else:
                 os.environ["TEST_GITHUB_TOKEN"] = old
+
+    def test_permission_denial_is_audited_without_payload(self):
+        with tempfile.TemporaryDirectory() as directory:
+            audit_path = Path(directory) / "audit.jsonl"
+            client = GitHubProposalClient(
+                permissions=PermissionManager(default_policies()),
+                audit_log=AuditLog(audit_path),
+                branch_policy_verified=True,
+            )
+            task = Task("curriculum-review")
+            with self.assertRaises(PermissionDenied):
+                client.create_pull_request("teacher", task=task, title="secret title", body="secret body", head="agent/x")
+            record = json.loads(audit_path.read_text(encoding="utf-8"))
+            self.assertEqual(record["reason"], "permission_denied")
+            self.assertNotIn("secret body", record)
 
     def test_missing_credential_fails_closed(self):
         os.environ.pop("TEST_GITHUB_TOKEN", None)
