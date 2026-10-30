@@ -10,7 +10,7 @@ from agent_foundation.audit import AuditLog
 from agent_foundation.config import AcademyConfig
 from agent_foundation.budgets import Budget, BudgetExceeded, BudgetLedger, PersistentBudgetLedger
 from agent_foundation.permissions import Action, PermissionDenied, PermissionManager, default_policies
-from agent_foundation.providers import DisabledProvider, ProviderUnavailable
+from agent_foundation.providers import BudgetedProvider, DisabledProvider, ProviderUnavailable
 from agent_foundation.registry import AgentRegistry
 from agent_foundation.schemas import Approval, Report, Task
 
@@ -83,6 +83,18 @@ class FoundationTests(unittest.TestCase):
     def test_provider_boundary_fails_closed(self):
         with self.assertRaises(ProviderUnavailable):
             DisabledProvider().complete("test prompt")
+
+    def test_provider_requires_agent_permission(self):
+        class FakeProvider:
+            name = "fake"
+            model = "test"
+
+            def complete(self, prompt):
+                return None
+
+        ledger = BudgetLedger({"curriculum_designer": Budget(1.0, 2.0, 2, 4)})
+        with self.assertRaises(PermissionDenied):
+            BudgetedProvider(FakeProvider(), ledger, "curriculum_designer", PermissionManager(default_policies())).complete("x")
 
     def test_agent_registry_exposes_policy(self):
         registry = AgentRegistry()
