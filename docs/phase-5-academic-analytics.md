@@ -16,5 +16,5 @@ pseudonymous events; it suppresses detailed counts below a configurable
 minimum cohort and never returns student subjects. It is not a production
 student database or ingestion endpoint. For sufficiently large cohorts it also
 emits generic lesson-level completion-gap recommendations, never individual
-learner recommendations.
+learner recommendations, and reports aggregate lesson completion rates.
 

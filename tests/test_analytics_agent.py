@@ -48,12 +48,14 @@ class AnalyticsAgentTests(unittest.TestCase):
         summary = AcademicAnalyticsAgent().aggregate_student_events(events)
         self.assertTrue(summary.suppressed)
         self.assertEqual(summary.by_lesson, {})
+        self.assertEqual(summary.completion_rates, {})
 
     def test_student_analytics_aggregates_only_large_cohorts(self):
         events = [self._event(f"anon_student0{i}") for i in range(1, 6)]
         summary = AcademicAnalyticsAgent().aggregate_student_events(events)
         self.assertFalse(summary.suppressed)
         self.assertEqual(summary.by_lesson["gradient-descent"], 5)
+        self.assertEqual(summary.completion_rates, {})
         self.assertNotIn("anon_student01", summary.to_dict())
 
     def test_student_analytics_recommends_review_for_completion_gaps(self):
@@ -63,6 +65,12 @@ class AnalyticsAgentTests(unittest.TestCase):
         ]
         summary = AcademicAnalyticsAgent().aggregate_student_events(events)
         self.assertEqual(summary.recommendations, ("Review cohort completion for lesson: hard-lesson",))
+
+    def test_student_analytics_reports_completion_rate(self):
+        events = [self._event(f"anon_student0{i}", "lesson_started", "lesson-a") for i in range(1, 6)]
+        events.extend(self._event(f"anon_student0{i}", "lesson_completed", "lesson-a") for i in range(1, 4))
+        summary = AcademicAnalyticsAgent().aggregate_student_events(events)
+        self.assertEqual(summary.completion_rates["lesson-a"], 0.6)
 
 
 if __name__ == "__main__":

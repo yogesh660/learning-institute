@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import os
 import tempfile
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from pathlib import Path
 from typing import Any
 
@@ -35,6 +35,7 @@ class StudentAnalyticsSummary:
     by_event_type: dict[str, int]
     by_lesson: dict[str, int]
     recommendations: tuple[str, ...] = ()
+    completion_rates: dict[str, float] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -65,7 +66,7 @@ class AcademicAnalyticsAgent:
             validate_student_event(event)
         unique_students = len({event["student_subject"] for event in events})
         if unique_students < minimum_cohort:
-            return StudentAnalyticsSummary(len(events), unique_students, True, {}, {})
+            return StudentAnalyticsSummary(len(events), unique_students, True, {}, {}, completion_rates={})
         by_event_type: dict[str, int] = {}
         by_lesson: dict[str, int] = {}
         started: dict[str, int] = {}
@@ -82,7 +83,13 @@ class AcademicAnalyticsAgent:
             for lesson in sorted(started)
             if started[lesson] > completed.get(lesson, 0)
         )
-        return StudentAnalyticsSummary(len(events), unique_students, False, by_event_type, by_lesson, recommendations)
+        completion_rates = {
+            lesson: round(min(completed.get(lesson, 0) / count, 1.0), 4)
+            for lesson, count in sorted(started.items())
+        }
+        return StudentAnalyticsSummary(
+            len(events), unique_students, False, by_event_type, by_lesson, recommendations, completion_rates
+        )
 
     def write_snapshot(self, output_path: str | Path, curriculum_report: str | Path, qa_report: str | Path) -> AnalyticsSnapshot:
         snapshot = self.aggregate(curriculum_report, qa_report)
