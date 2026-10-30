@@ -37,7 +37,17 @@ class FoundationTests(unittest.TestCase):
         self.assertEqual(manager.aliases(), ("primary",))
         self.assertTrue(manager.available("primary"))
         self.assertEqual(manager.resolve("primary"), "secret-value")
-        manager.rotate("primary", "TEST_PROVIDER_KEY_NEXT")
+        with tempfile.TemporaryDirectory() as directory:
+            audit_path = Path(directory) / "audit.jsonl"
+            manager = CredentialManager(
+                {"primary": "TEST_PROVIDER_KEY"},
+                {"TEST_PROVIDER_KEY": "secret-value"},
+                audit_log=AuditLog(audit_path),
+            )
+            manager.rotate("primary", "TEST_PROVIDER_KEY_NEXT")
+            record = json.loads(audit_path.read_text(encoding="utf-8"))
+            self.assertEqual(record["event"], "credential_rotated")
+            self.assertNotIn("secret-value", record)
         self.assertFalse(manager.available("primary"))
         with self.assertRaises(CredentialUnavailable):
             manager.resolve("primary")
