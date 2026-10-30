@@ -6,6 +6,7 @@ from uuid import uuid4
 
 from agent_foundation.audit import AuditLog
 from agent_foundation.budgets import Budget, BudgetExceeded, BudgetLedger
+from agent_foundation.permissions import Action, PermissionDenied, PermissionManager, default_policies
 from agent_foundation.schemas import Approval, Report, Task
 
 
@@ -31,6 +32,14 @@ class FoundationTests(unittest.TestCase):
             AuditLog(path).append({"event": "test", "api_key": "do-not-write"})
             record = json.loads(path.read_text(encoding="utf-8"))
             self.assertEqual(record["api_key"], "[REDACTED]")
+
+    def test_permissions_fail_closed(self):
+        manager = PermissionManager(default_policies())
+        manager.require("software_engineer", Action.CREATE_PULL_REQUEST)
+        with self.assertRaises(PermissionDenied):
+            manager.require("software_engineer", Action.MERGE_PULL_REQUEST)
+        with self.assertRaises(PermissionDenied):
+            manager.require("unknown-agent", Action.READ_PUBLIC_REPO)
 
 
 if __name__ == "__main__":
