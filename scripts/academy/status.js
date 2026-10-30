@@ -32,12 +32,21 @@ if (fs.existsSync(taskStore)) {
   }
   taskQueue = { available: true, total: Object.keys(tasks).length, byStatus };
 }
+let budgets = { available: false, data: null };
+if (process.env.ACADEMY_BUDGET_SNAPSHOT) {
+  const budgetPath = path.resolve(process.env.ACADEMY_BUDGET_SNAPSHOT);
+  if (fs.existsSync(budgetPath)) {
+    const data = JSON.parse(fs.readFileSync(budgetPath, 'utf8'));
+    budgets = { available: true, data };
+  }
+}
 const snapshot = {
   phase: 6,
   repository: 'yogesh660/learning-institute',
   mode: 'manual, read-only snapshot',
   evidence,
   taskQueue,
+  budgets,
   agentOperations: {
     providerCallsEnabled: false,
     productionMergeEnabled: false,

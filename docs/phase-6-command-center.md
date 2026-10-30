@@ -15,5 +15,7 @@ If a local `.academy/tasks.json` exists, the snapshot includes only task counts
 by status, never task payloads. It does not merge pull requests, enable GitHub
 Pages, call AI providers, or read student data. A future dashboard can replace
 this report after the backend, authentication, audit retention, and approval
-model are settled.
+model are settled. If `ACADEMY_BUDGET_SNAPSHOT` points to a metadata-only
+`BudgetLedger.snapshot()` JSON file, the report also includes quota capacity;
+otherwise it explicitly marks budget data unavailable.
 

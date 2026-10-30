@@ -1218,6 +1218,10 @@
     "total": 0,
     "byStatus": {}
   },
+  "budgets": {
+    "available": false,
+    "data": null
+  },
   "agentOperations": {
     "providerCallsEnabled": false,
     "productionMergeEnabled": false,
