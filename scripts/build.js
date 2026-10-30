@@ -32,7 +32,7 @@ const PROFILE = {
   linkedin: 'https://www.linkedin.com/in/yogesh-s-awate/', github: 'https://github.com/yogesh660',
   medium: 'https://medium.com/@yogeshinawate', twitter: 'https://twitter.com/YogeshSAwate1',
 };
-const REPO = 'https://github.com/yogesh660/ml-model-zoo';
+const REPO = 'https://github.com/yogesh660/learning-institute';
 const VERSION = Date.now().toString(36);
 const YEAR = new Date().getFullYear();
 
