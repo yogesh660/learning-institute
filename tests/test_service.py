@@ -45,6 +45,15 @@ class ServiceTests(unittest.TestCase):
             self.assertEqual(first.id, second.id)
             self.assertEqual(len(service.store.list()), 1)
 
+    def test_dedupe_key_is_normalized_before_persistence(self):
+        with tempfile.TemporaryDirectory() as directory:
+            service = AcademyService(TaskStore(Path(directory) / "tasks.json"))
+            agent = Identity("agent-1", Role.AGENT)
+            first = service.create_curriculum_review(agent, "  ci-run-123  ")
+            second = service.create_curriculum_review(agent, "ci-run-123")
+            self.assertEqual(first.id, second.id)
+            self.assertEqual(first.dedupe_key, "ci-run-123")
+
     def test_blank_dedupe_key_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             service = AcademyService(TaskStore(Path(directory) / "tasks.json"))

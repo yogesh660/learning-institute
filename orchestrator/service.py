@@ -31,6 +31,7 @@ class AcademyService:
     def create_curriculum_review(self, identity: Identity, dedupe_key: str | None = None) -> Task:
         self._require(identity, "prepare_proposal")
         if dedupe_key is not None:
+            dedupe_key = dedupe_key.strip()
             existing = self.store.find_by_dedupe_key(dedupe_key)
             if existing is not None:
                 return existing
