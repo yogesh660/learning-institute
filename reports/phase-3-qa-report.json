@@ -1,0 +1,20 @@
+{
+  "phase": 3,
+  "totals": {
+    "sourceLessons": 379,
+    "expectedPages": 379,
+    "plannedPages": 18
+  },
+  "checks": {
+    "missingGeneratedPages": [],
+    "brokenLinks": [],
+    "staleSourceLinks": [],
+    "status": "pass"
+  },
+  "policy": {
+    "modifiesProductionContent": false,
+    "requiresPullRequestEvidence": true,
+    "deploymentBranch": "main"
+  }
+}
+
