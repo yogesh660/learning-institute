@@ -49,5 +49,7 @@ def default_policies() -> dict[str, AgentPolicy]:
             "software_engineer",
             frozenset({Action.READ_PUBLIC_REPO, Action.WRITE_BRANCH, Action.CREATE_PULL_REQUEST}),
         ),
+        "qa_engineer": AgentPolicy("qa_engineer", frozenset({Action.READ_PUBLIC_REPO})),
+        "academic_reviewer": AgentPolicy("academic_reviewer", frozenset({Action.READ_PUBLIC_REPO})),
         "principal": AgentPolicy("principal", frozenset({Action.READ_PUBLIC_REPO, Action.MERGE_PULL_REQUEST})),
     }

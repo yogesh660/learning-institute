@@ -23,6 +23,8 @@ class AgentRegistry:
             "researcher": "produce evidence-backed research reports",
             "curriculum_designer": "maintain paths, modules, and prerequisites",
             "software_engineer": "prepare reviewed website and content changes",
+            "qa_engineer": "validate generated output and engineering evidence",
+            "academic_reviewer": "independently verify academic claims and sources",
             "principal": "approve important production decisions",
         }
         self._purposes = purposes
