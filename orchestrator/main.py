@@ -4,6 +4,7 @@ Examples:
   python -m orchestrator.main create --store work/tasks.json
   python -m orchestrator.main run task-... --store work/tasks.json --repo-root .
   python -m orchestrator.main approve task-... --store work/tasks.json
+  python -m orchestrator.main run task-... --output reports/task-review.json
 """
 
 from __future__ import annotations
@@ -23,6 +24,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("task_id", nargs="?")
     p.add_argument("--store", default=".academy/tasks.json")
     p.add_argument("--repo-root", default=".")
+    p.add_argument("--output", help="optional UTF-8 JSON workflow report")
     return p
 
 
@@ -42,7 +44,12 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "complete":
             task.transition(TaskStatus.COMPLETED)
         store.save(task)
-    print(json.dumps(task.to_dict(), indent=2))
+    rendered = json.dumps(task.to_dict(), indent=2)
+    if args.output:
+        output = Path(args.output)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered + "\n", encoding="utf-8")
+    print(rendered)
     return 0
 
 
