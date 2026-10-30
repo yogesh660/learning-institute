@@ -2,7 +2,7 @@
 
 An interactive learning hub with 69 lessons: 50 machine learning models and 19 statistics, theory and language-model concepts, arranged into five learning paths. Every lesson explains the idea in plain words, works through the maths, shows runnable code and includes a live lab where the algorithm actually trains in your browser.
 
-It is meant to sit at `yogesh660.github.io/ml-model-zoo/` and uses the same design system as the portfolio: same tokens, nav, reveals, card spotlight and footer.
+This repository is the target workspace for the AI Learning Institute. It was imported from `yogesh660/ml-model-zoo`; that source repository remains read-only. Deployment for this private repository is not configured yet.
 
 ## Learning paths
 
