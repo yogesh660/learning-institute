@@ -28,6 +28,13 @@ class GitHubReadOnlyTests(unittest.TestCase):
         with self.assertRaises(GitHubReadError):
             client.read_file("README.md")
 
+    def test_lists_directory_metadata_only(self):
+        def transport(url, headers):
+            return 200, json.dumps([{"name": "curriculum.js", "path": "content/curriculum.js", "type": "file", "sha": "secret-to-hide"}]).encode()
+
+        entries = GitHubReadOnlyClient(transport=transport).list_path("content")
+        self.assertEqual(entries, [{"name": "curriculum.js", "path": "content/curriculum.js", "type": "file"}])
+
 
 if __name__ == "__main__":
     unittest.main()

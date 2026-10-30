@@ -64,3 +64,28 @@ class GitHubReadOnlyClient:
             return base64.b64decode(payload["content"], validate=False).decode("utf-8")
         except (KeyError, ValueError, UnicodeDecodeError) as exc:
             raise GitHubReadError("invalid GitHub file response") from exc
+
+    def list_path(self, path: str = "", ref: str = "main") -> list[dict[str, str]]:
+        """List a repository directory, returning only safe metadata."""
+        clean_path = path.strip("/")
+        if ".." in clean_path.split("/"):
+            raise ValueError("path must remain inside the repository")
+        suffix = f"contents/{quote(clean_path, safe='/')}" if clean_path else "contents"
+        url = f"https://api.github.com/repos/{self.repository}/{suffix}?ref={quote(ref, safe='')}"
+        headers = {"Accept": "application/vnd.github+json", "User-Agent": "learning-institute"}
+        token = os.getenv(self.token_env)
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        status, body = self._transport(url, headers)
+        if status != 200:
+            raise GitHubReadError(f"GitHub directory read failed with status {status}")
+        try:
+            entries = json.loads(body)
+            if not isinstance(entries, list):
+                raise GitHubReadError("GitHub path is not a directory")
+            return [
+                {"name": entry["name"], "path": entry["path"], "type": entry["type"]}
+                for entry in entries
+            ]
+        except (KeyError, ValueError, TypeError) as exc:
+            raise GitHubReadError("invalid GitHub directory response") from exc
