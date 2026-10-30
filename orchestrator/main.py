@@ -31,6 +31,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--subject", help="authenticated identity subject")
     p.add_argument("--role", choices=[role.value for role in Role], help="authenticated identity role")
     p.add_argument("--reason", default="", help="required Principal approval rationale")
+    p.add_argument("--dedupe-key", help="idempotency key for create (returns an existing task on retry)")
     p.add_argument("--status-filter", choices=[status.value for status in TaskStatus], help="filter queue listing")
     return p
 
@@ -60,7 +61,7 @@ def main(argv: list[str] | None = None) -> int:
     identity = Identity(args.subject, Role(args.role))
     service = AcademyService(store)
     if args.command == "create":
-        task = service.create_curriculum_review(identity)
+        task = service.create_curriculum_review(identity, args.dedupe_key)
     else:
         if not args.task_id:
             raise SystemExit("task_id is required")

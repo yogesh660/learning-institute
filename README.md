@@ -58,6 +58,8 @@ The validation workflows run the Python backend suite, rebuild the imported stat
 
 ```bash
 python -m orchestrator.main create --store .academy/tasks.json --subject teacher-1 --role agent
+# Retries with the same key return the existing task instead of creating duplicate work.
+python -m orchestrator.main create --store .academy/tasks.json --subject teacher-1 --role agent --dedupe-key ci-run-2026-10-31
 python -m orchestrator.main run TASK_ID --store .academy/tasks.json --repo-root . --subject teacher-1 --role agent --output reports/task-review.json
 python -m orchestrator.main approve TASK_ID --store .academy/tasks.json --subject principal-1 --role principal --reason "Reviewed evidence and approved the scoped proposal."
 python -m orchestrator.main list --store .academy/tasks.json

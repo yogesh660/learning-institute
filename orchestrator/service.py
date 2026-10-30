@@ -16,9 +16,13 @@ class AcademyService:
         self.store = store
         self.authorizer = authorizer or default_authorizer()
 
-    def create_curriculum_review(self, identity: Identity) -> Task:
+    def create_curriculum_review(self, identity: Identity, dedupe_key: str | None = None) -> Task:
         self.authorizer.require(identity, "prepare_proposal")
-        return self.store.save(Task(kind=CurriculumReviewWorkflow.kind))
+        if dedupe_key is not None:
+            existing = self.store.find_by_dedupe_key(dedupe_key)
+            if existing is not None:
+                return existing
+        return self.store.save(Task(kind=CurriculumReviewWorkflow.kind, dedupe_key=dedupe_key))
 
     def run_curriculum_review(self, identity: Identity, task_id: str, repo_root: str | Path) -> Task:
         self.authorizer.require(identity, "prepare_proposal")

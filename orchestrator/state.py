@@ -36,6 +36,7 @@ _TRANSITIONS: dict[TaskStatus, set[TaskStatus]] = {
 class Task:
     kind: str
     payload: dict[str, Any] = field(default_factory=dict)
+    dedupe_key: str | None = None
     id: str = field(default_factory=lambda: f"task-{uuid4().hex[:12]}")
     status: TaskStatus = TaskStatus.CREATED
     result: dict[str, Any] | None = None
@@ -45,6 +46,8 @@ class Task:
     history: list[dict[str, str]] = field(default_factory=list)
 
     def __post_init__(self) -> None:
+        if self.dedupe_key is not None and not self.dedupe_key.strip():
+            raise ValueError("dedupe_key must not be blank")
         if not self.history:
             self.history.append({"status": self.status.value, "at": utc_now()})
 
@@ -63,6 +66,7 @@ class Task:
         return {
             "id": self.id,
             "kind": self.kind,
+            "dedupe_key": self.dedupe_key,
             "status": self.status.value,
             "history_count": len(self.history),
             "approved_by": self.approved_by,
@@ -74,6 +78,7 @@ class Task:
         return cls(
             kind=data["kind"],
             payload=data.get("payload", {}),
+            dedupe_key=data.get("dedupe_key"),
             id=data["id"],
             status=TaskStatus(data.get("status", TaskStatus.CREATED)),
             result=data.get("result"),

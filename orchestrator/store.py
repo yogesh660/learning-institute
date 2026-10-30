@@ -56,6 +56,16 @@ class TaskStore:
             raise KeyError(f"unknown task: {task_id}")
         return Task.from_dict(data)
 
+    def find_by_dedupe_key(self, dedupe_key: str) -> Task | None:
+        """Return the existing task for an idempotency key, if present."""
+        key = dedupe_key.strip()
+        if not key:
+            raise ValueError("dedupe_key must not be blank")
+        for data in self._read().values():
+            if data.get("dedupe_key") == key:
+                return Task.from_dict(data)
+        return None
+
     def list(self, status: TaskStatus | None = None) -> list[Task]:
         """Return tasks ordered by their first recorded state transition."""
         tasks = [Task.from_dict(data) for data in self._read().values()]

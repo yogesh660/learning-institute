@@ -35,6 +35,21 @@ class ServiceTests(unittest.TestCase):
             with self.assertRaises(AuthorizationDenied):
                 service.create_curriculum_review(None)
 
+    def test_create_is_idempotent_for_dedupe_key(self):
+        with tempfile.TemporaryDirectory() as directory:
+            service = AcademyService(TaskStore(Path(directory) / "tasks.json"))
+            agent = Identity("agent-1", Role.AGENT)
+            first = service.create_curriculum_review(agent, "ci-run-123")
+            second = service.create_curriculum_review(agent, "ci-run-123")
+            self.assertEqual(first.id, second.id)
+            self.assertEqual(len(service.store.list()), 1)
+
+    def test_blank_dedupe_key_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            service = AcademyService(TaskStore(Path(directory) / "tasks.json"))
+            with self.assertRaises(ValueError):
+                service.create_curriculum_review(Identity("agent-1", Role.AGENT), " ")
+
 
 if __name__ == "__main__":
     unittest.main()
