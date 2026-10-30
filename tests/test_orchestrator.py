@@ -70,6 +70,13 @@ class OrchestratorTests(unittest.TestCase):
             self.assertEqual([item.id for item in store.list(TaskStatus.CREATED)], [task.id])
             self.assertNotIn("payload", task.summary())
 
+    def test_store_lists_higher_priority_tasks_first(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store = TaskStore(Path(directory) / "tasks.json")
+            low = store.save(Task(kind="curriculum-review", priority=10))
+            high = store.save(Task(kind="curriculum-review", priority=90))
+            self.assertEqual([task.id for task in store.list()], [high.id, low.id])
+
     def test_store_rejects_stale_task_revision(self):
         with tempfile.TemporaryDirectory() as directory:
             store = TaskStore(Path(directory) / "tasks.json")

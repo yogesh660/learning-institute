@@ -123,5 +123,11 @@ class TaskStore:
         tasks = [self._decode(data) for data in self._read().values()]
         if status is not None:
             tasks = [task for task in tasks if task.status is status]
-        return sorted(tasks, key=lambda task: task.history[0]["at"] if task.history else "")
+        return sorted(
+            tasks,
+            key=lambda task: (
+                -task.priority,
+                task.history[0]["at"] if task.history else "",
+            ),
+        )
 
