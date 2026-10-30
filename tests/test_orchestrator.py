@@ -133,6 +133,30 @@ class OrchestratorTests(unittest.TestCase):
             self.assertEqual(code, 0)
             self.assertIn('"valid": true', output.getvalue())
 
+    def test_cli_create_and_queue_support_governance_metadata(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store = str(Path(directory) / "tasks.json")
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(
+                    main(
+                        [
+                            "create", "--store", store, "--subject", "agent-1", "--role", "agent",
+                            "--priority", "75", "--acceptance-criteria", "review evidence",
+                        ]
+                    ),
+                    0,
+                )
+            created = json.loads(output.getvalue())
+            output = StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(
+                    main(["queue", created["id"], "--store", store, "--subject", "agent-1", "--role", "agent"]),
+                    0,
+                )
+            queued = json.loads(output.getvalue())
+            self.assertEqual(queued["status"], "queued")
+
     def test_curriculum_review_pauses_for_approval(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

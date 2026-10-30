@@ -24,7 +24,7 @@ from agent_foundation.audit import AuditLog
 
 def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Learning Institute workflow runner")
-    p.add_argument("command", choices=("create", "run", "approve", "complete", "status", "list", "health", "audit-verify"))
+    p.add_argument("command", choices=("create", "queue", "run", "approve", "complete", "status", "list", "health", "audit-verify"))
     p.add_argument("task_id", nargs="?")
     p.add_argument("--store", default=".academy/tasks.json")
     p.add_argument("--repo-root", default=".")
@@ -33,6 +33,8 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--role", choices=[role.value for role in Role], help="authenticated identity role")
     p.add_argument("--reason", default="", help="required Principal approval rationale")
     p.add_argument("--dedupe-key", help="idempotency key for create (returns an existing task on retry)")
+    p.add_argument("--priority", type=int, default=0, help="task priority from 0 to 100")
+    p.add_argument("--acceptance-criteria", action="append", default=[], help="repeat for each acceptance criterion")
     p.add_argument("--status-filter", choices=[status.value for status in TaskStatus], help="filter queue listing")
     p.add_argument("--audit", default=".academy/audit.jsonl", help="audit JSONL path for audit-verify")
     return p
@@ -72,12 +74,19 @@ def main(argv: list[str] | None = None) -> int:
     identity = Identity(args.subject, Role(args.role))
     service = AcademyService(store)
     if args.command == "create":
-        task = service.create_curriculum_review(identity, args.dedupe_key)
+        task = service.create_curriculum_review(
+            identity,
+            args.dedupe_key,
+            priority=args.priority,
+            acceptance_criteria=args.acceptance_criteria,
+        )
     else:
         if not args.task_id:
             raise SystemExit("task_id is required")
         task = store.get(args.task_id)
-        if args.command == "run":
+        if args.command == "queue":
+            task = service.queue(identity, task.id)
+        elif args.command == "run":
             task = service.run_curriculum_review(identity, task.id, args.repo_root)
         elif args.command == "approve":
             task = service.approve(identity, task.id, args.reason)
