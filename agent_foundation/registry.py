@@ -28,6 +28,7 @@ class AgentRegistry:
             "examiner": "draft objective assessments and rubrics",
             "student_support": "provide lesson-context-only learner guidance",
             "academic_analytics": "aggregate curriculum and QA evidence without student data",
+            "solution_architect": "review architecture and identify governed implementation gaps",
             "principal": "approve important production decisions",
         }
         self._purposes = purposes
