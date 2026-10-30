@@ -58,6 +58,21 @@ class BudgetLedger:
             "monthly_calls": budget.monthly_calls - self._get(agent, "monthly_calls"),
         }
 
+    def snapshot(self) -> dict[str, dict[str, dict[str, float | int]]]:
+        """Return limits and remaining capacity without exposing raw prompts."""
+        return {
+            agent: {
+                "limits": {
+                    "daily_usd": budget.daily_usd,
+                    "monthly_usd": budget.monthly_usd,
+                    "daily_calls": budget.daily_calls,
+                    "monthly_calls": budget.monthly_calls,
+                },
+                "remaining": self.remaining(agent),
+            }
+            for agent, budget in sorted(self._budgets.items())
+        }
+
     def _get(self, agent: str, metric: str) -> float | int:
         now = self._clock()
         if now.tzinfo is None:

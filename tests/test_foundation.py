@@ -46,6 +46,14 @@ class FoundationTests(unittest.TestCase):
         self.assertEqual(ledger.remaining("teacher")["daily_calls"], 2)
         self.assertEqual(ledger.remaining("teacher")["monthly_calls"], 4)
 
+    def test_budget_snapshot_exposes_limits_and_remaining_capacity(self):
+        ledger = BudgetLedger({"teacher": Budget(1.0, 2.0, 2, 4)})
+        ledger.reserve("teacher", usd=0.25, calls=1)
+        snapshot = ledger.snapshot()
+        self.assertEqual(snapshot["teacher"]["limits"]["daily_usd"], 1.0)
+        self.assertEqual(snapshot["teacher"]["remaining"]["daily_usd"], 0.75)
+        self.assertNotIn("prompt", snapshot["teacher"])
+
     def test_budget_ledger_round_trips_persisted_usage(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "budgets.json"

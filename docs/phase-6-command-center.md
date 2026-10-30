@@ -2,7 +2,8 @@
 
 The first command-center slice is intentionally manual and read-only. It
 combines the curriculum, QA, and privacy-safe analytics reports into one
-status snapshot.
+status snapshot. Budget-ledger integrations can add the metadata-only limits
+and remaining-capacity snapshot from `BudgetLedger.snapshot()`.
 
 ```bash
 node scripts/academy/status.js reports/phase-6-status.json

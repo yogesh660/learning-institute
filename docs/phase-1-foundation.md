@@ -10,6 +10,8 @@ foundation for future governed agent workflows.
 - Credentials come from the execution environment or a secrets manager.
 - The foundation never prints credential values.
 - Budget reservations fail closed before a provider call.
+- Budget ledgers expose a metadata-only limits/remaining snapshot for command
+  center reporting; prompts and provider responses are never included.
 - Audit events are append-only JSONL records with common secret keys redacted.
 - These primitives do not grant GitHub access, merge pull requests, or deploy production.
 
