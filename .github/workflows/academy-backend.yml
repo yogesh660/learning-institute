@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   backend:
+    name: Academy backend validation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
