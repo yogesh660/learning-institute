@@ -1,0 +1,44 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Validate foundation tests
+        run: python -m unittest discover -s tests -v
+      - name: Build pages
+        run: node scripts/build.js
+      - name: Check generated local links
+        run: |
+          python3 - <<'PY'
+          import glob, os, re, sys
+          bad = []
+          for f in ["index.html"] + glob.glob("models/*/index.html") + glob.glob("concepts/*/index.html"):
+              base = os.path.dirname(f)
+              for u in re.findall(r'(?:href|src)="([^"#:?]+)(?:[?#][^"]*)?"', open(f, encoding="utf-8").read()):
+                  if u.startswith(("http", "mailto", "/")):
+                      continue
+                  p = os.path.normpath(os.path.join(base, u))
+                  if u.endswith("/"):
+                      p = os.path.join(p, "index.html")
+                  if not os.path.exists(p):
+                      bad.append(f"{f} -> {u}")
+          print("\n".join(bad) or "all links ok")
+          sys.exit(1 if bad else 0)
+          PY
+

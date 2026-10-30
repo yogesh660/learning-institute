@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AcademyReport",
+  "type": "object",
+  "required": ["task_id", "agent", "status", "summary", "evidence", "findings", "created_at"],
+  "properties": {
+    "task_id": {"type": "string", "format": "uuid"},
+    "agent": {"type": "string", "minLength": 1},
+    "status": {"enum": ["complete", "failed", "blocked"]},
+    "summary": {"type": "string", "minLength": 1},
+    "evidence": {"type": "array", "items": {"type": "string"}},
+    "findings": {"type": "array", "items": {"type": "object"}},
+    "created_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false
+}
+
