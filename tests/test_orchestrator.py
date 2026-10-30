@@ -77,6 +77,9 @@ class OrchestratorTests(unittest.TestCase):
             path.write_text(json.dumps([]), encoding="utf-8")
             with self.assertRaises(TaskStoreCorrupt):
                 TaskStore(path).list()
+            path.write_text(json.dumps({"task-1": {"id": "task-1"}}), encoding="utf-8")
+            with self.assertRaises(TaskStoreCorrupt):
+                TaskStore(path).get("task-1")
 
     def test_store_rejects_duplicate_dedupe_key(self):
         with tempfile.TemporaryDirectory() as directory:

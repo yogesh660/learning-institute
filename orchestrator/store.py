@@ -59,6 +59,13 @@ class TaskStore:
             if os.path.exists(temp_name):
                 os.unlink(temp_name)
 
+    @staticmethod
+    def _decode(data: dict) -> Task:
+        try:
+            return Task.from_dict(data)
+        except (KeyError, TypeError, ValueError) as exc:
+            raise TaskStoreCorrupt("task store contains an invalid task record") from exc
+
     def save(self, task: Task) -> Task:
         with self._save_lock:
             tasks = self._read()
@@ -99,7 +106,7 @@ class TaskStore:
         data = self._read().get(task_id)
         if data is None:
             raise KeyError(f"unknown task: {task_id}")
-        return Task.from_dict(data)
+        return self._decode(data)
 
     def find_by_dedupe_key(self, dedupe_key: str) -> Task | None:
         """Return the existing task for an idempotency key, if present."""
@@ -108,12 +115,12 @@ class TaskStore:
             raise ValueError("dedupe_key must not be blank")
         for data in self._read().values():
             if data.get("dedupe_key") == key:
-                return Task.from_dict(data)
+                return self._decode(data)
         return None
 
     def list(self, status: TaskStatus | None = None) -> list[Task]:
         """Return tasks ordered by their first recorded state transition."""
-        tasks = [Task.from_dict(data) for data in self._read().values()]
+        tasks = [self._decode(data) for data in self._read().values()]
         if status is not None:
             tasks = [task for task in tasks if task.status is status]
         return sorted(tasks, key=lambda task: task.history[0]["at"] if task.history else "")
