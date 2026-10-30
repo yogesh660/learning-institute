@@ -47,10 +47,7 @@ class AcademyService:
         if not reason.strip():
             raise ValueError("approval reason is required")
         task = self.store.get(task_id)
-        task.transition(TaskStatus.APPROVED)
-        task.approved_by = identity.subject
-        task.approval_reason = reason.strip()
-        task.approved_fingerprint = task.content_fingerprint()
+        task.approve(identity.subject, reason)
         return self.store.save(task)
 
     def complete(self, identity: Identity, task_id: str) -> Task:

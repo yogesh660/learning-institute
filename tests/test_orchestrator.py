@@ -14,6 +14,15 @@ class OrchestratorTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             Task(kind="curriculum-review").transition(TaskStatus.COMPLETED)
 
+    def test_approval_requires_explicit_approval_operation(self):
+        task = Task(kind="curriculum-review")
+        task.transition(TaskStatus.RUNNING)
+        task.transition(TaskStatus.REVIEW_REQUIRED)
+        with self.assertRaises(ValueError):
+            task.transition(TaskStatus.APPROVED)
+        task.approve("principal-1", "Reviewed the evidence.")
+        self.assertEqual(task.status, TaskStatus.APPROVED)
+
     def test_store_round_trip(self):
         with tempfile.TemporaryDirectory() as directory:
             store = TaskStore(Path(directory) / "tasks.json")

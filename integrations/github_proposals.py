@@ -65,6 +65,10 @@ class GitHubProposalClient:
         self.permissions.require(agent, Action.CREATE_PULL_REQUEST)
         if task.status is not TaskStatus.APPROVED:
             raise ApprovalRequired(f"task {task.id} is not approved")
+        if not task.approved_by or not task.approval_reason or not task.approved_fingerprint:
+            raise ApprovalRequired(f"task {task.id} has incomplete approval evidence")
+        if task.approved_fingerprint != task.content_fingerprint():
+            raise ApprovalRequired(f"task {task.id} approval no longer matches its content")
         if not title.strip() or not head.strip() or not base.strip():
             raise ValueError("title, head, and base are required")
         payload = json.dumps({"title": title, "body": body, "head": head, "base": base}).encode("utf-8")

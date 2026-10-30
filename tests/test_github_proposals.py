@@ -32,7 +32,7 @@ class GitHubProposalTests(unittest.TestCase):
                 client.create_pull_request("software_engineer", task=task, title="x", body="y", head="agent/x")
             task.transition(TaskStatus.RUNNING)
             task.transition(TaskStatus.REVIEW_REQUIRED)
-            task.transition(TaskStatus.APPROVED)
+            task.approve("principal-1", "Reviewed the evidence.")
             with self.assertRaises(Exception):
                 client.create_pull_request("teacher", task=task, title="x", body="y", head="agent/x")
             result = client.create_pull_request("software_engineer", task=task, title="x", body="y", head="agent/x")
@@ -52,7 +52,7 @@ class GitHubProposalTests(unittest.TestCase):
         task = Task("curriculum-review")
         task.transition(TaskStatus.RUNNING)
         task.transition(TaskStatus.REVIEW_REQUIRED)
-        task.transition(TaskStatus.APPROVED)
+        task.approve("principal-1", "Reviewed the evidence.")
         with self.assertRaises(GitHubProposalError):
             client.create_pull_request("software_engineer", task=task, title="x", body="y", head="agent/x")
 

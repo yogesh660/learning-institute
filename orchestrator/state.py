@@ -56,10 +56,26 @@ class Task:
             self.history.append({"status": self.status.value, "at": utc_now()})
 
     def transition(self, target: TaskStatus) -> None:
+        if target is TaskStatus.APPROVED:
+            raise ValueError("use approve() to record Principal approval")
         if target not in _TRANSITIONS[self.status]:
             raise ValueError(f"invalid task transition: {self.status} -> {target}")
         self.status = target
         self.history.append({"status": target.value, "at": utc_now()})
+
+    def approve(self, approved_by: str, reason: str) -> None:
+        """Record an explicit Principal approval and bind it to task content."""
+        if not approved_by.strip():
+            raise ValueError("approved_by is required")
+        if not reason.strip():
+            raise ValueError("approval reason is required")
+        if TaskStatus.APPROVED not in _TRANSITIONS[self.status]:
+            raise ValueError(f"invalid task transition: {self.status} -> {TaskStatus.APPROVED}")
+        self.approved_by = approved_by.strip()
+        self.approval_reason = reason.strip()
+        self.approved_fingerprint = self.content_fingerprint()
+        self.status = TaskStatus.APPROVED
+        self.history.append({"status": TaskStatus.APPROVED.value, "at": utc_now()})
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)

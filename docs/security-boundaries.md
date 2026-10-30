@@ -8,6 +8,8 @@
 - Only Principal identities can approve or complete production-bound tasks.
 - Principal approval is bound to a canonical task-content fingerprint; changing
   the payload or result after approval blocks completion.
+- Approved state can only be created through the explicit approval operation;
+  GitHub proposals require the recorded approver, rationale, and fingerprint.
 - Task writes use optimistic revisions so concurrent workers cannot silently
   overwrite newer lifecycle state.
 - GitHub pull-request proposals require both an allowed agent and an
