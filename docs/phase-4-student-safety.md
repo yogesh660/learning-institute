@@ -28,3 +28,8 @@ an API gateway policy while preserving the same fail-closed behavior. The
 `AcademyService` accepts this limiter and applies it only after authorization,
 so rejected identities do not consume an authenticated caller's quota.
 
+`security.student_data` provides offline export, deletion, and retention-purge
+helpers for validated pseudonymous events. They return detached collections and
+perform no persistence; a production backend must add authenticated access,
+audit events, and a human-approved data-governance policy before using them.
+
