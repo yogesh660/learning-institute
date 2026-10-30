@@ -9,7 +9,7 @@ from dataclasses import dataclass, asdict, field
 from pathlib import Path
 from typing import Any
 
-from security.student_data import validate_student_event
+from security.student_data import validate_student_events
 
 
 @dataclass(frozen=True)
@@ -62,8 +62,7 @@ class AcademicAnalyticsAgent:
         """Aggregate validated pseudonymous events without exposing subjects."""
         if minimum_cohort <= 0:
             raise ValueError("minimum_cohort must be positive")
-        for event in events:
-            validate_student_event(event)
+        validate_student_events(events)
         unique_students = len({event["student_subject"] for event in events})
         if unique_students < minimum_cohort:
             return StudentAnalyticsSummary(len(events), unique_students, True, {}, {}, completion_rates={})

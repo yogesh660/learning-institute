@@ -46,6 +46,12 @@ class StudentDataTests(unittest.TestCase):
         with self.assertRaises(StudentEventViolation):
             export_events([invalid_timestamp], "anon_student01")
 
+    def test_duplicate_event_ids_fail_closed(self):
+        first = event("anon_student01")
+        duplicate = dict(first)
+        with self.assertRaises(StudentEventViolation):
+            export_events([first, duplicate], "anon_student01")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -46,12 +46,22 @@ def validate_student_event(event: dict[str, Any]) -> None:
         raise StudentEventViolation("occurred_at must include a timezone")
 
 
+def validate_student_events(events: list[dict[str, Any]]) -> None:
+    """Validate a batch and reject duplicate event identifiers."""
+    seen: set[str] = set()
+    for event in events:
+        validate_student_event(event)
+        event_id = event["event_id"]
+        if event_id in seen:
+            raise StudentEventViolation("duplicate event_id in batch")
+        seen.add(event_id)
+
+
 def export_events(events: list[dict[str, Any]], student_subject: str) -> list[dict[str, Any]]:
     """Return a validated, detached export for one pseudonymous subject."""
     if not isinstance(student_subject, str) or not fullmatch(_SUBJECT, student_subject):
         raise StudentEventViolation("student_subject must be pseudonymous")
-    for event in events:
-        validate_student_event(event)
+    validate_student_events(events)
     return deepcopy([event for event in events if event["student_subject"] == student_subject])
 
 
@@ -67,8 +77,7 @@ def purge_expired_events(
 ) -> tuple[list[dict[str, Any]], int]:
     """Remove only events whose occurred timestamp exceeds event retention."""
     current = now or datetime.now(timezone.utc)
-    for event in events:
-        validate_student_event(event)
+    validate_student_events(events)
     retained: list[dict[str, Any]] = []
     deleted = 0
     for event in events:

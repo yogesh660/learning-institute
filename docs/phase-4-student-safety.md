@@ -32,5 +32,6 @@ so rejected identities do not consume an authenticated caller's quota.
 helpers for validated pseudonymous events. They return detached collections and
 perform no persistence; a production backend must add authenticated access,
 audit events, timezone-aware timestamps, and a human-approved data-governance
-policy before using them.
+policy before using them. Batch operations reject duplicate event IDs so
+analytics cannot count the same event twice.
 
