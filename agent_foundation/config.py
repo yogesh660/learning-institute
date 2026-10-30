@@ -1,7 +1,8 @@
 """Environment-only configuration helpers; secrets are never read from Git."""
 
-import os
 from dataclasses import dataclass
+
+from .credentials import CredentialManager
 
 
 @dataclass(frozen=True)
@@ -10,11 +11,9 @@ class ProviderConfig:
     api_key_env: str
     model: str
 
-    def api_key(self) -> str:
-        value = os.getenv(self.api_key_env, "")
-        if not value:
-            raise RuntimeError(f"missing provider credential: {self.api_key_env}")
-        return value
+    def api_key(self, credentials: CredentialManager | None = None) -> str:
+        manager = credentials or CredentialManager({self.api_key_env: self.api_key_env})
+        return manager.resolve(self.api_key_env)
 
 
 @dataclass(frozen=True)

@@ -8,6 +8,7 @@ from uuid import uuid4
 
 from agent_foundation.audit import AuditLog
 from agent_foundation.config import AcademyConfig
+from agent_foundation.credentials import CredentialManager, CredentialUnavailable
 from agent_foundation.budgets import Budget, BudgetExceeded, BudgetLedger, PersistentBudgetLedger
 from agent_foundation.permissions import Action, PermissionDenied, PermissionManager, default_policies
 from agent_foundation.providers import BudgetedProvider, DisabledProvider, ProviderRouter, ProviderUnavailable
@@ -30,6 +31,16 @@ class FoundationTests(unittest.TestCase):
         self.assertEqual(config.operations_repository, "yogesh660/learning-institute")
         with self.assertRaises(ValueError):
             AcademyConfig(github_repository="same/repo", source_repository="same/repo")
+
+    def test_credentials_are_allowlisted_and_environment_backed(self):
+        manager = CredentialManager({"primary": "TEST_PROVIDER_KEY"}, {"TEST_PROVIDER_KEY": "secret-value"})
+        self.assertEqual(manager.aliases(), ("primary",))
+        self.assertTrue(manager.available("primary"))
+        self.assertEqual(manager.resolve("primary"), "secret-value")
+        with self.assertRaises(CredentialUnavailable):
+            manager.resolve("unknown")
+        with self.assertRaises(ValueError):
+            CredentialManager({"primary": "lowercase_env"})
 
     def test_budget_fails_closed(self):
         ledger = BudgetLedger({"teacher": Budget(1.0, 5.0, 2, 10)})
