@@ -33,6 +33,7 @@ class OrchestratorTests(unittest.TestCase):
             self.assertEqual(task.result["side_effects"], [])
             self.assertEqual(task.result["teacher_review"]["lessons_reviewed"], 379)
             self.assertIsInstance(task.result["curriculum_proposal"]["planned_lessons"], list)
+            self.assertIsNone(task.result["qa_result"])
 
 
 if __name__ == "__main__":

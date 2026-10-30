@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from agents.curriculum_designer import CurriculumDesignerAgent
+from agents.qa import QAEngineerAgent
 from agents.teacher import TeacherAgent
 from .state import Task, TaskStatus
 
@@ -29,6 +30,8 @@ class CurriculumReviewWorkflow:
         totals = evidence.get("totals", {})
         teacher_review = TeacherAgent().review_report(report_path).to_dict()
         curriculum_proposal = CurriculumDesignerAgent().propose_from_report(report_path).to_dict()
+        qa_path = root / "reports" / "phase-3-qa-report.json"
+        qa_result = QAEngineerAgent().inspect_report(qa_path).to_dict() if qa_path.exists() else None
         task.result = {
             "evidence_file": str(report_path),
             "summary": {
@@ -40,6 +43,7 @@ class CurriculumReviewWorkflow:
             "approval_required": True,
             "teacher_review": teacher_review,
             "curriculum_proposal": curriculum_proposal,
+            "qa_result": qa_result,
         }
         task.transition(TaskStatus.REVIEW_REQUIRED)
         return task
