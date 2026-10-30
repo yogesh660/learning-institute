@@ -27,6 +27,7 @@ class AgentRegistry:
             "academic_reviewer": "independently verify academic claims and sources",
             "examiner": "draft objective assessments and rubrics",
             "student_support": "provide lesson-context-only learner guidance",
+            "academic_analytics": "aggregate curriculum and QA evidence without student data",
             "principal": "approve important production decisions",
         }
         self._purposes = purposes

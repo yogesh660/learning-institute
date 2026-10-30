@@ -53,5 +53,6 @@ def default_policies() -> dict[str, AgentPolicy]:
         "academic_reviewer": AgentPolicy("academic_reviewer", frozenset({Action.READ_PUBLIC_REPO})),
         "examiner": AgentPolicy("examiner", frozenset({Action.READ_PUBLIC_REPO})),
         "student_support": AgentPolicy("student_support", frozenset({Action.READ_PUBLIC_REPO})),
+        "academic_analytics": AgentPolicy("academic_analytics", frozenset({Action.READ_PUBLIC_REPO})),
         "principal": AgentPolicy("principal", frozenset({Action.READ_PUBLIC_REPO, Action.MERGE_PULL_REQUEST})),
     }
