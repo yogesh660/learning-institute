@@ -19,7 +19,7 @@ from .workflow import CurriculumReviewWorkflow
 
 def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Learning Institute workflow runner")
-    p.add_argument("command", choices=("create", "run", "approve", "status"))
+    p.add_argument("command", choices=("create", "run", "approve", "complete", "status"))
     p.add_argument("task_id", nargs="?")
     p.add_argument("--store", default=".academy/tasks.json")
     p.add_argument("--repo-root", default=".")
@@ -39,6 +39,8 @@ def main(argv: list[str] | None = None) -> int:
             task = CurriculumReviewWorkflow().run(task, args.repo_root)
         elif args.command == "approve":
             task.transition(TaskStatus.APPROVED)
+        elif args.command == "complete":
+            task.transition(TaskStatus.COMPLETED)
         store.save(task)
     print(json.dumps(task.to_dict(), indent=2))
     return 0
