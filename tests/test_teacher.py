@@ -30,6 +30,15 @@ class TeacherAgentTests(unittest.TestCase):
             self.assertFalse(review.production_changes)
             self.assertEqual(report.read_bytes(), before)
 
+    def test_writes_review_atomically(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            report = root / "audit.json"
+            output = root / "teacher.json"
+            report.write_text(json.dumps({"totals": {"sourceLessons": 1}, "checks": {"structuralStatus": "pass"}}), encoding="utf-8")
+            TeacherAgent().write_review(output, report)
+            self.assertEqual(json.loads(output.read_text(encoding="utf-8"))["lessons_reviewed"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -50,3 +52,20 @@ class TeacherAgent:
             candidates=candidates,
             recommendations=tuple(recommendations),
         )
+
+    def write_review(self, output_path: str | Path, report_path: str | Path) -> TeacherReview:
+        review = self.review_report(report_path)
+        target = Path(output_path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        fd, temporary = tempfile.mkstemp(prefix="teacher-review-", suffix=".json", dir=target.parent)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                json.dump(review.to_dict(), handle, indent=2)
+                handle.write("\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary, target)
+        finally:
+            if os.path.exists(temporary):
+                os.unlink(temporary)
+        return review
