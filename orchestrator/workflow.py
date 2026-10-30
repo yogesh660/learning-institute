@@ -29,44 +29,46 @@ class CurriculumReviewWorkflow:
             raise ValueError(f"unsupported workflow kind: {task.kind}")
         root = Path(repo_root)
         task.transition(TaskStatus.RUNNING)
-        report_path = root / "reports" / "phase-2-curriculum-audit.json"
-        if not report_path.exists():
+        try:
+            report_path = root / "reports" / "phase-2-curriculum-audit.json"
+            if not report_path.exists():
+                raise FileNotFoundError("missing audit evidence")
+            evidence = json.loads(report_path.read_text(encoding="utf-8"))
+            totals = evidence.get("totals", {})
+            teacher_review = TeacherAgent().review_report(report_path).to_dict()
+            curriculum_proposal = CurriculumDesignerAgent().propose_from_report(report_path).to_dict()
+            qa_path = root / "reports" / "phase-3-qa-report.json"
+            qa_result = QAEngineerAgent().inspect_report(qa_path).to_dict() if qa_path.exists() else None
+            analytics = AcademicAnalyticsAgent().aggregate(report_path, qa_path).to_dict() if qa_path.exists() else None
+            research_path = root / "reports" / "research.json"
+            research = ResearcherAgent().read_report(research_path) if research_path.exists() else None
+            task.result = {
+                "assigned_agents": TaskRouter().agents_for(task.kind),
+                "evidence_file": str(report_path),
+                "evidence_sha256": {"curriculum": self._sha256(report_path)},
+                "summary": {
+                    "lessons": totals.get("sourceLessons"),
+                    "planned": totals.get("planned"),
+                    "status": evidence.get("checks", {}).get("structuralStatus"),
+                },
+                "side_effects": [],
+                "approval_required": True,
+                "teacher_review": teacher_review,
+                "curriculum_proposal": curriculum_proposal,
+                "qa_result": qa_result,
+                "analytics": analytics,
+                "research": {
+                    "finding_count": research["finding_count"],
+                    "publication_required": research["publication_required"],
+                } if research else None,
+            }
+            if qa_path.exists():
+                task.result["evidence_sha256"]["qa"] = self._sha256(qa_path)
+            if research_path.exists():
+                task.result["evidence_sha256"]["research"] = self._sha256(research_path)
+            task.transition(TaskStatus.REVIEW_REQUIRED)
+        except Exception as exc:
+            task.result = {"error_type": type(exc).__name__}
             task.transition(TaskStatus.FAILED)
-            task.result = {"error": f"missing audit evidence: {report_path}"}
-            return task
-        evidence = json.loads(report_path.read_text(encoding="utf-8"))
-        totals = evidence.get("totals", {})
-        teacher_review = TeacherAgent().review_report(report_path).to_dict()
-        curriculum_proposal = CurriculumDesignerAgent().propose_from_report(report_path).to_dict()
-        qa_path = root / "reports" / "phase-3-qa-report.json"
-        qa_result = QAEngineerAgent().inspect_report(qa_path).to_dict() if qa_path.exists() else None
-        analytics = AcademicAnalyticsAgent().aggregate(report_path, qa_path).to_dict() if qa_path.exists() else None
-        research_path = root / "reports" / "research.json"
-        research = ResearcherAgent().read_report(research_path) if research_path.exists() else None
-        task.result = {
-            "assigned_agents": TaskRouter().agents_for(task.kind),
-            "evidence_file": str(report_path),
-            "evidence_sha256": {"curriculum": self._sha256(report_path)},
-            "summary": {
-                "lessons": totals.get("sourceLessons"),
-                "planned": totals.get("planned"),
-                "status": evidence.get("checks", {}).get("structuralStatus"),
-            },
-            "side_effects": [],
-            "approval_required": True,
-            "teacher_review": teacher_review,
-            "curriculum_proposal": curriculum_proposal,
-            "qa_result": qa_result,
-            "analytics": analytics,
-            "research": {
-                "finding_count": research["finding_count"],
-                "publication_required": research["publication_required"],
-            } if research else None,
-        }
-        if qa_path.exists():
-            task.result["evidence_sha256"]["qa"] = self._sha256(qa_path)
-        if research_path.exists():
-            task.result["evidence_sha256"]["research"] = self._sha256(research_path)
-        task.transition(TaskStatus.REVIEW_REQUIRED)
         return task
 

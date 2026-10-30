@@ -100,6 +100,16 @@ class OrchestratorTests(unittest.TestCase):
             self.assertIsNone(task.result["qa_result"])
             self.assertIsNone(task.result["analytics"])
 
+    def test_curriculum_review_failures_do_not_leave_tasks_running(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            report = root / "reports" / "phase-2-curriculum-audit.json"
+            report.parent.mkdir()
+            report.write_text("not-json")
+            task = CurriculumReviewWorkflow().run(Task(kind="curriculum-review"), root)
+            self.assertEqual(task.status, TaskStatus.FAILED)
+            self.assertEqual(task.result, {"error_type": "JSONDecodeError"})
+
     def test_curriculum_review_integrates_validated_research_evidence(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
