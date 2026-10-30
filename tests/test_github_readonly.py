@@ -57,6 +57,20 @@ class GitHubReadOnlyTests(unittest.TestCase):
         with self.assertRaises(GitHubReadError):
             client.verify_branch_policy()
 
+    def test_verifies_newer_named_checks_response_shape(self):
+        client = GitHubReadOnlyClient(
+            transport=lambda url, headers: (
+                200,
+                json.dumps(
+                    {
+                        "required_pull_request_reviews": {"required_approving_review_count": 1},
+                        "required_status_checks": {"contexts": [], "checks": [{"context": "Validate"}]},
+                    }
+                ).encode(),
+            )
+        )
+        self.assertTrue(client.verify_branch_policy(required_checks=("Validate",)))
+
 
 if __name__ == "__main__":
     unittest.main()

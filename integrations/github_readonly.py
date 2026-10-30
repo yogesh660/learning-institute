@@ -108,6 +108,11 @@ class GitHubReadOnlyClient:
             reviews = policy.get("required_pull_request_reviews")
             checks = policy.get("required_status_checks")
             contexts = set((checks or {}).get("contexts", []))
+            contexts.update(
+                check.get("context")
+                for check in (checks or {}).get("checks", [])
+                if isinstance(check, dict) and isinstance(check.get("context"), str)
+            )
             return bool(reviews and checks and set(required_checks).issubset(contexts))
         except (AttributeError, TypeError, ValueError) as exc:
             raise GitHubReadError("invalid GitHub branch policy response") from exc
