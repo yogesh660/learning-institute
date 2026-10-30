@@ -47,14 +47,20 @@ class BudgetedProvider:
         agent: str,
         permissions: PermissionManager,
         usd_per_call: float = 0.0,
+        max_prompt_chars: int = 100_000,
     ) -> None:
         self.provider = provider
         self.ledger = ledger
         self.agent = agent
         self.permissions = permissions
         self.usd_per_call = usd_per_call
+        self.max_prompt_chars = max_prompt_chars
 
     def complete(self, prompt: str) -> ProviderResponse:
+        if not prompt.strip():
+            raise ValueError("prompt must not be empty")
+        if len(prompt) > self.max_prompt_chars:
+            raise ValueError("prompt exceeds configured character limit")
         self.permissions.require(self.agent, Action.CALL_PROVIDER)
         self.ledger.reserve(self.agent, usd=self.usd_per_call, calls=1)
         return self.provider.complete(prompt)

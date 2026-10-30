@@ -111,6 +111,8 @@ class FoundationTests(unittest.TestCase):
         self.assertEqual(result, "ok")
         self.assertEqual(ledger.remaining("teacher")["daily_calls"], 1)
         self.assertEqual(ledger.remaining("teacher")["daily_usd"], 0.75)
+        with self.assertRaises(ValueError):
+            BudgetedProvider(FakeProvider(), ledger, "teacher", PermissionManager(default_policies())).complete(" ")
 
     def test_agent_registry_exposes_policy(self):
         registry = AgentRegistry()
