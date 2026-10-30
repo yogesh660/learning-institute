@@ -24,6 +24,12 @@ class AcademyConfig:
     github_token_env: str = "GITHUB_TOKEN"
     max_retries: int = 2
 
+    def __post_init__(self) -> None:
+        if self.source_repository == self.github_repository:
+            raise ValueError("source and operations repositories must be distinct")
+        if self.max_retries < 0:
+            raise ValueError("max_retries must be non-negative")
+
     @property
     def operations_repository(self) -> str:
         return self.github_repository

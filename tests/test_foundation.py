@@ -28,6 +28,8 @@ class FoundationTests(unittest.TestCase):
         config = AcademyConfig()
         self.assertEqual(config.source_repository, "yogesh660/ml-model-zoo")
         self.assertEqual(config.operations_repository, "yogesh660/learning-institute")
+        with self.assertRaises(ValueError):
+            AcademyConfig(github_repository="same/repo", source_repository="same/repo")
 
     def test_budget_fails_closed(self):
         ledger = BudgetLedger({"teacher": Budget(1.0, 5.0, 2, 10)})
