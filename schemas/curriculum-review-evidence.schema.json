@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Curriculum review evidence",
+  "type": "object",
+  "required": [
+    "source_repository", "source_revision", "comparison_target",
+    "section_matrix", "architecture_review", "code_review",
+    "research_sources", "qa_status", "human_review_required"
+  ],
+  "properties": {
+    "source_repository": {"const": "yogesh660/ml-model-zoo"},
+    "source_revision": {"type": "string", "minLength": 7},
+    "comparison_target": {"type": "string", "minLength": 1},
+    "section_matrix": {"type": "object", "minProperties": 13},
+    "architecture_review": {"type": "object"},
+    "code_review": {"type": "object"},
+    "research_sources": {"type": "array"},
+    "qa_status": {"enum": ["pass", "pending_human_review"]},
+    "human_review_required": {"const": true}
+  },
+  "additionalProperties": true
+}

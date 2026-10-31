@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT))
 from agent_foundation.audit import AuditLog
 from agent_foundation.credentials import CredentialManager
 from agent_foundation.permissions import PermissionManager, default_policies
+from agent_foundation.review_contract import REQUIRED_SECTIONS, validate_curriculum_evidence
 from integrations.github_proposals import GitHubProposalClient
 from orchestrator.state import Task, TaskStatus
 
@@ -33,6 +34,20 @@ def main() -> int:
     task.transition(TaskStatus.RUNNING)
     task.transition(TaskStatus.REVIEW_REQUIRED)
     task.approve("synthetic-principal", "Approved offline proposal gate test.")
+    review_evidence = {
+        "source_repository": "yogesh660/ml-model-zoo",
+        "source_revision": "abcdef1234567",
+        "comparison_target": "models/convolutional_neural_networks",
+        "section_matrix": {section: "reviewed" for section in REQUIRED_SECTIONS},
+        "architecture_review": {"status": "reviewed"},
+        "code_review": {"status": "reviewed"},
+        "research_sources": ["offline-fixture"],
+        "qa_status": "pending_human_review",
+        "human_review_required": True,
+    }
+    contract_errors = validate_curriculum_evidence(review_evidence)
+    if contract_errors:
+        raise RuntimeError("invalid review evidence: " + "; ".join(contract_errors))
 
     def transport(method: str, url: str, headers: dict[str, str], body: bytes) -> tuple[int, bytes]:
         return 201, json.dumps({"number": 1, "html_url": "https://example.invalid/pull/1"}).encode()
@@ -59,6 +74,7 @@ def main() -> int:
         "proposal": result,
         "network_calls": 0,
         "production_merge": False,
+        "review_evidence": review_evidence,
     }
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(rendered, indent=2) + "\n", encoding="utf-8")
