@@ -21,3 +21,5 @@ python -m orchestrator.main health --output backend-health.json
 ```
 
 Curriculum proposals must include source evidence, a template comparison, an architecture/interaction review, QA results, and explicit human approval before the GitHub proposal adapter may open a pull request.
+
+Use the bounded agent learning protocol in `docs/agent-learning-protocol.md`. Never treat an outcome score as permission to self-modify, bypass review, expose prompts/credentials/student data, or merge automatically.

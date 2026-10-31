@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bounded agent feedback event",
+  "type": "object",
+  "required": ["task_id", "agent", "signal", "evidence_ref", "lesson", "corrective_action", "review_required"],
+  "properties": {
+    "task_id": {"type": "string", "minLength": 1},
+    "agent": {"type": "string", "minLength": 1},
+    "signal": {"enum": ["accepted", "rejected", "needs_revision", "regression"]},
+    "evidence_ref": {"type": "string", "minLength": 1},
+    "lesson": {"type": "string", "minLength": 1},
+    "corrective_action": {"type": "string", "minLength": 1},
+    "review_required": {"const": true}
+  },
+  "additionalProperties": false
+}
