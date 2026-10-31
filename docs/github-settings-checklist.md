@@ -38,5 +38,4 @@ settings before any real source-repository proposal is attempted.
 ## Pages
 
 Keep Pages disabled for `learning-institute`; the public learning site remains
-`yogesh660/ml-model-zoo`. The local Pages workflow is manual-only compatibility
-code.
+`yogesh660/ml-model-zoo`. This repository is the backend/control plane only.

@@ -16,13 +16,15 @@ jobs:
           node-version: 22
       - name: Generate evidence reports
         run: |
-          node scripts/academy/curriculum-audit.js /tmp/phase-2-curriculum-audit.json --strict
-          node scripts/academy/qa-report.js /tmp/phase-3-qa-report.json --strict
-          node scripts/academy/analytics-report.js /tmp/phase-5-analytics-report.json
-          ACADEMY_EVIDENCE_DIR=/tmp node scripts/academy/status.js /tmp/phase-6-status.json
+          python -m unittest discover -s tests -q
+          python -m orchestrator.main health --output /tmp/backend-health.json
+          python scripts/academy/secret-scan.py .
+          ACADEMY_EVIDENCE_DIR=/tmp node scripts/academy/status.js /tmp/academy-status.json
       - name: Upload status snapshot
         uses: actions/upload-artifact@v4
         with:
           name: academy-status
-          path: /tmp/phase-*.json
+          path: |
+            /tmp/backend-health.json
+            /tmp/academy-status.json
 

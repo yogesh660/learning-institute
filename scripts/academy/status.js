@@ -10,9 +10,7 @@ const EVIDENCE_ROOT = process.env.ACADEMY_EVIDENCE_DIR
   ? path.resolve(process.env.ACADEMY_EVIDENCE_DIR)
   : ROOT;
 const files = {
-  curriculum: 'reports/phase-2-curriculum-audit.json',
-  qa: 'reports/phase-3-qa-report.json',
-  analytics: 'reports/phase-5-analytics-report.json',
+  backendHealth: 'backend-health.json',
 };
 const evidence = {};
 for (const [name, file] of Object.entries(files)) {

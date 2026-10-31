@@ -23,15 +23,17 @@ jobs:
         run: python -m unittest discover -s tests -q
       - name: Scan for committed secrets
         run: python scripts/academy/secret-scan.py .
-      - name: Build and validate curriculum evidence
-        run: |
-          node scripts/build.js
-          node scripts/academy/curriculum-audit.js /tmp/curriculum-audit.json --strict
-          node scripts/academy/qa-report.js /tmp/qa-report.json --strict
       - name: Generate health snapshot
         run: python -m orchestrator.main health --output academy-health.json
+      - name: Verify audit chain
+        run: python -m orchestrator.main audit-verify --audit /tmp/academy-audit.jsonl --output audit-verification.json
+      - name: Run offline proposal gate
+        run: python scripts/academy/synthetic-proposal.py --output synthetic-proposal.json
       - name: Upload audit evidence
         uses: actions/upload-artifact@v4
         with:
           name: scheduled-academy-audit
-          path: academy-health.json
+          path: |
+            academy-health.json
+            audit-verification.json
+            synthetic-proposal.json

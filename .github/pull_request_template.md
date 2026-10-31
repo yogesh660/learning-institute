@@ -4,20 +4,21 @@
 
 ## Evidence
 
-- [ ] `node scripts/build.js`
-- [ ] `node scripts/academy/curriculum-audit.js /tmp/phase-2-curriculum-audit.json --strict`
-- [ ] `node scripts/academy/qa-report.js /tmp/phase-3-qa-report.json --strict`
-- [ ] Relevant browser, Python, or model checks were run and listed below.
+- [ ] Backend tests pass.
+- [ ] Secret scan passes.
+- [ ] Remote source build/QA checks pass; link evidence below.
+- [ ] Closest model/lesson template compared.
+- [ ] Architecture, interaction, code, metadata, and links reviewed.
+- [ ] Missing sections have an explicit disposition.
+- [ ] Research claims have primary sources and limitations.
 
 ## Review boundaries
 
-- [ ] Source lessons were edited, or generated output was rebuilt from source.
 - [ ] No credentials or sensitive student data are included.
 - [ ] Academic claims and references have an explicit reviewer.
 - [ ] Deployment behavior is unchanged or explained.
-- [ ] This change does not modify `ml-model-zoo`.
+- [ ] No direct edit or merge of `ml-model-zoo/main` occurred.
 
 ## Test results
 
-<!-- Paste exact commands and results. -->
-
+<!-- Paste exact commands, results, source revision, and comparison target. -->

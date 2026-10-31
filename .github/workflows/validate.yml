@@ -21,28 +21,20 @@ jobs:
           python-version: "3.11"
       - name: Validate foundation tests
         run: python -m unittest discover -s tests -v
-      - name: Build pages
-        run: node scripts/build.js
-      - name: Curriculum audit
-        run: node scripts/academy/curriculum-audit.js /tmp/phase-2-curriculum-audit.json --strict
-      - name: Generated-output QA
-        run: node scripts/academy/qa-report.js /tmp/phase-3-qa-report.json --strict
-      - name: Check generated local links
-        run: |
-          python3 - <<'PY'
-          import glob, os, re, sys
-          bad = []
-          for f in ["index.html"] + glob.glob("models/*/index.html") + glob.glob("concepts/*/index.html"):
-              base = os.path.dirname(f)
-              for u in re.findall(r'(?:href|src)="([^"#:?]+)(?:[?#][^"]*)?"', open(f, encoding="utf-8").read()):
-                  if u.startswith(("http", "mailto", "/")):
-                      continue
-                  p = os.path.normpath(os.path.join(base, u))
-                  if u.endswith("/"):
-                      p = os.path.join(p, "index.html")
-                  if not os.path.exists(p):
-                      bad.append(f"{f} -> {u}")
-          print("\n".join(bad) or "all links ok")
-          sys.exit(1 if bad else 0)
-          PY
+      - name: Scan committed secrets
+        run: python scripts/academy/secret-scan.py .
+      - name: Generate backend health report
+        run: python -m orchestrator.main health --output backend-health.json
+      - name: Verify audit chain
+        run: python -m orchestrator.main audit-verify --audit /tmp/academy-audit.jsonl --output audit-verification.json
+      - name: Run offline proposal gate
+        run: python scripts/academy/synthetic-proposal.py --output synthetic-proposal.json
+      - name: Upload backend evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: academy-backend-validation
+          path: |
+            backend-health.json
+            audit-verification.json
+            synthetic-proposal.json
 
